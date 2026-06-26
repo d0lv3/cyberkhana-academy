@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1200px; height: 630px; }
+      body {
+        background: #0d1117;
+        color: #f3f6ff;
+        font-family: 'Poppins', 'Segoe UI', system-ui, sans-serif;
+        position: relative;
+        overflow: hidden;
+      }
+      /* neon grid — matches the hero */
+      .grid {
+        position: absolute; inset: 0; opacity: 0.06;
+        background-image:
+          linear-gradient(rgba(159,239,0,0.5) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(159,239,0,0.5) 1px, transparent 1px);
+        background-size: 60px 60px;
+      }
+      .glow1 { position: absolute; top: -160px; left: -120px; width: 560px; height: 560px; border-radius: 50%; background: #00a859; opacity: 0.16; filter: blur(140px); }
+      .glow2 { position: absolute; bottom: -220px; right: 80px; width: 480px; height: 480px; border-radius: 50%; background: #9fef00; opacity: 0.09; filter: blur(130px); }
+      .vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at 35% 45%, transparent 52%, rgba(5,8,14,0.6) 100%); }
+
+      .wrap { position: relative; height: 100%; width: 720px; padding-left: 80px; display: flex; flex-direction: column; justify-content: center; }
+      .brand { display: flex; align-items: center; gap: 14px; margin-bottom: 34px; }
+      .sq { width: 30px; height: 30px; background: #00a859; border-radius: 4px; box-shadow: 0 0 22px rgba(0,168,89,0.5); }
+      .brandtext { font-weight: 800; font-size: 28px; letter-spacing: -0.02em; }
+      .brandtext span { color: #9aa5bf; font-weight: 600; }
+
+      h1 { font-size: 50px; font-weight: 900; line-height: 1.08; letter-spacing: -0.03em; white-space: nowrap; }
+      h1 .g { background: linear-gradient(90deg, #00a859, #9fef00, #00a859); -webkit-background-clip: text; background-clip: text; color: transparent; }
+      .sub { margin-top: 24px; font-size: 23px; color: #9aa5bf; }
+      .pill {
+        margin-top: 26px; font-size: 18px; color: #9fef00; align-self: flex-start;
+        border: 1px solid rgba(159,239,0,0.35); background: rgba(159,239,0,0.08);
+        padding: 8px 16px; border-radius: 999px;
+      }
+
+      .foot { position: absolute; left: 80px; bottom: 50px; font-size: 21px; color: #6e7a94; font-family: 'Consolas', monospace; }
+
+      /* the logo mark — featured on the right */
+      .mark { position: absolute; right: 70px; top: 50%; transform: translateY(-50%); width: 400px; height: 400px; display: flex; align-items: center; justify-content: center; }
+      .mark .markglow { position: absolute; width: 340px; height: 340px; border-radius: 50%; background: #00a859; opacity: 0.22; filter: blur(95px); }
+      .mark img { position: relative; width: 380px; height: auto; filter: drop-shadow(0 0 24px rgba(159,239,0,0.18)); }
+    </style>
+  </head>
+  <body>
+    <div class="grid"></div>
+    <div class="glow1"></div>
+    <div class="glow2"></div>
+    <div class="vignette"></div>
+
+    <div class="mark">
+      <div class="markglow"></div>
+      <img src="file:///C:/Users/ASUS/Documents/Cyberkhana-Academy/public/assets/brand/logo1.png" alt="" />
+    </div>
+
+    <div class="wrap">
+      <div class="brand">
+        <div class="sq"></div>
+        <div class="brandtext">CyberKhana <span>Academy</span></div>
+      </div>
+      <h1>Learn Cybersecurity.<br /><span class="g">From the Ground Up.</span></h1>
+      <div class="sub">Hands-on labs · Interactive simulations · AR / EN</div>
+      <div class="pill">Where cybersecurity speaks Arabic</div>
+    </div>
+
+    <div class="foot">academy.cyberkhana.tech</div>
+  </body>
+</html>

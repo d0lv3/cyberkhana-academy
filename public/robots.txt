@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://academy.cyberkhana.tech/sitemap.xml
+
+# What are you doing here you little brat ;)?

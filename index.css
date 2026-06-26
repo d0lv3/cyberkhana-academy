@@ -1,0 +1,202 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Montserrat:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── BRAND ROOT VARIABLES ──────────────────────────────────── */
+:root {
+  --brand-bg:              #0d1117;
+  --brand-surface:         #121a2a;
+  --brand-surface-raised:  #1a2332;
+  --brand-surface-hover:   #182235;
+  --brand-border:          #263248;
+  --brand-border-subtle:   #2a3346;
+  --brand-text:            #f3f6ff;
+  --brand-text-secondary:  #d2d7e3;
+  --brand-muted:           #9aa5bf;
+  --brand-faint:           #8390ac;
+  --brand-green:           #00a859;
+  --brand-green-deep:      #007a42;
+  --brand-green-neon:      #9fef00;
+  --brand-gold:            #f3a43a;
+  --font-mono:             'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+}
+
+/* ── BASE ──────────────────────────────────────────────────── */
+@layer base {
+  html, body, #root {
+    min-height: 100%;
+  }
+
+  body {
+    font-family: 'Poppins', 'Montserrat', sans-serif;
+    background-color: var(--brand-bg);
+    color: var(--brand-text);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  :lang(ar), [lang='ar'], [dir='rtl'] {
+    font-family: 'IBM Plex Sans Arabic', 'Poppins', sans-serif;
+    font-weight: 700;
+  }
+
+  /* Technical content always reads left-to-right regardless of page direction */
+  code, pre, kbd, samp, var {
+    direction: ltr !important;
+    unicode-bidi: isolate;
+    text-align: left;
+  }
+
+  [dir='rtl'] .font-mono,
+  [dir='rtl'] [style*='monospace'] {
+    direction: ltr;
+    unicode-bidi: isolate;
+    text-align: left;
+  }
+
+  /* Directional icons (back arrows etc.) mirror in RTL */
+  [dir='rtl'] .rtl-flip {
+    transform: scaleX(-1);
+  }
+
+  /* Infinite horizontal ticker (content must be duplicated once) */
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  .animate-marquee {
+    animation: marquee 32s linear infinite;
+  }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #0d1117; }
+  ::-webkit-scrollbar-thumb { background: #263248; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #354562; }
+}
+
+/* Landing headlines use Montserrat — applied inline on the elements
+   (see DISPLAY_FONT in components/landing) so it's immune to cascade-layer
+   ordering. Arabic glyphs fall through to IBM Plex automatically. */
+
+/* ── UTILITIES ─────────────────────────────────────────────── */
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: #121a2a; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: #263248; border-radius: 4px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #354562; }
+
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .text-neon { color: #9fef00; text-shadow: 0 0 12px rgba(159,239,0,0.5); }
+  .text-brand { color: #00a859; }
+
+  .glow-green  { box-shadow: 0 0 20px rgba(0,168,89,0.3); }
+  .glow-neon   { box-shadow: 0 0 20px rgba(159,239,0,0.25); }
+  .glow-blue   { box-shadow: 0 0 20px rgba(96,165,250,0.25); }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(100%); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes modalEnter {
+    from { opacity: 0; transform: scale(0.9) translateY(-10px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50%       { transform: translateY(-6px); }
+  }
+  @keyframes pulse-green {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(0,168,89,0.4); }
+    50%       { box-shadow: 0 0 0 8px rgba(0,168,89,0); }
+  }
+
+  .animate-modal-enter { animation: modalEnter 0.3s ease-out; }
+  .animate-slideIn     { animation: slideIn 0.3s ease-out; }
+  .animate-float       { animation: float 3s ease-in-out infinite; }
+  .animate-pulse-green { animation: pulse-green 2s infinite; }
+
+  .animation-delay-100 { animation-delay: 0.1s; }
+  .animation-delay-200 { animation-delay: 0.2s; }
+  .animation-delay-300 { animation-delay: 0.3s; }
+  .animation-delay-500 { animation-delay: 0.5s; }
+  .animation-delay-700 { animation-delay: 0.7s; }
+
+  /* ── Terminal / tactical identity ───────────────────────────
+     Mono eyebrow label used above section headings + hero. */
+  .text-eyebrow {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.24em;
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+  .font-mono-brand { font-family: var(--font-mono); }
+
+  /* Hairline rule — structural divider (Swiss). */
+  .hairline {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--brand-border), transparent);
+  }
+
+  /* Subtle film grain overlay — sits in an absolutely-positioned layer to
+     add atmosphere/depth over flat dark backgrounds. */
+  .grain-overlay {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 180px 180px;
+  }
+
+  /* Faint terminal scanlines. */
+  .scanlines {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      rgba(159, 239, 0, 0.04) 0px,
+      rgba(159, 239, 0, 0.04) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  }
+}
+
+/* ── Accessibility: respect reduced-motion ──────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-float,
+  .animate-pulse-green,
+  .animate-slideIn,
+  .animate-modal-enter {
+    animation: none !important;
+  }
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+}
