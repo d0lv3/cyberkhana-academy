@@ -147,12 +147,6 @@ const PodiumCard: React.FC<{ entry: PodiumEntry; highlight?: boolean; isMe?: boo
                 {lang === 'ar' ? 'نقطة' : 'pts'}
               </span>
             </p>
-
-            {/* Tier pill */}
-            <span className="mt-2 inline-flex items-center gap-1 rounded-full border border-[#33405c] bg-[#0e1522] px-2.5 py-0.5 text-[11px] font-semibold text-[#cbd5e1]">
-              <span className={`w-2 h-2 rotate-45 rounded-[2px] bg-gradient-to-r ${tier.grad}`} />
-              {tier.label[lang]}
-            </span>
           </div>
         </div>
       </motion.div>

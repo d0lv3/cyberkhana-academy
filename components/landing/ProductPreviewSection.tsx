@@ -85,9 +85,6 @@ const NetSimMockup: React.FC = () => (
         <span className="ml-2 text-[10px] font-semibold text-[#4d5a73]" style={{ fontFamily: MONO }}>
           packet-flow.sim
         </span>
-        <span className="ml-auto inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-[#00a859]/10 border border-[#00a859]/25 text-[#00a859] font-bold">
-          <span className="w-1 h-1 rounded-full bg-[#00a859] animate-pulse" /> LIVE
-        </span>
       </div>
 
       <div className="relative h-[240px]">

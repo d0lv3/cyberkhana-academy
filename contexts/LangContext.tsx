@@ -55,13 +55,13 @@ const translations: Record<string, Record<Lang, string>> = {
 
   // Skill progression — surfaces the in-app skill matrix + ranks
   'skills.heading': { en: 'Watch your mastery take shape', ar: 'شاهد إتقانك يتشكّل' },
-  'skills.subtitle': { en: 'Every lesson you finish feeds a live skill matrix across six security pillars — and climbs your rank from Initiate to Elite.', ar: 'كل درس تُنهيه يغذّي مصفوفة مهارات حيّة عبر ست ركائز أمنية — ويرفع رتبتك من مبتدئ إلى نخبة.' },
+  'skills.subtitle': { en: 'Every lesson you finish feeds a live skill matrix across six security pillars — so you can see exactly where you’re strong and what to train next.', ar: 'كل درس تُنهيه يغذّي مصفوفة مهارات حيّة عبر ست ركائز أمنية — لترى بالضبط أين تتفوّق وما الذي يجب أن تتدرّب عليه تالياً.' },
   'skills.matrixLabel': { en: 'Live Skill Matrix', ar: 'مصفوفة مهارات حيّة' },
   'skills.rankLabel': { en: 'Your Rank', ar: 'رتبتك' },
   'skills.point1.title': { en: 'Six security pillars', ar: 'ست ركائز أمنية' },
   'skills.point1.desc': { en: 'Offensive, defensive, networking, programming, systems, and fundamentals — each scored by what you complete.', ar: 'هجومي، دفاعي، شبكات، برمجة، أنظمة، وأساسيات — كلٌّ يُقيَّم بما تُكمله.' },
-  'skills.point2.title': { en: 'Climb the ranks', ar: 'اصعد في الرتب' },
-  'skills.point2.desc': { en: 'Your overall index maps to a rank you can show off — from Initiate all the way to Elite.', ar: 'مؤشرك العام يتحوّل إلى رتبة تفخر بها — من مبتدئ وصولاً إلى نخبة.' },
+  'skills.point2.title': { en: 'See your strengths', ar: 'اعرف نقاط قوّتك' },
+  'skills.point2.desc': { en: 'Your matrix highlights which pillars you’ve mastered and which still need work — so every session has a clear focus.', ar: 'تُبرز مصفوفتك الركائز التي أتقنتها وتلك التي ما زالت بحاجة إلى عمل — ليكون لكل جلسة هدف واضح.' },
 
   // Landing stats
   'landing.stats.tracks': { en: 'Learning Tracks', ar: 'مسارات تعليمية' },

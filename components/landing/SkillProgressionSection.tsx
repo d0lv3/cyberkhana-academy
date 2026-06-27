@@ -1,9 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Layers, Trophy } from 'lucide-react';
+import { Layers, Target } from 'lucide-react';
 import { useLang } from '../../contexts/LangContext';
 import SectionHeading from './SectionHeading';
-import { SKILL_PILLARS, rankForIndex } from '../../services/skillMatrixService';
+import { SKILL_PILLARS } from '../../services/skillMatrixService';
 
 /* ── Radar geometry (mirrors components/skills/SkillMatrix.tsx) ── */
 const CX = 150;
@@ -113,23 +113,12 @@ const ShowcaseRadar: React.FC<{ lang: 'en' | 'ar' }> = ({ lang }) => {
   );
 };
 
-/* ── Rank ladder: Initiate → … → Elite, ascending, with the sample rank lit ── */
-const RANK_LADDER = [
-  { key: 'initiate', label: { en: 'Initiate', ar: 'مبتدئ' }, color: '#6e7a94' },
-  { key: 'recruit', label: { en: 'Recruit', ar: 'مُجنَّد' }, color: '#f3c84b' },
-  { key: 'operative', label: { en: 'Operative', ar: 'عامل ميداني' }, color: '#f3a43a' },
-  { key: 'specialist', label: { en: 'Specialist', ar: 'متخصّص' }, color: '#60a5fa' },
-  { key: 'expert', label: { en: 'Expert', ar: 'خبير' }, color: '#2dd4bf' },
-  { key: 'elite', label: { en: 'Elite', ar: 'نخبة' }, color: '#9fef00' },
-];
-
 const SkillProgressionSection: React.FC = () => {
   const { t, lang } = useLang();
-  const currentRank = rankForIndex(SAMPLE_INDEX);
 
   const points = [
     { icon: Layers, title: t('skills.point1.title'), desc: t('skills.point1.desc') },
-    { icon: Trophy, title: t('skills.point2.title'), desc: t('skills.point2.desc') },
+    { icon: Target, title: t('skills.point2.title'), desc: t('skills.point2.desc') },
   ];
 
   return (
@@ -154,7 +143,7 @@ const SkillProgressionSection: React.FC = () => {
           >
             <div className="flex items-center justify-end gap-4 px-6 pt-5 pb-4 border-b border-[#1e293b]">
               <div className="text-end" dir="ltr">
-                <span className="text-2xl font-black leading-none" style={{ color: currentRank.color }}>
+                <span className="text-2xl font-black leading-none text-[#9fef00]">
                   {SAMPLE_INDEX}
                   <span className="text-sm text-[#6e7a94] font-bold">/100</span>
                 </span>
@@ -165,7 +154,7 @@ const SkillProgressionSection: React.FC = () => {
             </div>
           </motion.div>
 
-          {/* ── Copy + rank ladder ── */}
+          {/* ── Copy ── */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -185,58 +174,6 @@ const SkillProgressionSection: React.FC = () => {
                   </div>
                 </div>
               ))}
-            </div>
-
-            {/* Rank ladder */}
-            <div className="rounded-2xl border border-[#263248] bg-[#0a0f18] p-5">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-[#4d5a73] mb-4">
-                {t('skills.rankLabel')}
-              </p>
-              <div className="flex items-center gap-1.5" dir="ltr">
-                {RANK_LADDER.map((r, i) => {
-                  const isCurrent = r.key === currentRank.key;
-                  const reached = i <= RANK_LADDER.findIndex((x) => x.key === currentRank.key);
-                  return (
-                    <React.Fragment key={r.key}>
-                      {i > 0 && (
-                        <div
-                          className="h-0.5 flex-1 rounded-full"
-                          style={{ backgroundColor: reached ? `${r.color}66` : '#1e293b' }}
-                        />
-                      )}
-                      <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
-                        <motion.span
-                          initial={{ scale: 0.6, opacity: 0 }}
-                          whileInView={{ scale: 1, opacity: 1 }}
-                          viewport={{ once: true }}
-                          transition={{ delay: 0.2 + i * 0.08, duration: 0.4 }}
-                          className="rounded-full flex items-center justify-center font-black"
-                          style={{
-                            width: isCurrent ? 18 : 12,
-                            height: isCurrent ? 18 : 12,
-                            backgroundColor: reached ? r.color : '#1e293b',
-                            boxShadow: isCurrent ? `0 0 16px ${r.color}aa` : 'none',
-                          }}
-                        />
-                      </div>
-                    </React.Fragment>
-                  );
-                })}
-              </div>
-              <div className="flex items-center justify-between mt-3" dir="ltr">
-                <span className="text-[10px] font-semibold text-[#6e7a94]">
-                  {RANK_LADDER[0].label[lang]}
-                </span>
-                <span
-                  className="text-xs font-black uppercase tracking-wide"
-                  style={{ color: currentRank.color }}
-                >
-                  {currentRank.label[lang]}
-                </span>
-                <span className="text-[10px] font-semibold" style={{ color: RANK_LADDER[RANK_LADDER.length - 1].color }}>
-                  {RANK_LADDER[RANK_LADDER.length - 1].label[lang]}
-                </span>
-              </div>
             </div>
           </motion.div>
         </div>

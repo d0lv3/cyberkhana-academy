@@ -5,7 +5,6 @@ import {
   UserCircle,
   Mail,
   GraduationCap,
-  MapPin,
   CalendarDays,
   Pencil,
   Check,
@@ -63,7 +62,6 @@ const ProfilePage: React.FC = () => {
     displayName: user?.displayName ?? '',
     bio: user?.bio ?? '',
     university: user?.university ?? '',
-    country: user?.country ?? '',
   });
 
   if (!user) return null;
@@ -75,7 +73,6 @@ const ProfilePage: React.FC = () => {
       displayName: user.displayName ?? '',
       bio: user.bio ?? '',
       university: user.university ?? '',
-      country: user.country ?? '',
     });
     setEditing(true);
   };
@@ -85,7 +82,6 @@ const ProfilePage: React.FC = () => {
       displayName: form.displayName.trim() || user.displayName,
       bio: form.bio.trim(),
       university: form.university.trim(),
-      country: form.country.trim(),
     });
     setEditing(false);
   };
@@ -169,18 +165,11 @@ const ProfilePage: React.FC = () => {
                       className="w-full bg-[#1a2332] border border-[#263248] rounded-lg text-[#f3f6ff] placeholder-[#6e7a94] focus:outline-none focus:ring-2 focus:ring-[#00a859] focus:border-[#00a859] transition-all p-3 resize-none"
                     />
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <Input
-                      label={t('profile.university')}
-                      value={form.university}
-                      onChange={(e) => setForm((f) => ({ ...f, university: e.target.value }))}
-                    />
-                    <Input
-                      label={t('profile.country')}
-                      value={form.country}
-                      onChange={(e) => setForm((f) => ({ ...f, country: e.target.value }))}
-                    />
-                  </div>
+                  <Input
+                    label={t('profile.university')}
+                    value={form.university}
+                    onChange={(e) => setForm((f) => ({ ...f, university: e.target.value }))}
+                  />
                   <div className="flex items-center gap-2 pt-1">
                     <Button variant="primary" size="sm" onClick={save} leftIcon={<Check size={15} />}>
                       {t('profile.save')}
@@ -218,10 +207,6 @@ const ProfilePage: React.FC = () => {
                     <span className="inline-flex items-center gap-2">
                       <GraduationCap size={14} className="text-[#6e7a94]" />
                       {user.university || <span className="text-[#6e7a94]">{t('profile.notSet')}</span>}
-                    </span>
-                    <span className="inline-flex items-center gap-2">
-                      <MapPin size={14} className="text-[#6e7a94]" />
-                      {user.country || <span className="text-[#6e7a94]">{t('profile.notSet')}</span>}
                     </span>
                     <span className="inline-flex items-center gap-2">
                       <CalendarDays size={14} className="text-[#6e7a94]" /> {t('profile.memberSince')}{' '}
