@@ -4,7 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import { useLang } from '../../contexts/LangContext';
 import Button from '../ui/EnhancedButton';
 import HeroShowcase from './HeroShowcase';
-import { DISPLAY_FONT_STYLE } from './displayFont';
+import BrandLogo from '../ui/BrandLogo';
 
 interface HeroSectionProps {
   onGetStarted: () => void;
@@ -64,9 +64,6 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted, onLogin }) => {
     : ['Cybersecurity Essentials', 'Penetration Testing', 'Blue Teaming', 'Red Teaming', 'Network Security', 'Malware Analysis'];
   const typed = useTypewriter(words);
 
-  // First line plain, last line in the brand gradient
-  const headlineLines = t('hero.headline').split('\n');
-
   return (
     <section className="relative min-h-screen w-full flex items-center px-6 py-28 lg:py-0 overflow-hidden bg-[#0d1117]">
       {/* Neon grid */}
@@ -93,29 +90,20 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted, onLogin }) => {
       <div className="relative z-10 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-14 lg:gap-10 items-center">
         {/* ── Copy ── */}
         <div className="flex flex-col items-center lg:items-start text-center lg:text-start">
-          {/* Headline — last line carries the brand gradient */}
+          {/* Headline — Academy logo lockup */}
           <motion.h1
             custom={0}
             variants={fadeUp}
             initial="hidden"
             animate="visible"
-            style={DISPLAY_FONT_STYLE}
-            className="text-4xl sm:text-5xl xl:text-6xl font-black tracking-tight text-[#f3f6ff] leading-[1.1] mb-6"
+            className="mb-6"
           >
-            {headlineLines.map((line, i) =>
-              i === headlineLines.length - 1 && headlineLines.length > 1 ? (
-                <span
-                  key={i}
-                  className="block bg-gradient-to-r from-[#00a859] via-[#9fef00] to-[#00a859] bg-clip-text text-transparent pb-1"
-                >
-                  {line}
-                </span>
-              ) : (
-                <span key={i} className="block">
-                  {line}
-                </span>
-              )
-            )}
+            <BrandLogo
+              variant="full"
+              loading="eager"
+              alt="CyberKhana Academy — Learn Cybersecurity from the ground up"
+              className="h-20 sm:h-24 xl:h-28 w-auto object-contain mx-auto lg:mx-0"
+            />
           </motion.h1>
 
           {/* Subtitle */}

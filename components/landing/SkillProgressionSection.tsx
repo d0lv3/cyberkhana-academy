@@ -152,11 +152,7 @@ const SkillProgressionSection: React.FC = () => {
             transition={{ duration: 0.6 }}
             className="rounded-2xl border border-[#263248] bg-[#121a2a]/80 backdrop-blur-xl overflow-hidden shadow-2xl shadow-black/30"
           >
-            <div className="flex items-center justify-between gap-4 px-6 pt-5 pb-4 border-b border-[#1e293b]">
-              <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#9fef00]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#9fef00] animate-pulse" />
-                {t('skills.matrixLabel')}
-              </span>
+            <div className="flex items-center justify-end gap-4 px-6 pt-5 pb-4 border-b border-[#1e293b]">
               <div className="text-end" dir="ltr">
                 <span className="text-2xl font-black leading-none" style={{ color: currentRank.color }}>
                   {SAMPLE_INDEX}
