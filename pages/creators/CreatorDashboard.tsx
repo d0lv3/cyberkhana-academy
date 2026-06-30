@@ -306,7 +306,7 @@ const CreatorDashboard: React.FC = () => {
               key={type.title}
               padding="lg"
               hoverable
-              onClick={() => navigate(type.newRoute)}
+              onClick={() => navigate(type.manageRoute)}
               className="group relative overflow-hidden"
             >
               <div className="flex items-start justify-between mb-4">
@@ -323,18 +323,18 @@ const CreatorDashboard: React.FC = () => {
               <h3 className="text-base font-bold text-[#f3f6ff] mb-1.5">{type.title}</h3>
               <p className="text-xs text-[#9aa5bf] leading-relaxed mb-5">{type.description}</p>
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#00a859]">
-                  <Plus size={13} /> {t('studio.new')}
-                </span>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    navigate(type.manageRoute);
+                    navigate(type.newRoute);
                   }}
-                  className="ml-auto inline-flex items-center gap-1 text-[11px] font-medium text-[#6e7a94] hover:text-[#d2d7e3] transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#00a859] hover:text-[#00c267] transition-colors"
                 >
-                  {t('studio.manage')} <ArrowUpRight size={12} />
+                  <Plus size={13} /> {t('studio.new')}
                 </button>
+                <span className="ml-auto inline-flex items-center gap-1 text-[11px] font-medium text-[#6e7a94] group-hover:text-[#d2d7e3] transition-colors">
+                  {t('studio.manage')} <ArrowUpRight size={12} />
+                </span>
               </div>
             </EnhancedCard>
           ))}
