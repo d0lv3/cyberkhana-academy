@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Clock, Layers, FileText, Video } from 'lucide-react';
 import DifficultyBadge from '../ui/DifficultyBadge';
 import { useLang } from '../../contexts/LangContext';
-import { MODULE_DOMAIN_META, moduleDomain, type FundamentalModule } from '../../data/fundamentalsData';
+import { MODULE_DOMAIN_META, moduleDomain, coverImageSrc, type FundamentalModule } from '../../data/fundamentalsData';
 
 const contentTypeIcons = {
   video: Video,
@@ -55,7 +55,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ module: mod, index = 0 }) => {
       {/* Cover image / accent fallback */}
       {mod.coverImage ? (
         <img
-          src={mod.coverImage}
+          src={coverImageSrc(mod.coverImage)}
           alt={mod.title[lang]}
           loading="lazy"
           className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"

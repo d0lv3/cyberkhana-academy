@@ -39,7 +39,11 @@ export type FundamentalModule = {
   category: 'programming' | 'networking' | 'operating-systems' | 'general';
   /** Security domain shown as the module's category tag. Missing → treated as 'general'. */
   domain?: ModuleDomain;
-  /** Optional uploaded cover image (absolute URL) shown on the module tile. */
+  /**
+   * Optional cover shown on the module tile. Either an uploaded raster URL
+   * (PNG/JPEG/WebP/GIF) or raw SVG markup (uploaded `.svg` or pasted). Render
+   * it through `coverImageSrc()` so SVG is sandboxed.
+   */
   coverImage?: string;
   contentType: 'video' | 'text' | 'mixed';
   difficulty: 'Beginner' | 'Easy' | 'Medium' | 'Hard' | 'Expert';
@@ -52,6 +56,23 @@ export type FundamentalModule = {
   iconColor: string;
   courseData: any;
 };
+
+/** True when a cover value is raw SVG markup rather than an uploaded URL. */
+export function isSvgCover(coverImage?: string): boolean {
+  return !!coverImage && coverImage.trim().startsWith('<svg');
+}
+
+/**
+ * Resolve a module cover into a safe <img> src. Raw SVG markup is rendered as a
+ * sandboxed data-URI image (an SVG loaded via <img> can't execute scripts);
+ * an uploaded raster URL is used as-is.
+ */
+export function coverImageSrc(coverImage?: string): string | undefined {
+  if (!coverImage) return undefined;
+  const v = coverImage.trim();
+  if (v.startsWith('<svg')) return `data:image/svg+xml;utf8,${encodeURIComponent(v)}`;
+  return coverImage;
+}
 
 /** Calculate total course hours from video durations + quiz time (~1 min/question) */
 const calcLinuxHours = () => {
