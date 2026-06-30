@@ -15,7 +15,7 @@ import {
 import CreatorLayout from '../../components/creators/CreatorLayout';
 import BilingualInput from '../../components/creators/BilingualInput';
 import TagInput from '../../components/creators/TagInput';
-import MarkdownUploader from '../../components/creators/MarkdownUploader';
+import BilingualMarkdown from '../../components/creators/BilingualMarkdown';
 import MarkdownPreview from '../../components/creators/MarkdownPreview';
 import CoverImageUploader from '../../components/creators/CoverImageUploader';
 import QuizEditor, { cleanQuiz } from '../../components/creators/QuizEditor';
@@ -31,9 +31,12 @@ import {
 import {
   makeCreatorMeta,
   statusOf,
+  mdFor,
+  toLocalizedMarkdown,
   type ContentStatus,
   type CreatorFundamentalModule,
   type CreatorModuleChapter,
+  type LocalizedMarkdown,
   type QuizQuestion,
 } from '../../services/creatorTypes';
 import { MODULE_DOMAINS, MODULE_DOMAIN_META, type ModuleDomain } from '../../data/fundamentalsData';
@@ -53,12 +56,13 @@ const uid = (p: string) => `${p}-${Date.now()}-${Math.random().toString(36).slic
 const generateSlug = (title: string) =>
   title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').slice(0, 60);
 
-const newSection = () => ({ id: uid('sec'), title: 'New Section', subtitle: '', videoId: '', markdownContent: '' });
+const newSection = () => ({ id: uid('sec'), title: 'New Section', subtitle: '', videoId: '', markdownContent: { en: '', ar: '' } });
 const newChapter = (): CreatorModuleChapter => ({ id: uid('ch'), title: 'New Chapter', sections: [newSection()] });
 
 /** Rough mm:ss reading/watch time so the viewer sidebar shows something sane. */
-function estimateDuration(s: { markdownContent: string; videoId?: string }): string {
-  const words = (s.markdownContent || '').trim().split(/\s+/).filter(Boolean).length;
+function estimateDuration(s: { markdownContent: LocalizedMarkdown; videoId?: string }): string {
+  const body = mdFor(s.markdownContent, 'en') || mdFor(s.markdownContent, 'ar');
+  const words = body.trim().split(/\s+/).filter(Boolean).length;
   const mins = Math.max(1, Math.round(words / 180) + (s.videoId ? 4 : 0));
   return `${mins}:00`;
 }
@@ -94,6 +98,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
   const [selected, setSelected] = useState<{ ci: number; si: number } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [existing, setExisting] = useState<CreatorFundamentalModule | null>(null);
+  const [mdLang, setMdLang] = useState<'en' | 'ar'>('en');
 
   // Load existing
   useEffect(() => {
@@ -117,10 +122,15 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
         setStatus(statusOf(mod));
         // chapters: prefer structured, fall back to legacy single markdown
         if (mod.chapters && mod.chapters.length) {
-          setChapters(mod.chapters);
+          setChapters(
+            mod.chapters.map((ch) => ({
+              ...ch,
+              sections: ch.sections.map((s) => ({ ...s, markdownContent: toLocalizedMarkdown(s.markdownContent) })),
+            }))
+          );
         } else if (mod.markdownContent) {
           setChapters([
-            { id: uid('ch'), title: mod.title.en || 'Chapter 1', sections: [{ id: uid('sec'), title: 'Overview', subtitle: '', videoId: mod.videoId || '', markdownContent: mod.markdownContent }] },
+            { id: uid('ch'), title: mod.title.en || 'Chapter 1', sections: [{ id: uid('sec'), title: 'Overview', subtitle: '', videoId: mod.videoId || '', markdownContent: toLocalizedMarkdown(mod.markdownContent) }] },
           ]);
         } else {
           setChapters([newChapter()]);
@@ -192,18 +202,8 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
 
   const activeSection = selected ? chapters[selected.ci]?.sections[selected.si] : undefined;
 
-  /* ── Save ── */
-  const handleSave = () => {
-    if (!titleEn.trim()) {
-      toast('error', 'An English title is required.');
-      return;
-    }
-    if (totalSections === 0) {
-      toast('error', 'Add at least one section.');
-      return;
-    }
-
-    setIsSaving(true);
+  /* ── Build the full module object from the current editor state ── */
+  const buildModule = (): CreatorFundamentalModule => {
     const resolvedAuthorName = existing?.authorName || user?.displayName || author;
     // OS modules are pinned to their pillar; standalone modules are free-topic
     // ('general') — legacy categories are preserved on edit.
@@ -211,7 +211,9 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
 
     // Derive a content type from the sections
     const hasVideo = chapters.some((c) => c.sections.some((s) => s.videoId));
-    const hasText = chapters.some((c) => c.sections.some((s) => s.markdownContent.trim()));
+    const hasText = chapters.some((c) =>
+      c.sections.some((s) => (mdFor(s.markdownContent, 'en') || mdFor(s.markdownContent, 'ar')).trim())
+    );
     const contentType: CreatorFundamentalModule['contentType'] =
       hasVideo && hasText ? 'mixed' : hasVideo ? 'video' : 'text';
 
@@ -245,7 +247,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
       0
     );
 
-    const mod: CreatorFundamentalModule = {
+    return {
       id: existing?.id || uid('mod'),
       slug: slug || generateSlug(titleEn),
       title: { en: titleEn, ar: titleAr },
@@ -276,13 +278,49 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
           }
         : makeCreatorMeta(status, resolvedAuthorName)),
     };
+  };
 
-    saveModule(mod);
+  /* ── Save ── */
+  const handleSave = () => {
+    if (!titleEn.trim()) {
+      toast('error', 'An English title is required.');
+      return;
+    }
+    if (totalSections === 0) {
+      toast('error', 'Add at least one section.');
+      return;
+    }
+
+    setIsSaving(true);
+    saveModule(buildModule());
     toast('success', status === 'published' ? `${noun} published.` : `${noun} saved.`);
     setTimeout(() => {
       setIsSaving(false);
       navigate(listRoute);
     }, 500);
+  };
+
+  /* ── Preview as published: snapshot the current (unsaved) draft and open it
+   * in the real student viewer in a new tab. ── */
+  const handlePreview = () => {
+    if (!titleEn.trim()) {
+      toast('error', 'Add an English title before previewing.');
+      return;
+    }
+    if (totalSections === 0) {
+      toast('error', 'Add at least one section to preview.');
+      return;
+    }
+    try {
+      localStorage.setItem('academy-module-preview', JSON.stringify(buildModule()));
+      window.open(
+        `${window.location.origin}${window.location.pathname}#/fundamentals/module/__preview__`,
+        '_blank',
+        'noopener'
+      );
+    } catch {
+      toast('error', 'Could not open the preview.');
+    }
   };
 
   return (
@@ -293,6 +331,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
       backLabel={isOS ? 'OS & Modules' : 'Modules'}
       onSave={handleSave}
       isSaving={isSaving}
+      onPreview={handlePreview}
       status={status}
       onStatusChange={setStatus}
     >
@@ -516,10 +555,11 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-[#9aa5bf] mb-1.5">Markdown Content</label>
-                    <MarkdownUploader
-                      value={activeSection.markdownContent}
+                    <BilingualMarkdown
+                      value={toLocalizedMarkdown(activeSection.markdownContent)}
                       onChange={(v) => updateSection(selected.ci, selected.si, { markdownContent: v })}
-                      placeholder={'## Section heading\n\nExplain the topic here...'}
+                      lang={mdLang}
+                      onLangChange={setMdLang}
                     />
                   </div>
                 </div>
@@ -544,8 +584,9 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
               </EnhancedCard>
 
               <EnhancedCard padding="none" className="overflow-hidden">
-                <div className="px-4 py-3 border-b border-[#263248] bg-[#0b1019]">
+                <div className="px-4 py-3 border-b border-[#263248] bg-[#0b1019] flex items-center justify-between">
                   <span className="text-xs font-bold uppercase tracking-wider text-[#6e7a94]">Section Preview</span>
+                  <span className="text-[10px] font-semibold text-[#6e7a94]">{mdLang === 'ar' ? 'العربية' : 'English'}</span>
                 </div>
                 {activeSection.videoId && (
                   <div className="aspect-video border-b border-[#263248]">
@@ -559,7 +600,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
                   </div>
                 )}
                 <div className="p-6 max-h-[420px] overflow-y-auto custom-scrollbar">
-                  <MarkdownPreview content={activeSection.markdownContent} />
+                  <MarkdownPreview content={mdFor(activeSection.markdownContent, mdLang)} />
                 </div>
               </EnhancedCard>
             </>

@@ -6,6 +6,23 @@ import type { FundamentalModule } from '../data/fundamentalsData';
 import type { QuizQuestion } from '../data/linuxQuizData';
 import type { Difficulty } from '../types';
 
+/* ── Localized markdown ──
+ * Lesson bodies are bilingual: { en, ar } with an English fallback. Legacy
+ * content was a single string, so reads tolerate both shapes. */
+export type LocalizedMarkdown = string | { en: string; ar: string };
+
+export function mdFor(value: LocalizedMarkdown | undefined | null, lang: 'en' | 'ar'): string {
+  if (!value) return '';
+  if (typeof value === 'string') return value;
+  return value[lang] || value.en || value.ar || '';
+}
+
+export function toLocalizedMarkdown(value: LocalizedMarkdown | undefined | null): { en: string; ar: string } {
+  if (!value) return { en: '', ar: '' };
+  if (typeof value === 'string') return { en: value, ar: '' };
+  return { en: value.en || '', ar: value.ar || '' };
+}
+
 /* ── Content lifecycle ──
  * A community/Ambassador platform needs a quality gate, not a binary toggle.
  *   draft       → work in progress, only the author sees it
@@ -58,8 +75,8 @@ export interface CreatorModuleSection {
   subtitle?: string;
   /** Optional YouTube video id shown above the markdown */
   videoId?: string;
-  /** The section's markdown body */
-  markdownContent: string;
+  /** The section's markdown body (bilingual) */
+  markdownContent: LocalizedMarkdown;
   /** Optional end-of-section quiz (multiple choice). */
   quiz?: QuizQuestion[];
 }
@@ -78,7 +95,7 @@ export type CreatorFundamentalModule = FundamentalModule & CreatorMeta & {
   /** Structured, section-divided content (source of truth for editing) */
   chapters?: CreatorModuleChapter[];
   /** Legacy single-blob markdown (pre-sections modules) */
-  markdownContent?: string;
+  markdownContent?: LocalizedMarkdown;
   /** Legacy single video id */
   videoId?: string;
 };

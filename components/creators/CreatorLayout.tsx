@@ -18,6 +18,8 @@ interface CreatorLayoutProps {
   onStatusChange?: (status: ContentStatus) => void;
   /** Optional "preview as student" link (only meaningful once saved/published) */
   previewHref?: string;
+  /** Live "preview as published" action — previews the current draft, unsaved. */
+  onPreview?: () => void;
   children: React.ReactNode;
 }
 
@@ -31,6 +33,7 @@ const CreatorLayout: React.FC<CreatorLayoutProps> = ({
   status,
   onStatusChange,
   previewHref,
+  onPreview,
   children,
 }) => {
   const navigate = useNavigate();
@@ -55,7 +58,16 @@ const CreatorLayout: React.FC<CreatorLayoutProps> = ({
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
-          {previewHref && (
+          {onPreview && (
+            <button
+              type="button"
+              onClick={onPreview}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-[#9fef00] bg-[#9fef00]/10 border border-[#9fef00]/25 hover:bg-[#9fef00]/15 transition-all"
+            >
+              <ExternalLink size={13} /> {t('studio.preview')}
+            </button>
+          )}
+          {!onPreview && previewHref && (
             <a
               href={previewHref}
               target="_blank"

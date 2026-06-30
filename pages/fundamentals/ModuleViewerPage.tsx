@@ -27,6 +27,7 @@ import Button from '../../components/ui/EnhancedButton';
 import DifficultyBadge from '../../components/ui/DifficultyBadge';
 import CourseViewerSidebar, { SidebarModule } from '../../components/CourseViewerSidebar';
 import { useLang } from '../../contexts/LangContext';
+import { mdFor, type LocalizedMarkdown } from '../../services/creatorTypes';
 import { emitProgressChange, recordActivity } from '../../services/progressService';
 
 type Lecture = {
@@ -40,8 +41,8 @@ type Lecture = {
   quizQuestions?: QuizQuestion[];
   notes?: string[];
   resource?: string;
-  /** Creator section markdown body (rendered below any video) */
-  markdownContent?: string;
+  /** Creator section markdown body (rendered below any video), bilingual */
+  markdownContent?: LocalizedMarkdown;
 };
 
 type CourseModule = {
@@ -170,7 +171,19 @@ const ModuleViewerPage: React.FC = () => {
   const navigate = useNavigate();
   const { lang } = useLang();
 
-  const fundamentalModule = getViewableModuleBySlug(slug || '');
+  // `__preview__` renders an unsaved draft snapshotted by the creator studio.
+  const isPreview = slug === '__preview__';
+  const fundamentalModule = useMemo(() => {
+    if (isPreview) {
+      try {
+        const raw = localStorage.getItem('academy-module-preview');
+        return raw ? JSON.parse(raw) : null;
+      } catch {
+        return null;
+      }
+    }
+    return getViewableModuleBySlug(slug || '');
+  }, [slug, isPreview]);
   const course = fundamentalModule?.courseData as {
     id: string; title: string; description: string; modules: CourseModule[];
   } | undefined;
@@ -206,7 +219,7 @@ const ModuleViewerPage: React.FC = () => {
 
   // Remember this as the learner's most recent activity (dashboard "Jump back in").
   useEffect(() => {
-    if (fundamentalModule) {
+    if (fundamentalModule && !isPreview) {
       recordActivity({
         kind: 'os',
         route: `/fundamentals/module/${fundamentalModule.slug}`,
@@ -331,6 +344,11 @@ const ModuleViewerPage: React.FC = () => {
             <h1 className="text-sm font-bold text-[#f3f6ff] truncate max-w-[260px]">
               {fundamentalModule.title[lang]}
             </h1>
+            {isPreview && (
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[#9fef00]/15 text-[#9fef00] border border-[#9fef00]/30">
+                Preview
+              </span>
+            )}
           </div>
           <div className="hidden lg:flex items-center gap-2" dir="ltr">
             <DifficultyBadge difficulty={fundamentalModule.difficulty} />
@@ -410,9 +428,9 @@ const ModuleViewerPage: React.FC = () => {
               )}
 
               {/* Section markdown (creator modules) */}
-              {activeLecture.markdownContent && (
+              {mdFor(activeLecture.markdownContent, lang) && (
                 <div className="rounded-xl border border-[#263248] bg-[#121a2a] p-6 md:p-8">
-                  <LessonMarkdown content={activeLecture.markdownContent} />
+                  <LessonMarkdown content={mdFor(activeLecture.markdownContent, lang)} />
                 </div>
               )}
 
