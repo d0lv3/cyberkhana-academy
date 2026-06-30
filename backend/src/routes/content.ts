@@ -1,5 +1,7 @@
 import { Router } from 'express';
+import mongoose from 'mongoose';
 import ContentBucket from '../models/ContentBucket';
+import User from '../models/User';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 import { checkSafeJson } from '../utils/sanitize';
 import { CONTENT_BUCKETS, type ContentBucketKey } from '../types';
@@ -8,6 +10,13 @@ import { logger } from '../utils/logger';
 const router = Router();
 
 const MAX_ITEMS_PER_BUCKET = 300;
+
+/** Buckets an admin may moderate across all authors (the two "module" kinds). */
+const MODULE_BUCKETS: ContentBucketKey[] = ['os-modules', 'standalone-modules'];
+
+function isModuleBucket(value: string): value is ContentBucketKey {
+  return (MODULE_BUCKETS as readonly string[]).includes(value);
+}
 
 type AnyItem = Record<string, unknown>;
 
@@ -149,6 +158,96 @@ router.put('/:bucket', authenticate, requireRole('creator', 'admin'), async (req
   } catch (err) {
     logger.error('content.put_failed', { bucket, error: String(err) });
     res.status(500).json({ error: 'Could not save content' });
+  }
+});
+
+/* ── GET /api/content/admin/modules ── every PUBLISHED module across ALL
+ * authors, each annotated with its owner. Admin-only: the studio surfaces
+ * these so an admin can moderate/fix any creator's live module. */
+router.get('/admin/modules', authenticate, requireRole('admin'), async (_req: AuthRequest, res) => {
+  try {
+    const docs = await ContentBucket.find({ bucket: { $in: MODULE_BUCKETS } }).lean();
+
+    const ownerIds = [...new Set(docs.map((d) => String(d.ownerId)))];
+    const owners = await User.find({ _id: { $in: ownerIds } }).select('displayName').lean();
+    const nameById = new Map(owners.map((u) => [String(u._id), u.displayName as string]));
+
+    const items: AnyItem[] = [];
+    for (const doc of docs) {
+      for (const item of ((doc.items as AnyItem[]) ?? [])) {
+        if (!isPlainObject(item) || !isPublishedItem(item)) continue;
+        items.push({
+          ...item,
+          _ownerId: String(doc.ownerId),
+          _ownerName: nameById.get(String(doc.ownerId)) ?? 'Unknown',
+          _bucket: doc.bucket,
+        });
+      }
+    }
+    res.json({ items });
+  } catch (err) {
+    logger.error('content.admin_modules_failed', { error: String(err) });
+    res.status(500).json({ error: 'Could not load modules' });
+  }
+});
+
+/* ── PATCH /api/content/admin/module ── replace a single module in its
+ * author's bucket, IN PLACE (ownership preserved). Admin-only. The module must
+ * already exist in the named owner's bucket — admins edit existing modules,
+ * they never inject new items into another account. A wrong/forged ownerId
+ * simply 404s. */
+router.patch('/admin/module', authenticate, requireRole('admin'), async (req: AuthRequest, res) => {
+  const { ownerId, bucket, item } = (req.body ?? {}) as {
+    ownerId?: unknown;
+    bucket?: unknown;
+    item?: unknown;
+  };
+
+  if (typeof bucket !== 'string' || !isModuleBucket(bucket)) {
+    res.status(404).json({ error: 'Unknown module bucket' });
+    return;
+  }
+  if (typeof ownerId !== 'string' || !mongoose.isValidObjectId(ownerId)) {
+    res.status(400).json({ error: 'Invalid owner' });
+    return;
+  }
+  if (!isPlainObject(item) || typeof item.id !== 'string' || !item.id) {
+    res.status(400).json({ error: 'A module with an id is required' });
+    return;
+  }
+  const problem = validateBucketItems(bucket, [item]);
+  if (problem) {
+    res.status(400).json({ error: problem });
+    return;
+  }
+
+  try {
+    const doc = await ContentBucket.findOne({ ownerId, bucket });
+    if (!doc) {
+      res.status(404).json({ error: 'Module not found' });
+      return;
+    }
+    const list = doc.items as AnyItem[];
+    const idx = list.findIndex((i) => isPlainObject(i) && i.id === item.id);
+    if (idx < 0) {
+      res.status(404).json({ error: 'Module not found' });
+      return;
+    }
+
+    list[idx] = item;
+    doc.markModified('items');
+    await doc.save();
+
+    logger.info('content.admin_module_edited', {
+      by: String(req.user!._id),
+      owner: ownerId,
+      bucket,
+      itemId: item.id,
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    logger.error('content.admin_module_patch_failed', { error: String(err) });
+    res.status(500).json({ error: 'Could not save module' });
   }
 });
 

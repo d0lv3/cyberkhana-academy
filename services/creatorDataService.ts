@@ -21,6 +21,7 @@ import {
   authorOf,
 } from './creatorTypes';
 import { queueContentPush } from './syncService';
+import { api } from './api';
 
 /* ─────────────────────────────────────────────
  * Generic localStorage helpers
@@ -584,6 +585,40 @@ export function getAllCreatorContent(): StudioContentItem[] {
   }
 
   return items;
+}
+
+/* ═══════════════════════════════════════════════
+ * ADMIN — cross-author module moderation
+ * Admins may edit ANY published module. Editing happens IN PLACE in the
+ * original author's bucket (ownership preserved); the server enforces the
+ * admin role and that the module already exists, so these calls 403/404
+ * for everyone else.
+ * ═══════════════════════════════════════════════ */
+
+export type AdminModuleBucket = 'os-modules' | 'standalone-modules';
+
+export interface AdminPublishedModule extends CreatorFundamentalModule {
+  /** Author's user id — the bucket the edit is written back to. */
+  _ownerId: string;
+  /** Author's display name (for the studio list). */
+  _ownerName: string;
+  /** Which module bucket this lives in. */
+  _bucket: AdminModuleBucket;
+}
+
+/** Every published module across all authors (admin-only endpoint). */
+export async function fetchAllPublishedModulesForAdmin(): Promise<AdminPublishedModule[]> {
+  const { items } = await api.get<{ items: AdminPublishedModule[] }>('/content/admin/modules');
+  return items;
+}
+
+/** Save an admin edit back into the original author's bucket, in place. */
+export async function saveModuleAsAdmin(
+  ownerId: string,
+  bucket: AdminModuleBucket,
+  item: CreatorFundamentalModule
+): Promise<void> {
+  await api.patch('/content/admin/module', { ownerId, bucket, item });
 }
 
 /** Most recently updated content first. */

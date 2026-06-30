@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Plus,
   Trash2,
@@ -27,6 +27,8 @@ import {
   getOSModuleById,
   saveStandaloneModule,
   getStandaloneModuleById,
+  saveModuleAsAdmin,
+  type AdminModuleBucket,
 } from '../../services/creatorDataService';
 import {
   makeCreatorMeta,
@@ -52,6 +54,17 @@ const DIFFICULTIES: Difficulty[] = ['Beginner', 'Easy', 'Medium', 'Hard', 'Exper
 const inputCls =
   'w-full bg-[#0a0f18] border border-[#263248] rounded-lg px-3 py-2 text-sm text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#3d4a63]';
 
+/** Where the module list stashes the foreign module an admin chose to edit. */
+const ADMIN_EDIT_STASH = 'academy-admin-module-edit';
+
+interface AdminEditStash {
+  id: string;
+  ownerId: string;
+  ownerName: string;
+  bucket: AdminModuleBucket;
+  module: CreatorFundamentalModule;
+}
+
 const uid = (p: string) => `${p}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 const generateSlug = (title: string) =>
   title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').slice(0, 60);
@@ -69,11 +82,14 @@ function estimateDuration(s: { markdownContent: LocalizedMarkdown; videoId?: str
 
 const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast, ToastContainer } = useToast();
   const { user } = useAuth();
   const isEditing = !!id;
   const isOS = kind === 'os';
+  // Admin editing another author's published module (in place, ownership kept).
+  const isAdminEdit = searchParams.get('admin') === '1' && user?.role === 'admin';
 
   const getById = isOS ? getOSModuleById : getStandaloneModuleById;
   const saveModule = isOS ? saveOSModule : saveStandaloneModule;
@@ -99,11 +115,37 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [existing, setExisting] = useState<CreatorFundamentalModule | null>(null);
   const [mdLang, setMdLang] = useState<'en' | 'ar'>('en');
+  const [adminCtx, setAdminCtx] = useState<{
+    ownerId: string;
+    ownerName: string;
+    bucket: AdminModuleBucket;
+  } | null>(null);
 
   // Load existing
   useEffect(() => {
     if (id) {
-      const mod = getById(id);
+      // Admin editing a foreign module: the list page stashed the full module
+      // (+ its owner) in sessionStorage. Fall back to a normal own-bucket load.
+      let mod: CreatorFundamentalModule | undefined;
+      if (isAdminEdit) {
+        try {
+          const raw = sessionStorage.getItem(ADMIN_EDIT_STASH);
+          const stash: AdminEditStash | null = raw ? JSON.parse(raw) : null;
+          if (stash && stash.id === id && stash.module) {
+            mod = stash.module;
+            setAdminCtx({ ownerId: stash.ownerId, ownerName: stash.ownerName, bucket: stash.bucket });
+          }
+        } catch {
+          /* fall through to own-bucket load */
+        }
+        if (!mod) {
+          toast('error', 'Could not open this module for editing. Open it again from the list.');
+          navigate(listRoute);
+          return;
+        }
+      } else {
+        mod = getById(id);
+      }
       if (mod) {
         setExisting(mod);
         setTitleEn(mod.title.en);
@@ -281,7 +323,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
   };
 
   /* ── Save ── */
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!titleEn.trim()) {
       toast('error', 'An English title is required.');
       return;
@@ -292,7 +334,26 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
     }
 
     setIsSaving(true);
-    saveModule(buildModule());
+    const built = buildModule();
+
+    // Admin edit: write back into the original author's bucket via the server.
+    if (adminCtx) {
+      try {
+        await saveModuleAsAdmin(adminCtx.ownerId, adminCtx.bucket, built);
+        sessionStorage.removeItem(ADMIN_EDIT_STASH);
+        toast('success', status === 'published' ? `${noun} published.` : `${noun} saved.`);
+        setTimeout(() => {
+          setIsSaving(false);
+          navigate(listRoute);
+        }, 500);
+      } catch (err) {
+        setIsSaving(false);
+        toast('error', err instanceof Error ? err.message : 'Could not save this module.');
+      }
+      return;
+    }
+
+    saveModule(built);
     toast('success', status === 'published' ? `${noun} published.` : `${noun} saved.`);
     setTimeout(() => {
       setIsSaving(false);
@@ -336,6 +397,18 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
       onStatusChange={setStatus}
     >
       <ToastContainer />
+
+      {/* ── Admin moderation banner ── */}
+      {adminCtx && (
+        <div className="flex items-start gap-3 rounded-lg border border-[#f3a43a]/30 bg-[#f3a43a]/10 px-4 py-3">
+          <Layers size={16} className="text-[#f3a43a] mt-0.5 flex-shrink-0" />
+          <div className="text-xs text-[#d2d7e3]">
+            <span className="font-bold text-[#f3a43a]">Admin edit</span> — you're editing{' '}
+            <span className="font-semibold text-[#f3f6ff]">{adminCtx.ownerName}</span>'s published
+            module. Authorship is kept; saving updates the live module for everyone.
+          </div>
+        </div>
+      )}
 
       {/* ── Metadata ── */}
       <EnhancedCard padding="lg">

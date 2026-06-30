@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit3, Trash2, Eye, EyeOff, Clock, Layers, Lock, User } from 'lucide-react';
+import { Plus, Edit3, Trash2, Eye, EyeOff, Clock, Layers, Lock, User, ShieldCheck } from 'lucide-react';
 import EnhancedCard from '../../components/ui/EnhancedCard';
 import Button from '../../components/ui/EnhancedButton';
 import DifficultyBadge from '../../components/ui/DifficultyBadge';
@@ -8,17 +8,50 @@ import CreatorLayout from '../../components/creators/CreatorLayout';
 import StatusBadge from '../../components/creators/StatusBadge';
 import { confirmDialog } from '../../components/ui/ConfirmHost';
 import { useLang } from '../../contexts/LangContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { fundamentalModules } from '../../data/fundamentalsData';
-import { getCreatorOSModules, deleteOSModule, saveOSModule } from '../../services/creatorDataService';
+import {
+  getCreatorOSModules,
+  deleteOSModule,
+  saveOSModule,
+  fetchAllPublishedModulesForAdmin,
+  type AdminPublishedModule,
+} from '../../services/creatorDataService';
 import { statusOf, authorOf } from '../../services/creatorTypes';
+
+/** Stash a foreign module + its owner, then open it in the editor (admin mode). */
+function openAdminEdit(
+  navigate: ReturnType<typeof useNavigate>,
+  mod: AdminPublishedModule,
+  editRoute: string
+): void {
+  const { _ownerId, _ownerName, _bucket, ...clean } = mod;
+  sessionStorage.setItem(
+    'academy-admin-module-edit',
+    JSON.stringify({ id: mod.id, ownerId: _ownerId, ownerName: _ownerName, bucket: _bucket, module: clean })
+  );
+  navigate(`${editRoute}/${mod.id}?admin=1`);
+}
 
 const OSModulesCreator: React.FC = () => {
   const navigate = useNavigate();
   const { t, lang } = useLang();
+  const { user } = useAuth();
   const [refreshKey, setRefreshKey] = useState(0);
 
   const staticModules = fundamentalModules.filter((m) => m.category === 'operating-systems');
   const creatorModules = getCreatorOSModules();
+
+  // Admin-only: every published OS module by other authors.
+  const [foreign, setForeign] = useState<AdminPublishedModule[]>([]);
+  useEffect(() => {
+    if (user?.role !== 'admin') return;
+    fetchAllPublishedModulesForAdmin()
+      .then((items) =>
+        setForeign(items.filter((m) => m._bucket === 'os-modules' && m._ownerId !== user._id))
+      )
+      .catch(() => setForeign([]));
+  }, [user, refreshKey]);
 
   const handleDelete = async (id: string) => {
     if (
@@ -187,6 +220,55 @@ const OSModulesCreator: React.FC = () => {
           ))
         )}
       </div>
+
+      {/* ── Admin: every published OS module (any author) ── */}
+      {user?.role === 'admin' && foreign.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <ShieldCheck size={14} className="text-[#f3a43a]" />
+            <h2 className="text-sm font-bold text-[#6e7a94] uppercase tracking-wider">
+              {lang === 'ar' ? 'كل وحدات الأنظمة المنشورة' : 'All published OS modules'} ({foreign.length})
+            </h2>
+          </div>
+          <p className="text-xs text-[#6e7a94] -mt-1">
+            {lang === 'ar'
+              ? 'كمشرف، يمكنك تعديل أي وحدة منشورة. تبقى ملكية المؤلف كما هي.'
+              : 'As an admin you can edit any published module. The original author is kept.'}
+          </p>
+
+          {foreign.map((mod) => (
+            <EnhancedCard key={`${mod._ownerId}-${mod.id}`} padding="none" hoverable className="overflow-hidden group">
+              <div className="h-1" style={{ backgroundColor: mod.iconColor }} />
+              <div className="flex items-center gap-4 px-5 py-4">
+                <div className="w-10 h-10 rounded-lg bg-[#f3a43a]/10 border border-[#f3a43a]/20 flex items-center justify-center flex-shrink-0">
+                  <Eye size={16} className="text-[#f3a43a]" />
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-bold text-[#f3f6ff] truncate">{mod.title.en || t('studio.untitled')}</h3>
+                  <p className="text-xs text-[#6e7a94] truncate mt-0.5">{mod.description.en || t('studio.noDescription')}</p>
+                </div>
+
+                <div className="flex items-center gap-2 flex-shrink-0" dir="ltr">
+                  <span className="hidden md:flex text-[10px] font-medium text-[#4d5a73] items-center gap-1">
+                    <User size={10} /> {mod._ownerName}
+                  </span>
+                  <DifficultyBadge difficulty={mod.difficulty} />
+                  <StatusBadge status={statusOf(mod)} />
+
+                  <button
+                    onClick={() => openAdminEdit(navigate, mod, '/creators/os-modules/edit')}
+                    title={lang === 'ar' ? 'تعديل (مشرف)' : 'Edit as admin'}
+                    className="w-7 h-7 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#f3a43a] hover:bg-[#f3a43a]/10 transition-all"
+                  >
+                    <Edit3 size={13} />
+                  </button>
+                </div>
+              </div>
+            </EnhancedCard>
+          ))}
+        </div>
+      )}
     </CreatorLayout>
   );
 };
