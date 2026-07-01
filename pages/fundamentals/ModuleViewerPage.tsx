@@ -20,6 +20,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { getViewableModuleBySlug } from '../../data/modulesData';
+import { moduleViewerPath } from '../../data/fundamentalsData';
 import LessonMarkdown from '../../components/ui/LessonMarkdown';
 import quizBank, { QuizQuestion } from '../../data/linuxQuizData';
 import ProgressBar from '../../components/ui/ProgressBar';
@@ -222,7 +223,7 @@ const ModuleViewerPage: React.FC = () => {
     if (fundamentalModule && !isPreview) {
       recordActivity({
         kind: 'os',
-        route: `/fundamentals/module/${fundamentalModule.slug}`,
+        route: moduleViewerPath(fundamentalModule),
         title: fundamentalModule.title,
       });
     }

@@ -113,7 +113,18 @@ function AppRoutes() {
         <Route path="/privacy" element={<LegalPage kind="privacy" />} />
         <Route path="/terms" element={<LegalPage kind="terms" />} />
 
-        {/* Module viewer — full-screen, outside AppLayout */}
+        {/* Module viewer — full-screen, outside AppLayout.
+         * Standalone (Modules-hub) modules use /modules/:slug; fundamentals
+         * modules use /fundamentals/module/:slug. Both render the same page,
+         * and the fundamentals path stays a working alias for old links. */}
+        <Route
+          path="/modules/:slug"
+          element={
+            <AuthGate>
+              <ModuleViewerPage />
+            </AuthGate>
+          }
+        />
         <Route
           path="/fundamentals/module/:slug"
           element={

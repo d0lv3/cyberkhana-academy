@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Clock, Layers, FileText, Video } from 'lucide-react';
 import DifficultyBadge from '../ui/DifficultyBadge';
 import { useLang } from '../../contexts/LangContext';
-import { MODULE_DOMAIN_META, moduleDomain, coverImageSrc, type FundamentalModule } from '../../data/fundamentalsData';
+import { MODULE_DOMAIN_META, moduleDomain, coverImageSrc, moduleViewerPath, type FundamentalModule } from '../../data/fundamentalsData';
 
 const contentTypeIcons = {
   video: Video,
@@ -34,7 +34,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ module: mod, index = 0 }) => {
   const ContentIcon = contentTypeIcons[mod.contentType];
   const domain = MODULE_DOMAIN_META[moduleDomain(mod)];
 
-  const open = () => navigate(`/fundamentals/module/${mod.slug}`);
+  const open = () => navigate(moduleViewerPath(mod));
 
   return (
     <motion.div

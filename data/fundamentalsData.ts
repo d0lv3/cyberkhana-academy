@@ -141,6 +141,16 @@ export const fundamentalModules: FundamentalModule[] = [
 export const moduleDomain = (m: Pick<FundamentalModule, 'domain'>): ModuleDomain =>
   m.domain ?? 'general';
 
+/**
+ * Canonical viewer route for a module. Standalone modules (category 'general',
+ * surfaced in the Modules hub) live under /modules; fundamentals-pillar modules
+ * (programming / networking / operating-systems) under /fundamentals/module.
+ * The old /fundamentals/module/:slug route stays a working alias for both.
+ */
+export function moduleViewerPath(m: Pick<FundamentalModule, 'category' | 'slug'>): string {
+  return m.category === 'general' ? `/modules/${m.slug}` : `/fundamentals/module/${m.slug}`;
+}
+
 export const getFundamentalsByCategory = (category: FundamentalModule['category']) =>
   mergeFundamentalModules(fundamentalModules).filter((m) => m.category === category);
 
