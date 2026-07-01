@@ -363,14 +363,22 @@ export function getOSModuleById(id: string): CreatorFundamentalModule | undefine
  * "networking" module under Fundamentals → Networking, etc.
  */
 export function mergeFundamentalModules(staticModules: FundamentalModule[]): FundamentalModule[] {
-  const seen = new Set(staticModules.map((m) => m.id));
+  const published = [...getPublishedCreatorOSModules(), ...getPublishedStandaloneModules()];
+
+  // A published creator module sharing a built-in's id OVERRIDES the static one
+  // (an admin edited the built-in course; the DB copy is now the source).
+  const overrideById = new Map(published.map((m) => [m.id, m]));
+  const merged = staticModules.map((m) => overrideById.get(m.id) ?? m);
+
+  const staticIds = new Set(staticModules.map((m) => m.id));
+  const seen = new Set<string>();
   const additional: FundamentalModule[] = [];
-  for (const mod of [...getPublishedCreatorOSModules(), ...getPublishedStandaloneModules()]) {
-    if (seen.has(mod.id)) continue;
+  for (const mod of published) {
+    if (staticIds.has(mod.id) || seen.has(mod.id)) continue;
     seen.add(mod.id);
     additional.push(mod);
   }
-  return [...staticModules, ...additional];
+  return [...merged, ...additional];
 }
 
 /* ═══════════════════════════════════════════════

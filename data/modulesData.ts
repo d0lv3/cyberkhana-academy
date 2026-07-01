@@ -19,15 +19,18 @@ import {
 export function getAllModules(): FundamentalModule[] {
   // Static OS modules always appear
   const staticOSModules = fundamentalModules.filter((m) => m.category === 'operating-systems');
-  
+
   // Creator-authored modules for the modules page
   const creatorModules = getModulesPageData();
-  
-  // Deduplicate by id
-  const seen = new Set(staticOSModules.map((m) => m.id));
-  const additional = creatorModules.filter((m) => !seen.has(m.id));
 
-  return [...staticOSModules, ...additional];
+  // A creator module sharing a built-in's id overrides it (copy-on-write edit).
+  const overrideById = new Map(creatorModules.map((m) => [m.id, m]));
+  const mergedStatic = staticOSModules.map((m) => overrideById.get(m.id) ?? m);
+
+  const staticIds = new Set(staticOSModules.map((m) => m.id));
+  const additional = creatorModules.filter((m) => !staticIds.has(m.id));
+
+  return [...mergedStatic, ...additional];
 }
 
 /**
@@ -36,9 +39,10 @@ export function getAllModules(): FundamentalModule[] {
  * modules.
  */
 export function getViewableModuleBySlug(slug: string): FundamentalModule | undefined {
+  // Creator content first, so a published override of a built-in wins.
   return (
-    fundamentalModules.find((m) => m.slug === slug) ||
     getPublishedCreatorOSModules().find((m) => m.slug === slug) ||
-    getPublishedStandaloneModules().find((m) => m.slug === slug)
+    getPublishedStandaloneModules().find((m) => m.slug === slug) ||
+    fundamentalModules.find((m) => m.slug === slug)
   );
 }

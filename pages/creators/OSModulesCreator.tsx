@@ -9,7 +9,8 @@ import StatusBadge from '../../components/creators/StatusBadge';
 import { confirmDialog } from '../../components/ui/ConfirmHost';
 import { useLang } from '../../contexts/LangContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { fundamentalModules } from '../../data/fundamentalsData';
+import { fundamentalModules, type FundamentalModule } from '../../data/fundamentalsData';
+import { builtinToEditableModule } from '../../data/builtinCourse';
 import {
   getCreatorOSModules,
   deleteOSModule,
@@ -75,6 +76,36 @@ const OSModulesCreator: React.FC = () => {
     setRefreshKey((k) => k + 1);
   };
 
+  const isAdmin = user?.role === 'admin';
+
+  // A built-in is "overridden" once a published creator module shares its id
+  // (this admin's own, or any other author's). Hide it so it isn't listed twice.
+  const overriddenIds = new Set<string>([
+    ...creatorModules.map((m) => m.id),
+    ...foreign.map((m) => m.id),
+  ]);
+  const visibleStatic = staticModules.filter((m) => !overriddenIds.has(m.id));
+
+  /** Admin edits a built-in course. If an override already exists, edit that;
+   * otherwise convert the static course and open it in copy-on-write mode. */
+  const editBuiltin = (mod: FundamentalModule) => {
+    const own = creatorModules.find((m) => m.id === mod.id);
+    if (own) {
+      navigate(`/creators/os-modules/edit/${mod.id}`);
+      return;
+    }
+    const foreignOverride = foreign.find((m) => m.id === mod.id);
+    if (foreignOverride) {
+      openAdminEdit(navigate, foreignOverride, '/creators/os-modules/edit');
+      return;
+    }
+    sessionStorage.setItem(
+      'academy-builtin-module-edit',
+      JSON.stringify({ id: mod.id, module: builtinToEditableModule(mod) })
+    );
+    navigate(`/creators/os-modules/edit/${mod.id}?builtin=1`);
+  };
+
   return (
     <CreatorLayout
       title={lang === 'ar' ? 'أنظمة التشغيل والوحدات' : 'OS & Modules'}
@@ -97,12 +128,19 @@ const OSModulesCreator: React.FC = () => {
       </div>
 
       {/* Built-in modules */}
-      {staticModules.length > 0 && (
+      {visibleStatic.length > 0 && (
         <div className="space-y-3">
           <h2 className="text-sm font-bold text-[#6e7a94] uppercase tracking-wider">
             {t('studio.builtInModules')}
           </h2>
-          {staticModules.map((mod) => (
+          {isAdmin && (
+            <p className="text-xs text-[#6e7a94] -mt-1">
+              {lang === 'ar'
+                ? 'كمشرف، يمكنك تعديل الدورات المدمجة. أول حفظ ينشئ نسخة قابلة للتعديل تحل محل الأصل.'
+                : 'As an admin you can edit built-in courses. The first save creates an editable copy that replaces the original.'}
+            </p>
+          )}
+          {visibleStatic.map((mod) => (
             <EnhancedCard key={mod.id} padding="none" className="overflow-hidden">
               <div className="h-1" style={{ backgroundColor: mod.iconColor }} />
               <div className="flex items-center gap-4 px-5 py-4">
@@ -124,6 +162,15 @@ const OSModulesCreator: React.FC = () => {
                   <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#1a2332] border border-[#263248] text-[#6e7a94]">
                     {t('studio.builtIn')}
                   </span>
+                  {isAdmin && (
+                    <button
+                      onClick={() => editBuiltin(mod)}
+                      title={lang === 'ar' ? 'تعديل (مشرف)' : 'Edit as admin'}
+                      className="w-7 h-7 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#9fef00] hover:bg-[#9fef00]/10 transition-all"
+                    >
+                      <Edit3 size={13} />
+                    </button>
+                  )}
                 </div>
               </div>
             </EnhancedCard>

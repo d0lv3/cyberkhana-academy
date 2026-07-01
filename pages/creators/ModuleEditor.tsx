@@ -65,6 +65,14 @@ interface AdminEditStash {
   module: CreatorFundamentalModule;
 }
 
+/** Where the list stashes a built-in course converted for copy-on-write edit. */
+const BUILTIN_EDIT_STASH = 'academy-builtin-module-edit';
+
+interface BuiltinEditStash {
+  id: string;
+  module: CreatorFundamentalModule;
+}
+
 const uid = (p: string) => `${p}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 const generateSlug = (title: string) =>
   title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').slice(0, 60);
@@ -90,6 +98,8 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
   const isOS = kind === 'os';
   // Admin editing another author's published module (in place, ownership kept).
   const isAdminEdit = searchParams.get('admin') === '1' && user?.role === 'admin';
+  // Admin editing a built-in course: first save creates a DB override (copy-on-write).
+  const isBuiltinEdit = searchParams.get('builtin') === '1' && user?.role === 'admin';
 
   const getById = isOS ? getOSModuleById : getStandaloneModuleById;
   const saveModule = isOS ? saveOSModule : saveStandaloneModule;
@@ -127,7 +137,21 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
       // Admin editing a foreign module: the list page stashed the full module
       // (+ its owner) in sessionStorage. Fall back to a normal own-bucket load.
       let mod: CreatorFundamentalModule | undefined;
-      if (isAdminEdit) {
+      if (isBuiltinEdit) {
+        // Built-in course converted by the list page; save creates the override.
+        try {
+          const raw = sessionStorage.getItem(BUILTIN_EDIT_STASH);
+          const stash: BuiltinEditStash | null = raw ? JSON.parse(raw) : null;
+          if (stash && stash.id === id && stash.module) mod = stash.module;
+        } catch {
+          /* fall through */
+        }
+        if (!mod) {
+          toast('error', 'Could not open this course for editing. Open it again from the list.');
+          navigate(listRoute);
+          return;
+        }
+      } else if (isAdminEdit) {
         try {
           const raw = sessionStorage.getItem(ADMIN_EDIT_STASH);
           const stash: AdminEditStash | null = raw ? JSON.parse(raw) : null;
@@ -353,7 +377,11 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
       return;
     }
 
+    // Normal own-bucket save. Copy-on-write of a built-in course lands here too:
+    // it writes a fresh, published DB module (owned by this admin) that overrides
+    // the static original.
     saveModule(built);
+    if (isBuiltinEdit) sessionStorage.removeItem(BUILTIN_EDIT_STASH);
     toast('success', status === 'published' ? `${noun} published.` : `${noun} saved.`);
     setTimeout(() => {
       setIsSaving(false);
@@ -397,6 +425,18 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
       onStatusChange={setStatus}
     >
       <ToastContainer />
+
+      {/* ── Built-in copy-on-write banner ── */}
+      {isBuiltinEdit && !adminCtx && (
+        <div className="flex items-start gap-3 rounded-lg border border-[#9fef00]/30 bg-[#9fef00]/10 px-4 py-3">
+          <BookOpen size={16} className="text-[#9fef00] mt-0.5 flex-shrink-0" />
+          <div className="text-xs text-[#d2d7e3]">
+            <span className="font-bold text-[#9fef00]">Editing a built-in course</span> — saving
+            creates an editable copy that replaces the original everywhere. Existing student
+            progress is preserved.
+          </div>
+        </div>
+      )}
 
       {/* ── Admin moderation banner ── */}
       {adminCtx && (
