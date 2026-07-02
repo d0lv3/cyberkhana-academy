@@ -6,7 +6,8 @@ interface CardArtProps {
   kind: CardArtKind;
   /** Accent color the built-in art is tinted with. */
   color: string;
-  /** Raw uploaded SVG markup; when present it replaces the built-in art. */
+  /** Creator cover: raw SVG markup OR an uploaded image URL. Either replaces
+   * the built-in art. */
   svg?: string;
   /** Short glyph drawn large behind the code window (e.g. "Py", "C", "$_"). */
   glyph?: string;
@@ -34,12 +35,16 @@ function blend(hex: string, target: string, t: number): string {
 const CardArt: React.FC<CardArtProps> = ({ kind, color, svg, glyph, className = '' }) => {
   const uid = useId().replace(/:/g, '');
 
-  // Creator-supplied SVG → safe data-URI image.
-  if (svg && svg.trim().startsWith('<svg')) {
-    const dataUri = `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+  // Creator-supplied cover: SVG markup becomes a sandboxed data-URI image (a
+  // data URI can't execute scripts); an uploaded raster is shown by its URL.
+  const cover = svg?.trim();
+  if (cover) {
+    const src = cover.startsWith('<svg')
+      ? `data:image/svg+xml;utf8,${encodeURIComponent(cover)}`
+      : cover;
     return (
       <img
-        src={dataUri}
+        src={src}
         alt=""
         aria-hidden
         className={`absolute inset-0 h-full w-full object-cover ${className}`}

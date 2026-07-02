@@ -8,6 +8,10 @@ interface CoverImageUploaderProps {
   onChange: (cover: string) => void;
   /** Accent color used for the empty-state preview tint. */
   accent?: string;
+  /** Field label (defaults to "Cover Image"). */
+  label?: string;
+  /** Where the cover appears, e.g. "module tile" (used in the helper line). */
+  shownOn?: string;
 }
 
 /** Validate pasted/uploaded SVG markup (rendered sandboxed, but keep it sane). */
@@ -32,6 +36,8 @@ const CoverImageUploader: React.FC<CoverImageUploaderProps> = ({
   value,
   onChange,
   accent = '#34d399',
+  label = 'Cover Image',
+  shownOn = 'the module tile',
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -107,7 +113,7 @@ const CoverImageUploader: React.FC<CoverImageUploaderProps> = ({
 
   return (
     <div>
-      <label className="block text-xs font-semibold text-[#9aa5bf] mb-1.5">Cover Image</label>
+      <label className="block text-xs font-semibold text-[#9aa5bf] mb-1.5">{label}</label>
       <div className="flex items-stretch gap-3">
         {/* Square preview — matches the module tile */}
         <div
@@ -157,7 +163,7 @@ const CoverImageUploader: React.FC<CoverImageUploaderProps> = ({
             )}
           </div>
           <p className="text-[11px] text-[#6e7a94]">
-            PNG, JPEG, WebP, GIF (max 2 MB) or SVG (max ~200 KB) · shown on the module tile
+            PNG, JPEG, WebP, GIF (max 2 MB) or SVG (max ~200 KB) · shown on {shownOn}
           </p>
           {error && (
             <p className="flex items-center gap-1.5 text-[11px] text-red-400">

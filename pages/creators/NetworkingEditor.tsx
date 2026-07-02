@@ -4,7 +4,7 @@ import { FileText, Network, Eye, HelpCircle } from 'lucide-react';
 import CreatorLayout from '../../components/creators/CreatorLayout';
 import BilingualInput from '../../components/creators/BilingualInput';
 import TagInput from '../../components/creators/TagInput';
-import CoverSvgUploader from '../../components/creators/CoverSvgUploader';
+import CoverImageUploader from '../../components/creators/CoverImageUploader';
 import MarkdownUploader from '../../components/creators/MarkdownUploader';
 import MarkdownPreview from '../../components/creators/MarkdownPreview';
 import QuizEditor, { cleanQuiz } from '../../components/creators/QuizEditor';
@@ -250,7 +250,13 @@ const NetworkingEditor: React.FC = () => {
 
                 <TagInput value={tags} onChange={setTags} label="Tags" placeholder="Add a tag..." />
 
-                <CoverSvgUploader value={coverSvg} onChange={setCoverSvg} accent="#60a5fa" kind="network" />
+                <CoverImageUploader
+                  value={coverSvg}
+                  onChange={setCoverSvg}
+                  accent="#60a5fa"
+                  label="Cover"
+                  shownOn="the lesson card"
+                />
               </div>
             </EnhancedCard>
 

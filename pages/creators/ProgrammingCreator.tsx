@@ -5,7 +5,7 @@ import EnhancedCard from '../../components/ui/EnhancedCard';
 import Button from '../../components/ui/EnhancedButton';
 import CreatorLayout from '../../components/creators/CreatorLayout';
 import StatusBadge from '../../components/creators/StatusBadge';
-import CoverSvgUploader from '../../components/creators/CoverSvgUploader';
+import CoverImageUploader from '../../components/creators/CoverImageUploader';
 import { confirmDialog } from '../../components/ui/ConfirmHost';
 import { useLang } from '../../contexts/LangContext';
 import { getProgrammingLanguages } from '../../data/programming';
@@ -170,12 +170,12 @@ const ProgrammingCreator: React.FC = () => {
               {/* Cover-art editor */}
               {(coverOpen[lang.slug] ?? false) && (
                 <div className="mt-4 pt-4 border-t border-[#263248]">
-                  <CoverSvgUploader
+                  <CoverImageUploader
                     value={lang.coverSvg ?? ''}
-                    onChange={(svg) => handleSaveCover(lang.slug, svg)}
+                    onChange={(cover) => handleSaveCover(lang.slug, cover)}
                     accent={lang.color}
-                    kind="code"
-                    glyph={glyphFor(lang)}
+                    label={uiLang === 'ar' ? 'غلاف اللغة' : 'Language Cover'}
+                    shownOn={uiLang === 'ar' ? 'بطاقة اللغة' : 'the language card'}
                   />
                 </div>
               )}
