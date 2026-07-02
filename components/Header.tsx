@@ -1,5 +1,5 @@
 import React from 'react';
-import { LogOut, Globe, Menu } from 'lucide-react';
+import { LogOut, Globe, Menu, UserCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import BrandLogo from './ui/BrandLogo';
 import { useAuth } from '../contexts/AuthContext';
@@ -49,6 +49,16 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
               </p>
             </div>
           )}
+
+          {/* Profile */}
+          <Link
+            to="/profile"
+            aria-label={lang === 'ar' ? 'الملف الشخصي' : 'Profile'}
+            title={lang === 'ar' ? 'الملف الشخصي' : 'Profile'}
+            className="w-9 h-9 rounded-lg bg-[#121a2a] border border-[#263248] flex items-center justify-center text-[#8390ac] hover:text-[#00a859] hover:border-[#00a859]/40 transition-all"
+          >
+            <UserCircle size={16} />
+          </Link>
 
           {/* Language toggle */}
           <button

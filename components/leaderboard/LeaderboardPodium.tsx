@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Crown, Medal, GraduationCap } from 'lucide-react';
 import { useLang } from '../../contexts/LangContext';
+import { universityLabel } from '../../data/iraqUniversities';
 
 export interface PodiumEntry {
   rank: number;
@@ -138,7 +139,12 @@ const PodiumCard: React.FC<{ entry: PodiumEntry; highlight?: boolean; isMe?: boo
 
             <p className="mt-1 inline-flex items-center gap-1 text-[11px] text-[#9aa5bf] max-w-[170px]">
               <GraduationCap size={11} className="flex-shrink-0" />
-              <span className="truncate">{entry.university || '—'}</span>
+              <span className="truncate">
+                {(() => {
+                  const u = universityLabel(entry.university, lang);
+                  return u.isSet && !u.isNotEnrolled ? u.text : '—';
+                })()}
+              </span>
             </p>
 
             <p className="mt-2 text-lg font-black" style={{ color: tier.accent }} dir="ltr">

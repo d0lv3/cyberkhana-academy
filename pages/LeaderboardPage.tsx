@@ -6,6 +6,7 @@ import LeaderboardPodium from '../components/leaderboard/LeaderboardPodium';
 import { useAuth } from '../contexts/AuthContext';
 import { useLang } from '../contexts/LangContext';
 import { api } from '../services/api';
+import { universityLabel, NOT_ENROLLED } from '../data/iraqUniversities';
 
 type Scope = 'overall' | 'monthly';
 
@@ -52,7 +53,9 @@ const LeaderboardPage: React.FC = () => {
         if (cancelled) return;
         setData(res);
         // Keep the dropdown populated regardless of the active filter.
-        if (res.universities.length) setUniversities(res.universities);
+        // Exclude the "not enrolled" sentinel — it isn't a real university.
+        const named = res.universities.filter((u) => u && u !== NOT_ENROLLED);
+        if (named.length) setUniversities(named);
       })
       .catch(() => {
         if (!cancelled) setData(null);
@@ -115,7 +118,7 @@ const LeaderboardPage: React.FC = () => {
           <option value="">{t('leaderboard.allUniversities')}</option>
           {universities.map((u) => (
             <option key={u} value={u}>
-              {u}
+              {universityLabel(u, lang).text || u}
             </option>
           ))}
         </select>
@@ -207,7 +210,7 @@ const LeaderboardPage: React.FC = () => {
                           </p>
                           {/* University on mobile (hidden column) */}
                           <p className="sm:hidden text-[11px] text-[#6e7a94] truncate inline-flex items-center gap-1">
-                            <GraduationCap size={11} /> {e.university || '—'}
+                            <GraduationCap size={11} /> {(() => { const u = universityLabel(e.university, lang); return u.isSet && !u.isNotEnrolled ? u.text : '—'; })()}
                           </p>
                         </div>
                       </div>
@@ -215,7 +218,7 @@ const LeaderboardPage: React.FC = () => {
                       {/* University (desktop) */}
                       <div className="hidden sm:flex items-center gap-1.5 text-xs text-[#9aa5bf] min-w-0">
                         <GraduationCap size={13} className="text-[#6e7a94] flex-shrink-0" />
-                        <span className="truncate">{e.university || '—'}</span>
+                        <span className="truncate">{(() => { const u = universityLabel(e.university, lang); return u.isSet && !u.isNotEnrolled ? u.text : '—'; })()}</span>
                       </div>
 
                       {/* Points */}

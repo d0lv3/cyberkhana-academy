@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import UniversityPrompt from './university/UniversityPrompt';
 
 const SIDEBAR_KEY = 'academy-sidebar-collapsed';
 
@@ -31,6 +32,9 @@ const AppLayout: React.FC = () => {
           </div>
         </main>
       </div>
+
+      {/* First-run university prompt — shows until the student chooses. */}
+      <UniversityPrompt />
     </div>
   );
 };

@@ -26,6 +26,8 @@ import { useLang } from '../contexts/LangContext';
 import { useOverallProgress, getTrackProgress, type TrackKey } from '../services/progressService';
 import { getTotalPoints } from '../services/pointsService';
 import SkillMatrix from '../components/skills/SkillMatrix';
+import UniversityPicker from '../components/university/UniversityPicker';
+import { universityLabel } from '../data/iraqUniversities';
 
 const TRACK_META: Record<
   TrackKey,
@@ -165,11 +167,16 @@ const ProfilePage: React.FC = () => {
                       className="w-full bg-[#1a2332] border border-[#263248] rounded-lg text-[#f3f6ff] placeholder-[#6e7a94] focus:outline-none focus:ring-2 focus:ring-[#00a859] focus:border-[#00a859] transition-all p-3 resize-none"
                     />
                   </div>
-                  <Input
-                    label={t('profile.university')}
-                    value={form.university}
-                    onChange={(e) => setForm((f) => ({ ...f, university: e.target.value }))}
-                  />
+                  <div>
+                    <label className="block text-sm font-medium text-[#d2d7e3] mb-2">
+                      {t('profile.university')}
+                    </label>
+                    <UniversityPicker
+                      value={form.university}
+                      onSelect={(v) => setForm((f) => ({ ...f, university: v }))}
+                      lang={lang}
+                    />
+                  </div>
                   <div className="flex items-center gap-2 pt-1">
                     <Button variant="primary" size="sm" onClick={save} leftIcon={<Check size={15} />}>
                       {t('profile.save')}
@@ -206,7 +213,10 @@ const ProfilePage: React.FC = () => {
                     </span>
                     <span className="inline-flex items-center gap-2">
                       <GraduationCap size={14} className="text-[#6e7a94]" />
-                      {user.university || <span className="text-[#6e7a94]">{t('profile.notSet')}</span>}
+                      {(() => {
+                        const uni = universityLabel(user.university, lang);
+                        return uni.isSet ? uni.text : <span className="text-[#6e7a94]">{t('profile.notSet')}</span>;
+                      })()}
                     </span>
                     <span className="inline-flex items-center gap-2">
                       <CalendarDays size={14} className="text-[#6e7a94]" /> {t('profile.memberSince')}{' '}
