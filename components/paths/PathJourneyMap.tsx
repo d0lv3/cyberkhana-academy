@@ -84,9 +84,7 @@ const PathJourneyMap: React.FC<PathJourneyMapProps> = ({ steps, states, nextInde
         {[
           [70, 74, 1.2], [280, 52, 1], [560, 120, 1.2], [500, 40, 1], [150, 196, 1.1], [610, 170, 1], [120, 132, 1.2],
         ].map(([x, y, r], i) => (
-          <circle key={`s${i}`} cx={x} cy={y} r={r} fill="#3d4f73">
-            <animate attributeName="opacity" values="0.2;0.8;0.2" dur={`${2.6 + (i % 4) * 0.8}s`} begin={`${i * 0.4}s`} repeatCount="indefinite" />
-          </circle>
+          <circle key={`s${i}`} cx={x} cy={y} r={r} fill="#3d4f73" opacity={0.5} />
         ))}
 
         {/* Climbing trails (drawn under the cubes) */}
@@ -107,9 +105,7 @@ const PathJourneyMap: React.FC<PathJourneyMapProps> = ({ steps, states, nextInde
               strokeDasharray="6 8"
               strokeLinecap="round"
               opacity={done ? 0.9 : 0.72}
-            >
-              <animate attributeName="stroke-dashoffset" from="28" to="0" dur="2.6s" repeatCount="indefinite" />
-            </path>
+            />
           );
         })}
 
@@ -123,18 +119,13 @@ const PathJourneyMap: React.FC<PathJourneyMapProps> = ({ steps, states, nextInde
           const cover = catalog.get(`${step.kind}:${step.refId}`)?.coverImage;
           const coverSrc = cover ? coverImageSrc(cover) : undefined;
           const clipId = `clip-${uid}-${i}`;
-          const bob = 6.2 + (i % 5) * 0.6;
 
           return (
             <g key={step.kind + step.refId} transform={`translate(${xOf(i)}, ${cyOf(i)})`}>
               <motion.g
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: st.available ? 1 : 0.55, scale: 1, y: [0, -6, 0] }}
-                transition={{
-                  opacity: { duration: 0.3 },
-                  scale: { duration: 0.35 },
-                  y: { delay: 0.15 * (i % 5), duration: bob, repeat: Infinity, ease: 'easeInOut' },
-                }}
+                initial={{ opacity: 0, scale: 0.92 }}
+                animate={{ opacity: st.available ? 1 : 0.55, scale: 1 }}
+                transition={{ duration: 0.35 }}
                 whileHover={st.available ? { scale: 1.06 } : undefined}
                 style={{ cursor: st.available ? 'pointer' : 'default', willChange: 'transform' }}
                 onClick={() => st.available && onOpen(i)}
@@ -151,13 +142,9 @@ const PathJourneyMap: React.FC<PathJourneyMapProps> = ({ steps, states, nextInde
                 <polygon points={TOP} fill={accent} opacity={isCurrent ? 0.22 : 0.13} />
                 <polygon points={TOP} fill="none" stroke={accent} strokeOpacity={0.85} strokeWidth={1.4} />
 
-                {/* Current step: pulsing beacon on the top face */}
+                {/* Current step: a static ring marks where you are */}
                 {isCurrent && st.available && (
-                  <ellipse cx={0} cy={0} rx={CW * 0.7} ry={CH * 0.7} fill="none" stroke={accent} strokeWidth={1.4}>
-                    <animate attributeName="rx" values={`${CW * 0.4};${CW * 0.98}`} dur="3s" repeatCount="indefinite" />
-                    <animate attributeName="ry" values={`${CH * 0.4};${CH * 0.98}`} dur="3s" repeatCount="indefinite" />
-                    <animate attributeName="stroke-opacity" values="0.55;0" dur="3s" repeatCount="indefinite" />
-                  </ellipse>
+                  <ellipse cx={0} cy={0} rx={CW * 0.82} ry={CH * 0.82} fill="none" stroke={accent} strokeWidth={1.4} strokeOpacity={0.4} />
                 )}
 
                 {/* Tile contact shadow */}
