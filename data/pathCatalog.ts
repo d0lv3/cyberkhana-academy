@@ -31,6 +31,7 @@ export function buildPathCatalog(): CatalogGroup[] {
     subtitle: `${m.difficulty} · ${m.totalLessons} lessons`,
     route: moduleViewerPath(m),
     accent: OS_ACCENT,
+    coverImage: m.coverImage,
   }));
 
   /* Networking lessons (merged) */

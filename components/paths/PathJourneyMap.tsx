@@ -1,0 +1,243 @@
+import React, { useId, useMemo } from 'react';
+import { motion } from 'framer-motion';
+import { coverImageSrc } from '../../data/fundamentalsData';
+import { buildCatalogIndex } from '../../data/pathCatalog';
+import type { PathStep } from '../../services/creatorTypes';
+import type { PathStepState } from '../../services/progressService';
+
+interface PathJourneyMapProps {
+  steps: PathStep[];
+  states: PathStepState[];
+  nextIndex: number;
+  color: string;
+  onOpen: (index: number) => void;
+}
+
+/* ── Layout ── */
+const VBW = 680;
+const LEFT_X = 210;
+const RIGHT_X = 470;
+const ROW_GAP = 158;
+const TOP_PAD = 124;
+const BOTTOM_PAD = 132;
+
+/* ── Isometric cube geometry (top-face half-width/height, side depth) ── */
+const CW = 58;
+const CH = 33;
+const CD = 32;
+const TOP = `0,${-CH} ${CW},0 0,${CH} ${-CW},0`;
+const LEFT = `${-CW},0 0,${CH} 0,${CH + CD} ${-CW},${CD}`;
+const RIGHT = `0,${CH} ${CW},0 ${CW},${CD} 0,${CH + CD}`;
+
+/* Floating cover tile */
+const TW = 104;
+const TH = 70;
+const TILE_X = -TW / 2;
+const TILE_Y = -114;
+
+const xOf = (i: number) => (i % 2 === 0 ? LEFT_X : RIGHT_X);
+
+function truncate(s: string, n = 22): string {
+  return s.length > n ? `${s.slice(0, n - 1)}…` : s;
+}
+
+/**
+ * PathJourneyMap — the path's curriculum as a climbing road of floating
+ * isometric cubes, alternating left/right up toward the finish. Each cube
+ * carries the referenced module's cover (module steps) or an accent tile with
+ * the step number; dashed trails link them and light up green as steps are
+ * completed. Desktop-only; the detail page keeps a vertical list for mobile.
+ */
+const PathJourneyMap: React.FC<PathJourneyMapProps> = ({ steps, states, nextIndex, color, onOpen }) => {
+  const uid = useId().replace(/:/g, '');
+  const catalog = useMemo(() => buildCatalogIndex(), []);
+  const n = steps.length;
+  const cyOf = (i: number) => TOP_PAD + (n - 1 - i) * ROW_GAP;
+  const totalH = TOP_PAD + Math.max(0, n - 1) * ROW_GAP + BOTTOM_PAD;
+
+  // Draw far (top) cubes first so nearer (bottom) ones overlap them.
+  const order = Array.from({ length: n }, (_, i) => i).reverse();
+
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-[#263248] bg-[#0a0f18]">
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(520px circle at 62% 6%, rgba(0,168,89,0.10), transparent 55%), radial-gradient(420px circle at 20% 88%, rgba(96,165,250,0.05), transparent 55%)',
+        }}
+      />
+      <svg viewBox={`0 0 ${VBW} ${totalH}`} className="relative h-auto w-full" role="img" aria-label="Learning path journey">
+        <defs>
+          <filter id={`blur-${uid}`} x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="6" />
+          </filter>
+        </defs>
+
+        {/* Ambient stars */}
+        {[
+          [70, 90, 1.3], [280, 60, 1], [560, 130, 1.3], [500, 40, 1], [150, 260, 1.2], [620, 360, 1.1], [90, 470, 1.3],
+        ].map(([x, y, r], i) => (
+          <circle key={`s${i}`} cx={x} cy={y} r={r} fill="#3d4f73">
+            <animate attributeName="opacity" values="0.2;0.85;0.2" dur={`${2.6 + (i % 4) * 0.8}s`} begin={`${i * 0.4}s`} repeatCount="indefinite" />
+          </circle>
+        ))}
+
+        {/* Climbing trails (drawn under the cubes) */}
+        {steps.slice(0, -1).map((_, i) => {
+          const x1 = xOf(i);
+          const y1 = cyOf(i) - CH;
+          const x2 = xOf(i + 1);
+          const y2 = cyOf(i + 1) + CH + CD;
+          const midY = (y1 + y2) / 2;
+          const done = states[i]?.complete;
+          return (
+            <path
+              key={`t${i}`}
+              d={`M ${x1} ${y1} C ${x1} ${midY}, ${x2} ${midY}, ${x2} ${y2}`}
+              fill="none"
+              stroke={done ? '#00a859' : '#33415e'}
+              strokeWidth={2}
+              strokeDasharray="7 9"
+              strokeLinecap="round"
+              opacity={done ? 0.9 : 0.72}
+            >
+              <animate attributeName="stroke-dashoffset" from="32" to="0" dur="2.6s" repeatCount="indefinite" />
+            </path>
+          );
+        })}
+
+        {/* Cubes */}
+        {order.map((i) => {
+          const step = steps[i];
+          const st = states[i] ?? { available: false, complete: false, route: step.route };
+          const isCurrent = i === nextIndex;
+          const isLast = i === n - 1;
+          const accent = step.accent || color;
+          const cover = catalog.get(`${step.kind}:${step.refId}`)?.coverImage;
+          const coverSrc = cover ? coverImageSrc(cover) : undefined;
+          const clipId = `clip-${uid}-${i}`;
+          const bob = 6.2 + (i % 5) * 0.6;
+
+          return (
+            <g key={step.kind + step.refId} transform={`translate(${xOf(i)}, ${cyOf(i)})`}>
+              <motion.g
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: st.available ? 1 : 0.55, scale: 1, y: [0, -7, 0] }}
+                transition={{
+                  opacity: { duration: 0.3 },
+                  scale: { duration: 0.35 },
+                  y: { delay: 0.15 * (i % 5), duration: bob, repeat: Infinity, ease: 'easeInOut' },
+                }}
+                whileHover={st.available ? { scale: 1.05 } : undefined}
+                style={{ cursor: st.available ? 'pointer' : 'default', willChange: 'transform' }}
+                onClick={() => st.available && onOpen(i)}
+                role="link"
+                aria-label={step.title}
+              >
+                {/* Soft glow under the cube */}
+                <ellipse cx={0} cy={CH + CD + 8} rx={CW * 0.95} ry={12} fill={accent} opacity={0.1} filter={`url(#blur-${uid})`} />
+
+                {/* Cube body */}
+                <polygon points={LEFT} fill="#0f1726" stroke="#1f2c45" strokeWidth={1} />
+                <polygon points={RIGHT} fill="#141f36" stroke="#23304c" strokeWidth={1} />
+                <polygon points={TOP} fill="#16223b" />
+                <polygon points={TOP} fill={accent} opacity={isCurrent ? 0.22 : 0.13} />
+                <polygon points={TOP} fill="none" stroke={accent} strokeOpacity={0.85} strokeWidth={1.6} />
+
+                {/* Current step: pulsing beacon on the top face */}
+                {isCurrent && st.available && (
+                  <ellipse cx={0} cy={0} rx={CW * 0.7} ry={CH * 0.7} fill="none" stroke={accent} strokeWidth={1.5}>
+                    <animate attributeName="rx" values={`${CW * 0.4};${CW * 0.98}`} dur="3s" repeatCount="indefinite" />
+                    <animate attributeName="ry" values={`${CH * 0.4};${CH * 0.98}`} dur="3s" repeatCount="indefinite" />
+                    <animate attributeName="stroke-opacity" values="0.55;0" dur="3s" repeatCount="indefinite" />
+                  </ellipse>
+                )}
+
+                {/* Tile contact shadow */}
+                <ellipse cx={0} cy={-8} rx={30} ry={7} fill="#03050b" opacity={0.45} filter={`url(#blur-${uid})`} />
+
+                {/* Floating cover tile */}
+                <clipPath id={clipId}>
+                  <rect x={TILE_X} y={TILE_Y} width={TW} height={TH} rx={12} />
+                </clipPath>
+                {coverSrc ? (
+                  <>
+                    <image
+                      href={coverSrc}
+                      x={TILE_X}
+                      y={TILE_Y}
+                      width={TW}
+                      height={TH}
+                      preserveAspectRatio="xMidYMid slice"
+                      clipPath={`url(#${clipId})`}
+                    />
+                    <rect x={TILE_X} y={TILE_Y + TH * 0.5} width={TW} height={TH * 0.5} fill="#04070e" opacity={0.28} clipPath={`url(#${clipId})`} />
+                  </>
+                ) : (
+                  <>
+                    <rect x={TILE_X} y={TILE_Y} width={TW} height={TH} rx={12} fill="#0e1726" />
+                    <rect x={TILE_X} y={TILE_Y} width={TW} height={TH} rx={12} fill={accent} opacity={0.12} />
+                    <text x={0} y={TILE_Y + TH / 2 + 12} textAnchor="middle" fill={accent} fontSize={32} fontWeight={800} fontFamily="'Poppins', sans-serif" opacity={0.85}>
+                      {i + 1}
+                    </text>
+                  </>
+                )}
+                <rect x={TILE_X} y={TILE_Y} width={TW} height={TH} rx={12} fill="none" stroke={accent} strokeWidth={2} strokeOpacity={st.available ? 0.9 : 0.4} />
+
+                {/* Finish flag on the last cube */}
+                {isLast && (
+                  <g transform={`translate(${TW / 2 - 12}, ${TILE_Y - 2})`}>
+                    <line x1={0} y1={0} x2={0} y2={-22} stroke={accent} strokeWidth={2} strokeLinecap="round" />
+                    <path d="M0,-22 L15,-17 L0,-12 Z" fill={accent} />
+                  </g>
+                )}
+
+                {/* Status badge on the cube face */}
+                {st.complete ? (
+                  <g>
+                    <circle cx={0} cy={CH + CD * 0.5} r={13} fill="#00a859" stroke="#0a0f18" strokeWidth={2} />
+                    <path d={`M-5,${CH + CD * 0.5} l3.5,4 l7,-8`} fill="none" stroke="#0a0f18" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" />
+                  </g>
+                ) : st.available ? (
+                  <g>
+                    <circle cx={0} cy={CH + CD * 0.5} r={13} fill="#0e1726" stroke={accent} strokeWidth={isCurrent ? 2.6 : 2} />
+                    <text x={0} y={CH + CD * 0.5 + 4.5} textAnchor="middle" fill={accent} fontSize={12} fontWeight={700} fontFamily="'JetBrains Mono', monospace">
+                      {i + 1}
+                    </text>
+                  </g>
+                ) : (
+                  <g>
+                    <circle cx={0} cy={CH + CD * 0.5} r={13} fill="#0e1726" stroke="#33415e" strokeWidth={2} />
+                    <path d={`M-4,${CH + CD * 0.5} v-3 a4,4 0 0 1 8,0 v3`} fill="none" stroke="#6e7a94" strokeWidth={1.8} />
+                    <rect x={-6} y={CH + CD * 0.5 - 1} width={12} height={9} rx={2} fill="#6e7a94" />
+                  </g>
+                )}
+
+                {/* Labels */}
+                <text
+                  x={0}
+                  y={CH + CD + 34}
+                  textAnchor="middle"
+                  fill={st.available ? (isCurrent ? '#f3f6ff' : '#e5e9f0') : '#6e7a94'}
+                  fontSize={13}
+                  fontWeight={700}
+                  fontFamily="'Poppins', sans-serif"
+                >
+                  {truncate(step.title)}
+                </text>
+                {step.subtitle && (
+                  <text x={0} y={CH + CD + 52} textAnchor="middle" fill="#8b98ae" fontSize={11} fontFamily="'Poppins', sans-serif">
+                    {truncate(step.subtitle, 30)}
+                  </text>
+                )}
+              </motion.g>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+};
+
+export default PathJourneyMap;

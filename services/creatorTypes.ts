@@ -118,6 +118,9 @@ export interface PathStep {
   route: string;
   /** Accent color of the underlying content type */
   accent: string;
+  /** Cover of the referenced content, resolved live from the catalog (module
+   * steps only). Not persisted on stored steps — used for the journey map. */
+  coverImage?: string;
 }
 
 export interface CreatorPath extends CreatorMeta {

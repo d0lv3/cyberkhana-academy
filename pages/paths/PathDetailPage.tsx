@@ -7,6 +7,7 @@ import DifficultyBadge from '../../components/ui/DifficultyBadge';
 import Button from '../../components/ui/EnhancedButton';
 import { useLang } from '../../contexts/LangContext';
 import { coverImageSrc } from '../../data/fundamentalsData';
+import PathJourneyMap from '../../components/paths/PathJourneyMap';
 import { getPublishedPathBySlug } from '../../services/creatorDataService';
 import { getPathProgress, isPathEnrolled, enrollInPath } from '../../services/progressService';
 
@@ -141,7 +142,23 @@ const PathDetailPage: React.FC = () => {
       {/* ── Curriculum timeline ── */}
       <div>
         <h2 className="text-sm font-bold text-[#f3f6ff] mb-4">{t('paths.curriculum')}</h2>
-        <div className="relative max-w-3xl">
+
+        {/* Desktop: the curriculum as a climbing road of floating cubes */}
+        <div className="hidden md:block">
+          <PathJourneyMap
+            steps={path.steps}
+            states={progress.states}
+            nextIndex={progress.nextIndex}
+            color={path.color}
+            onOpen={(idx) => {
+              const st = progress.states[idx];
+              if (st?.available) navigate(st.route);
+            }}
+          />
+        </div>
+
+        {/* Mobile: vertical curriculum list */}
+        <div className="relative max-w-3xl md:hidden">
           <div className="absolute left-[18px] top-3 bottom-3 w-px bg-[#263248]" />
 
           <div className="space-y-3">
