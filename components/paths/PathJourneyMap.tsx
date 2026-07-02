@@ -18,7 +18,7 @@ const VBW = 680;
 const LEFT_X = 214;
 const RIGHT_X = 466;
 const ROW_GAP = 120;
-const TOP_PAD = 120;
+const TOP_PAD = 128;
 const BOTTOM_PAD = 104;
 
 /* ── Isometric cube geometry (top-face half-width/height, side depth) ── */
@@ -29,11 +29,11 @@ const TOP = `0,${-CH} ${CW},0 0,${CH} ${-CW},0`;
 const LEFT = `${-CW},0 0,${CH} 0,${CH + CD} ${-CW},${CD}`;
 const RIGHT = `0,${CH} ${CW},0 ${CW},${CD} 0,${CH + CD}`;
 
-/* Floating cover tile — small square resting just on the cube's top face */
-const TS = 64;
+/* Floating cover tile — square resting just on the cube's top face */
+const TS = 80;
 const TILE_X = -TS / 2;
-const TILE_Y = -88;
-const TILE_R = 10;
+const TILE_Y = -102;
+const TILE_R = 12;
 
 const xOf = (i: number) => (i % 2 === 0 ? LEFT_X : RIGHT_X);
 
@@ -67,7 +67,7 @@ const PathJourneyMap: React.FC<PathJourneyMapProps> = ({ steps, states, nextInde
             'radial-gradient(520px circle at 62% 6%, rgba(0,168,89,0.10), transparent 55%), radial-gradient(420px circle at 20% 88%, rgba(96,165,250,0.05), transparent 55%)',
         }}
       />
-      <svg viewBox={`0 0 ${VBW} ${totalH}`} className="relative mx-auto h-auto w-full max-w-[520px]" role="img" aria-label="Learning path journey">
+      <svg viewBox={`0 0 ${VBW} ${totalH}`} className="relative mx-auto h-auto w-full max-w-[860px]" role="img" aria-label="Learning path journey">
         <defs>
           <filter id={`blur-${uid}`} x="-60%" y="-60%" width="220%" height="220%">
             <feGaussianBlur stdDeviation="5" />
@@ -181,7 +181,7 @@ const PathJourneyMap: React.FC<PathJourneyMapProps> = ({ steps, states, nextInde
                   <>
                     <rect x={TILE_X} y={TILE_Y} width={TS} height={TS} rx={TILE_R} fill="#0e1726" />
                     <rect x={TILE_X} y={TILE_Y} width={TS} height={TS} rx={TILE_R} fill={accent} opacity={0.12} />
-                    <text x={0} y={TILE_Y + TS / 2 + 8} textAnchor="middle" fill={accent} fontSize={24} fontWeight={800} fontFamily="'Poppins', sans-serif" opacity={0.85}>
+                    <text x={0} y={TILE_Y + TS / 2 + 9} textAnchor="middle" fill={accent} fontSize={30} fontWeight={800} fontFamily="'Poppins', sans-serif" opacity={0.85}>
                       {i + 1}
                     </text>
                   </>
