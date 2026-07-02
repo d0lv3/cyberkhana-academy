@@ -16,8 +16,10 @@ import {
 import CreatorLayout from '../../components/creators/CreatorLayout';
 import BilingualInput from '../../components/creators/BilingualInput';
 import TagInput from '../../components/creators/TagInput';
+import CoverImageUploader from '../../components/creators/CoverImageUploader';
 import EnhancedCard from '../../components/ui/EnhancedCard';
 import DifficultyBadge from '../../components/ui/DifficultyBadge';
+import { coverImageSrc } from '../../data/fundamentalsData';
 import { useToast } from '../../hooks/useToast';
 import { useAuth } from '../../contexts/AuthContext';
 import { savePath, getPathById } from '../../services/creatorDataService';
@@ -62,6 +64,7 @@ const PathEditor: React.FC = () => {
   const [slug, setSlug] = useState('');
   const [difficulty, setDifficulty] = useState<Difficulty>('Beginner');
   const [color, setColor] = useState('#a78bfa');
+  const [cover, setCover] = useState('');
   const [estimatedHours, setEstimatedHours] = useState(2);
   const [tags, setTags] = useState<string[]>([]);
   const [steps, setSteps] = useState<PathStep[]>([]);
@@ -86,6 +89,7 @@ const PathEditor: React.FC = () => {
         setSlug(p.slug);
         setDifficulty(p.difficulty);
         setColor(p.color);
+        setCover(p.coverImage || '');
         setEstimatedHours(p.estimatedHours);
         setTags(p.tags);
         setSteps(p.steps);
@@ -145,6 +149,7 @@ const PathEditor: React.FC = () => {
       description: { en: descEn, ar: descAr },
       difficulty,
       color,
+      coverImage: cover || undefined,
       tags,
       estimatedHours,
       steps,
@@ -246,6 +251,14 @@ const PathEditor: React.FC = () => {
           </div>
 
           <TagInput value={tags} onChange={setTags} label="Tags" />
+
+          <CoverImageUploader
+            value={cover}
+            onChange={setCover}
+            accent={color}
+            label="Cover Image"
+            shownOn="the path card"
+          />
         </div>
       </EnhancedCard>
 
@@ -396,12 +409,21 @@ const PathEditor: React.FC = () => {
 
         {/* hero */}
         <div className="flex items-start gap-4 mb-6">
-          <div
-            className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: `${color}15`, border: `1px solid ${color}30` }}
-          >
-            <Route size={22} style={{ color }} />
-          </div>
+          {cover ? (
+            <div
+              className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 border"
+              style={{ borderColor: `${color}30` }}
+            >
+              <img src={coverImageSrc(cover)} alt="" className="w-full h-full object-cover" />
+            </div>
+          ) : (
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: `${color}15`, border: `1px solid ${color}30` }}
+            >
+              <Route size={22} style={{ color }} />
+            </div>
+          )}
           <div className="flex-1 min-w-0">
             <h2 className="text-lg font-black text-[#f3f6ff]">{titleEn || 'Untitled path'}</h2>
             {descEn && <p className="text-sm text-[#9aa5bf] mt-1">{descEn}</p>}

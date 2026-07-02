@@ -6,6 +6,7 @@ import PageHeader from '../../components/ui/PageHeader';
 import DifficultyBadge from '../../components/ui/DifficultyBadge';
 import Button from '../../components/ui/EnhancedButton';
 import { useLang } from '../../contexts/LangContext';
+import { coverImageSrc } from '../../data/fundamentalsData';
 import { getPublishedPathBySlug } from '../../services/creatorDataService';
 import { getPathProgress, isPathEnrolled, enrollInPath } from '../../services/progressService';
 
@@ -64,6 +65,24 @@ const PathDetailPage: React.FC = () => {
           </span>
         </div>
       </PageHeader>
+
+      {/* ── Cover banner ── */}
+      {path.coverImage && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="relative max-w-3xl overflow-hidden rounded-2xl border border-[#263248]"
+        >
+          <img
+            src={coverImageSrc(path.coverImage)}
+            alt=""
+            aria-hidden
+            className="h-44 w-full object-cover md:h-56"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f18]/75 via-transparent to-transparent" />
+        </motion.div>
+      )}
 
       {/* ── Enroll / progress ── */}
       <motion.div

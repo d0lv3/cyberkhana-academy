@@ -128,6 +128,10 @@ export interface CreatorPath extends CreatorMeta {
   difficulty: Difficulty;
   /** Accent color for the path card */
   color: string;
+  /** Optional cover shown on the path card. Either an uploaded raster URL
+   * (PNG/JPEG/WebP/GIF) or raw SVG markup. Render via coverImageSrc() so SVG
+   * is sandboxed. When absent, the generated "roadmap" art is drawn instead. */
+  coverImage?: string;
   tags: string[];
   estimatedHours: number;
   steps: PathStep[];

@@ -12,6 +12,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { hasPerm } from '../../services/permissions';
 import { getCreatorPaths, deletePath, savePath } from '../../services/creatorDataService';
 import { statusOf, authorOf } from '../../services/creatorTypes';
+import { coverImageSrc } from '../../data/fundamentalsData';
 
 const PathsCreator: React.FC = () => {
   const navigate = useNavigate();
@@ -90,12 +91,21 @@ const PathsCreator: React.FC = () => {
               <EnhancedCard key={path.id} padding="none" hoverable className="overflow-hidden group">
                 <div className="h-1" style={{ backgroundColor: path.color }} />
                 <div className="flex items-center gap-4 px-5 py-4">
-                  <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: `${path.color}15`, border: `1px solid ${path.color}30` }}
-                  >
-                    <Route size={16} style={{ color: path.color }} />
-                  </div>
+                  {path.coverImage ? (
+                    <div
+                      className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border"
+                      style={{ borderColor: `${path.color}30` }}
+                    >
+                      <img src={coverImageSrc(path.coverImage)} alt="" className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <div
+                      className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{ backgroundColor: `${path.color}15`, border: `1px solid ${path.color}30` }}
+                    >
+                      <Route size={16} style={{ color: path.color }} />
+                    </div>
+                  )}
 
                   <div className="flex-1 min-w-0">
                     <h3 className="text-sm font-bold text-[#f3f6ff] truncate">
