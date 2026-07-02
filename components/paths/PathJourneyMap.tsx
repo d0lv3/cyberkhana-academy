@@ -15,25 +15,25 @@ interface PathJourneyMapProps {
 
 /* ── Layout ── */
 const VBW = 680;
-const LEFT_X = 210;
-const RIGHT_X = 470;
-const ROW_GAP = 158;
-const TOP_PAD = 124;
-const BOTTOM_PAD = 132;
+const LEFT_X = 214;
+const RIGHT_X = 466;
+const ROW_GAP = 120;
+const TOP_PAD = 120;
+const BOTTOM_PAD = 104;
 
 /* ── Isometric cube geometry (top-face half-width/height, side depth) ── */
-const CW = 58;
-const CH = 33;
-const CD = 32;
+const CW = 46;
+const CH = 26;
+const CD = 26;
 const TOP = `0,${-CH} ${CW},0 0,${CH} ${-CW},0`;
 const LEFT = `${-CW},0 0,${CH} 0,${CH + CD} ${-CW},${CD}`;
 const RIGHT = `0,${CH} ${CW},0 ${CW},${CD} 0,${CH + CD}`;
 
-/* Floating cover tile */
-const TW = 104;
-const TH = 70;
-const TILE_X = -TW / 2;
-const TILE_Y = -114;
+/* Floating cover tile — small square resting just on the cube's top face */
+const TS = 64;
+const TILE_X = -TS / 2;
+const TILE_Y = -88;
+const TILE_R = 10;
 
 const xOf = (i: number) => (i % 2 === 0 ? LEFT_X : RIGHT_X);
 
@@ -67,19 +67,25 @@ const PathJourneyMap: React.FC<PathJourneyMapProps> = ({ steps, states, nextInde
             'radial-gradient(520px circle at 62% 6%, rgba(0,168,89,0.10), transparent 55%), radial-gradient(420px circle at 20% 88%, rgba(96,165,250,0.05), transparent 55%)',
         }}
       />
-      <svg viewBox={`0 0 ${VBW} ${totalH}`} className="relative h-auto w-full" role="img" aria-label="Learning path journey">
+      <svg viewBox={`0 0 ${VBW} ${totalH}`} className="relative mx-auto h-auto w-full max-w-[520px]" role="img" aria-label="Learning path journey">
         <defs>
           <filter id={`blur-${uid}`} x="-60%" y="-60%" width="220%" height="220%">
-            <feGaussianBlur stdDeviation="6" />
+            <feGaussianBlur stdDeviation="5" />
           </filter>
+          {/* Glass sheen for the floating tiles */}
+          <linearGradient id={`glass-${uid}`} x1="0" y1="0" x2="0.35" y2="1">
+            <stop offset="0" stopColor="#ffffff" stopOpacity="0.22" />
+            <stop offset="0.5" stopColor="#ffffff" stopOpacity="0.04" />
+            <stop offset="1" stopColor="#ffffff" stopOpacity="0" />
+          </linearGradient>
         </defs>
 
         {/* Ambient stars */}
         {[
-          [70, 90, 1.3], [280, 60, 1], [560, 130, 1.3], [500, 40, 1], [150, 260, 1.2], [620, 360, 1.1], [90, 470, 1.3],
+          [70, 74, 1.2], [280, 52, 1], [560, 120, 1.2], [500, 40, 1], [150, 196, 1.1], [610, 170, 1], [120, 132, 1.2],
         ].map(([x, y, r], i) => (
           <circle key={`s${i}`} cx={x} cy={y} r={r} fill="#3d4f73">
-            <animate attributeName="opacity" values="0.2;0.85;0.2" dur={`${2.6 + (i % 4) * 0.8}s`} begin={`${i * 0.4}s`} repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.2;0.8;0.2" dur={`${2.6 + (i % 4) * 0.8}s`} begin={`${i * 0.4}s`} repeatCount="indefinite" />
           </circle>
         ))}
 
@@ -98,11 +104,11 @@ const PathJourneyMap: React.FC<PathJourneyMapProps> = ({ steps, states, nextInde
               fill="none"
               stroke={done ? '#00a859' : '#33415e'}
               strokeWidth={2}
-              strokeDasharray="7 9"
+              strokeDasharray="6 8"
               strokeLinecap="round"
               opacity={done ? 0.9 : 0.72}
             >
-              <animate attributeName="stroke-dashoffset" from="32" to="0" dur="2.6s" repeatCount="indefinite" />
+              <animate attributeName="stroke-dashoffset" from="28" to="0" dur="2.6s" repeatCount="indefinite" />
             </path>
           );
         })}
@@ -123,31 +129,31 @@ const PathJourneyMap: React.FC<PathJourneyMapProps> = ({ steps, states, nextInde
             <g key={step.kind + step.refId} transform={`translate(${xOf(i)}, ${cyOf(i)})`}>
               <motion.g
                 initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: st.available ? 1 : 0.55, scale: 1, y: [0, -7, 0] }}
+                animate={{ opacity: st.available ? 1 : 0.55, scale: 1, y: [0, -6, 0] }}
                 transition={{
                   opacity: { duration: 0.3 },
                   scale: { duration: 0.35 },
                   y: { delay: 0.15 * (i % 5), duration: bob, repeat: Infinity, ease: 'easeInOut' },
                 }}
-                whileHover={st.available ? { scale: 1.05 } : undefined}
+                whileHover={st.available ? { scale: 1.06 } : undefined}
                 style={{ cursor: st.available ? 'pointer' : 'default', willChange: 'transform' }}
                 onClick={() => st.available && onOpen(i)}
                 role="link"
                 aria-label={step.title}
               >
                 {/* Soft glow under the cube */}
-                <ellipse cx={0} cy={CH + CD + 8} rx={CW * 0.95} ry={12} fill={accent} opacity={0.1} filter={`url(#blur-${uid})`} />
+                <ellipse cx={0} cy={CH + CD + 6} rx={CW * 0.95} ry={9} fill={accent} opacity={0.1} filter={`url(#blur-${uid})`} />
 
                 {/* Cube body */}
                 <polygon points={LEFT} fill="#0f1726" stroke="#1f2c45" strokeWidth={1} />
                 <polygon points={RIGHT} fill="#141f36" stroke="#23304c" strokeWidth={1} />
                 <polygon points={TOP} fill="#16223b" />
                 <polygon points={TOP} fill={accent} opacity={isCurrent ? 0.22 : 0.13} />
-                <polygon points={TOP} fill="none" stroke={accent} strokeOpacity={0.85} strokeWidth={1.6} />
+                <polygon points={TOP} fill="none" stroke={accent} strokeOpacity={0.85} strokeWidth={1.4} />
 
                 {/* Current step: pulsing beacon on the top face */}
                 {isCurrent && st.available && (
-                  <ellipse cx={0} cy={0} rx={CW * 0.7} ry={CH * 0.7} fill="none" stroke={accent} strokeWidth={1.5}>
+                  <ellipse cx={0} cy={0} rx={CW * 0.7} ry={CH * 0.7} fill="none" stroke={accent} strokeWidth={1.4}>
                     <animate attributeName="rx" values={`${CW * 0.4};${CW * 0.98}`} dur="3s" repeatCount="indefinite" />
                     <animate attributeName="ry" values={`${CH * 0.4};${CH * 0.98}`} dur="3s" repeatCount="indefinite" />
                     <animate attributeName="stroke-opacity" values="0.55;0" dur="3s" repeatCount="indefinite" />
@@ -155,79 +161,78 @@ const PathJourneyMap: React.FC<PathJourneyMapProps> = ({ steps, states, nextInde
                 )}
 
                 {/* Tile contact shadow */}
-                <ellipse cx={0} cy={-8} rx={30} ry={7} fill="#03050b" opacity={0.45} filter={`url(#blur-${uid})`} />
+                <ellipse cx={0} cy={-6} rx={20} ry={5} fill="#03050b" opacity={0.4} filter={`url(#blur-${uid})`} />
 
-                {/* Floating cover tile */}
+                {/* Floating cover tile (square, glassy) */}
                 <clipPath id={clipId}>
-                  <rect x={TILE_X} y={TILE_Y} width={TW} height={TH} rx={12} />
+                  <rect x={TILE_X} y={TILE_Y} width={TS} height={TS} rx={TILE_R} />
                 </clipPath>
                 {coverSrc ? (
-                  <>
-                    <image
-                      href={coverSrc}
-                      x={TILE_X}
-                      y={TILE_Y}
-                      width={TW}
-                      height={TH}
-                      preserveAspectRatio="xMidYMid slice"
-                      clipPath={`url(#${clipId})`}
-                    />
-                    <rect x={TILE_X} y={TILE_Y + TH * 0.5} width={TW} height={TH * 0.5} fill="#04070e" opacity={0.28} clipPath={`url(#${clipId})`} />
-                  </>
+                  <image
+                    href={coverSrc}
+                    x={TILE_X}
+                    y={TILE_Y}
+                    width={TS}
+                    height={TS}
+                    preserveAspectRatio="xMidYMid slice"
+                    clipPath={`url(#${clipId})`}
+                  />
                 ) : (
                   <>
-                    <rect x={TILE_X} y={TILE_Y} width={TW} height={TH} rx={12} fill="#0e1726" />
-                    <rect x={TILE_X} y={TILE_Y} width={TW} height={TH} rx={12} fill={accent} opacity={0.12} />
-                    <text x={0} y={TILE_Y + TH / 2 + 12} textAnchor="middle" fill={accent} fontSize={32} fontWeight={800} fontFamily="'Poppins', sans-serif" opacity={0.85}>
+                    <rect x={TILE_X} y={TILE_Y} width={TS} height={TS} rx={TILE_R} fill="#0e1726" />
+                    <rect x={TILE_X} y={TILE_Y} width={TS} height={TS} rx={TILE_R} fill={accent} opacity={0.12} />
+                    <text x={0} y={TILE_Y + TS / 2 + 8} textAnchor="middle" fill={accent} fontSize={24} fontWeight={800} fontFamily="'Poppins', sans-serif" opacity={0.85}>
                       {i + 1}
                     </text>
                   </>
                 )}
-                <rect x={TILE_X} y={TILE_Y} width={TW} height={TH} rx={12} fill="none" stroke={accent} strokeWidth={2} strokeOpacity={st.available ? 0.9 : 0.4} />
+                {/* Glass sheen + translucent border */}
+                <rect x={TILE_X} y={TILE_Y} width={TS} height={TS} rx={TILE_R} fill={`url(#glass-${uid})`} clipPath={`url(#${clipId})`} />
+                <rect x={TILE_X} y={TILE_Y} width={TS} height={TS} rx={TILE_R} fill="none" stroke="#ffffff" strokeOpacity={st.available ? 0.34 : 0.16} strokeWidth={1.2} />
 
                 {/* Finish flag on the last cube */}
                 {isLast && (
-                  <g transform={`translate(${TW / 2 - 12}, ${TILE_Y - 2})`}>
-                    <line x1={0} y1={0} x2={0} y2={-22} stroke={accent} strokeWidth={2} strokeLinecap="round" />
-                    <path d="M0,-22 L15,-17 L0,-12 Z" fill={accent} />
+                  <g transform={`translate(${TS / 2 - 8}, ${TILE_Y - 2})`}>
+                    <line x1={0} y1={0} x2={0} y2={-18} stroke={accent} strokeWidth={1.8} strokeLinecap="round" />
+                    <path d="M0,-18 L12,-14 L0,-10 Z" fill={accent} />
                   </g>
                 )}
 
                 {/* Status badge on the cube face */}
                 {st.complete ? (
                   <g>
-                    <circle cx={0} cy={CH + CD * 0.5} r={13} fill="#00a859" stroke="#0a0f18" strokeWidth={2} />
-                    <path d={`M-5,${CH + CD * 0.5} l3.5,4 l7,-8`} fill="none" stroke="#0a0f18" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" />
+                    <circle cx={0} cy={CH + CD * 0.5} r={11} fill="#00a859" stroke="#0a0f18" strokeWidth={2} />
+                    <path d={`M-4.5,${CH + CD * 0.5} l3,3.5 l6,-7`} fill="none" stroke="#0a0f18" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" />
                   </g>
                 ) : st.available ? (
                   <g>
-                    <circle cx={0} cy={CH + CD * 0.5} r={13} fill="#0e1726" stroke={accent} strokeWidth={isCurrent ? 2.6 : 2} />
-                    <text x={0} y={CH + CD * 0.5 + 4.5} textAnchor="middle" fill={accent} fontSize={12} fontWeight={700} fontFamily="'JetBrains Mono', monospace">
+                    <circle cx={0} cy={CH + CD * 0.5} r={11} fill="#0e1726" stroke={accent} strokeWidth={isCurrent ? 2.4 : 1.8} />
+                    <text x={0} y={CH + CD * 0.5 + 4} textAnchor="middle" fill={accent} fontSize={11} fontWeight={700} fontFamily="'JetBrains Mono', monospace">
                       {i + 1}
                     </text>
                   </g>
                 ) : (
                   <g>
-                    <circle cx={0} cy={CH + CD * 0.5} r={13} fill="#0e1726" stroke="#33415e" strokeWidth={2} />
-                    <path d={`M-4,${CH + CD * 0.5} v-3 a4,4 0 0 1 8,0 v3`} fill="none" stroke="#6e7a94" strokeWidth={1.8} />
-                    <rect x={-6} y={CH + CD * 0.5 - 1} width={12} height={9} rx={2} fill="#6e7a94" />
+                    <circle cx={0} cy={CH + CD * 0.5} r={11} fill="#0e1726" stroke="#33415e" strokeWidth={1.8} />
+                    <path d={`M-3.5,${CH + CD * 0.5} v-2.5 a3.5,3.5 0 0 1 7,0 v2.5`} fill="none" stroke="#6e7a94" strokeWidth={1.6} />
+                    <rect x={-5} y={CH + CD * 0.5 - 1} width={10} height={8} rx={2} fill="#6e7a94" />
                   </g>
                 )}
 
                 {/* Labels */}
                 <text
                   x={0}
-                  y={CH + CD + 34}
+                  y={CH + CD + 24}
                   textAnchor="middle"
                   fill={st.available ? (isCurrent ? '#f3f6ff' : '#e5e9f0') : '#6e7a94'}
-                  fontSize={13}
+                  fontSize={11.5}
                   fontWeight={700}
                   fontFamily="'Poppins', sans-serif"
                 >
                   {truncate(step.title)}
                 </text>
                 {step.subtitle && (
-                  <text x={0} y={CH + CD + 52} textAnchor="middle" fill="#8b98ae" fontSize={11} fontFamily="'Poppins', sans-serif">
+                  <text x={0} y={CH + CD + 39} textAnchor="middle" fill="#8b98ae" fontSize={10} fontFamily="'Poppins', sans-serif">
                     {truncate(step.subtitle, 30)}
                   </text>
                 )}
