@@ -7,6 +7,8 @@ import CreatorLayout from '../../components/creators/CreatorLayout';
 import StatusBadge from '../../components/creators/StatusBadge';
 import { confirmDialog } from '../../components/ui/ConfirmHost';
 import { useLang } from '../../contexts/LangContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { hasPerm } from '../../services/permissions';
 import { networkingLessons } from '../../data/networking';
 import {
   getCreatorNetworkingLessons,
@@ -18,6 +20,8 @@ import { statusOf, authorOf } from '../../services/creatorTypes';
 const NetworkingCreator: React.FC = () => {
   const navigate = useNavigate();
   const { t, lang } = useLang();
+  const { user } = useAuth();
+  const canCreate = hasPerm(user, 'networking');
   const [refreshKey, setRefreshKey] = React.useState(0);
 
   const creatorLessons = getCreatorNetworkingLessons();
@@ -50,16 +54,18 @@ const NetworkingCreator: React.FC = () => {
       backTo="/creators"
       backLabel={t('studio.contentStudio')}
     >
-      {/* New lesson button */}
-      <div className="flex justify-end">
-        <Button
-          size="sm"
-          leftIcon={<Plus size={14} />}
-          onClick={() => navigate('/creators/networking/new')}
-        >
-          {t('studio.newLesson')}
-        </Button>
-      </div>
+      {/* New lesson button (permission-gated) */}
+      {canCreate && (
+        <div className="flex justify-end">
+          <Button
+            size="sm"
+            leftIcon={<Plus size={14} />}
+            onClick={() => navigate('/creators/networking/new')}
+          >
+            {t('studio.newLesson')}
+          </Button>
+        </div>
+      )}
 
       {/* Built-in lessons */}
       {networkingLessons.length > 0 && (
@@ -111,13 +117,15 @@ const NetworkingCreator: React.FC = () => {
                 ? 'لا توجد دروس مخصصة بعد. أنشئ أول درس شبكات لك!'
                 : 'No custom lessons yet. Create your first networking lesson!'}
             </p>
-            <Button
-              size="sm"
-              leftIcon={<Plus size={14} />}
-              onClick={() => navigate('/creators/networking/new')}
-            >
-              {t('studio.createLesson')}
-            </Button>
+            {canCreate && (
+              <Button
+                size="sm"
+                leftIcon={<Plus size={14} />}
+                onClick={() => navigate('/creators/networking/new')}
+              >
+                {t('studio.createLesson')}
+              </Button>
+            )}
           </EnhancedCard>
         ) : (
           creatorLessons.map((lesson) => (

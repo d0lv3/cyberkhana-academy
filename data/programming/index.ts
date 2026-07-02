@@ -1,6 +1,6 @@
 import type { ProgrammingLanguage, ProgrammingModule, ProgrammingConcept } from './types';
 import python from './python';
-import { mergeProgrammingLanguages } from '../../services/creatorDataService';
+import { mergeProgrammingLanguages, getVisibleCreatorLanguages } from '../../services/creatorDataService';
 
 const staticLanguages: ProgrammingLanguage[] = [
   python,
@@ -33,9 +33,12 @@ const staticLanguages: ProgrammingLanguage[] = [
 /** Static languages (used for backwards-compat) */
 export const programmingLanguages: ProgrammingLanguage[] = staticLanguages;
 
-/** All languages: static + creator patches (published) */
+const staticSlugs = new Set(staticLanguages.map((l) => l.slug));
+
+/** All languages: static + published creator-defined languages, each with
+ * creator patches (published modules/concepts/covers) merged in. */
 export const getProgrammingLanguages = (): ProgrammingLanguage[] =>
-  mergeProgrammingLanguages(staticLanguages);
+  mergeProgrammingLanguages([...staticLanguages, ...getVisibleCreatorLanguages(staticSlugs)]);
 
 export const getLanguage = (slug: string): ProgrammingLanguage | undefined =>
   getProgrammingLanguages().find((l) => l.slug === slug);

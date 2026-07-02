@@ -8,12 +8,16 @@ import CreatorLayout from '../../components/creators/CreatorLayout';
 import StatusBadge from '../../components/creators/StatusBadge';
 import { confirmDialog } from '../../components/ui/ConfirmHost';
 import { useLang } from '../../contexts/LangContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { hasPerm } from '../../services/permissions';
 import { getCreatorPaths, deletePath, savePath } from '../../services/creatorDataService';
 import { statusOf, authorOf } from '../../services/creatorTypes';
 
 const PathsCreator: React.FC = () => {
   const navigate = useNavigate();
   const { t, lang } = useLang();
+  const { user } = useAuth();
+  const canCreate = hasPerm(user, 'paths');
   const [refreshKey, setRefreshKey] = useState(0);
 
   const paths = getCreatorPaths();
@@ -53,9 +57,11 @@ const PathsCreator: React.FC = () => {
               ? 'رتّب الوحدات والدروس والتحديات الموجودة في منهج موجّه. المسارات المنشورة تظهر في صفحة المسارات لجميع الطلاب.'
               : 'Sequence existing modules, lessons, and challenges into a guided curriculum. Published paths appear on the Paths page for all students.'}
           </p>
-          <Button size="sm" leftIcon={<Plus size={14} />} onClick={() => navigate('/creators/paths/new')}>
-            {t('studio.newPath')}
-          </Button>
+          {canCreate && (
+            <Button size="sm" leftIcon={<Plus size={14} />} onClick={() => navigate('/creators/paths/new')}>
+              {t('studio.newPath')}
+            </Button>
+          )}
         </div>
 
         <div className="space-y-3">
@@ -73,9 +79,11 @@ const PathsCreator: React.FC = () => {
                   ? 'لا توجد مسارات بعد. اجمع أفضل محتواك في مسار يركّز على المهنة.'
                   : 'No paths yet. Bundle your best content into a career-focused track.'}
               </p>
-              <Button size="sm" leftIcon={<Plus size={14} />} onClick={() => navigate('/creators/paths/new')}>
-                {lang === 'ar' ? 'أنشئ أول مسار لك' : 'Create your first path'}
-              </Button>
+              {canCreate && (
+                <Button size="sm" leftIcon={<Plus size={14} />} onClick={() => navigate('/creators/paths/new')}>
+                  {lang === 'ar' ? 'أنشئ أول مسار لك' : 'Create your first path'}
+                </Button>
+              )}
             </EnhancedCard>
           ) : (
             paths.map((path) => (

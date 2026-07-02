@@ -9,6 +9,7 @@ interface ServerUser {
   displayName: string;
   avatarUrl?: string;
   role: AcademyUser['role'];
+  permissions?: string[];
   preferredLang: 'en' | 'ar';
   university?: string;
   country?: string;
@@ -46,6 +47,7 @@ function mapServerUser(u: ServerUser): AcademyUser {
     displayName: u.displayName,
     avatarUrl: u.avatarUrl,
     role: u.role,
+    permissions: u.permissions,
     preferredLang: u.preferredLang,
     university: u.university,
     country: u.country,

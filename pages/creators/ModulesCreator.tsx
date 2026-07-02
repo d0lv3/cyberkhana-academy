@@ -17,6 +17,7 @@ import {
   type AdminPublishedModule,
 } from '../../services/creatorDataService';
 import { statusOf, authorOf } from '../../services/creatorTypes';
+import { hasPerm } from '../../services/permissions';
 
 /** Stash a foreign module + its owner, then open it in the editor (admin mode). */
 function openAdminEdit(
@@ -39,6 +40,7 @@ const ModulesCreator: React.FC = () => {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const modules = getCreatorStandaloneModules();
+  const canCreate = hasPerm(user, 'modules');
 
   // Admin-only: every published standalone module by other authors.
   const [foreign, setForeign] = useState<AdminPublishedModule[]>([]);
@@ -82,9 +84,11 @@ const ModulesCreator: React.FC = () => {
               ? 'وحدات مستقلة مقسّمة إلى أقسام تظهر في مركز الوحدات. كل وحدة مقسّمة إلى فصول وأقسام، تمامًا مثل الدورة.'
               : 'Standalone, section-divided modules that appear on the Modules hub. Each module is split into chapters and sections, just like a course.'}
           </p>
-          <Button size="sm" leftIcon={<Plus size={14} />} onClick={() => navigate('/creators/modules/new')}>
-            {t('studio.newModule')}
-          </Button>
+          {canCreate && (
+            <Button size="sm" leftIcon={<Plus size={14} />} onClick={() => navigate('/creators/modules/new')}>
+              {t('studio.newModule')}
+            </Button>
+          )}
         </div>
 
         <div className="space-y-3">
@@ -102,9 +106,11 @@ const ModulesCreator: React.FC = () => {
                   ? 'لا توجد وحدات بعد. ابنِ أول وحدة مقسّمة إلى أقسام.'
                   : 'No modules yet. Build your first section-divided module.'}
               </p>
-              <Button size="sm" leftIcon={<Plus size={14} />} onClick={() => navigate('/creators/modules/new')}>
-                {lang === 'ar' ? 'أنشئ أول وحدة لك' : 'Create your first module'}
-              </Button>
+              {canCreate && (
+                <Button size="sm" leftIcon={<Plus size={14} />} onClick={() => navigate('/creators/modules/new')}>
+                  {lang === 'ar' ? 'أنشئ أول وحدة لك' : 'Create your first module'}
+                </Button>
+              )}
             </EnhancedCard>
           ) : (
             modules.map((mod) => (

@@ -11,6 +11,7 @@ import {
   PUBLISHED_CACHE_KEYS,
   type CreatorNetworkingLesson,
   type CreatorProgrammingConcept,
+  type CreatorProgrammingLanguage,
   type CreatorFundamentalModule,
   type CreatorPath,
   type ProgrammingPatch,
@@ -183,6 +184,75 @@ export function saveProgrammingLanguageCoverSvg(langSlug: string, svg: string): 
   const patch = ensurePatch(patches, langSlug);
   patch.languageCoverSvg = svg.trim() || undefined;
   saveAllProgrammingPatches(patches);
+}
+
+/* ── Creator-defined languages ──
+ * A patch whose `newLanguage` is set defines a whole new catalog language.
+ * Gated by the 'programming-languages' permission (client UI + server). */
+
+/** All languages this creator has defined (any status). */
+export function getCreatorLanguages(): CreatorProgrammingLanguage[] {
+  return getCreatorProgrammingPatches()
+    .map((p) => p.newLanguage)
+    .filter((l): l is CreatorProgrammingLanguage => !!l);
+}
+
+export function getCreatorLanguageBySlug(slug: string): CreatorProgrammingLanguage | undefined {
+  return getCreatorLanguages().find((l) => l.slug === slug);
+}
+
+/** Create/update a creator language definition on its patch. */
+export function saveProgrammingLanguage(langDef: CreatorProgrammingLanguage): void {
+  const patches = getCreatorProgrammingPatches();
+  const patch = ensurePatch(patches, langDef.slug);
+  patch.newLanguage = syncPublished({ ...langDef, updatedAt: new Date().toISOString() });
+  saveAllProgrammingPatches(patches);
+}
+
+/** Delete a creator language — removes its whole patch (modules/concepts too). */
+export function deleteProgrammingLanguage(slug: string): void {
+  const patches = getCreatorProgrammingPatches().filter((p) => p.languageSlug !== slug);
+  saveAllProgrammingPatches(patches);
+}
+
+/** Build a bare catalog entry from a language definition (modules merge in later). */
+function languageToCatalogEntry(def: CreatorProgrammingLanguage, coverSvg?: string): ProgrammingLanguage {
+  return {
+    id: def.slug,
+    slug: def.slug,
+    name: def.name,
+    color: def.color || '#9fef00',
+    available: true,
+    description: def.description ?? { en: '', ar: '' },
+    coverSvg,
+    modules: [],
+  };
+}
+
+/**
+ * Creator languages visible in the CATALOG: my own published + everyone
+ * else's published (from the hydrated cache). Own definition wins on slug
+ * collisions; static built-ins always win over creator ones.
+ */
+export function getVisibleCreatorLanguages(staticSlugs: Set<string>): ProgrammingLanguage[] {
+  const bySlug = new Map<string, ProgrammingLanguage>();
+
+  for (const patch of getCreatorProgrammingPatches()) {
+    const def = patch.newLanguage;
+    if (!def || statusOf(def) !== 'published' || staticSlugs.has(def.slug)) continue;
+    bySlug.set(def.slug, languageToCatalogEntry(def, patch.languageCoverSvg));
+  }
+
+  const remote = readPublishedCache<ProgrammingPatch & { id?: string }>(
+    PUBLISHED_CACHE_KEYS.PROGRAMMING_PATCHES
+  );
+  for (const patch of remote) {
+    const def = (patch as ProgrammingPatch).newLanguage;
+    if (!def || staticSlugs.has(def.slug) || bySlug.has(def.slug)) continue;
+    bySlug.set(def.slug, languageToCatalogEntry(def, patch.languageCoverSvg));
+  }
+
+  return [...bySlug.values()];
 }
 
 /** Save a new module to a language */

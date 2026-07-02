@@ -11,6 +11,7 @@ import {
 } from '../middleware/auth';
 import { env } from '../config/env';
 import { logger } from '../utils/logger';
+import { effectivePermissions } from '../types';
 
 const router = Router();
 const googleClient = env.googleClientId ? new OAuth2Client(env.googleClientId) : null;
@@ -23,6 +24,7 @@ function publicUser(user: IUser) {
     displayName: user.displayName,
     avatarUrl: user.avatarUrl,
     role: user.role,
+    permissions: effectivePermissions(user),
     preferredLang: user.preferredLang,
     university: user.university,
     country: user.country,

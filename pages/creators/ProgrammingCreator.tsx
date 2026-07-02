@@ -8,12 +8,17 @@ import StatusBadge from '../../components/creators/StatusBadge';
 import CoverImageUploader from '../../components/creators/CoverImageUploader';
 import { confirmDialog } from '../../components/ui/ConfirmHost';
 import { useLang } from '../../contexts/LangContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { hasPerm } from '../../services/permissions';
 import { getProgrammingLanguages } from '../../data/programming';
 import {
   getCreatorProgrammingPatches,
+  getCreatorLanguages,
+  deleteProgrammingLanguage,
   deleteProgrammingConcept,
   deleteProgrammingModule,
   saveProgrammingModule,
+  saveProgrammingLanguage,
   saveProgrammingLanguageCoverSvg,
 } from '../../services/creatorDataService';
 import { statusOf, type CreatorMeta } from '../../services/creatorTypes';
@@ -28,12 +33,61 @@ const glyphFor = (l: Pick<ProgrammingLanguage, 'slug' | 'name'>): string =>
 const ProgrammingCreator: React.FC = () => {
   const navigate = useNavigate();
   const { t, lang: uiLang } = useLang();
+  const { user } = useAuth();
   const [refreshKey, setRefreshKey] = useState(0);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [coverOpen, setCoverOpen] = useState<Record<string, boolean>>({});
 
-  const languages = getProgrammingLanguages();
+  // Capability gates — the admin grants these per creator.
+  const canProgramming = hasPerm(user, 'programming');
+  const canLanguages = hasPerm(user, 'programming-languages');
+
   const patches = getCreatorProgrammingPatches();
+
+  // Catalog languages (static + published creator languages) + my own DRAFT
+  // languages, which the public merge hides until published.
+  const publishedLanguages = getProgrammingLanguages();
+  const listedSlugs = new Set(publishedLanguages.map((l) => l.slug));
+  const draftLanguages: ProgrammingLanguage[] = getCreatorLanguages()
+    .filter((d) => !listedSlugs.has(d.slug))
+    .map((d) => ({
+      id: d.slug,
+      slug: d.slug,
+      name: d.name,
+      color: d.color || '#9fef00',
+      available: true,
+      description: d.description ?? { en: '', ar: '' },
+      coverSvg: patches.find((p) => p.languageSlug === d.slug)?.languageCoverSvg,
+      modules: [],
+    }));
+  const languages = [...publishedLanguages, ...draftLanguages];
+
+  /** My own definition for this language, when I created it. */
+  const ownLanguageDef = (slug: string) => patches.find((p) => p.languageSlug === slug)?.newLanguage;
+
+  const handleToggleLanguagePublish = (slug: string) => {
+    const def = ownLanguageDef(slug);
+    if (!def) return;
+    const next = statusOf(def) === 'published' ? 'draft' : 'published';
+    saveProgrammingLanguage({ ...def, status: next, isPublished: next === 'published' });
+    setRefreshKey((k) => k + 1);
+  };
+
+  const handleDeleteLanguage = async (slug: string, name: string) => {
+    if (
+      await confirmDialog({
+        title: uiLang === 'ar' ? `حذف لغة ${name}؟` : `Delete ${name}?`,
+        message:
+          uiLang === 'ar'
+            ? 'ستُحذف هذه اللغة وكل وحداتها ودروسها نهائيًا.'
+            : 'This language and ALL of its modules and lessons will be permanently removed.',
+        confirmLabel: t('studio.delete'),
+      })
+    ) {
+      deleteProgrammingLanguage(slug);
+      setRefreshKey((k) => k + 1);
+    }
+  };
 
   const toggleExpand = (key: string) => {
     setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -110,6 +164,23 @@ const ProgrammingCreator: React.FC = () => {
       backLabel={t('studio.contentStudio')}
     >
       <div className="space-y-6">
+        {canLanguages && (
+          <div className="flex justify-between items-start gap-4">
+            <p className="text-sm text-[#9aa5bf] max-w-lg">
+              {uiLang === 'ar'
+                ? 'يمكنك إنشاء لغات برمجة جديدة في الكتالوج، ثم إضافة الوحدات والدروس إليها.'
+                : 'You can create new programming languages in the catalog, then fill them with modules and lessons.'}
+            </p>
+            <Button
+              size="sm"
+              leftIcon={<Plus size={14} />}
+              onClick={() => navigate('/creators/programming/new-language')}
+            >
+              {uiLang === 'ar' ? 'لغة جديدة' : 'New Language'}
+            </Button>
+          </div>
+        )}
+
         {languages.map((lang) => (
           <EnhancedCard key={lang.id} padding="none" className="overflow-hidden">
             {/* Language header */}
@@ -146,15 +217,48 @@ const ProgrammingCreator: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    leftIcon={<Image size={12} />}
-                    onClick={() => setCoverOpen((p) => ({ ...p, [lang.slug]: !p[lang.slug] }))}
-                  >
-                    {uiLang === 'ar' ? 'الغلاف' : 'Cover'}
-                  </Button>
-                  {lang.available && (
+                  {/* Own creator language: lifecycle + edit + delete */}
+                  {(() => {
+                    const def = ownLanguageDef(lang.slug);
+                    if (!def || !canLanguages) return null;
+                    return (
+                      <div className="flex items-center gap-1.5" dir="ltr">
+                        <StatusBadge status={statusOf(def)} />
+                        <button
+                          onClick={() => handleToggleLanguagePublish(lang.slug)}
+                          title={statusOf(def) === 'published' ? t('studio.unpublish') : t('studio.publish')}
+                          className="w-7 h-7 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#00a859] hover:bg-[#00a859]/10 transition-all"
+                        >
+                          {statusOf(def) === 'published' ? <EyeOff size={13} /> : <Eye size={13} />}
+                        </button>
+                        <button
+                          onClick={() => navigate(`/creators/programming/edit-language/${lang.slug}`)}
+                          title={uiLang === 'ar' ? 'تعديل اللغة' : 'Edit language'}
+                          className="w-7 h-7 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#60a5fa] hover:bg-[#60a5fa]/10 transition-all"
+                        >
+                          <Edit3 size={13} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteLanguage(lang.slug, lang.name)}
+                          title={uiLang === 'ar' ? 'حذف اللغة' : 'Delete language'}
+                          className="w-7 h-7 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-red-400 hover:bg-red-500/10 transition-all"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    );
+                  })()}
+                  {(canProgramming || canLanguages) && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      leftIcon={<Image size={12} />}
+                      onClick={() => setCoverOpen((p) => ({ ...p, [lang.slug]: !p[lang.slug] }))}
+                    >
+                      {uiLang === 'ar' ? 'الغلاف' : 'Cover'}
+                    </Button>
+                  )}
+                  {lang.available && canProgramming && (
                     <Button
                       size="sm"
                       variant="secondary"
@@ -339,14 +443,16 @@ const ProgrammingCreator: React.FC = () => {
                           ))}
 
                         {/* Add concept button */}
-                        <button
-                          onClick={() =>
-                            navigate(`/creators/programming/new-concept/${lang.slug}/${mod.slug}`)
-                          }
-                          className="flex items-center gap-1.5 px-8 py-2.5 text-xs font-medium text-[#6e7a94] hover:text-[#00a859] transition-colors w-full"
-                        >
-                          <Plus size={12} /> {t('studio.addConcept')}
-                        </button>
+                        {canProgramming && (
+                          <button
+                            onClick={() =>
+                              navigate(`/creators/programming/new-concept/${lang.slug}/${mod.slug}`)
+                            }
+                            className="flex items-center gap-1.5 px-8 py-2.5 text-xs font-medium text-[#6e7a94] hover:text-[#00a859] transition-colors w-full"
+                          >
+                            <Plus size={12} /> {t('studio.addConcept')}
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>

@@ -33,6 +33,7 @@ const NetworkingEditor = lazy(() => import('./pages/creators/NetworkingEditor'))
 const ProgrammingCreator = lazy(() => import('./pages/creators/ProgrammingCreator'));
 const ProgrammingConceptEditor = lazy(() => import('./pages/creators/ProgrammingConceptEditor'));
 const ProgrammingModuleEditor = lazy(() => import('./pages/creators/ProgrammingModuleEditor'));
+const ProgrammingLanguageEditor = lazy(() => import('./pages/creators/ProgrammingLanguageEditor'));
 const OSModulesCreator = lazy(() => import('./pages/creators/OSModulesCreator'));
 const ModulesCreator = lazy(() => import('./pages/creators/ModulesCreator'));
 const ModuleEditor = lazy(() => import('./pages/creators/ModuleEditor'));
@@ -182,6 +183,8 @@ function AppRoutes() {
             <Route path="/creators/networking/new" element={<NetworkingEditor />} />
             <Route path="/creators/networking/edit/:id" element={<NetworkingEditor />} />
             <Route path="/creators/programming" element={<ProgrammingCreator />} />
+            <Route path="/creators/programming/new-language" element={<ProgrammingLanguageEditor />} />
+            <Route path="/creators/programming/edit-language/:slug" element={<ProgrammingLanguageEditor />} />
             <Route path="/creators/programming/new-module/:langSlug" element={<ProgrammingModuleEditor />} />
             <Route path="/creators/programming/edit-module/:langSlug/:moduleId" element={<ProgrammingModuleEditor />} />
             <Route path="/creators/programming/new-concept/:langSlug/:moduleSlug" element={<ProgrammingConceptEditor />} />

@@ -4,6 +4,8 @@ export interface AcademyUser {
   displayName: string;
   avatarUrl?: string;
   role: 'user' | 'creator' | 'admin';
+  /** Effective creator capabilities, resolved by the server (admins get all). */
+  permissions?: string[];
   preferredLang: 'en' | 'ar';
   university?: string;
   country?: string;

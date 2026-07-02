@@ -19,6 +19,7 @@ import {
   type AdminPublishedModule,
 } from '../../services/creatorDataService';
 import { statusOf, authorOf } from '../../services/creatorTypes';
+import { hasPerm } from '../../services/permissions';
 
 /** Stash a foreign module + its owner, then open it in the editor (admin mode). */
 function openAdminEdit(
@@ -42,6 +43,7 @@ const OSModulesCreator: React.FC = () => {
 
   const staticModules = fundamentalModules.filter((m) => m.category === 'operating-systems');
   const creatorModules = getCreatorOSModules();
+  const canCreate = hasPerm(user, 'os-modules');
 
   // Admin-only: every published OS module by other authors.
   const [foreign, setForeign] = useState<AdminPublishedModule[]>([]);
@@ -118,13 +120,15 @@ const OSModulesCreator: React.FC = () => {
             ? 'الوحدات المُنشأة هنا تظهر في صفحة أساسيات أنظمة التشغيل وصفحة الوحدات معًا.'
             : 'Modules created here appear in both the Operating Systems fundamentals page and the Modules page.'}
         </p>
-        <Button
-          size="sm"
-          leftIcon={<Plus size={14} />}
-          onClick={() => navigate('/creators/os-modules/new')}
-        >
-          {t('studio.newModule')}
-        </Button>
+        {canCreate && (
+          <Button
+            size="sm"
+            leftIcon={<Plus size={14} />}
+            onClick={() => navigate('/creators/os-modules/new')}
+          >
+            {t('studio.newModule')}
+          </Button>
+        )}
       </div>
 
       {/* Built-in modules */}
@@ -191,13 +195,15 @@ const OSModulesCreator: React.FC = () => {
                 ? 'لا توجد وحدات مخصصة بعد. أنشئ أول وحدة نظام تشغيل لك!'
                 : 'No custom modules yet. Create your first OS module!'}
             </p>
-            <Button
-              size="sm"
-              leftIcon={<Plus size={14} />}
-              onClick={() => navigate('/creators/os-modules/new')}
-            >
-              {t('studio.createModule')}
-            </Button>
+            {canCreate && (
+              <Button
+                size="sm"
+                leftIcon={<Plus size={14} />}
+                onClick={() => navigate('/creators/os-modules/new')}
+              >
+                {t('studio.createModule')}
+              </Button>
+            )}
           </EnhancedCard>
         ) : (
           creatorModules.map((mod) => (

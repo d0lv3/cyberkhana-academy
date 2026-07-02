@@ -4,7 +4,12 @@ import ContentBucket from '../models/ContentBucket';
 import User from '../models/User';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 import { checkSafeJson } from '../utils/sanitize';
-import { CONTENT_BUCKETS, type ContentBucketKey } from '../types';
+import {
+  CONTENT_BUCKETS,
+  effectivePermissions,
+  type ContentBucketKey,
+  type CreatorPermission,
+} from '../types';
 import { logger } from '../utils/logger';
 
 const router = Router();
@@ -16,6 +21,25 @@ const MODULE_BUCKETS: ContentBucketKey[] = ['os-modules', 'standalone-modules'];
 
 function isModuleBucket(value: string): value is ContentBucketKey {
   return (MODULE_BUCKETS as readonly string[]).includes(value);
+}
+
+/** Which creator permission a bucket write requires. */
+const PERMISSION_BY_BUCKET: Record<ContentBucketKey, CreatorPermission> = {
+  'networking-lessons': 'networking',
+  'programming-patches': 'programming',
+  'os-modules': 'os-modules',
+  'standalone-modules': 'modules',
+  paths: 'paths',
+};
+
+/** May this user write this bucket? Admins always; creators per grant. The
+ * programming bucket also accepts the language-creation grant, since creator
+ * languages live in the same patches. */
+function canWriteBucket(user: { role: string; creatorPermissions?: string[] }, bucket: ContentBucketKey): boolean {
+  if (user.role === 'admin') return true;
+  const perms = effectivePermissions(user as { role: 'user' | 'creator' | 'admin'; creatorPermissions?: string[] });
+  if (perms.includes(PERMISSION_BY_BUCKET[bucket])) return true;
+  return bucket === 'programming-patches' && perms.includes('programming-languages');
 }
 
 type AnyItem = Record<string, unknown>;
@@ -73,7 +97,16 @@ router.get('/published', authenticate, async (_req: AuthRequest, res) => {
     };
 
     // languageSlug → merged patch
-    const patchByLang = new Map<string, { languageSlug: string; newModules: AnyItem[]; newConcepts: Record<string, AnyItem[]> }>();
+    const patchByLang = new Map<
+      string,
+      {
+        languageSlug: string;
+        newModules: AnyItem[];
+        newConcepts: Record<string, AnyItem[]>;
+        newLanguage?: AnyItem;
+        languageCoverSvg?: string;
+      }
+    >();
 
     for (const doc of docs) {
       const items = (doc.items as AnyItem[]) ?? [];
@@ -93,7 +126,12 @@ router.get('/published', authenticate, async (_req: AuthRequest, res) => {
               if (pub.length) publishedConcepts[modSlug] = pub;
             }
           }
-          if (!publishedModules.length && !Object.keys(publishedConcepts).length) continue;
+          // Creator-defined language: published ones reach every student.
+          const publishedLanguage =
+            isPlainObject(patch.newLanguage) && isPublishedItem(patch.newLanguage)
+              ? (patch.newLanguage as AnyItem)
+              : undefined;
+          if (!publishedModules.length && !Object.keys(publishedConcepts).length && !publishedLanguage) continue;
 
           const merged = patchByLang.get(patch.languageSlug) ?? {
             languageSlug: patch.languageSlug,
@@ -103,6 +141,10 @@ router.get('/published', authenticate, async (_req: AuthRequest, res) => {
           merged.newModules.push(...publishedModules);
           for (const [slug, concepts] of Object.entries(publishedConcepts)) {
             merged.newConcepts[slug] = [...(merged.newConcepts[slug] ?? []), ...concepts];
+          }
+          if (publishedLanguage && !merged.newLanguage) merged.newLanguage = publishedLanguage;
+          if (!merged.languageCoverSvg && typeof patch.languageCoverSvg === 'string' && patch.languageCoverSvg) {
+            merged.languageCoverSvg = patch.languageCoverSvg;
           }
           patchByLang.set(patch.languageSlug, merged);
         }
@@ -138,6 +180,12 @@ router.put('/:bucket', authenticate, requireRole('creator', 'admin'), async (req
   const bucket = req.params.bucket;
   if (!isBucketKey(bucket)) {
     res.status(404).json({ error: 'Unknown bucket' });
+    return;
+  }
+
+  // Capability gate: the admin decides which content types each creator may author.
+  if (!canWriteBucket(req.user!, bucket)) {
+    res.status(403).json({ error: 'You do not have permission to author this content type' });
     return;
   }
 

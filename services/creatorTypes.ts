@@ -162,6 +162,18 @@ export const SERVER_BUCKET_BY_STORAGE_KEY: Record<string, string> = {
   [STORAGE_KEYS.PATHS]: 'paths',
 };
 
+/* ── Creator-defined programming language ──
+ * A whole new language in the catalog (vs. the built-in Python/C/Bash). Stored
+ * on its patch as `newLanguage`; the patch's languageSlug IS the new language.
+ * Requires the 'programming-languages' permission to author. */
+export interface CreatorProgrammingLanguage extends CreatorMeta {
+  slug: string;
+  name: string;
+  /** Accent color for the language card. */
+  color: string;
+  description: { en: string; ar: string };
+}
+
 /* ── Programming patches structure ── */
 export interface ProgrammingPatch {
   /** Which language this patch targets (e.g. 'python') */
@@ -170,8 +182,10 @@ export interface ProgrammingPatch {
   newModules: (ProgrammingModule & Partial<CreatorMeta>)[];
   /** New concepts to add to existing modules. Key = moduleSlug */
   newConcepts: Record<string, CreatorProgrammingConcept[]>;
-  /** Creator override for the language card's cover art (raw SVG markup). */
+  /** Creator override for the language card's cover art (SVG markup or image URL). */
   languageCoverSvg?: string;
+  /** Present when this patch DEFINES a creator-authored language. */
+  newLanguage?: CreatorProgrammingLanguage;
 }
 
 /* ── Unified content item (for the studio overview / recent activity) ── */

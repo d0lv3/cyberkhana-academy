@@ -22,6 +22,7 @@ import EnhancedCard from '../../components/ui/EnhancedCard';
 import StatusBadge from '../../components/creators/StatusBadge';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLang } from '../../contexts/LangContext';
+import { hasPerm, type CreatorPermission } from '../../services/permissions';
 import {
   getStudioStats,
   getAllCreatorContent,
@@ -122,6 +123,7 @@ const CreatorDashboard: React.FC = () => {
       manageRoute: '/creators/networking',
       newRoute: '/creators/networking/new',
       count: stats.byKind.networking,
+      perm: 'networking' as CreatorPermission,
     },
     {
       icon: Code,
@@ -134,6 +136,7 @@ const CreatorDashboard: React.FC = () => {
       manageRoute: '/creators/programming',
       newRoute: '/creators/programming',
       count: stats.byKind.programming,
+      perm: 'programming' as CreatorPermission,
     },
     {
       icon: Box,
@@ -146,6 +149,7 @@ const CreatorDashboard: React.FC = () => {
       manageRoute: '/creators/modules',
       newRoute: '/creators/modules/new',
       count: stats.byKind.modules,
+      perm: 'modules' as CreatorPermission,
     },
     {
       icon: Monitor,
@@ -158,6 +162,7 @@ const CreatorDashboard: React.FC = () => {
       manageRoute: '/creators/os-modules',
       newRoute: '/creators/os-modules/new',
       count: stats.byKind.os,
+      perm: 'os-modules' as CreatorPermission,
     },
     {
       icon: Route,
@@ -170,8 +175,13 @@ const CreatorDashboard: React.FC = () => {
       manageRoute: '/creators/paths',
       newRoute: '/creators/paths/new',
       count: stats.byKind.paths,
+      perm: 'paths' as CreatorPermission,
     },
   ];
+
+  /** Types this creator may author (admin-granted). The create menu only
+   * offers these; Manage cards stay visible for existing content. */
+  const creatableTypes = contentTypes.filter((type) => hasPerm(user, type.perm));
 
   const TYPE_ICON: Record<StudioContentItem['kind'], React.ElementType> = {
     networking: Wifi,
@@ -238,7 +248,14 @@ const CreatorDashboard: React.FC = () => {
                   role="menu"
                   className="absolute end-0 z-30 mt-2 w-72 rounded-xl border border-[#263248] bg-[#0e1522] p-1.5 shadow-xl shadow-black/50"
                 >
-                  {contentTypes.map((type) => (
+                  {creatableTypes.length === 0 && (
+                    <p className="px-3 py-2.5 text-xs text-[#6e7a94]">
+                      {lang === 'ar'
+                        ? 'لم يمنحك المدير صلاحيات إنشاء بعد.'
+                        : 'An admin hasn’t granted you any creation permissions yet.'}
+                    </p>
+                  )}
+                  {creatableTypes.map((type) => (
                     <button
                       key={type.title}
                       role="menuitem"

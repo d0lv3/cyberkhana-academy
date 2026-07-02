@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Search, ShieldCheck, PenTool, GraduationCap, RefreshCw, Ban, RotateCcw } from 'lucide-react';
+import { Users, Search, ShieldCheck, PenTool, GraduationCap, RefreshCw, Ban, RotateCcw, KeyRound, Check } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import EnhancedCard from '../../components/ui/EnhancedCard';
 import { confirmDialog } from '../../components/ui/ConfirmHost';
@@ -8,6 +8,7 @@ import { useToast } from '../../hooks/useToast';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLang } from '../../contexts/LangContext';
 import { api } from '../../services/api';
+import { CREATOR_PERMISSIONS, PERMISSION_META, type CreatorPermission } from '../../services/permissions';
 
 type Role = 'user' | 'creator' | 'admin';
 
@@ -17,6 +18,8 @@ interface AdminUser {
   displayName: string;
   avatarUrl?: string;
   role: Role;
+  /** Effective creator capabilities (server-resolved). */
+  permissions?: string[];
   isBanned: boolean;
   createdAt: string;
   lastLoginAt?: string;
@@ -40,6 +43,9 @@ const MembersPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
   const [savingId, setSavingId] = useState<string | null>(null);
+  /** Which creator's permission panel is open, and the toggles being edited. */
+  const [permsOpenId, setPermsOpenId] = useState<string | null>(null);
+  const [permsDraft, setPermsDraft] = useState<CreatorPermission[]>([]);
 
   const load = async () => {
     setLoading(true);
@@ -124,6 +130,41 @@ const MembersPage: React.FC = () => {
     }
   };
 
+  const togglePermsPanel = (target: AdminUser) => {
+    if (permsOpenId === target.id) {
+      setPermsOpenId(null);
+      return;
+    }
+    setPermsOpenId(target.id);
+    setPermsDraft(
+      (target.permissions ?? []).filter((p): p is CreatorPermission =>
+        (CREATOR_PERMISSIONS as readonly string[]).includes(p)
+      )
+    );
+  };
+
+  const savePerms = async (target: AdminUser) => {
+    setSavingId(target.id);
+    try {
+      const { user: updated } = await api.patch<{ user: AdminUser }>(
+        `/admin/users/${target.id}/permissions`,
+        { permissions: permsDraft }
+      );
+      setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+      setPermsOpenId(null);
+      toast(
+        'success',
+        ar
+          ? `تم تحديث صلاحيات ${updated.displayName}.`
+          : `${updated.displayName}'s permissions updated.`
+      );
+    } catch (err) {
+      toast('error', err instanceof Error ? err.message : 'Permission update failed');
+    } finally {
+      setSavingId(null);
+    }
+  };
+
   const fmtDate = (iso?: string) => {
     if (!iso) return '—';
     try {
@@ -196,8 +237,8 @@ const MembersPage: React.FC = () => {
               const meta = ROLE_META[u.role];
               const isSelf = u.id === me?._id;
               return (
+                <React.Fragment key={u.id}>
                 <motion.div
-                  key={u.id}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: Math.min(i * 0.03, 0.3), duration: 0.3 }}
@@ -275,6 +316,22 @@ const MembersPage: React.FC = () => {
                     ))}
                   </select>
 
+                  {/* creator permissions */}
+                  {u.role === 'creator' && (
+                    <button
+                      onClick={() => togglePermsPanel(u)}
+                      disabled={savingId === u.id}
+                      title={ar ? 'الصلاحيات' : 'Permissions'}
+                      className={`w-8 h-8 rounded-lg border flex items-center justify-center flex-shrink-0 transition-all disabled:opacity-30 ${
+                        permsOpenId === u.id
+                          ? 'border-[#f3a43a]/50 text-[#f3a43a] bg-[#f3a43a]/10'
+                          : 'border-[#263248] text-[#6e7a94] hover:text-[#f3a43a] hover:border-[#f3a43a]/40 hover:bg-[#f3a43a]/10'
+                      }`}
+                    >
+                      <KeyRound size={13} />
+                    </button>
+                  )}
+
                   {/* ban / unban */}
                   <button
                     onClick={() => void toggleBan(u)}
@@ -305,6 +362,71 @@ const MembersPage: React.FC = () => {
                     {u.isBanned ? <RotateCcw size={13} /> : <Ban size={13} />}
                   </button>
                 </motion.div>
+
+                {/* Creator permissions panel */}
+                {permsOpenId === u.id && u.role === 'creator' && (
+                  <div className="px-5 pb-4 pt-1 bg-[#0b1019]">
+                    <p className="text-[11px] text-[#6e7a94] mb-3">
+                      {ar
+                        ? 'حدد ما يمكن لهذا المنشئ إنشاؤه. تُطبَّق الصلاحيات فورًا على الاستوديو والخادم.'
+                        : 'Choose what this creator can author. Applies immediately in the studio and on the server.'}
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                      {CREATOR_PERMISSIONS.map((perm) => {
+                        const on = permsDraft.includes(perm);
+                        const meta = PERMISSION_META[perm];
+                        return (
+                          <button
+                            key={perm}
+                            type="button"
+                            onClick={() =>
+                              setPermsDraft((prev) =>
+                                on ? prev.filter((p) => p !== perm) : [...prev, perm]
+                              )
+                            }
+                            className={`flex items-start gap-2.5 rounded-lg border px-3 py-2.5 text-start transition-all ${
+                              on
+                                ? 'border-[#00a859]/40 bg-[#00a859]/10'
+                                : 'border-[#263248] bg-[#121a2a] hover:border-[#354562]'
+                            }`}
+                          >
+                            <span
+                              className={`mt-0.5 w-4 h-4 rounded flex items-center justify-center flex-shrink-0 border ${
+                                on ? 'bg-[#00a859] border-[#00a859]' : 'border-[#3a4864]'
+                              }`}
+                            >
+                              {on && <Check size={11} className="text-white" />}
+                            </span>
+                            <span className="min-w-0">
+                              <span className={`block text-xs font-bold ${on ? 'text-[#00a859]' : 'text-[#d2d7e3]'}`}>
+                                {meta.label[lang]}
+                              </span>
+                              <span className="block text-[10px] text-[#6e7a94] leading-snug">
+                                {meta.hint[lang]}
+                              </span>
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="mt-3 flex items-center gap-2">
+                      <button
+                        onClick={() => void savePerms(u)}
+                        disabled={savingId === u.id}
+                        className="px-4 py-2 rounded-lg text-xs font-bold text-[#0d1117] bg-[#00a859] hover:bg-[#00934e] transition-colors disabled:opacity-50"
+                      >
+                        {savingId === u.id ? (ar ? 'جارٍ الحفظ...' : 'Saving...') : ar ? 'حفظ الصلاحيات' : 'Save permissions'}
+                      </button>
+                      <button
+                        onClick={() => setPermsOpenId(null)}
+                        className="px-4 py-2 rounded-lg text-xs font-semibold text-[#9aa5bf] hover:text-[#d2d7e3] transition-colors"
+                      >
+                        {ar ? 'إلغاء' : 'Cancel'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+                </React.Fragment>
               );
             })}
           </div>

@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import User, { IUser } from '../models/User';
 import { authenticate, requireAdmin, AuthRequest } from '../middleware/auth';
 import { logger } from '../utils/logger';
+import { CREATOR_PERMISSIONS, effectivePermissions } from '../types';
 
 const router = Router();
 
@@ -17,6 +18,7 @@ function adminUserShape(user: IUser) {
     displayName: user.displayName,
     avatarUrl: user.avatarUrl,
     role: user.role,
+    permissions: effectivePermissions(user),
     isBanned: user.isBanned,
     createdAt: user.createdAt,
     lastLoginAt: user.lastLoginAt,
@@ -136,6 +138,51 @@ router.patch('/users/:id/ban', async (req: AuthRequest, res) => {
   } catch (err) {
     logger.error('admin.ban_change_failed', { error: String(err) });
     res.status(500).json({ error: 'Could not update ban status' });
+  }
+});
+
+/* ── PATCH /api/admin/users/:id/permissions ── set a creator's capabilities.
+ * Only meaningful for creators (admins implicitly hold everything; students
+ * hold nothing). The stored set is exactly what the admin toggled. */
+const permissionsSchema = z
+  .object({ permissions: z.array(z.enum(CREATOR_PERMISSIONS)).max(CREATOR_PERMISSIONS.length) })
+  .strict();
+
+router.patch('/users/:id/permissions', async (req: AuthRequest, res) => {
+  const { id } = req.params;
+  if (!mongoose.isValidObjectId(id)) {
+    res.status(404).json({ error: 'User not found' });
+    return;
+  }
+  const parsed = permissionsSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Invalid permissions' });
+    return;
+  }
+
+  try {
+    const target = await User.findById(id);
+    if (!target) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+    if (target.role !== 'creator') {
+      res.status(400).json({ error: 'Permissions apply to creators only' });
+      return;
+    }
+
+    target.creatorPermissions = [...new Set(parsed.data.permissions)];
+    await target.save();
+
+    logger.info('admin.permissions_changed', {
+      by: String(req.user!._id),
+      target: id,
+      permissions: target.creatorPermissions,
+    });
+    res.json({ user: adminUserShape(target) });
+  } catch (err) {
+    logger.error('admin.permissions_change_failed', { error: String(err) });
+    res.status(500).json({ error: 'Could not update permissions' });
   }
 });
 

@@ -14,6 +14,8 @@ export interface IUser extends Document {
   university?: string;
   country?: string;
   bio?: string;
+  /** Explicit creator capability grants (admin-managed). Unset → default set. */
+  creatorPermissions?: string[];
   preferredLang: 'en' | 'ar';
   completedModulesCount: number;
   completedLessonsCount: number;
@@ -53,6 +55,7 @@ const UserSchema = new Schema<IUser>(
     university: { type: String },
     country: { type: String },
     bio: { type: String, maxlength: 500 },
+    creatorPermissions: { type: [String], default: undefined },
     preferredLang: { type: String, enum: ['en', 'ar'], default: 'en' },
     completedModulesCount: { type: Number, default: 0 },
     completedLessonsCount: { type: Number, default: 0 },
