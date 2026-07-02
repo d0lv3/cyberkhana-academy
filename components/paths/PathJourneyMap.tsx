@@ -2,6 +2,7 @@ import React, { useId, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { coverImageSrc } from '../../data/fundamentalsData';
 import { buildCatalogIndex } from '../../data/pathCatalog';
+import ThrowableStars from './ThrowableStars';
 import type { PathStep } from '../../services/creatorTypes';
 import type { PathStepState } from '../../services/progressService';
 
@@ -60,42 +61,6 @@ function mulberry32(a: number): () => number {
   };
 }
 
-/* Small cyber-sec glyphs scattered across the space background (centered at 0). */
-const GLYPHS: (() => React.ReactNode)[] = [
-  () => <polygon points="9,0 4.5,7.8 -4.5,7.8 -9,0 -4.5,-7.8 4.5,-7.8" />,
-  () => <path d="M0,-9 L8,-6 L8,1 Q8,7 0,10 Q-8,7 -8,1 L-8,-6 Z" />,
-  () => (
-    <>
-      <rect x={-5} y={-1} width={10} height={8} rx={1.5} />
-      <path d="M-3,-1 v-3 a3,3 0 0 1 6,0 v3" />
-    </>
-  ),
-  () => (
-    <>
-      <path d="M-3,-7 L-9,0 L-3,7" />
-      <path d="M3,-7 L9,0 L3,7" />
-      <line x1={1.5} y1={-8} x2={-1.5} y2={8} />
-    </>
-  ),
-  () => (
-    <>
-      <circle r={2.6} />
-      <line x1={2.6} y1={0} x2={9} y2={0} />
-      <line x1={-2} y1={2} x2={-7} y2={7} />
-      <line x1={2} y1={-2} x2={7} y2={-7} />
-      <circle cx={9} cy={0} r={1.4} />
-      <circle cx={-7} cy={7} r={1.4} />
-    </>
-  ),
-  () => (
-    <>
-      <rect x={-9} y={-7} width={18} height={14} rx={2} />
-      <path d="M-5,-2 L-1,1 L-5,4" />
-      <line x1={1} y1={4} x2={6} y2={4} />
-    </>
-  ),
-];
-
 /**
  * PathJourneyMap — the path's curriculum as a climbing road of floating
  * isometric cubes over a space backdrop, alternating left/right up toward the
@@ -109,24 +74,15 @@ const PathJourneyMap: React.FC<PathJourneyMapProps> = ({ steps, states, nextInde
   const cyOf = (i: number) => TOP_PAD + (n - 1 - i) * ROW_GAP;
   const totalH = TOP_PAD + Math.max(0, n - 1) * ROW_GAP + BOTTOM_PAD;
 
-  // Starfield + scattered glyphs, distributed across the whole scene height.
-  const bg = useMemo(() => {
+  // Faint static starfield for depth (the interactive stars sit on top).
+  const stars = useMemo(() => {
     const rand = mulberry32(20240703);
-    const stars = Array.from({ length: Math.round(totalH / 22) }, () => ({
+    return Array.from({ length: Math.round(totalH / 26) }, () => ({
       x: rand() * VBW,
       y: rand() * totalH,
-      r: 0.5 + rand() * 1.5,
-      o: 0.2 + rand() * 0.5,
+      r: 0.5 + rand() * 1.2,
+      o: 0.15 + rand() * 0.35,
     }));
-    const glyphs = Array.from({ length: Math.max(7, Math.round(totalH / 90)) }, () => ({
-      x: rand() * VBW,
-      y: rand() * totalH,
-      s: 0.7 + rand() * 0.95,
-      rot: rand() * 360,
-      type: Math.floor(rand() * GLYPHS.length),
-      o: 0.3 + rand() * 0.22,
-    }));
-    return { stars, glyphs };
   }, [totalH]);
 
   // Draw far (top) cubes first so nearer (bottom) ones overlap them.
@@ -142,25 +98,9 @@ const PathJourneyMap: React.FC<PathJourneyMapProps> = ({ steps, states, nextInde
         }}
       />
       <svg viewBox={`0 0 ${VBW} ${totalH}`} className="relative mx-auto h-auto w-full max-w-[880px]" role="img" aria-label="Learning path journey">
-        {/* Starfield */}
-        {bg.stars.map((s, i) => (
+        {/* Faint static starfield (depth) */}
+        {stars.map((s, i) => (
           <circle key={`st${i}`} cx={s.x} cy={s.y} r={s.r} fill="#4a5d82" opacity={s.o} />
-        ))}
-
-        {/* Scattered cyber-sec glyphs */}
-        {bg.glyphs.map((g, i) => (
-          <g
-            key={`gl${i}`}
-            transform={`translate(${g.x}, ${g.y}) rotate(${g.rot}) scale(${g.s})`}
-            stroke={GREEN}
-            fill="none"
-            strokeWidth={1.3}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            opacity={g.o}
-          >
-            {GLYPHS[g.type]()}
-          </g>
         ))}
 
         {/* Climbing trails — from the inner side edges of the cubes */}
@@ -315,6 +255,9 @@ const PathJourneyMap: React.FC<PathJourneyMapProps> = ({ steps, states, nextInde
           </linearGradient>
         </defs>
       </svg>
+
+      {/* Small stars you can grab and throw */}
+      <ThrowableStars count={20} />
     </div>
   );
 };
