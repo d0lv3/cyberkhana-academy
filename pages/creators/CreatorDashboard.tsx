@@ -323,16 +323,7 @@ const CreatorDashboard: React.FC = () => {
               <h3 className="text-base font-bold text-[#f3f6ff] mb-1.5">{type.title}</h3>
               <p className="text-xs text-[#9aa5bf] leading-relaxed mb-5">{type.description}</p>
               <div className="flex items-center gap-2">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(type.newRoute);
-                  }}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#00a859] hover:text-[#00c267] transition-colors"
-                >
-                  <Plus size={13} /> {t('studio.new')}
-                </button>
-                <span className="ml-auto inline-flex items-center gap-1 text-[11px] font-medium text-[#6e7a94] group-hover:text-[#d2d7e3] transition-colors">
+                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#6e7a94] group-hover:text-[#d2d7e3] transition-colors">
                   {t('studio.manage')} <ArrowUpRight size={12} />
                 </span>
               </div>
