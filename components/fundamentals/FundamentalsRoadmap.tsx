@@ -273,19 +273,15 @@ const Island: React.FC<{
   const { w, h, d, top, right, left } = cubeFaces(island.scale);
   const c = island.color;
   const labelBase = h + d + 36;
-  // Gently desynced bob so islands don't pulse in lockstep.
-  const bobDur = 6.4 + index * 0.7;
-  const bobDelay = 0.2 + index * 0.15;
 
   return (
     <g transform={`translate(${island.cx}, ${island.cy})`}>
       <motion.g
         initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1, y: [0, -10, 0] }}
+        animate={{ opacity: 1, scale: 1 }}
         transition={{
           opacity: { delay: index * 0.04, duration: 0.28, ease: 'easeOut' },
           scale: { delay: index * 0.04, duration: 0.38, ease: [0.34, 1.3, 0.64, 1] },
-          y: { delay: bobDelay, duration: bobDur, repeat: Infinity, ease: 'easeInOut' },
         }}
         whileHover={{ scale: 1.06 }}
         style={{ cursor: 'pointer', willChange: 'transform' }}
@@ -330,13 +326,9 @@ const Island: React.FC<{
           strokeDasharray="4 5"
         />
 
-        {/* Goal island gets a pulsing beacon ring */}
+        {/* Goal island gets a static beacon ring */}
         {island.isGoal && (
-          <ellipse cx={0} cy={0} rx={w * 0.7} ry={h * 0.7} fill="none" stroke={c} strokeWidth={1.4}>
-            <animate attributeName="rx" values={`${w * 0.4};${w * 0.95}`} dur="3s" repeatCount="indefinite" />
-            <animate attributeName="ry" values={`${h * 0.4};${h * 0.95}`} dur="3s" repeatCount="indefinite" />
-            <animate attributeName="stroke-opacity" values="0.5;0" dur="3s" repeatCount="indefinite" />
-          </ellipse>
+          <ellipse cx={0} cy={0} rx={w * 0.82} ry={h * 0.82} fill="none" stroke={c} strokeWidth={1.4} strokeOpacity={0.4} />
         )}
 
         {/* 3D emblem seated on the top face */}
@@ -453,15 +445,7 @@ const FundamentalsRoadmap: React.FC = () => {
             [85, 120, 1.4], [320, 70, 1], [520, 300, 1.2], [880, 130, 1.5], [930, 420, 1],
             [120, 460, 1.2], [820, 690, 1.3], [480, 760, 1], [680, 330, 1], [60, 730, 1.4],
           ].map(([x, y, r], i) => (
-            <circle key={i} cx={x} cy={y} r={r} fill="#3d4f73">
-              <animate
-                attributeName="opacity"
-                values="0.2;0.9;0.2"
-                dur={`${2.6 + (i % 4) * 0.9}s`}
-                begin={`${i * 0.45}s`}
-                repeatCount="indefinite"
-              />
-            </circle>
+            <circle key={i} cx={x} cy={y} r={r} fill="#3d4f73" opacity={0.5} />
           ))}
 
           {/* Climbing trails (drawn under the islands) */}
@@ -471,9 +455,7 @@ const FundamentalsRoadmap: React.FC = () => {
             const stroke = done ? '#00a859' : '#33415e';
             return (
               <g key={trail.from}>
-                <path d={trail.d} fill="none" stroke={stroke} strokeWidth={2} strokeDasharray="7 9" strokeLinecap="round" opacity={done ? 0.9 : 0.7}>
-                  <animate attributeName="stroke-dashoffset" from="32" to="0" dur="2.4s" repeatCount="indefinite" />
-                </path>
+                <path d={trail.d} fill="none" stroke={stroke} strokeWidth={2} strokeDasharray="7 9" strokeLinecap="round" opacity={done ? 0.9 : 0.7} />
                 {done && (
                   <path d={trail.d} fill="none" stroke="#9fef00" strokeWidth={4} strokeLinecap="round" opacity={0.1} />
                 )}
