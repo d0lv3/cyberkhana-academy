@@ -114,6 +114,18 @@ const CourseTerminal = forwardRef<CourseTerminalHandle, CourseTerminalProps>(({ 
     else if (e.key === 'ArrowUp') { e.preventDefault(); navHistory(-1); }
     else if (e.key === 'ArrowDown') { e.preventDefault(); navHistory(1); }
     else if (e.key === 'l' && e.ctrlKey) { e.preventDefault(); setLines([]); }
+    else if (e.key === 'Tab') {
+      e.preventDefault();
+      const res = session.complete(input);
+      if (res.replacement !== null) setInput(res.replacement);
+      else if (res.candidates.length > 1) {
+        setLines((prev) => [
+          ...prev,
+          { kind: 'cmd', text: input, prompt },
+          { kind: 'out', text: res.candidates.join('   ') },
+        ]);
+      }
+    }
   };
 
   return (

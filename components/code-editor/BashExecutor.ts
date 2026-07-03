@@ -1132,6 +1132,12 @@ export interface ShellSession {
   readonly user: string;
   /** Run one command line against the persistent session. */
   run(line: string, timeoutMs?: number): ShellRunResult;
+  /**
+   * Tab-completion for the given input. `replacement` is the new input line if
+   * the completion resolved (or advanced to a common prefix), else null;
+   * `candidates` lists the options to show when the completion is ambiguous.
+   */
+  complete(input: string): { replacement: string | null; candidates: string[] };
   /** Current working directory with $HOME shown as ~ (for the prompt). */
   cwdLabel(): string;
   /** Serialize fs + env + cwd + history so a popped-out tab can continue. */
@@ -1268,9 +1274,48 @@ export function createShellSession(opts: { user?: string; restore?: string | nul
     ctx.status = 0;
   };
 
+  const commandNames = Object.keys(BUILTINS).sort();
+  const complete = (input: string): { replacement: string | null; candidates: string[] } => {
+    const lastSpace = input.lastIndexOf(' ');
+    const before = input.slice(0, lastSpace + 1);
+    const word = input.slice(lastSpace + 1);
+    const seg = before.split(/[|;&]/).pop() ?? '';
+    const isCommand = seg.trim() === '' && !word.includes('/');
+
+    let matches: { insert: string; display: string }[] = [];
+    if (isCommand) {
+      matches = commandNames.filter((c) => c.startsWith(word)).map((c) => ({ insert: c, display: c }));
+    } else if (ctx.fs) {
+      const slash = word.lastIndexOf('/');
+      const dirPart = slash === -1 ? '' : word.slice(0, slash + 1);
+      const base = slash === -1 ? word : word.slice(slash + 1);
+      const dirNode = nodeAt(ctx.fs, resolvePath(ctx, dirPart || '.'));
+      if (isDir(dirNode)) {
+        let names = Object.keys(dirNode.dir).sort().filter((n) => n.startsWith(base));
+        if (!base.startsWith('.')) names = names.filter((n) => !n.startsWith('.'));
+        matches = names.map((n) => {
+          const d = isDir(dirNode.dir[n]);
+          return { insert: dirPart + n + (d ? '/' : ''), display: n + (d ? '/' : '') };
+        });
+      }
+    }
+
+    if (matches.length === 0) return { replacement: null, candidates: [] };
+    if (matches.length === 1) {
+      const ins = matches[0].insert;
+      return { replacement: before + ins + (ins.endsWith('/') ? '' : ' '), candidates: [] };
+    }
+    // Advance to the longest common prefix of the candidates.
+    let lcp = matches[0].insert;
+    for (const m of matches) { let i = 0; while (i < lcp.length && i < m.insert.length && lcp[i] === m.insert[i]) i++; lcp = lcp.slice(0, i); }
+    if (lcp.length > word.length) return { replacement: before + lcp, candidates: [] };
+    return { replacement: null, candidates: matches.map((m) => m.display) };
+  };
+
   return {
     user,
     run,
+    complete,
     cwdLabel: () => prettyCwd(ctx),
     snapshot: () => JSON.stringify({ fs: ctx.fs, env: ctx.env, cwd: ctx.cwd, history: ctx.history }),
     reset,
