@@ -11,8 +11,10 @@
  * flow, functions, arrays, and the bundled headers `<iostream> <cmath>
  * <cstdio> <cstdlib> <cstring> <cctype> <ctime> <iomanip>`. It does NOT bundle
  * `<string>` (std::string), `<vector>`, or other STL containers/algorithms, so
- * author exercises with plain types / C-strings. `maxTimeout` aborts runaway
- * loops so the tab can't freeze.
+ * author exercises with plain types / C-strings. Known quirk: it collapses a
+ * comma-then-space (`", "`) inside a string literal to just `","`, so avoid
+ * that exact sequence in printed strings (`"a, b"` prints `"a,b"`). `maxTimeout`
+ * aborts runaway loops so the tab can't freeze.
  */
 
 import type { ExecutionResult } from './PythonExecutor';

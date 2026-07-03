@@ -1,34 +1,10 @@
 import type { ProgrammingLanguage, ProgrammingModule, ProgrammingConcept } from './types';
 import python from './python';
+import c from './c';
+import bash from './bash';
 import { mergeProgrammingLanguages, getVisibleCreatorLanguages } from '../../services/creatorDataService';
 
-const staticLanguages: ProgrammingLanguage[] = [
-  python,
-  {
-    id: 'c',
-    slug: 'c',
-    name: 'C',
-    color: '#555555',
-    available: false,
-    description: {
-      en: 'Understand memory, pointers, and low-level concepts essential for reverse engineering and exploit development.',
-      ar: 'فهم الذاكرة، المؤشرات، والمفاهيم المنخفضة المستوى الأساسية للهندسة العكسية وتطوير الاستغلالات.',
-    },
-    modules: [],
-  },
-  {
-    id: 'bash',
-    slug: 'bash',
-    name: 'Bash',
-    color: '#4EAA25',
-    available: false,
-    description: {
-      en: 'Shell scripting for automating security tasks, log analysis, and system administration.',
-      ar: 'برمجة الشيل لأتمتة مهام الأمن، تحليل السجلات، وإدارة النظام.',
-    },
-    modules: [],
-  },
-];
+const staticLanguages: ProgrammingLanguage[] = [python, c, bash];
 
 /** Static languages (used for backwards-compat) */
 export const programmingLanguages: ProgrammingLanguage[] = staticLanguages;

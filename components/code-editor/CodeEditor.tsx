@@ -1,6 +1,7 @@
 import React from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { python } from '@codemirror/lang-python';
+import { cpp } from '@codemirror/lang-cpp';
 import { EditorView } from '@codemirror/view';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
@@ -177,7 +178,7 @@ const editorTheme = EditorView.theme({
 
 const langExtensions = {
   python: [python()],
-  cpp: [],
+  cpp: [cpp()],
   bash: [],
 };
 
