@@ -42,6 +42,7 @@ const PathEditor = lazy(() => import('./pages/creators/PathEditor'));
 const PathDetailPage = lazy(() => import('./pages/paths/PathDetailPage'));
 const MembersPage = lazy(() => import('./pages/admin/MembersPage'));
 const CyberSecurity101Page = lazy(() => import('./pages/fundamentals/CyberSecurity101Page'));
+const TerminalPage = lazy(() => import('./pages/TerminalPage'));
 
 function LazyFallback() {
   return (
@@ -151,6 +152,16 @@ function AppRoutes() {
           element={
             <AuthGate>
               <ProgrammingLessonPage />
+            </AuthGate>
+          }
+        />
+
+        {/* Popped-out practice terminal — full-screen, outside AppLayout */}
+        <Route
+          path="/terminal"
+          element={
+            <AuthGate>
+              <TerminalPage />
             </AuthGate>
           }
         />

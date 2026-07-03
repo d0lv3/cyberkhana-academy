@@ -28,6 +28,8 @@ import Button from '../../components/ui/EnhancedButton';
 import DifficultyBadge from '../../components/ui/DifficultyBadge';
 import CourseViewerSidebar, { SidebarModule } from '../../components/CourseViewerSidebar';
 import { useLang } from '../../contexts/LangContext';
+import { useAuth } from '../../contexts/AuthContext';
+import CourseTerminalLauncher from '../../components/terminal/CourseTerminalLauncher';
 import { mdFor, type LocalizedMarkdown } from '../../services/creatorTypes';
 import { emitProgressChange, recordActivity } from '../../services/progressService';
 
@@ -171,6 +173,9 @@ const ModuleViewerPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { lang } = useLang();
+  const { user } = useAuth();
+  const isLinuxCourse = slug === 'linux-for-cybersecurity';
+  const firstName = (user?.displayName ?? 'user').trim().split(/\s+/)[0] || 'user';
 
   // `__preview__` renders an unsaved draft snapshotted by the creator studio.
   const isPreview = slug === '__preview__';
@@ -697,6 +702,8 @@ const ModuleViewerPage: React.FC = () => {
           ) : null}
         </main>
       </div>
+
+      {isLinuxCourse && <CourseTerminalLauncher user={firstName} />}
     </div>
   );
 };

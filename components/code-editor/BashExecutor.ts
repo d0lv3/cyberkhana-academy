@@ -21,6 +21,17 @@ const MAX_OUTPUT = 200_000;
 const MAX_LOOP = 200_000;
 const DEFAULT_TIMEOUT_MS = 5_000;
 
+const SHELL_HELP = `This is a practice shell — it runs in your browser, so nothing here can
+affect your real computer. Supported commands:
+
+  Files:   ls  cd  pwd  cat  mkdir  touch  rm  echo
+  Text:    grep  wc  sort  uniq  head  tail  tr  cut  sed  rev  seq
+  Shell:   variables (x=5)  $(( )) math  pipes |  &&  ||  > >>  <
+           if / for / while  ·  history  env  whoami  clear  help
+
+Example:  echo "hello" > note.txt  &&  cat note.txt
+`;
+
 class ShellError extends Error {}
 class ExitSignal {
   code: number;
@@ -30,6 +41,13 @@ class ExitSignal {
 type Quote = 'none' | 'single' | 'double';
 interface Chunk { s: string; q: Quote }
 interface Tok { op?: string; word?: Chunk[] }
+/* ── Virtual filesystem (used by the interactive shell; unused by one-shot runBash) ── */
+interface FSFile { file: string }
+interface FSDir { dir: Record<string, FSNode> }
+type FSNode = FSFile | FSDir;
+const isDir = (n: FSNode | undefined): n is FSDir => !!n && 'dir' in n;
+const isFile = (n: FSNode | undefined): n is FSFile => !!n && 'file' in n;
+
 interface Ctx {
   env: Record<string, string>;
   status: number;
@@ -37,10 +55,70 @@ interface Ctx {
   stdinBuf: string;
   stdinPos: number;
   checkTime: () => void;
+  fs?: FSDir;
+  cwd?: string;
+  home?: string;
+  user?: string;
+  history?: string[];
+  cleared?: boolean;
 }
 interface IO { stdin: string; w: (s: string) => void; ctx: Ctx; rawWords?: Tok[] }
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Node = any;
+
+/* ── Path helpers ── */
+const splitPath = (p: string) => p.split('/').filter((x) => x !== '');
+function resolvePath(ctx: Ctx, p: string): string {
+  const home = ctx.home ?? '/root';
+  let segs: string[];
+  if (p === '' || p === '~') return home;
+  if (p.startsWith('~/')) { segs = splitPath(home).concat(splitPath(p.slice(2))); }
+  else if (p.startsWith('/')) segs = splitPath(p);
+  else segs = splitPath(ctx.cwd ?? home).concat(splitPath(p));
+  const out: string[] = [];
+  for (const s of segs) {
+    if (s === '.') continue;
+    else if (s === '..') out.pop();
+    else out.push(s);
+  }
+  return '/' + out.join('/');
+}
+function nodeAt(root: FSDir, abs: string): FSNode | undefined {
+  let cur: FSNode = root;
+  for (const s of splitPath(abs)) { if (!isDir(cur)) return undefined; cur = cur.dir[s]; if (cur === undefined) return undefined; }
+  return cur;
+}
+/** Ensure a directory exists (mkdir -p style); returns it or null on conflict. */
+function ensureDir(root: FSDir, abs: string): FSDir | null {
+  let cur: FSDir = root;
+  for (const s of splitPath(abs)) {
+    const next = cur.dir[s];
+    if (next === undefined) { const d: FSDir = { dir: {} }; cur.dir[s] = d; cur = d; }
+    else if (isDir(next)) cur = next;
+    else return null;
+  }
+  return cur;
+}
+function parentAndName(abs: string): { parent: string; name: string } {
+  const segs = splitPath(abs);
+  const name = segs.pop() ?? '';
+  return { parent: '/' + segs.join('/'), name };
+}
+function writeFile(ctx: Ctx, abs: string, content: string): string | null {
+  const { parent, name } = parentAndName(abs);
+  if (!name) return 'invalid path';
+  const dir = nodeAt(ctx.fs!, parent);
+  if (!isDir(dir)) return `${parent}: No such file or directory`;
+  dir.dir[name] = { file: content };
+  return null;
+}
+/** cwd shown with $HOME collapsed to ~ (for the prompt). */
+export function prettyCwd(ctx: { cwd?: string; home?: string }): string {
+  const cwd = ctx.cwd ?? '/';
+  const home = ctx.home ?? '';
+  if (home && (cwd === home || cwd.startsWith(home + '/'))) return '~' + cwd.slice(home.length);
+  return cwd;
+}
 
 /** This runner has no async warm-up, so it's always ready. */
 export function isBashReady(): boolean { return true; }
@@ -80,6 +158,9 @@ function tokenize(src: string): Tok[] {
     if (c === '&' && src[i + 1] === '&') { flush(); toks.push({ op: '&&' }); i += 2; continue; }
     if (c === '|' && src[i + 1] === '|') { flush(); toks.push({ op: '||' }); i += 2; continue; }
     if (c === '|') { flush(); toks.push({ op: '|' }); i++; continue; }
+    if (c === '>' && src[i + 1] === '>') { flush(); toks.push({ op: '>>' }); i += 2; continue; }
+    if (c === '>') { flush(); toks.push({ op: '>' }); i++; continue; }
+    if (c === '<') { flush(); toks.push({ op: '<' }); i++; continue; }
     if (c === '\\') { if (i + 1 < n) { add(src[i + 1], 'none'); i += 2; } else i++; continue; }
     if (c === "'") { i++; let s = ''; while (i < n && src[i] !== "'") { s += src[i]; i++; } i++; add(s, 'single'); continue; }
     if (c === '"') {
@@ -146,8 +227,19 @@ function parse(toks: Tok[]): Node {
     if (kw === 'for') return parseFor();
     if (kw === 'while' || kw === 'until') return parseLoop(kw);
     const words: Tok[] = [];
-    while (peek() && peek().word && !RESERVED.has(wordKw(peek()) ?? '')) { words.push(peek()); p++; }
-    return { type: 'cmd', words };
+    const redirs: { op: string; target: Tok }[] = [];
+    for (;;) {
+      const t = peek();
+      if (t && t.word && !RESERVED.has(wordKw(t) ?? '')) { words.push(t); p++; continue; }
+      if (t && (t.op === '>' || t.op === '>>' || t.op === '<')) {
+        const op = t.op; p++;
+        const target = peek();
+        if (target && target.word) { redirs.push({ op, target }); p++; }
+        continue;
+      }
+      break;
+    }
+    return { type: 'cmd', words, redirs };
   }
 
   function parseIf(): Node {
@@ -398,7 +490,38 @@ function execSimple(node: Node, ctx: Ctx, stdin: string, captured: boolean): { o
   }
   const rest: Tok[] = node.words.slice(idx);
   for (const a of assigns) applyAssign(a, ctx);
-  if (rest.length === 0) return { out: '', status: 0 };
+
+  const redirs: { op: string; target: Tok }[] = node.redirs ?? [];
+  const finish = (out: string, status: number): { out: string; status: number } => {
+    if (!captured) { ctx.out += out; if (ctx.out.length > MAX_OUTPUT) throw new ShellError('output limit'); return { out: '', status }; }
+    return { out, status };
+  };
+  const applyOutRedir = (out: string, status: number): { out: string; status: number } => {
+    const r = redirs.find((x) => x.op === '>' || x.op === '>>');
+    if (!r) return finish(out, status);
+    if (ctx.fs) {
+      const path = expandWord(r.target, ctx)[0] ?? '';
+      const abs = resolvePath(ctx, path);
+      const existing = nodeAt(ctx.fs, abs);
+      const prev = r.op === '>>' && isFile(existing) ? existing.file : '';
+      const err = writeFile(ctx, abs, prev + out);
+      if (err) return finish(`bash: ${path}: ${err}\n`, 1);
+    }
+    return finish('', status); // output was redirected to a file
+  };
+
+  if (rest.length === 0) return applyOutRedir('', 0);
+
+  // input redirection: `< file`
+  let effStdin = stdin;
+  for (const r of redirs) {
+    if (r.op === '<') {
+      const path = expandWord(r.target, ctx)[0] ?? '';
+      const n = ctx.fs ? nodeAt(ctx.fs, resolvePath(ctx, path)) : undefined;
+      if (isFile(n)) effStdin = n.file;
+      else return finish(`bash: ${path}: No such file or directory\n`, 1);
+    }
+  }
 
   const argv = expandWords(rest, ctx);
   const cmd = argv[0];
@@ -407,11 +530,10 @@ function execSimple(node: Node, ctx: Ctx, stdin: string, captured: boolean): { o
   const w = (s: string) => { out += s; };
   let status = 0;
   const b = BUILTINS[cmd];
-  if (b) status = b(args, { stdin, w, ctx, rawWords: rest }) | 0;
+  if (b) status = b(args, { stdin: effStdin, w, ctx, rawWords: rest }) | 0;
   else { out += `${cmd}: command not found\n`; status = 127; }
 
-  if (!captured) { ctx.out += out; if (ctx.out.length > MAX_OUTPUT) throw new ShellError('output limit'); }
-  return { out, status };
+  return applyOutRedir(out, status);
 }
 
 function applyAssign(w: Tok, ctx: Ctx) {
@@ -518,7 +640,18 @@ const BUILTINS: Record<string, (args: string[], io: IO) => number> = {
     }
     return 0;
   },
-  cat(_args, { stdin, w }) { w(stdin ?? ''); return 0; },
+  cat(args, { stdin, w, ctx }) {
+    const files = args.filter((a) => !a.startsWith('-'));
+    if (files.length === 0) { w(stdin ?? ''); return 0; }
+    let status = 0;
+    for (const f of files) {
+      const n = ctx.fs ? nodeAt(ctx.fs, resolvePath(ctx, f)) : undefined;
+      if (isFile(n)) w(n.file);
+      else if (isDir(n)) { w(`cat: ${f}: Is a directory\n`); status = 1; }
+      else { w(`cat: ${f}: No such file or directory\n`); status = 1; }
+    }
+    return status;
+  },
   wc(args, { stdin, w }) {
     const s = stdin ?? '';
     const lines = s === '' ? 0 : s.split('\n').length - (s.endsWith('\n') ? 1 : 0);
@@ -597,8 +730,91 @@ const BUILTINS: Record<string, (args: string[], io: IO) => number> = {
   expr(args, { w, ctx }) { const v = arith(args.join(' '), ctx.env); w(String(v) + '\n'); return v === 0 ? 1 : 0; },
   basename(args, { w }) { const p = (args[0] ?? '').replace(/\/+$/, ''); w((p.split('/').pop() || '/') + '\n'); return 0; },
   dirname(args, { w }) { const p = (args[0] ?? '').replace(/\/+$/, ''); const i = p.lastIndexOf('/'); w((i <= 0 ? (i === 0 ? '/' : '.') : p.slice(0, i)) + '\n'); return 0; },
-  pwd(_args, { w }) { w('/home/khana\n'); return 0; },
-  cd() { return 0; },
+  pwd(_args, { w, ctx }) { w((ctx.cwd ?? '/') + '\n'); return 0; },
+  cd(args, { w, ctx }) {
+    if (!ctx.fs) return 0;
+    const target = args.find((a) => !a.startsWith('-')) ?? '~';
+    const abs = resolvePath(ctx, target);
+    const n = nodeAt(ctx.fs, abs);
+    if (n === undefined) { w(`cd: ${target}: No such file or directory\n`); return 1; }
+    if (!isDir(n)) { w(`cd: ${target}: Not a directory\n`); return 1; }
+    ctx.cwd = abs === '' ? '/' : abs;
+    ctx.env.PWD = ctx.cwd;
+    return 0;
+  },
+  ls(args, { w, ctx }) {
+    if (!ctx.fs) return 0;
+    const flags = args.filter((a) => a.startsWith('-')).join('');
+    const long = flags.includes('l');
+    const all = flags.includes('a');
+    const target = args.find((a) => !a.startsWith('-')) ?? '.';
+    const abs = resolvePath(ctx, target);
+    const n = nodeAt(ctx.fs, abs);
+    if (n === undefined) { w(`ls: cannot access '${target}': No such file or directory\n`); return 1; }
+    if (isFile(n)) { w(target + '\n'); return 0; }
+    let names = Object.keys(n.dir).sort();
+    if (!all) names = names.filter((nm) => !nm.startsWith('.'));
+    if (all) names = ['.', '..', ...names];
+    const child = (nm: string): FSNode => (nm === '.' || nm === '..' ? { dir: {} } : n.dir[nm]);
+    if (long) {
+      w(names.map((nm) => {
+        const c = child(nm);
+        const size = isFile(c) ? c.file.length : 4096;
+        return `${isDir(c) ? 'd' : '-'}rw-r--r-- 1 ${ctx.user ?? 'user'} ${ctx.user ?? 'user'} ${String(size).padStart(5)} ${isDir(c) ? nm + '/' : nm}`;
+      }).join('\n') + (names.length ? '\n' : ''));
+    } else {
+      w(names.map((nm) => (isDir(child(nm)) ? nm + '/' : nm)).join('  ') + (names.length ? '\n' : ''));
+    }
+    return 0;
+  },
+  mkdir(args, { w, ctx }) {
+    if (!ctx.fs) return 0;
+    const p = args.some((a) => a.startsWith('-') && a.includes('p'));
+    let status = 0;
+    for (const t of args.filter((a) => !a.startsWith('-'))) {
+      const abs = resolvePath(ctx, t);
+      if (p) { if (!ensureDir(ctx.fs, abs)) { w(`mkdir: cannot create directory '${t}': Not a directory\n`); status = 1; } continue; }
+      const { parent, name } = parentAndName(abs);
+      const par = nodeAt(ctx.fs, parent);
+      if (!isDir(par)) { w(`mkdir: cannot create directory '${t}': No such file or directory\n`); status = 1; }
+      else if (par.dir[name]) { w(`mkdir: cannot create directory '${t}': File exists\n`); status = 1; }
+      else par.dir[name] = { dir: {} };
+    }
+    return status;
+  },
+  touch(args, { w, ctx }) {
+    if (!ctx.fs) return 0;
+    for (const t of args.filter((a) => !a.startsWith('-'))) {
+      const abs = resolvePath(ctx, t);
+      if (nodeAt(ctx.fs, abs) === undefined) { const err = writeFile(ctx, abs, ''); if (err) w(`touch: cannot touch '${t}': ${err}\n`); }
+    }
+    return 0;
+  },
+  rm(args, { w, ctx }) {
+    if (!ctx.fs) return 0;
+    const rec = args.some((a) => a.startsWith('-') && /[rR]/.test(a));
+    const force = args.some((a) => a.startsWith('-') && a.includes('f'));
+    let status = 0;
+    for (const t of args.filter((a) => !a.startsWith('-'))) {
+      const abs = resolvePath(ctx, t);
+      const { parent, name } = parentAndName(abs);
+      const par = nodeAt(ctx.fs, parent);
+      const target = isDir(par) ? par.dir[name] : undefined;
+      if (target === undefined) { if (!force) { w(`rm: cannot remove '${t}': No such file or directory\n`); status = 1; } continue; }
+      if (isDir(target) && !rec) { w(`rm: cannot remove '${t}': Is a directory\n`); status = 1; continue; }
+      delete (par as FSDir).dir[name];
+    }
+    return status;
+  },
+  clear(_args, { ctx }) { ctx.cleared = true; return 0; },
+  whoami(_args, { w, ctx }) { w((ctx.user ?? 'user') + '\n'); return 0; },
+  history(_args, { w, ctx }) {
+    const h = ctx.history ?? [];
+    w(h.map((c, i) => `${String(i + 1).padStart(4)}  ${c}`).join('\n') + (h.length ? '\n' : ''));
+    return 0;
+  },
+  env(_args, { w, ctx }) { w(Object.entries(ctx.env).map(([k, v]) => `${k}=${v}`).join('\n') + '\n'); return 0; },
+  help(_args, { w }) { w(SHELL_HELP); return 0; },
   export(args, { ctx }) { for (const a of args) { const m = /^([A-Za-z_]\w*)=(.*)$/s.exec(a); if (m) ctx.env[m[1]] = m[2]; } return 0; },
   sleep() { return 0; },
   exit(args) { throw new ExitSignal(parseInt(args[0], 10) || 0); },
@@ -632,4 +848,118 @@ export async function runBash(
     const msg = e instanceof ShellError ? e.message : (e instanceof Error ? e.message : String(e));
     return { output: ctx.out, error: `bash: ${msg}`, durationMs: Math.round(performance.now() - start) };
   }
+}
+
+/* ── Interactive shell session ── */
+
+export interface ShellRunResult {
+  output: string;
+  error?: string;
+  /** `clear` was run — the UI should wipe the scrollback. */
+  cleared?: boolean;
+  /** `exit` was run — the UI may close the terminal. */
+  exited?: boolean;
+  cwd: string;
+  cwdLabel: string;
+}
+
+export interface ShellSession {
+  readonly user: string;
+  /** Run one command line against the persistent session. */
+  run(line: string, timeoutMs?: number): ShellRunResult;
+  /** Current working directory with $HOME shown as ~ (for the prompt). */
+  cwdLabel(): string;
+  /** Serialize fs + env + cwd + history so a popped-out tab can continue. */
+  snapshot(): string;
+  /** Reset to a fresh home + welcome file. */
+  reset(): void;
+}
+
+function seedSession(user: string): { fs: FSDir; env: Record<string, string>; cwd: string; home: string } {
+  const home = `/home/${user}`;
+  const fs: FSDir = { dir: {} };
+  const seedCtx = { fs } as Ctx;
+  ensureDir(fs, home);
+  ensureDir(fs, `${home}/notes`);
+  ensureDir(fs, '/etc');
+  writeFile(seedCtx, `${home}/welcome.txt`,
+    `Welcome to your CyberKhana practice shell, ${user}!\n\nTry:  ls   ·   cat welcome.txt   ·   echo "hi" > hello.txt   ·   help\n`);
+  writeFile(seedCtx, '/etc/hostname', 'cyberkhana\n');
+  const env: Record<string, string> = { USER: user, HOME: home, PWD: home, HOSTNAME: 'cyberkhana', SHELL: '/bin/bash' };
+  return { fs, env, cwd: home, home };
+}
+
+/**
+ * Create a persistent interactive shell for the given user. State (variables,
+ * working directory, and an in-memory filesystem) carries across commands. It
+ * runs entirely in the browser — a safe sandbox, never the real machine.
+ */
+export function createShellSession(opts: { user?: string; restore?: string | null } = {}): ShellSession {
+  const user = (opts.user || 'user').trim().toLowerCase().replace(/[^a-z0-9._-]/g, '') || 'user';
+
+  const seed = seedSession(user);
+  const ctx: Ctx = {
+    env: seed.env,
+    status: 0,
+    out: '',
+    stdinBuf: '',
+    stdinPos: 0,
+    checkTime: () => {},
+    fs: seed.fs,
+    cwd: seed.cwd,
+    home: seed.home,
+    user,
+    history: [],
+  };
+
+  if (opts.restore) {
+    try {
+      const s = JSON.parse(opts.restore);
+      if (s.fs) ctx.fs = s.fs;
+      if (s.env) ctx.env = s.env;
+      if (typeof s.cwd === 'string') ctx.cwd = s.cwd;
+      if (Array.isArray(s.history)) ctx.history = s.history;
+    } catch {
+      /* corrupt snapshot — keep the fresh seed */
+    }
+  }
+
+  const run = (line: string, timeoutMs = DEFAULT_TIMEOUT_MS): ShellRunResult => {
+    ctx.out = '';
+    ctx.stdinBuf = '';
+    ctx.stdinPos = 0;
+    ctx.cleared = false;
+    if (line.trim() !== '') ctx.history!.push(line);
+    const deadline = Date.now() + timeoutMs;
+    ctx.checkTime = () => { if (Date.now() > deadline) throw new ShellError('command timed out'); };
+    let error: string | undefined;
+    let exited = false;
+    try {
+      runList(parse(tokenize(line)), ctx);
+    } catch (e) {
+      if (e instanceof ExitSignal) exited = true;
+      else if (e instanceof ShellError) error = `bash: ${e.message}`;
+      else error = `bash: ${e instanceof Error ? e.message : String(e)}`;
+    }
+    ctx.env.PWD = ctx.cwd!;
+    return { output: ctx.out, error, cleared: ctx.cleared, exited, cwd: ctx.cwd!, cwdLabel: prettyCwd(ctx) };
+  };
+
+  const reset = () => {
+    const fresh = seedSession(user);
+    ctx.fs = fresh.fs;
+    ctx.env = fresh.env;
+    ctx.cwd = fresh.cwd;
+    ctx.home = fresh.home;
+    ctx.history = [];
+    ctx.status = 0;
+  };
+
+  return {
+    user,
+    run,
+    cwdLabel: () => prettyCwd(ctx),
+    snapshot: () => JSON.stringify({ fs: ctx.fs, env: ctx.env, cwd: ctx.cwd, history: ctx.history }),
+    reset,
+  };
 }
