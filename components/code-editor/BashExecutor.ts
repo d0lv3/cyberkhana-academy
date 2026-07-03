@@ -21,15 +21,19 @@ const MAX_OUTPUT = 200_000;
 const MAX_LOOP = 200_000;
 const DEFAULT_TIMEOUT_MS = 5_000;
 
-const SHELL_HELP = `This is a practice shell — it runs in your browser, so nothing here can
-affect your real computer. Supported commands:
+const SHELL_HELP = `A practice shell — runs safely in your browser, never a real machine.
 
-  Files:   ls  cd  pwd  cat  mkdir  touch  rm  echo
-  Text:    grep  wc  sort  uniq  head  tail  tr  cut  sed  rev  seq
-  Shell:   variables (x=5)  $(( )) math  pipes |  &&  ||  > >>  <
-           if / for / while  ·  history  env  whoami  clear  help
+  Navigate : ls  cd  pwd  tree  find  stat  file  realpath
+  Files    : cat  cp  mv  rm  mkdir  rmdir  touch  ln  chmod  du
+  Text     : echo  grep  wc  sort  uniq  head  tail  tac  nl  cut  tr
+             sed  rev  tee  more  less  seq  printf
+  System   : whoami  id  groups  uname  hostname  arch  date  uptime
+             ps  free  df  who  w  env  printenv  history  which  type
+  Shell    : variables (x=5)  ·  \$(( )) math  ·  \$(cmd)  ·  pipes |
+             &&  ||  ·  redirection > >> <  ·  if / for / while  ·  clear
 
-Example:  echo "hello" > note.txt  &&  cat note.txt
+Try:  ls -la      ·   cat readme.md      ·   grep -i error /var/log/syslog
+      cd projects && tree     ·   echo "hi" > note.txt && cat note.txt
 `;
 
 class ShellError extends Error {}
@@ -42,11 +46,12 @@ type Quote = 'none' | 'single' | 'double';
 interface Chunk { s: string; q: Quote }
 interface Tok { op?: string; word?: Chunk[] }
 /* ── Virtual filesystem (used by the interactive shell; unused by one-shot runBash) ── */
-interface FSFile { file: string }
-interface FSDir { dir: Record<string, FSNode> }
+interface FSFile { file: string; mode?: string }
+interface FSDir { dir: Record<string, FSNode>; mode?: string }
 type FSNode = FSFile | FSDir;
 const isDir = (n: FSNode | undefined): n is FSDir => !!n && 'dir' in n;
 const isFile = (n: FSNode | undefined): n is FSFile => !!n && 'file' in n;
+const modeOf = (n: FSNode) => n.mode ?? (isDir(n) ? 'rwxr-xr-x' : 'rw-r--r--');
 
 interface Ctx {
   env: Record<string, string>;
@@ -548,6 +553,39 @@ function applyAssign(w: Tok, ctx: Ctx) {
 /* ── Builtins & coreutils ── */
 const splitLines = (s: string) => (s === '' ? [] : s.replace(/\n$/, '').split('\n'));
 
+/** Read from file arguments if given, else fall back to piped/redirected stdin. */
+function readInput(ctx: Ctx, files: string[], stdin: string): { data: string; errors: string } {
+  if (files.length === 0) return { data: stdin ?? '', errors: '' };
+  let data = '';
+  let errors = '';
+  for (const f of files) {
+    const n = ctx.fs ? nodeAt(ctx.fs, resolvePath(ctx, f)) : undefined;
+    if (isFile(n)) data += n.file;
+    else if (isDir(n)) errors += `${f}: Is a directory\n`;
+    else errors += `${f}: No such file or directory\n`;
+  }
+  return { data, errors };
+}
+
+/** Non-flag args, skipping the value that follows each flag in `valueFlags`. */
+function nonFlagFiles(args: string[], valueFlags: string[] = []): string[] {
+  const files: string[] = [];
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if (valueFlags.includes(a)) { i++; continue; }
+    if (a.startsWith('-')) continue;
+    files.push(a);
+  }
+  return files;
+}
+
+/** Deep-clone a filesystem node (for cp). */
+function cloneNode(n: FSNode): FSNode {
+  return isDir(n)
+    ? { dir: Object.fromEntries(Object.entries(n.dir).map(([k, v]) => [k, cloneNode(v)])), mode: n.mode }
+    : { file: n.file, mode: n.mode };
+}
+
 function headTailCount(args: string[], def: number): number {
   for (let i = 0; i < args.length; i++) {
     const a = args[i];
@@ -652,44 +690,54 @@ const BUILTINS: Record<string, (args: string[], io: IO) => number> = {
     }
     return status;
   },
-  wc(args, { stdin, w }) {
-    const s = stdin ?? '';
+  wc(args, { stdin, w, ctx }) {
+    const { data, errors } = readInput(ctx, args.filter((a) => !a.startsWith('-')), stdin);
+    if (errors) w(errors.split('\n').filter(Boolean).map((e) => `wc: ${e}\n`).join(''));
+    const s = data;
     const lines = s === '' ? 0 : s.split('\n').length - (s.endsWith('\n') ? 1 : 0);
     const words = s.trim() === '' ? 0 : s.trim().split(/\s+/).length;
     const chars = s.length;
     if (args.includes('-l')) w(`${lines}\n`);
     else if (args.includes('-w')) w(`${words}\n`);
-    else if (args.includes('-c')) w(`${chars}\n`);
+    else if (args.includes('-c') || args.includes('-m')) w(`${chars}\n`);
     else w(`${lines} ${words} ${chars}\n`);
-    return 0;
+    return errors ? 1 : 0;
   },
-  head(args, { stdin, w }) { const k = headTailCount(args, 10); w(splitLines(stdin ?? '').slice(0, k).map((l) => l + '\n').join('')); return 0; },
-  tail(args, { stdin, w }) { const k = headTailCount(args, 10); const L = splitLines(stdin ?? ''); w(L.slice(Math.max(0, L.length - k)).map((l) => l + '\n').join('')); return 0; },
-  rev(_args, { stdin, w }) { w(splitLines(stdin ?? '').map((l) => l.split('').reverse().join('')).map((l) => l + '\n').join('')); return 0; },
-  sort(args, { stdin, w }) {
-    let L = splitLines(stdin ?? '');
+  head(args, { stdin, w, ctx }) { const k = headTailCount(args, 10); const { data } = readInput(ctx, nonFlagFiles(args, ['-n']), stdin); w(splitLines(data).slice(0, k).map((l) => l + '\n').join('')); return 0; },
+  tail(args, { stdin, w, ctx }) { const k = headTailCount(args, 10); const { data } = readInput(ctx, nonFlagFiles(args, ['-n']), stdin); const L = splitLines(data); w(L.slice(Math.max(0, L.length - k)).map((l) => l + '\n').join('')); return 0; },
+  tac(args, { stdin, w, ctx }) { const { data } = readInput(ctx, args.filter((a) => !a.startsWith('-')), stdin); w(splitLines(data).reverse().map((l) => l + '\n').join('')); return 0; },
+  nl(args, { stdin, w, ctx }) { const { data } = readInput(ctx, args.filter((a) => !a.startsWith('-')), stdin); const L = splitLines(data); w(L.map((l, i) => `${String(i + 1).padStart(6)}\t${l}`).join('\n') + (L.length ? '\n' : '')); return 0; },
+  rev(args, { stdin, w, ctx }) { const { data } = readInput(ctx, args.filter((a) => !a.startsWith('-')), stdin); w(splitLines(data).map((l) => l.split('').reverse().join('')).map((l) => l + '\n').join('')); return 0; },
+  sort(args, { stdin, w, ctx }) {
+    const { data } = readInput(ctx, args.filter((a) => !a.startsWith('-')), stdin);
+    let L = splitLines(data);
     const num = args.includes('-n'); const rev = args.includes('-r'); const uniq = args.includes('-u');
     L.sort((x, y) => (num ? (parseFloat(x) || 0) - (parseFloat(y) || 0) : x < y ? -1 : x > y ? 1 : 0));
     if (rev) L.reverse();
     if (uniq) L = L.filter((x, k) => k === 0 || x !== L[k - 1]);
     w(L.map((l) => l + '\n').join('')); return 0;
   },
-  uniq(args, { stdin, w }) {
-    const L = splitLines(stdin ?? ''); const count = args.includes('-c');
+  uniq(args, { stdin, w, ctx }) {
+    const { data } = readInput(ctx, args.filter((a) => !a.startsWith('-')), stdin);
+    const L = splitLines(data); const count = args.includes('-c');
     const out: { v: string; c: number }[] = [];
     for (const l of L) { if (out.length && out[out.length - 1].v === l) out[out.length - 1].c++; else out.push({ v: l, c: 1 }); }
     w(out.map((o) => (count ? `${String(o.c).padStart(7)} ${o.v}` : o.v) + '\n').join('')); return 0;
   },
-  grep(args, { stdin, w }) {
-    let inv = false; let ic = false; let cnt = false;
-    const pats: string[] = [];
-    for (const a of args) { if (a === '-v') inv = true; else if (a === '-i') ic = true; else if (a === '-c') cnt = true; else if (a === '-E' || a === '-e') { /* flag */ } else pats.push(a); }
-    const pat = pats[0] ?? '';
+  grep(args, { stdin, w, ctx }) {
+    let inv = false; let ic = false; let cnt = false; let num = false;
+    const rest: string[] = [];
+    for (const a of args) {
+      if (a === '-v') inv = true; else if (a === '-i') ic = true; else if (a === '-c') cnt = true; else if (a === '-n') num = true;
+      else if (a === '-E' || a === '-e') { /* flag */ } else rest.push(a);
+    }
+    const pat = rest[0] ?? '';
+    const { data } = readInput(ctx, rest.slice(1), stdin);
     let re: RegExp;
     try { re = new RegExp(pat, ic ? 'i' : ''); } catch { re = new RegExp(pat.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), ic ? 'i' : ''); }
-    const L = splitLines(stdin ?? '').filter((l) => re.test(l) !== inv);
-    if (cnt) { w(`${L.length}\n`); return L.length ? 0 : 1; }
-    w(L.map((l) => l + '\n').join('')); return L.length ? 0 : 1;
+    const matched = splitLines(data).map((l, i) => ({ l, i })).filter(({ l }) => re.test(l) !== inv);
+    if (cnt) { w(`${matched.length}\n`); return matched.length ? 0 : 1; }
+    w(matched.map(({ l, i }) => (num ? `${i + 1}:${l}` : l) + '\n').join('')); return matched.length ? 0 : 1;
   },
   tr(args, { stdin, w }) {
     const del = args[0] === '-d';
@@ -699,24 +747,41 @@ const BUILTINS: Record<string, (args: string[], io: IO) => number> = {
     else { s = s.split('').map((c) => { const k = a.indexOf(c); return k >= 0 && bset[k] !== undefined ? bset[Math.min(k, bset.length - 1)] : c; }).join(''); }
     w(s); return 0;
   },
-  cut(args, { stdin, w }) {
-    let d = '\t'; let f = '1';
+  cut(args, { stdin, w, ctx }) {
+    let d = '\t'; let f = '1'; const files: string[] = [];
     for (let i = 0; i < args.length; i++) {
       const a = args[i];
       if (a === '-d') d = args[++i] ?? '\t';
       else if (a.startsWith('-d')) d = a.slice(2);
       else if (a === '-f') f = args[++i] ?? '1';
       else if (a.startsWith('-f')) f = a.slice(2);
+      else if (!a.startsWith('-')) files.push(a);
     }
     const fi = parseInt(f, 10) || 1;
-    w(splitLines(stdin ?? '').map((l) => (l.split(d)[fi - 1] ?? '')).map((l) => l + '\n').join('')); return 0;
+    const { data } = readInput(ctx, files, stdin);
+    w(splitLines(data).map((l) => (l.split(d)[fi - 1] ?? '')).map((l) => l + '\n').join('')); return 0;
   },
-  sed(args, { stdin, w }) {
-    const expr = args.find((a) => a.startsWith('s'));
+  sed(args, { stdin, w, ctx }) {
+    const expr = args.find((a) => /^s(.).*\1/.test(a));
+    const files = args.filter((a) => a !== expr && !a.startsWith('-'));
     const m = expr && /^s(.)(.*)\1(.*)\1([gi]*)$/.exec(expr);
-    let s = stdin ?? '';
+    const { data } = readInput(ctx, files, stdin);
+    let s = data;
     if (m) { const re = new RegExp(m[2], m[4].includes('g') ? 'g' : ''); s = splitLines(s).map((l) => l.replace(re, m[3])).map((l) => l + '\n').join(''); }
     w(s); return 0;
+  },
+  more(args, io) { return BUILTINS.cat(args, io); },
+  less(args, io) { return BUILTINS.cat(args, io); },
+  tee(args, { stdin, w, ctx }) {
+    const append = args.some((a) => a.startsWith('-') && a.includes('a'));
+    const data = stdin ?? '';
+    if (ctx.fs) for (const f of args.filter((a) => !a.startsWith('-'))) {
+      const abs = resolvePath(ctx, f);
+      const existing = nodeAt(ctx.fs, abs);
+      const prev = append && isFile(existing) ? existing.file : '';
+      writeFile(ctx, abs, prev + data);
+    }
+    w(data); return 0;
   },
   seq(args, { w }) {
     let a = 1; let step = 1; let b: number;
@@ -751,7 +816,11 @@ const BUILTINS: Record<string, (args: string[], io: IO) => number> = {
     const abs = resolvePath(ctx, target);
     const n = nodeAt(ctx.fs, abs);
     if (n === undefined) { w(`ls: cannot access '${target}': No such file or directory\n`); return 1; }
-    if (isFile(n)) { w(target + '\n'); return 0; }
+    if (isFile(n)) {
+      if (long) w(`-${modeOf(n)} 1 ${ctx.user ?? 'user'} ${ctx.user ?? 'user'} ${String(n.file.length).padStart(5)} ${target}\n`);
+      else w(target + '\n');
+      return 0;
+    }
     let names = Object.keys(n.dir).sort();
     if (!all) names = names.filter((nm) => !nm.startsWith('.'));
     if (all) names = ['.', '..', ...names];
@@ -760,7 +829,7 @@ const BUILTINS: Record<string, (args: string[], io: IO) => number> = {
       w(names.map((nm) => {
         const c = child(nm);
         const size = isFile(c) ? c.file.length : 4096;
-        return `${isDir(c) ? 'd' : '-'}rw-r--r-- 1 ${ctx.user ?? 'user'} ${ctx.user ?? 'user'} ${String(size).padStart(5)} ${isDir(c) ? nm + '/' : nm}`;
+        return `${isDir(c) ? 'd' : '-'}${modeOf(c)} 1 ${ctx.user ?? 'user'} ${ctx.user ?? 'user'} ${String(size).padStart(5)} ${isDir(c) ? nm + '/' : nm}`;
       }).join('\n') + (names.length ? '\n' : ''));
     } else {
       w(names.map((nm) => (isDir(child(nm)) ? nm + '/' : nm)).join('  ') + (names.length ? '\n' : ''));
@@ -815,6 +884,202 @@ const BUILTINS: Record<string, (args: string[], io: IO) => number> = {
   },
   env(_args, { w, ctx }) { w(Object.entries(ctx.env).map(([k, v]) => `${k}=${v}`).join('\n') + '\n'); return 0; },
   help(_args, { w }) { w(SHELL_HELP); return 0; },
+  cp(args, { w, ctx }) {
+    if (!ctx.fs) return 0;
+    const rec = args.some((a) => a.startsWith('-') && /[rR]/.test(a));
+    const files = args.filter((a) => !a.startsWith('-'));
+    if (files.length < 2) { w('cp: missing destination file operand\n'); return 1; }
+    const dest = files.pop() as string;
+    const destAbs = resolvePath(ctx, dest);
+    const intoDir = isDir(nodeAt(ctx.fs, destAbs));
+    let status = 0;
+    for (const src of files) {
+      const srcNode = nodeAt(ctx.fs, resolvePath(ctx, src));
+      if (srcNode === undefined) { w(`cp: cannot stat '${src}': No such file or directory\n`); status = 1; continue; }
+      if (isDir(srcNode) && !rec) { w(`cp: -r not specified; omitting directory '${src}'\n`); status = 1; continue; }
+      const targetAbs = intoDir ? `${destAbs === '/' ? '' : destAbs}/${parentAndName(resolvePath(ctx, src)).name}` : destAbs;
+      const { parent, name } = parentAndName(targetAbs);
+      const par = nodeAt(ctx.fs, parent);
+      if (!isDir(par)) { w(`cp: cannot create '${dest}': No such file or directory\n`); status = 1; continue; }
+      par.dir[name] = cloneNode(srcNode);
+    }
+    return status;
+  },
+  mv(args, { w, ctx }) {
+    if (!ctx.fs) return 0;
+    const files = args.filter((a) => !a.startsWith('-'));
+    if (files.length < 2) { w('mv: missing destination file operand\n'); return 1; }
+    const dest = files.pop() as string;
+    const destAbs = resolvePath(ctx, dest);
+    const intoDir = isDir(nodeAt(ctx.fs, destAbs));
+    let status = 0;
+    for (const src of files) {
+      const srcAbs = resolvePath(ctx, src);
+      const srcNode = nodeAt(ctx.fs, srcAbs);
+      if (srcNode === undefined) { w(`mv: cannot stat '${src}': No such file or directory\n`); status = 1; continue; }
+      const targetAbs = intoDir ? `${destAbs === '/' ? '' : destAbs}/${parentAndName(srcAbs).name}` : destAbs;
+      const { parent: tp, name: tn } = parentAndName(targetAbs);
+      const tpar = nodeAt(ctx.fs, tp);
+      if (!isDir(tpar)) { w(`mv: cannot move '${src}': No such file or directory\n`); status = 1; continue; }
+      tpar.dir[tn] = srcNode;
+      const { parent: sp, name: sn } = parentAndName(srcAbs);
+      const spar = nodeAt(ctx.fs, sp);
+      if (isDir(spar)) delete spar.dir[sn];
+    }
+    return status;
+  },
+  rmdir(args, { w, ctx }) {
+    if (!ctx.fs) return 0;
+    let status = 0;
+    for (const t of args.filter((a) => !a.startsWith('-'))) {
+      const { parent, name } = parentAndName(resolvePath(ctx, t));
+      const par = nodeAt(ctx.fs, parent);
+      const node = isDir(par) ? par.dir[name] : undefined;
+      if (!isDir(node)) { w(`rmdir: failed to remove '${t}': Not a directory\n`); status = 1; continue; }
+      if (Object.keys(node.dir).length) { w(`rmdir: failed to remove '${t}': Directory not empty\n`); status = 1; continue; }
+      delete (par as FSDir).dir[name];
+    }
+    return status;
+  },
+  ln(args, { w, ctx }) {
+    if (!ctx.fs) return 0;
+    const files = args.filter((a) => !a.startsWith('-'));
+    if (files.length < 2) { w('ln: missing file operand\n'); return 1; }
+    const tn = nodeAt(ctx.fs, resolvePath(ctx, files[0]));
+    if (tn === undefined) { w(`ln: failed to access '${files[0]}': No such file or directory\n`); return 1; }
+    const { parent, name } = parentAndName(resolvePath(ctx, files[1]));
+    const par = nodeAt(ctx.fs, parent);
+    if (isDir(par)) par.dir[name] = cloneNode(tn);
+    return 0;
+  },
+  find(args, { w, ctx }) {
+    if (!ctx.fs) return 0;
+    let start = '.'; let namePat: RegExp | null = null; let typ: 'f' | 'd' | null = null;
+    for (let i = 0; i < args.length; i++) {
+      const a = args[i];
+      if (a === '-name') { const g = args[++i] ?? ''; namePat = new RegExp('^' + g.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*').replace(/\?/g, '.') + '$'); }
+      else if (a === '-type') { typ = args[++i] === 'd' ? 'd' : 'f'; }
+      else if (!a.startsWith('-')) start = a;
+    }
+    const startAbs = resolvePath(ctx, start);
+    const root = nodeAt(ctx.fs, startAbs);
+    if (root === undefined) { w(`find: '${start}': No such file or directory\n`); return 1; }
+    const out: string[] = [];
+    const rec = (path: string, node: FSNode) => {
+      const nm = parentAndName(path).name || '/';
+      if ((!namePat || namePat.test(nm)) && (!typ || (typ === 'd' ? isDir(node) : isFile(node)))) out.push(path);
+      if (isDir(node)) for (const k of Object.keys(node.dir).sort()) rec(path === '/' ? '/' + k : path + '/' + k, node.dir[k]);
+    };
+    rec(startAbs, root);
+    const disp = (p: string) => (p === startAbs ? start : (start.replace(/\/$/, '')) + p.slice(startAbs.length));
+    w(out.map(disp).join('\n') + (out.length ? '\n' : ''));
+    return 0;
+  },
+  tree(args, { w, ctx }) {
+    if (!ctx.fs) return 0;
+    const start = args.find((a) => !a.startsWith('-')) ?? '.';
+    const root = nodeAt(ctx.fs, resolvePath(ctx, start));
+    if (!isDir(root)) { w(`${start} [error opening dir]\n\n0 directories, 0 files\n`); return 1; }
+    let dirs = 0; let files = 0;
+    const lines = [start];
+    const rec = (node: FSDir, prefix: string) => {
+      const names = Object.keys(node.dir).sort();
+      names.forEach((name, idx) => {
+        const last = idx === names.length - 1;
+        const child = node.dir[name];
+        lines.push(prefix + (last ? '└── ' : '├── ') + (isDir(child) ? name + '/' : name));
+        if (isDir(child)) { dirs++; rec(child, prefix + (last ? '    ' : '│   ')); } else files++;
+      });
+    };
+    rec(root, '');
+    lines.push('', `${dirs} director${dirs === 1 ? 'y' : 'ies'}, ${files} file${files === 1 ? '' : 's'}`);
+    w(lines.join('\n') + '\n');
+    return 0;
+  },
+  stat(args, { w, ctx }) {
+    if (!ctx.fs) return 0;
+    const t = args.find((a) => !a.startsWith('-')) ?? '';
+    const n = nodeAt(ctx.fs, resolvePath(ctx, t));
+    if (n === undefined) { w(`stat: cannot stat '${t}': No such file or directory\n`); return 1; }
+    const size = isFile(n) ? n.file.length : 4096;
+    w(`  File: ${t}\n  Size: ${size}\t\tType: ${isDir(n) ? 'directory' : 'regular file'}\nAccess: (${isDir(n) ? '0755' : '0644'}/${isDir(n) ? 'd' : '-'}${modeOf(n)})  Uid: (1000/${ctx.user ?? 'user'})  Gid: (1000/${ctx.user ?? 'user'})\n`);
+    return 0;
+  },
+  du(args, { w, ctx }) {
+    if (!ctx.fs) return 0;
+    const start = args.find((a) => !a.startsWith('-')) ?? '.';
+    const root = nodeAt(ctx.fs, resolvePath(ctx, start));
+    if (root === undefined) { w(`du: cannot access '${start}': No such file or directory\n`); return 1; }
+    const size = (n: FSNode): number => (isDir(n) ? Object.values(n.dir).reduce((s, c) => s + size(c), 4) : Math.max(1, Math.ceil(n.file.length / 1024)));
+    w(`${size(root)}\t${start}\n`);
+    return 0;
+  },
+  df(_args, { w }) { w('Filesystem     1K-blocks    Used Available Use% Mounted on\n/dev/vda1       20512768 6291456  14221312  31% /\ntmpfs            1024000       0   1024000   0% /dev/shm\n'); return 0; },
+  file(args, { w, ctx }) {
+    if (!ctx.fs) return 0;
+    for (const t of args.filter((a) => !a.startsWith('-'))) {
+      const n = nodeAt(ctx.fs, resolvePath(ctx, t));
+      if (n === undefined) w(`${t}: cannot open (No such file or directory)\n`);
+      else if (isDir(n)) w(`${t}: directory\n`);
+      else if (n.file === '') w(`${t}: empty\n`);
+      else w(`${t}: ASCII text\n`);
+    }
+    return 0;
+  },
+  chmod(args, { w, ctx }) {
+    if (!ctx.fs) return 0;
+    const spec = args.find((a) => /^[0-7]{3,4}$/.test(a) || /^[ugoa]*[+-][rwx]+$/.test(a)) ?? args[0] ?? '';
+    const targets = args.filter((a) => a !== spec && !a.startsWith('-'));
+    const num2mode = (t: string) => { const map = ['---', '--x', '-w-', '-wx', 'r--', 'r-x', 'rw-', 'rwx']; return t.split('').map((d) => map[parseInt(d, 10)] ?? '---').join(''); };
+    let status = 0;
+    for (const t of targets) {
+      const n = nodeAt(ctx.fs, resolvePath(ctx, t));
+      if (n === undefined) { w(`chmod: cannot access '${t}': No such file or directory\n`); status = 1; continue; }
+      if (/^[0-7]{3,4}$/.test(spec)) { n.mode = num2mode(spec.slice(-3)); }
+      else {
+        const sym = /^([ugoa]*)([+-])([rwx]+)$/.exec(spec);
+        if (sym) {
+          const m = (n.mode ?? modeOf(n)).split('');
+          const posMap: Record<string, number[]> = { r: [0, 3, 6], w: [1, 4, 7], x: [2, 5, 8] };
+          for (const p of sym[3]) for (const i of posMap[p]) m[i] = sym[2] === '+' ? 'rwxrwxrwx'[i] : '-';
+          n.mode = m.join('');
+        }
+      }
+    }
+    return status;
+  },
+  uname(args, { w }) {
+    if (args.includes('-a')) { w('Linux cyberkhana 6.1.0-cyberkhana #1 SMP x86_64 GNU/Linux\n'); return 0; }
+    if (args.includes('-r')) { w('6.1.0-cyberkhana\n'); return 0; }
+    if (args.includes('-m')) { w('x86_64\n'); return 0; }
+    if (args.includes('-n')) { w('cyberkhana\n'); return 0; }
+    w('Linux\n'); return 0;
+  },
+  hostname(_args, { w }) { w('cyberkhana\n'); return 0; },
+  arch(_args, { w }) { w('x86_64\n'); return 0; },
+  id(_args, { w, ctx }) { const u = ctx.user ?? 'user'; w(`uid=1000(${u}) gid=1000(${u}) groups=1000(${u}),27(sudo)\n`); return 0; },
+  groups(_args, { w, ctx }) { w(`${ctx.user ?? 'user'} sudo\n`); return 0; },
+  date(_args, { w }) { w(new Date().toString().replace(/ \(.*\)$/, '') + '\n'); return 0; },
+  uptime(_args, { w }) { w(' 10:30:01 up 2 days,  3:14,  1 user,  load average: 0.08, 0.03, 0.01\n'); return 0; },
+  who(_args, { w, ctx }) { w(`${(ctx.user ?? 'user').padEnd(8)} pts/0        2026-07-03 10:00 (:0)\n`); return 0; },
+  w(_args, { w, ctx }) { w(` 10:30:01 up 2 days,  1 user,  load average: 0.08, 0.03, 0.01\nUSER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT\n${(ctx.user ?? 'user').padEnd(8)} pts/0    :0               10:00    0.00s  0.10s  0.00s w\n`); return 0; },
+  ps(_args, { w }) { w('    PID TTY          TIME CMD\n   1337 pts/0    00:00:00 bash\n   1420 pts/0    00:00:00 ps\n'); return 0; },
+  free(args, { w }) {
+    if (args.includes('-h')) { w('               total        used        free      shared  buff/cache   available\nMem:           2.0Gi       512Mi       1.0Gi        10Mi       500Mi       1.4Gi\nSwap:          1.0Gi          0B       1.0Gi\n'); return 0; }
+    w('               total        used        free      shared  buff/cache   available\nMem:         2048000      512000     1024000       10240      512000     1433600\nSwap:        1048576           0     1048576\n'); return 0;
+  },
+  printenv(args, { w, ctx }) {
+    if (args[0]) { const v = ctx.env[args[0]]; if (v !== undefined) w(v + '\n'); return v !== undefined ? 0 : 1; }
+    w(Object.entries(ctx.env).map(([k, v]) => `${k}=${v}`).join('\n') + '\n'); return 0;
+  },
+  which(args, { w }) { let status = 0; for (const a of args) { if (BUILTINS[a]) w(`/usr/bin/${a}\n`); else status = 1; } return status; },
+  type(args, { w }) { for (const a of args) w(BUILTINS[a] ? `${a} is a shell builtin\n` : `bash: type: ${a}: not found\n`); return 0; },
+  man(args, { w }) { w(`No manual entry for ${args[0] ?? ''}. Try "help" for the list of available commands.\n`); return 0; },
+  alias(_args) { return 0; },
+  unalias(_args) { return 0; },
+  unset(args, { ctx }) { for (const a of args) delete ctx.env[a]; return 0; },
+  realpath(args, { w, ctx }) { w(resolvePath(ctx, args[0] ?? '.') + '\n'); return 0; },
+  yes(args, { w }) { const s = args.join(' ') || 'y'; let out = ''; for (let i = 0; i < 1000; i++) out += s + '\n'; w(out); return 0; },
   export(args, { ctx }) { for (const a of args) { const m = /^([A-Za-z_]\w*)=(.*)$/s.exec(a); if (m) ctx.env[m[1]] = m[2]; } return 0; },
   sleep() { return 0; },
   exit(args) { throw new ExitSignal(parseInt(args[0], 10) || 0); },
@@ -878,14 +1143,62 @@ export interface ShellSession {
 function seedSession(user: string): { fs: FSDir; env: Record<string, string>; cwd: string; home: string } {
   const home = `/home/${user}`;
   const fs: FSDir = { dir: {} };
-  const seedCtx = { fs } as Ctx;
-  ensureDir(fs, home);
-  ensureDir(fs, `${home}/notes`);
-  ensureDir(fs, '/etc');
-  writeFile(seedCtx, `${home}/welcome.txt`,
-    `Welcome to your CyberKhana practice shell, ${user}!\n\nTry:  ls   ·   cat welcome.txt   ·   echo "hi" > hello.txt   ·   help\n`);
-  writeFile(seedCtx, '/etc/hostname', 'cyberkhana\n');
-  const env: Record<string, string> = { USER: user, HOME: home, PWD: home, HOSTNAME: 'cyberkhana', SHELL: '/bin/bash' };
+  const c = { fs } as Ctx;
+  const F = (path: string, content: string, mode?: string) => { writeFile(c, path, content); if (mode) { const n = nodeAt(fs, path); if (n) n.mode = mode; } };
+
+  // A realistic little Linux tree.
+  for (const d of ['/bin', '/etc', '/tmp', '/root', '/opt', '/usr/bin', '/usr/share', '/var/log', '/var/www/html',
+    home, `${home}/Documents`, `${home}/Downloads`, `${home}/Desktop`, `${home}/Pictures`,
+    `${home}/projects/webapp`, `${home}/scripts`, `${home}/notes`, `${home}/.config`]) ensureDir(fs, d);
+
+  // System files
+  F('/etc/hostname', 'cyberkhana\n');
+  F('/etc/hosts', '127.0.0.1\tlocalhost\n127.0.1.1\tcyberkhana\n::1\t\tlocalhost ip6-localhost\n');
+  F('/etc/os-release', 'PRETTY_NAME="CyberKhana Linux"\nNAME="CyberKhana Linux"\nVERSION="1.0"\nID=cyberkhana\n');
+  F('/etc/passwd',
+    `root:x:0:0:root:/root:/bin/bash\ndaemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin\nwww-data:x:33:33:www-data:/var/www:/usr/sbin/nologin\n${user}:x:1000:1000:${user}:/home/${user}:/bin/bash\n`);
+  F('/etc/shadow', 'root:!:19000:0:99999:7:::\n', 'r--------');
+  F('/etc/motd', 'Welcome to CyberKhana Linux — a safe practice sandbox.\n');
+  F('/var/log/syslog',
+    'Jul  3 10:00:01 cyberkhana systemd[1]: Started Daily apt download activities.\n' +
+    'Jul  3 10:05:14 cyberkhana kernel: [  0.000000] Linux version 6.1.0-cyberkhana\n' +
+    'Jul  3 10:12:33 cyberkhana CRON[1420]: (root) CMD (cd / && run-parts /etc/cron.hourly)\n' +
+    'Jul  3 10:18:07 cyberkhana kernel: [ 12.441] EXT4-fs error (device vda1): failed to read block 42\n' +
+    'Jul  3 10:22:19 cyberkhana nginx[1502]: [error] 1502#0: connect() failed while reaching 10.0.0.99\n' +
+    'Jul  3 10:30:02 cyberkhana sshd[2001]: Accepted password for ' + user + ' from 10.0.0.5 port 51234\n');
+  F('/var/log/auth.log',
+    'Jul  3 10:29:58 cyberkhana sshd[2001]: Failed password for invalid user admin from 10.0.0.9 port 40012\n' +
+    'Jul  3 10:30:02 cyberkhana sshd[2001]: Accepted password for ' + user + ' from 10.0.0.5 port 51234\n' +
+    'Jul  3 10:30:02 cyberkhana sudo:   ' + user + ' : TTY=pts/0 ; PWD=/home/' + user + ' ; USER=root ; COMMAND=/usr/bin/apt update\n');
+  F('/var/www/html/index.html', '<!doctype html>\n<html><body><h1>It works!</h1></body></html>\n');
+
+  // Home files
+  F(`${home}/welcome.txt`,
+    `Welcome to your CyberKhana practice shell, ${user}!\n\n` +
+    `This is a safe, in-browser Linux sandbox — explore freely.\n` +
+    `Try:   ls -la      cat readme.md      cd projects      tree      help\n`);
+  F(`${home}/readme.md`,
+    `# ${user}'s sandbox\n\nA place to practice Linux commands. Nothing here can affect a real machine.\n\n` +
+    `## Folders\n- Documents/  — text files and notes\n- Downloads/  — a sample file or two\n- projects/   — a tiny web app\n- scripts/    — example shell scripts\n`);
+  F(`${home}/.bashrc`, "export PS1='\\u@\\h:\\w\\$ '\nalias ll='ls -la'\nalias ..='cd ..'\n");
+  F(`${home}/.bash_history`, 'ls -la\ncd projects\ncat readme.md\ngrep -i error /var/log/syslog\nwhoami\n');
+  F(`${home}/todo.txt`, '[ ] learn ls, cd, pwd\n[ ] practice grep and pipes\n[ ] write a bash script\n[x] open the terminal\n');
+  F(`${home}/Documents/notes.md`, '# Notes\n\n- pipes send one command\'s output into another: `cat file | grep x`\n- redirect output to a file with `>` (overwrite) or `>>` (append)\n');
+  F(`${home}/Documents/quotes.txt`, 'Talk is cheap. Show me the code.\nGiven enough eyeballs, all bugs are shallow.\nThe quieter you become, the more you can hear.\n');
+  F(`${home}/Documents/servers.csv`, 'name,ip,role\nweb01,10.0.0.11,web\ndb01,10.0.0.12,database\ncache01,10.0.0.13,cache\n');
+  F(`${home}/Downloads/report.txt`,
+    'INFO  service started\nWARN  disk usage at 71%\nERROR failed to reach 10.0.0.99\nINFO  retry succeeded\nERROR timeout on backup job\n');
+  F(`${home}/Downloads/numbers.txt`, '42\n7\n15\n3\n99\n23\n8\n');
+  F(`${home}/projects/webapp/index.html`, '<!doctype html>\n<html><head><title>webapp</title></head><body>hello</body></html>\n');
+  F(`${home}/projects/webapp/app.js`, "console.log('starting webapp');\nconst port = 3000;\nconsole.log('listening on ' + port);\n");
+  F(`${home}/projects/README`, 'webapp — a demo project. run: node app.js\n');
+  F(`${home}/scripts/hello.sh`, '#!/bin/bash\necho "Hello from a script!"\nfor i in 1 2 3; do\n  echo "count $i"\ndone\n', 'rwxr-xr-x');
+  F(`${home}/scripts/backup.sh`, '#!/bin/bash\n# pretend to back up the home folder\necho "backing up $HOME ..."\necho "done"\n', 'rwxr-xr-x');
+
+  const env: Record<string, string> = {
+    USER: user, LOGNAME: user, HOME: home, PWD: home, HOSTNAME: 'cyberkhana',
+    SHELL: '/bin/bash', PATH: '/usr/local/bin:/usr/bin:/bin', LANG: 'en_US.UTF-8', TERM: 'xterm-256color',
+  };
   return { fs, env, cwd: home, home };
 }
 
