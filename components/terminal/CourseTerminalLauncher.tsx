@@ -29,7 +29,8 @@ const CourseTerminalLauncher: React.FC<{ user: string }> = ({ user }) => {
 
   const popOut = () => {
     const base = window.location.href.split('#')[0];
-    window.open(`${base}#/terminal`, 'cyberkhana-terminal', 'width=940,height=640');
+    // No window features → the browser opens a normal new tab, not a popup.
+    window.open(`${base}#/terminal`, '_blank');
     setOpen(false);
   };
 
