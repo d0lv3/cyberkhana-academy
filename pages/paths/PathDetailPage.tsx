@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Route, Clock, ListChecks, ChevronRight, Check, Lock } from 'lucide-react';
-import PageHeader from '../../components/ui/PageHeader';
+import { Route, Clock, ListChecks, ChevronRight, Check, Lock, ArrowLeft } from 'lucide-react';
 import DifficultyBadge from '../../components/ui/DifficultyBadge';
 import Button from '../../components/ui/EnhancedButton';
 import { useLang } from '../../contexts/LangContext';
@@ -48,95 +47,114 @@ const PathDetailPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        backTo="/paths"
-        backLabel={t('sidebar.paths')}
-        icon={Route}
-        iconColor={path.color}
-        title={path.title[lang] || path.title.en}
-        subtitle={path.description[lang] || path.description.en}
+      {/* Back link */}
+      <button
+        onClick={() => navigate('/paths')}
+        className="inline-flex items-center gap-2 text-sm text-[#6e7a94] hover:text-[#d2d7e3] transition-colors"
       >
-        <div className="flex items-center gap-3" dir="ltr">
-          <DifficultyBadge difficulty={path.difficulty} />
-          <span className="flex items-center gap-1.5 text-xs text-[#6e7a94]">
-            <ListChecks size={13} /> {path.steps.length} {t('paths.stepsLabel')}
-          </span>
-          <span className="flex items-center gap-1.5 text-xs text-[#6e7a94]">
-            <Clock size={13} /> {path.estimatedHours}h
-          </span>
-        </div>
-      </PageHeader>
+        <ArrowLeft size={16} className="rtl-flip" />
+        <span>{t('sidebar.paths')}</span>
+      </button>
 
-      {/* ── Cover banner ── */}
-      {path.coverImage && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="relative max-w-3xl overflow-hidden rounded-2xl border border-[#263248]"
-        >
-          <img
-            src={coverImageSrc(path.coverImage)}
-            alt=""
-            aria-hidden
-            className="h-44 w-full object-cover md:h-56"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f18]/75 via-transparent to-transparent" />
-        </motion.div>
-      )}
-
-      {/* ── Enroll / progress ── */}
+      {/* ── Hero ── */}
       <motion.div
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="rounded-2xl border border-[#263248] bg-[#121a2a] p-5 max-w-3xl"
+        className="overflow-hidden rounded-2xl border border-[#263248] bg-[#121a2a]"
       >
-        {enrolled ? (
-          <>
-            <div className="flex items-center justify-between mb-2" dir="ltr">
-              <span className="text-sm font-semibold text-[#d2d7e3]">
-                {isComplete
-                  ? t('paths.completed')
-                  : `${progress.completed}/${progress.total} · ${progress.pct}%`}
+        {/* Cover band */}
+        <div className="relative h-52 md:h-64">
+          {path.coverImage ? (
+            <img
+              src={coverImageSrc(path.coverImage)}
+              alt=""
+              aria-hidden
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          ) : (
+            <div
+              className="absolute inset-0"
+              style={{ background: `radial-gradient(130% 120% at 12% 0%, ${path.color}33 0%, #0d1424 52%, #0a0f18 100%)` }}
+            >
+              <Route size={230} className="absolute -bottom-10 -right-8 opacity-[0.06]" style={{ color: path.color }} />
+            </div>
+          )}
+
+          {/* Readability scrims */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f18] via-[#0a0f18]/40 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-black/40 to-transparent" />
+
+          {/* Top: path tag + difficulty */}
+          <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-5">
+            <span
+              className="inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-semibold backdrop-blur-sm"
+              style={{ color: path.color, backgroundColor: `${path.color}1f`, borderColor: `${path.color}55` }}
+            >
+              <Route size={13} /> {t('sidebar.paths')}
+            </span>
+            <DifficultyBadge difficulty={path.difficulty} className="backdrop-blur-sm" />
+          </div>
+
+          {/* Bottom: title + description */}
+          <div className="absolute inset-x-0 bottom-0 p-6">
+            <h1 className="text-2xl font-black text-white sm:text-3xl">{path.title[lang] || path.title.en}</h1>
+            {(path.description[lang] || path.description.en) && (
+              <p className="mt-2 max-w-2xl text-sm text-[#cbd3e1] line-clamp-2">
+                {path.description[lang] || path.description.en}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Info + CTA bar */}
+        <div className="space-y-4 p-5">
+          {enrolled && progress.total > 0 && (
+            <div dir="ltr">
+              <div className="mb-1.5 flex items-center justify-between">
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#00a859]">
+                  <Check size={13} /> {isComplete ? t('paths.completed') : t('paths.enrolled')}
+                </span>
+                <span className="text-xs font-medium text-[#9aa5bf]">
+                  {progress.completed}/{progress.total} · {progress.pct}%
+                </span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-[#0a0f18]">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-[#00a859] to-[#9fef00] transition-all duration-700"
+                  style={{ width: `${progress.pct}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-[#9aa5bf]" dir="ltr">
+              <span className="inline-flex items-center gap-1.5">
+                <ListChecks size={15} className="text-[#6e7a94]" /> {progress.total} {t('paths.stepsLabel')}
               </span>
-              <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#00a859]">
-                <Check size={13} /> {t('paths.enrolled')}
+              <span className="inline-flex items-center gap-1.5">
+                <Clock size={15} className="text-[#6e7a94]" /> {path.estimatedHours}h
               </span>
             </div>
-            <div className="h-2 rounded-full bg-[#0a0f18] overflow-hidden mb-4" dir="ltr">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-[#00a859] to-[#9fef00] transition-all duration-700"
-                style={{ width: `${progress.pct}%` }}
-              />
-            </div>
-            {firstAvailable >= 0 && (
-              <Button
-                variant={isComplete ? 'outline' : 'primary'}
-                onClick={goToNext}
-                rightIcon={<ChevronRight size={16} className="rtl-flip" />}
-              >
-                {isComplete ? t('paths.review') : t('paths.continue')}
+
+            {enrolled ? (
+              firstAvailable >= 0 && (
+                <Button
+                  variant={isComplete ? 'outline' : 'primary'}
+                  onClick={goToNext}
+                  rightIcon={<ChevronRight size={16} className="rtl-flip" />}
+                >
+                  {isComplete ? t('paths.review') : t('paths.continue')}
+                </Button>
+              )
+            ) : (
+              <Button variant="neon" onClick={handleEnroll} rightIcon={<ChevronRight size={16} className="rtl-flip" />}>
+                {t('paths.enroll')}
               </Button>
             )}
-          </>
-        ) : (
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div>
-              <p className="text-sm font-semibold text-[#f3f6ff]">{path.title[lang] || path.title.en}</p>
-              <p className="text-xs text-[#9aa5bf] mt-0.5" dir="ltr">
-                {progress.total} {t('paths.stepsLabel')} · {path.estimatedHours}h
-              </p>
-            </div>
-            <Button
-              variant="neon"
-              onClick={handleEnroll}
-              rightIcon={<ChevronRight size={16} className="rtl-flip" />}
-            >
-              {t('paths.enroll')}
-            </Button>
           </div>
-        )}
+        </div>
       </motion.div>
 
       {/* ── Curriculum timeline ── */}
