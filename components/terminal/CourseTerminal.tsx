@@ -1,5 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { createShellSession, type ShellSession } from '../code-editor/BashExecutor';
+
+export interface CourseTerminalHandle {
+  /** Wipe the sandbox filesystem, variables, and scrollback back to the seed. */
+  reset: () => void;
+}
 
 interface Line {
   kind: 'cmd' | 'out' | 'err' | 'sys';
@@ -25,7 +30,7 @@ interface CourseTerminalProps {
  * State (variables, working directory, files) persists to localStorage so it
  * survives navigation and follows the learner into a popped-out tab.
  */
-const CourseTerminal: React.FC<CourseTerminalProps> = ({ user, onExit, className = '' }) => {
+const CourseTerminal = forwardRef<CourseTerminalHandle, CourseTerminalProps>(({ user, onExit, className = '' }, ref) => {
   const session = useMemo<ShellSession>(() => {
     let restore: string | null = null;
     try { restore = localStorage.getItem(storageKey(user)); } catch { /* ignore */ }
@@ -47,6 +52,18 @@ const CourseTerminal: React.FC<CourseTerminalProps> = ({ user, onExit, className
   const persist = useCallback(() => {
     try { localStorage.setItem(storageKey(user), session.snapshot()); } catch { /* quota */ }
   }, [session, user]);
+
+  const reset = useCallback(() => {
+    session.reset();
+    try { localStorage.setItem(storageKey(user), session.snapshot()); } catch { /* quota */ }
+    setLines([{ kind: 'sys', text: 'Sandbox reset to its starting state. Type "help" to begin.' }]);
+    setCwdLabel(session.cwdLabel());
+    setInput('');
+    typed.current = [];
+    histIdx.current = null;
+  }, [session, user]);
+
+  useImperativeHandle(ref, () => ({ reset }), [reset]);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -139,6 +156,8 @@ const CourseTerminal: React.FC<CourseTerminalProps> = ({ user, onExit, className
       </div>
     </div>
   );
-};
+});
+
+CourseTerminal.displayName = 'CourseTerminal';
 
 export default CourseTerminal;

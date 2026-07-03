@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef } from 'react';
-import { TerminalSquare, PanelLeft, PanelRight, ExternalLink, X } from 'lucide-react';
-import CourseTerminal from './CourseTerminal';
+import { TerminalSquare, PanelLeft, PanelRight, ExternalLink, RotateCcw, X } from 'lucide-react';
+import CourseTerminal, { type CourseTerminalHandle } from './CourseTerminal';
+import { confirmDialog } from '../ui/ConfirmHost';
 
 export type DockSide = 'left' | 'right';
 
@@ -23,6 +24,16 @@ interface TerminalDockProps {
  */
 const TerminalDock: React.FC<TerminalDockProps> = ({ user, side, width, onSide, onWidth, onClose, onPopOut }) => {
   const dragging = useRef(false);
+  const termRef = useRef<CourseTerminalHandle>(null);
+
+  const handleReset = async () => {
+    const ok = await confirmDialog({
+      title: 'Reset terminal?',
+      message: 'This clears the sandbox filesystem, variables, and history back to the starting state.',
+      confirmLabel: 'Reset',
+    });
+    if (ok) termRef.current?.reset();
+  };
 
   const onMove = useCallback(
     (e: PointerEvent) => {
@@ -82,6 +93,9 @@ const TerminalDock: React.FC<TerminalDockProps> = ({ user, side, width, onSide, 
           <button className={side === 'right' ? activeBtn : btn} title="Dock right" aria-label="Dock right" onClick={() => onSide('right')}>
             <PanelRight size={15} />
           </button>
+          <button className={btn} title="Reset sandbox" aria-label="Reset sandbox" onClick={handleReset}>
+            <RotateCcw size={14} />
+          </button>
           <button className={btn} title="Open in new tab" aria-label="Open in new tab" onClick={onPopOut}>
             <ExternalLink size={14} />
           </button>
@@ -92,7 +106,7 @@ const TerminalDock: React.FC<TerminalDockProps> = ({ user, side, width, onSide, 
       </div>
 
       <div className="min-h-0 flex-1">
-        <CourseTerminal user={user} onExit={onClose} />
+        <CourseTerminal ref={termRef} user={user} onExit={onClose} />
       </div>
     </div>
   );
