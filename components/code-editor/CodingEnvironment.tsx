@@ -11,7 +11,8 @@ import {
 } from 'lucide-react';
 import CodeEditor from './CodeEditor';
 import OutputPanel from './OutputPanel';
-import { runPython, isPyodideReady, type ExecutionResult } from './PythonExecutor';
+import type { ExecutionResult } from './PythonExecutor';
+import { runCode, isRunnerReady } from './runners';
 import type { TestCase } from '../../data/programming/types';
 
 interface CodingEnvironmentProps {
@@ -57,9 +58,9 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
     setTestResults(null);
     setOutput('');
     setError(undefined);
-    if (!isPyodideReady()) setIsLoading(true);
+    if (!isRunnerReady(language)) setIsLoading(true);
     try {
-      const result: ExecutionResult = await runPython(code);
+      const result: ExecutionResult = await runCode(language, code);
       setOutput(result.output);
       setError(result.error);
       setDurationMs(result.durationMs);
@@ -77,13 +78,13 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
     setOutput('');
     setError(undefined);
     setTestResults(null);
-    if (!isPyodideReady()) setIsLoading(true);
+    if (!isRunnerReady(language)) setIsLoading(true);
 
     const results: TestResult[] = [];
     let lastOutput = '';
     try {
       for (const tc of testCases) {
-        const result = await runPython(code, tc.input);
+        const result = await runCode(language, code, tc.input);
         const actual = result.output.trimEnd();
         const expected = tc.expectedOutput.trimEnd();
         lastOutput = result.output;

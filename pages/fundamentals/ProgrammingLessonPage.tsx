@@ -279,7 +279,7 @@ const ProgrammingLessonPage: React.FC = () => {
             <CodingEnvironment
               key={concept.id}
               starterCode={concept.starterCode}
-              language={langSlug === 'python' ? 'python' : langSlug === 'cpp' ? 'cpp' : 'python'}
+              language={langSlug === 'bash' ? 'bash' : langSlug === 'c' || langSlug === 'cpp' || langSlug === 'c++' ? 'cpp' : 'python'}
               testCases={concept.testCases}
               hints={concept.hints}
               solution={concept.solution}

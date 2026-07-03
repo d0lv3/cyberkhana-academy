@@ -10,3 +10,6 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+/** JSCPP ships no types — it's a C/C++ interpreter used by the client-side runner. */
+declare module 'JSCPP';
