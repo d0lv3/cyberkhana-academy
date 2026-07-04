@@ -51,7 +51,6 @@ const CourseTerminal = forwardRef<CourseTerminalHandle, CourseTerminalProps>(({ 
 
   const [lines, setLines] = useState<Line[]>([
     { kind: 'sys', text: `CyberKhana practice shell — runs safely in your browser. Type "help" to begin.` },
-    { kind: 'sys', text: `Your IP on the lab LAN is ${net.localIp}. (For the nc demo, open a second tab with the ⧉ button.)` },
   ]);
   const [input, setInput] = useState('');
   const [cwdLabel, setCwdLabel] = useState(session.cwdLabel());

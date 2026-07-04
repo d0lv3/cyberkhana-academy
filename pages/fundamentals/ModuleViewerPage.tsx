@@ -398,7 +398,7 @@ const ModuleViewerPage: React.FC = () => {
         />
 
         {/* ── MAIN CONTENT ── */}
-        <main className="flex-1 overflow-y-auto custom-scrollbar bg-[#0d1117]">
+        <main className="min-w-0 flex-1 overflow-y-auto custom-scrollbar bg-[#0d1117]">
           {activeLecture && activeModule ? (
             <motion.div
               key={activeLecture.id}
@@ -701,9 +701,10 @@ const ModuleViewerPage: React.FC = () => {
             </motion.div>
           ) : null}
         </main>
-      </div>
 
-      {isLinuxCourse && <CourseTerminalLauncher user={firstName} />}
+        {/* Practice terminal — an in-flow panel that docks beside the lesson. */}
+        {isLinuxCourse && <CourseTerminalLauncher user={firstName} />}
+      </div>
     </div>
   );
 };

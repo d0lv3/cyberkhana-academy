@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import { TerminalSquare, PanelLeft, PanelRight, ExternalLink, RotateCcw, X } from 'lucide-react';
 import CourseTerminal, { type CourseTerminalHandle } from './CourseTerminal';
 import { confirmDialog } from '../ui/ConfirmHost';
+import { useLang } from '../../contexts/LangContext';
 
 export type DockSide = 'left' | 'right';
 
@@ -10,6 +11,7 @@ const MAX_W = 860;
 
 interface TerminalDockProps {
   user: string;
+  /** Physical side of the viewport the panel sits on (works in LTR and RTL). */
   side: DockSide;
   width: number;
   onSide: (side: DockSide) => void;
@@ -19,12 +21,19 @@ interface TerminalDockProps {
 }
 
 /**
- * A resizable terminal panel docked to the left or right edge of the viewport,
- * with controls to switch sides, pop out to a new tab, or close.
+ * A resizable terminal panel that lives *in the page flow* beside the course
+ * content — it pushes the lesson aside rather than covering it. It can dock to
+ * the left or right edge and mirrors correctly under RTL.
  */
 const TerminalDock: React.FC<TerminalDockProps> = ({ user, side, width, onSide, onWidth, onClose, onPopOut }) => {
+  const { isArabic } = useLang();
   const dragging = useRef(false);
+  const panelRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<CourseTerminalHandle>(null);
+
+  const physicalLeft = side === 'left';
+  // Flex `order` that pins the panel to `side` regardless of the row's direction.
+  const order = physicalLeft !== isArabic ? -1 : 1;
 
   const handleReset = async () => {
     const ok = await confirmDialog({
@@ -38,10 +47,13 @@ const TerminalDock: React.FC<TerminalDockProps> = ({ user, side, width, onSide, 
   const onMove = useCallback(
     (e: PointerEvent) => {
       if (!dragging.current) return;
-      const w = side === 'right' ? window.innerWidth - e.clientX : e.clientX;
+      const rect = panelRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      // Width measured from the panel's outer (viewport-facing) edge to the pointer.
+      const w = physicalLeft ? e.clientX - rect.left : rect.right - e.clientX;
       onWidth(Math.max(MIN_W, Math.min(MAX_W, w)));
     },
-    [side, onWidth]
+    [physicalLeft, onWidth]
   );
   const stop = useCallback(() => {
     dragging.current = false;
@@ -70,14 +82,20 @@ const TerminalDock: React.FC<TerminalDockProps> = ({ user, side, width, onSide, 
 
   return (
     <div
-      className="fixed top-0 bottom-0 z-40 flex flex-col border-[#263248] bg-[#0a0e14] shadow-2xl shadow-black/50"
-      style={{ [side]: 0, width, borderLeftWidth: side === 'right' ? 1 : 0, borderRightWidth: side === 'left' ? 1 : 0 }}
+      ref={panelRef}
+      className="relative flex h-full flex-shrink-0 flex-col border-[#263248] bg-[#0a0e14] shadow-2xl shadow-black/40"
+      style={{
+        width,
+        order,
+        borderRightWidth: physicalLeft ? 1 : 0,
+        borderLeftWidth: physicalLeft ? 0 : 1,
+      }}
     >
-      {/* Resize handle on the inner edge */}
+      {/* Resize handle on the inner edge (the one facing the lesson content) */}
       <div
         onPointerDown={startResize}
         className="absolute top-0 bottom-0 z-10 w-1.5 cursor-col-resize hover:bg-[#00a859]/40"
-        style={side === 'right' ? { left: -1 } : { right: -1 }}
+        style={physicalLeft ? { right: -3 } : { left: -3 }}
       />
 
       {/* Header */}
