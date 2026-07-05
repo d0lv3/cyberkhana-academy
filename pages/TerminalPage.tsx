@@ -3,6 +3,7 @@ import { TerminalSquare, RotateCcw } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import CourseTerminal, { type CourseTerminalHandle } from '../components/terminal/CourseTerminal';
 import { confirmDialog } from '../components/ui/ConfirmHost';
+import BrandLogo from '../components/ui/BrandLogo';
 
 /** Full-screen standalone terminal — the target of the dock's "open in new tab". */
 const TerminalPage: React.FC = () => {
@@ -27,9 +28,20 @@ const TerminalPage: React.FC = () => {
   return (
     <div className="fixed inset-0 flex flex-col bg-[#0a0e14]">
       <div className="flex items-center justify-between border-b border-[#263248] bg-[#0d1117] px-4 py-2.5">
-        <div className="flex items-center gap-2 text-sm font-semibold text-[#c9d3e0]">
-          <TerminalSquare size={16} className="text-[#00c766]" />
-          <span dir="ltr">{firstName}@cyberkhana — practice shell</span>
+        <div className="flex items-center gap-3">
+          <a
+            href="#/dashboard"
+            title="CyberKhana Academy"
+            aria-label="CyberKhana Academy home"
+            className="flex items-center transition-opacity hover:opacity-80"
+          >
+            <BrandLogo variant="mark" loading="eager" className="h-7 w-7 object-contain" />
+          </a>
+          <span className="h-5 w-px bg-[#263248]" aria-hidden />
+          <div className="flex items-center gap-2 text-sm font-semibold text-[#c9d3e0]">
+            <TerminalSquare size={15} className="text-[#00c766]" />
+            <span dir="ltr">{firstName}@cyberkhana — practice shell</span>
+          </div>
         </div>
         <div className="flex items-center gap-4">
           <button onClick={handleReset} className="inline-flex items-center gap-1.5 text-xs text-[#6e7a94] transition-colors hover:text-[#c9d3e0]">
