@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ConfirmHost from './components/ui/ConfirmHost';
 import ErrorBoundary from './components/ErrorBoundary';
 
+import { FullscreenLiquidLoader } from './components/ui/LiquidLogoLoader';
 import AppLayout from './components/AppLayout';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
@@ -45,14 +46,7 @@ const CyberSecurity101Page = lazy(() => import('./pages/fundamentals/CyberSecuri
 const TerminalPage = lazy(() => import('./pages/TerminalPage'));
 
 function LazyFallback() {
-  return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-[#0d1117]">
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-8 h-8 border-2 border-[#00a859] border-t-transparent rounded-full animate-spin" />
-        <p className="text-sm text-[#6e7a94]">Loading...</p>
-      </div>
-    </div>
-  );
+  return <FullscreenLiquidLoader />;
 }
 
 function AuthGate({ children }: { children: React.ReactNode }) {

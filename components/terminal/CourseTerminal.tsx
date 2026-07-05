@@ -1,6 +1,7 @@
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { createShellSession, type ShellSession, type NetRequest } from '../code-editor/BashExecutor';
 import { getNet, type Socket } from '../../services/cyberNet';
+import LiquidLogoLoader from '../ui/LiquidLogoLoader';
 
 export interface CourseTerminalHandle {
   /** Wipe the sandbox filesystem, variables, and scrollback back to the seed. */
@@ -56,6 +57,7 @@ const CourseTerminal = forwardRef<CourseTerminalHandle, CourseTerminalProps>(({ 
   const [cwdLabel, setCwdLabel] = useState(session.cwdLabel());
   const [promptUser, setPromptUser] = useState(session.user);
   const [netMode, setNetMode] = useState<NetMode | null>(null);
+  const [booting, setBooting] = useState(true);
   const typed = useRef<string[]>([]);
   const histIdx = useRef<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -74,6 +76,12 @@ const CourseTerminal = forwardRef<CourseTerminalHandle, CourseTerminalProps>(({ 
     net.setHost(`${session.user}-box`);
     net.announce();
   }, [session, net]);
+
+  // Brief boot splash whenever the terminal is opened.
+  useEffect(() => {
+    const t = setTimeout(() => setBooting(false), 1150);
+    return () => clearTimeout(t);
+  }, []);
 
   const persist = useCallback(() => {
     try { localStorage.setItem(storageKey(user), session.snapshot()); } catch { /* quota */ }
@@ -285,9 +293,15 @@ const CourseTerminal = forwardRef<CourseTerminalHandle, CourseTerminalProps>(({ 
 
   return (
     <div
-      className={`flex h-full flex-col bg-[#0a0e14] font-mono text-[12.5px] leading-relaxed text-[#c9d3e0] ${className}`}
+      className={`relative flex h-full flex-col bg-[#0a0e14] font-mono text-[12.5px] leading-relaxed text-[#c9d3e0] ${className}`}
       onClick={() => inputRef.current?.focus()}
     >
+      {booting && (
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-[#0a0e14]">
+          <LiquidLogoLoader size={76} />
+          <p className="text-[11px] tracking-[0.2em] text-[#4b5a72]">booting practice shell…</p>
+        </div>
+      )}
       <div ref={scrollRef} className="custom-scrollbar flex-1 overflow-y-auto px-3 py-2" dir="ltr">
         {lines.map((l, i) => (
           <div key={i} className="whitespace-pre-wrap break-words">

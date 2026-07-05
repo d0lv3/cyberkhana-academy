@@ -125,6 +125,34 @@
     from { opacity: 0; }
     to   { opacity: 1; }
   }
+
+  /* ── Liquid-fill logo loader ── */
+  @keyframes liquid-rise {
+    0%   { transform: translateY(84px); }
+    52%  { transform: translateY(12px); }
+    100% { transform: translateY(84px); }
+  }
+  @keyframes liquid-wave {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-80px); }
+  }
+  @keyframes liquid-wave-slow {
+    from { transform: translateX(-80px); }
+    to   { transform: translateX(0); }
+  }
+  @keyframes liquid-bubble {
+    0%   { transform: translateY(10px); opacity: 0; }
+    30%  { opacity: 0.8; }
+    100% { transform: translateY(-46px); opacity: 0; }
+  }
+  .liquid-rise { animation: liquid-rise 3.4s ease-in-out infinite; }
+  .liquid-wave { animation: liquid-wave 2.1s linear infinite; }
+  .liquid-wave-slow { animation: liquid-wave-slow 3.4s linear infinite; }
+  .liquid-bubble { animation: liquid-bubble 2.6s ease-in infinite; }
+  @media (prefers-reduced-motion: reduce) {
+    .liquid-rise, .liquid-wave, .liquid-wave-slow, .liquid-bubble { animation: none; }
+    .liquid-rise { transform: translateY(40px); }
+  }
   @keyframes modalEnter {
     from { opacity: 0; transform: scale(0.9) translateY(-10px); }
     to   { opacity: 1; transform: scale(1) translateY(0); }
