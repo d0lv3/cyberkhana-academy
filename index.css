@@ -145,13 +145,20 @@
     30%  { opacity: 0.8; }
     100% { transform: translateY(-46px); opacity: 0; }
   }
+  /* One-shot fill: empty → full, then holds (for the terminal boot splash). */
+  @keyframes liquid-fill {
+    0%   { transform: translateY(86px); }
+    100% { transform: translateY(-6px); }
+  }
   .liquid-rise { animation: liquid-rise 3.4s ease-in-out infinite; }
+  .liquid-fill { animation: liquid-fill var(--fill-dur, 1s) cubic-bezier(0.33, 0, 0.2, 1) forwards; }
   .liquid-wave { animation: liquid-wave 2.1s linear infinite; }
   .liquid-wave-slow { animation: liquid-wave-slow 3.4s linear infinite; }
   .liquid-bubble { animation: liquid-bubble 2.6s ease-in infinite; }
   @media (prefers-reduced-motion: reduce) {
-    .liquid-rise, .liquid-wave, .liquid-wave-slow, .liquid-bubble { animation: none; }
+    .liquid-rise, .liquid-fill, .liquid-wave, .liquid-wave-slow, .liquid-bubble { animation: none; }
     .liquid-rise { transform: translateY(40px); }
+    .liquid-fill { transform: translateY(-6px); }
   }
   @keyframes modalEnter {
     from { opacity: 0; transform: scale(0.9) translateY(-10px); }

@@ -58,6 +58,7 @@ const CourseTerminal = forwardRef<CourseTerminalHandle, CourseTerminalProps>(({ 
   const [promptUser, setPromptUser] = useState(session.user);
   const [netMode, setNetMode] = useState<NetMode | null>(null);
   const [booting, setBooting] = useState(true);
+  const [bootHide, setBootHide] = useState(false);
   const typed = useRef<string[]>([]);
   const histIdx = useRef<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -77,10 +78,12 @@ const CourseTerminal = forwardRef<CourseTerminalHandle, CourseTerminalProps>(({ 
     net.announce();
   }, [session, net]);
 
-  // Brief boot splash whenever the terminal is opened.
+  // Brief boot splash whenever the terminal is opened: let the fill finish
+  // (~780ms), hold a beat, then fade out — quick enough not to get in the way.
   useEffect(() => {
-    const t = setTimeout(() => setBooting(false), 1150);
-    return () => clearTimeout(t);
+    const fade = setTimeout(() => setBootHide(true), 860);
+    const done = setTimeout(() => setBooting(false), 1160);
+    return () => { clearTimeout(fade); clearTimeout(done); };
   }, []);
 
   const persist = useCallback(() => {
@@ -297,8 +300,10 @@ const CourseTerminal = forwardRef<CourseTerminalHandle, CourseTerminalProps>(({ 
       onClick={() => inputRef.current?.focus()}
     >
       {booting && (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-[#0a0e14]">
-          <LiquidLogoLoader size={76} />
+        <div
+          className={`absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-[#0a0e14] transition-opacity duration-300 ${bootHide ? 'opacity-0' : 'opacity-100'}`}
+        >
+          <LiquidLogoLoader size={76} fill fillMs={780} />
           <p className="text-[11px] tracking-[0.2em] text-[#4b5a72]">booting practice shell…</p>
         </div>
       )}

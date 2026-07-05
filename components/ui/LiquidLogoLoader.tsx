@@ -4,6 +4,10 @@ interface LiquidLogoLoaderProps {
   /** Rendered width/height in px. */
   size?: number;
   className?: string;
+  /** One-shot fill (empty → full, then holds) instead of the endless loop. */
+  fill?: boolean;
+  /** Duration of the one-shot fill in ms (only used when `fill`). */
+  fillMs?: number;
 }
 
 /**
@@ -12,7 +16,7 @@ interface LiquidLogoLoaderProps {
  * and as the terminal's boot splash. The logo PNG is used as a luminance mask
  * (white glyph shows, dark badge is hidden), so the liquid only fills the mark.
  */
-const LiquidLogoLoader: React.FC<LiquidLogoLoaderProps> = ({ size = 96, className = '' }) => {
+const LiquidLogoLoader: React.FC<LiquidLogoLoaderProps> = ({ size = 96, className = '', fill = false, fillMs = 900 }) => {
   // Unique ids so multiple loaders on one page don't collide.
   const uid = React.useId().replace(/:/g, '');
   const maskId = `ckliq-mask-${uid}`;
@@ -27,7 +31,7 @@ const LiquidLogoLoader: React.FC<LiquidLogoLoaderProps> = ({ size = 96, classNam
       className={className}
       role="img"
       aria-label="Loading"
-      style={{ filter: 'drop-shadow(0 0 14px rgba(0,199,102,0.35))' }}
+      style={{ filter: 'drop-shadow(0 0 14px rgba(0,199,102,0.35))', ['--fill-dur' as string]: `${fillMs}ms` }}
     >
       <defs>
         <mask id={maskId}>
@@ -57,7 +61,7 @@ const LiquidLogoLoader: React.FC<LiquidLogoLoaderProps> = ({ size = 96, classNam
         <rect x="0" y="0" width="120" height="120" fill={`url(#${glassId})`} />
 
         {/* Rising liquid level */}
-        <g className="liquid-rise">
+        <g className={fill ? 'liquid-fill' : 'liquid-rise'}>
           {/* darker back wave for depth */}
           <path
             className="liquid-wave-slow"
