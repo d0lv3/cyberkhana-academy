@@ -116,7 +116,7 @@ export const IRAQ_UNIVERSITIES: IraqUniversity[] = [
   { name: 'Al-Mustafa University College', type: 'private', region: 'federal' },
   { name: 'Al-Noor University College', type: 'private', region: 'federal' },
   { name: 'Al-Salam University College', type: 'private', region: 'federal' },
-  { name: "Al-Ma'moon University College", type: 'private', region: 'federal' },
+  { name: 'Al-Mamoun University', ar: 'جامعة المأمون', type: 'private', region: 'federal' },
   { name: 'Shatt Al-Arab University College', type: 'private', region: 'federal' },
   { name: 'Al-Hadba University College', type: 'private', region: 'federal' },
   { name: 'Al-Yarmouk University College', type: 'private', region: 'federal' },
