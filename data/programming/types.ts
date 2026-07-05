@@ -31,6 +31,8 @@ export type ProgrammingModule = {
   title: { en: string; ar: string };
   description: { en: string; ar: string };
   order: number;
+  /** Optional YouTube video id shown at the top of every lesson in the module. */
+  videoId?: string;
   concepts: ProgrammingConcept[];
 };
 

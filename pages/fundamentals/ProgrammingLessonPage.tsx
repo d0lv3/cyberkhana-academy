@@ -6,15 +6,17 @@ import {
   Code,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Trophy,
   CheckCircle2,
-  Circle,
+  Youtube,
 } from 'lucide-react';
 import { getLanguage, getModule, getConcept } from '../../data/programming';
 import type { ProgrammingConcept } from '../../data/programming';
 import { CodingEnvironment } from '../../components/code-editor';
 import Button from '../../components/ui/EnhancedButton';
 import LessonMarkdown from '../../components/ui/LessonMarkdown';
+import { youtubeEmbedUrl } from '../../services/youtube';
 import { useLang } from '../../contexts/LangContext';
 import { getProgrammingDone, markProgrammingDone, recordActivity } from '../../services/progressService';
 
@@ -34,6 +36,7 @@ const ProgrammingLessonPage: React.FC = () => {
   const concept = getConcept(langSlug || '', moduleSlug || '', conceptSlug || '');
 
   const [mobileTab, setMobileTab] = useState<Tab>('content');
+  const [videoOpen, setVideoOpen] = useState(true);
   const [completed, setCompleted] = useState<Set<string>>(() =>
     getProgrammingDone(langSlug || '')
   );
@@ -190,6 +193,33 @@ const ProgrammingLessonPage: React.FC = () => {
           `}
         >
           <div className="flex-1 overflow-y-auto custom-scrollbar">
+            {mod.videoId && (
+              <div className="max-w-2xl mx-auto px-6 pt-6 md:px-8">
+                <div className="rounded-xl border border-[#263248] bg-[#0e1522] overflow-hidden">
+                  <button
+                    onClick={() => setVideoOpen((o) => !o)}
+                    className="flex w-full items-center justify-between px-4 py-2.5 text-xs font-semibold text-[#9aa5bf] transition-colors hover:text-[#f3f6ff]"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Youtube size={15} className="text-[#ff4d4d]" />
+                      {lang === 'ar' ? 'فيديو الوحدة' : 'Module video'}
+                    </span>
+                    <ChevronDown size={15} className={`transition-transform ${videoOpen ? '' : '-rotate-90'}`} />
+                  </button>
+                  {videoOpen && (
+                    <div className="aspect-video border-t border-[#263248]">
+                      <iframe
+                        className="h-full w-full"
+                        src={youtubeEmbedUrl(mod.videoId)}
+                        title={`${mod.title[lang]} video`}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
             <article className="max-w-2xl mx-auto px-6 py-8 md:px-8 md:py-10">
               <LessonMarkdown content={concept.markdownContent} />
             </article>

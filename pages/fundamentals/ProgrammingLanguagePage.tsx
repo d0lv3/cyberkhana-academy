@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { BookOpen, Trophy, ChevronRight } from 'lucide-react';
+import { BookOpen, Trophy, ChevronRight, Youtube } from 'lucide-react';
 import EnhancedCard from '../../components/ui/EnhancedCard';
 import Button from '../../components/ui/EnhancedButton';
 import PageHeader from '../../components/ui/PageHeader';
@@ -97,6 +97,11 @@ const ProgrammingLanguagePage: React.FC = () => {
                     {challengeCount > 0 && (
                       <span className="flex items-center gap-1 text-xs text-[#f3a43a]">
                         <Trophy size={12} /> {challengeCount} {challengeCount === 1 ? 'challenge' : 'challenges'}
+                      </span>
+                    )}
+                    {mod.videoId && (
+                      <span className="flex items-center gap-1 text-xs text-[#ff4d4d]">
+                        <Youtube size={13} /> {lang === 'ar' ? 'فيديو' : 'Video'}
                       </span>
                     )}
                   </div>
