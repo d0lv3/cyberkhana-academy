@@ -7,6 +7,8 @@ import {
   PlayCircle,
   BookOpen,
   Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
   X,
   Clock,
   Layers,
@@ -205,6 +207,9 @@ const ModuleViewerPage: React.FC = () => {
   });
   const [activeLectureId, setActiveLectureId] = useState<string>(allLectures[0]?.lecture.id || '');
   const [tocMobileOpen, setTocMobileOpen] = useState(false);
+  const [tocCollapsed, setTocCollapsed] = useState<boolean>(() => {
+    try { return localStorage.getItem('academy-toc-collapsed') === '1'; } catch { return false; }
+  });
   const [quizStates, setQuizStates] = useState<Record<string, QuizState>>({});
 
   // Build sidebar module data (generic shape for the reusable component)
@@ -262,6 +267,14 @@ const ModuleViewerPage: React.FC = () => {
   const handleSelectLecture = (lectureId: string) => {
     setActiveLectureId(lectureId);
     setTocMobileOpen(false);
+  };
+
+  const toggleToc = () => {
+    setTocCollapsed((v) => {
+      const next = !v;
+      try { localStorage.setItem('academy-toc-collapsed', next ? '1' : '0'); } catch { /* quota */ }
+      return next;
+    });
   };
 
   const getQuestions = (lecture: Lecture): QuizQuestion[] => {
@@ -346,6 +359,15 @@ const ModuleViewerPage: React.FC = () => {
           <button className="md:hidden text-[#9aa5bf] hover:text-[#f3f6ff]" onClick={() => setTocMobileOpen(true)}>
             <Menu className="w-5 h-5" />
           </button>
+          <button
+            className="hidden md:inline-flex text-[#9aa5bf] hover:text-[#f3f6ff] transition-colors"
+            onClick={toggleToc}
+            title={tocCollapsed ? 'Show course sections' : 'Hide course sections'}
+            aria-label={tocCollapsed ? 'Show course sections' : 'Hide course sections'}
+            aria-pressed={!tocCollapsed}
+          >
+            {tocCollapsed ? <PanelLeftOpen className="w-5 h-5 rtl-flip" /> : <PanelLeftClose className="w-5 h-5 rtl-flip" />}
+          </button>
           <div className="hidden md:flex items-center gap-2.5">
             <h1 className="text-sm font-bold text-[#f3f6ff] truncate max-w-[260px]">
               {fundamentalModule.title[lang]}
@@ -395,6 +417,7 @@ const ModuleViewerPage: React.FC = () => {
           onSelectLecture={handleSelectLecture}
           mobileOpen={tocMobileOpen}
           onMobileClose={() => setTocMobileOpen(false)}
+          collapsed={tocCollapsed}
         />
 
         {/* ── MAIN CONTENT ── */}

@@ -33,6 +33,8 @@ interface CourseViewerSidebarProps {
   onSelectLecture: (lectureId: string) => void;
   mobileOpen: boolean;
   onMobileClose: () => void;
+  /** Hide the sidebar on desktop (the mobile drawer is unaffected). */
+  collapsed?: boolean;
 }
 
 /* ─── Helpers ─── */
@@ -58,6 +60,7 @@ const CourseViewerSidebar: React.FC<CourseViewerSidebarProps> = ({
   onSelectLecture,
   mobileOpen,
   onMobileClose,
+  collapsed = false,
 }) => {
   // Which module contains the active lecture?
   const activeModuleId = useMemo(() => {
@@ -281,6 +284,7 @@ const CourseViewerSidebar: React.FC<CourseViewerSidebarProps> = ({
           flex flex-col transition-transform duration-300
           md:relative md:top-0 md:translate-x-0 md:w-80 md:flex-shrink-0
           ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
+          ${collapsed ? 'md:hidden' : ''}
         `}
       >
         {/* Mobile header */}
