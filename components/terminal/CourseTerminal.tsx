@@ -1,6 +1,6 @@
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { createShellSession, type ShellSession, type NetRequest } from '../code-editor/BashExecutor';
-import { getNet, type Socket } from '../../services/cyberNet';
+import { getNet, type Socket, type CyberNet } from '../../services/cyberNet';
 import LiquidLogoLoader from '../ui/LiquidLogoLoader';
 
 export interface CourseTerminalHandle {
@@ -23,7 +23,8 @@ type NetMode =
 /** Canonical, filesystem-safe username — mirrors createShellSession's own rule. */
 const canonical = (user: string) =>
   (user || 'user').trim().toLowerCase().replace(/[^a-z0-9._-]/g, '') || 'user';
-const storageKey = (user: string) => `academy-shell-${canonical(user)}`;
+const storageKey = (user: string, suffix = '') =>
+  `academy-shell-${canonical(user)}${suffix ? '-' + suffix : ''}`;
 
 const isIp = (s: string) => /^\d{1,3}(\.\d{1,3}){3}$/.test(s);
 
@@ -33,6 +34,10 @@ interface CourseTerminalProps {
   /** Called when the user runs `exit`. */
   onExit?: () => void;
   className?: string;
+  /** Network instance to use. Split panes pass their own; defaults to the tab's. */
+  net?: CyberNet;
+  /** Namespaces this terminal's saved session (so split panes don't collide). */
+  instanceId?: string;
 }
 
 /**
@@ -41,14 +46,14 @@ interface CourseTerminalProps {
  * survives navigation and follows the learner into a popped-out tab. It can also
  * open a live `nc` socket to another tab (the reverse/bind-shell demo).
  */
-const CourseTerminal = forwardRef<CourseTerminalHandle, CourseTerminalProps>(({ user, onExit, className = '' }, ref) => {
+const CourseTerminal = forwardRef<CourseTerminalHandle, CourseTerminalProps>(({ user, onExit, className = '', net: netProp, instanceId }, ref) => {
   const session = useMemo<ShellSession>(() => {
     let restore: string | null = null;
-    try { restore = localStorage.getItem(storageKey(user)); } catch { /* ignore */ }
+    try { restore = localStorage.getItem(storageKey(user, instanceId)); } catch { /* ignore */ }
     return createShellSession({ user, restore });
-  }, [user]);
+  }, [user, instanceId]);
 
-  const net = useRef(getNet()).current;
+  const net = useRef(netProp ?? getNet()).current;
 
   const [lines, setLines] = useState<Line[]>([
     { kind: 'sys', text: `CyberKhana practice shell — runs safely in your browser. Type "help" to begin.` },
@@ -87,8 +92,8 @@ const CourseTerminal = forwardRef<CourseTerminalHandle, CourseTerminalProps>(({ 
   }, []);
 
   const persist = useCallback(() => {
-    try { localStorage.setItem(storageKey(user), session.snapshot()); } catch { /* quota */ }
-  }, [session, user]);
+    try { localStorage.setItem(storageKey(user, instanceId), session.snapshot()); } catch { /* quota */ }
+  }, [session, user, instanceId]);
 
   const teardownNet = useCallback(() => {
     socketRef.current?.close();
@@ -103,14 +108,14 @@ const CourseTerminal = forwardRef<CourseTerminalHandle, CourseTerminalProps>(({ 
     teardownNet();
     setNetMode(null);
     session.reset();
-    try { localStorage.setItem(storageKey(user), session.snapshot()); } catch { /* quota */ }
+    try { localStorage.setItem(storageKey(user, instanceId), session.snapshot()); } catch { /* quota */ }
     setLines([{ kind: 'sys', text: 'Sandbox reset to its starting state. Type "help" to begin.' }]);
     setCwdLabel(session.cwdLabel());
     setPromptUser(session.user);
     setInput('');
     typed.current = [];
     histIdx.current = null;
-  }, [session, user, teardownNet]);
+  }, [session, user, instanceId, teardownNet]);
 
   useImperativeHandle(ref, () => ({ reset }), [reset]);
 

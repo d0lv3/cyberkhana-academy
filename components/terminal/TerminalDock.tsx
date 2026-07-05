@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useRef } from 'react';
-import { TerminalSquare, PanelLeft, PanelRight, ExternalLink, RotateCcw, Columns2, X } from 'lucide-react';
-import CourseTerminal, { type CourseTerminalHandle } from './CourseTerminal';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { TerminalSquare, PanelLeft, PanelRight, ExternalLink, RotateCcw, Rows2, X } from 'lucide-react';
+import TerminalSplit, { type TerminalSplitHandle } from './TerminalSplit';
 import { confirmDialog } from '../ui/ConfirmHost';
 import { useLang } from '../../contexts/LangContext';
 
@@ -18,8 +18,6 @@ interface TerminalDockProps {
   onWidth: (width: number) => void;
   onClose: () => void;
   onPopOut: () => void;
-  /** Open a *second* terminal in a new tab (its own IP) for the nc demo. */
-  onSecondTerminal: () => void;
 }
 
 /**
@@ -27,11 +25,12 @@ interface TerminalDockProps {
  * content — it pushes the lesson aside rather than covering it. It can dock to
  * the left or right edge and mirrors correctly under RTL.
  */
-const TerminalDock: React.FC<TerminalDockProps> = ({ user, side, width, onSide, onWidth, onClose, onPopOut, onSecondTerminal }) => {
+const TerminalDock: React.FC<TerminalDockProps> = ({ user, side, width, onSide, onWidth, onClose, onPopOut }) => {
   const { isArabic } = useLang();
   const dragging = useRef(false);
   const panelRef = useRef<HTMLDivElement>(null);
-  const termRef = useRef<CourseTerminalHandle>(null);
+  const termRef = useRef<TerminalSplitHandle>(null);
+  const [split, setSplit] = useState(false);
 
   const physicalLeft = side === 'left';
   // Flex `order` that pins the panel to `side` regardless of the row's direction.
@@ -116,8 +115,14 @@ const TerminalDock: React.FC<TerminalDockProps> = ({ user, side, width, onSide, 
           <button className={btn} title="Reset sandbox" aria-label="Reset sandbox" onClick={handleReset}>
             <RotateCcw size={14} />
           </button>
-          <button className={btn} title="Open a second terminal (for the nc demo)" aria-label="Open a second terminal" onClick={onSecondTerminal}>
-            <Columns2 size={14} />
+          <button
+            className={split ? activeBtn : btn}
+            title={split ? 'Back to one terminal' : 'Split into two terminals (for the nc demo)'}
+            aria-label="Split terminal"
+            aria-pressed={split}
+            onClick={() => setSplit((s) => !s)}
+          >
+            <Rows2 size={14} />
           </button>
           <button className={btn} title="Open in new tab" aria-label="Open in new tab" onClick={onPopOut}>
             <ExternalLink size={14} />
@@ -129,7 +134,7 @@ const TerminalDock: React.FC<TerminalDockProps> = ({ user, side, width, onSide, 
       </div>
 
       <div className="min-h-0 flex-1">
-        <CourseTerminal ref={termRef} user={user} onExit={onClose} />
+        <TerminalSplit ref={termRef} user={user} split={split} onExit={onClose} />
       </div>
     </div>
   );

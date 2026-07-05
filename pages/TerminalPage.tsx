@@ -1,7 +1,7 @@
-import React, { useRef } from 'react';
-import { TerminalSquare, RotateCcw, Columns2 } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { TerminalSquare, RotateCcw, Rows2, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import CourseTerminal, { type CourseTerminalHandle } from '../components/terminal/CourseTerminal';
+import TerminalSplit, { type TerminalSplitHandle } from '../components/terminal/TerminalSplit';
 import { confirmDialog } from '../components/ui/ConfirmHost';
 import BrandLogo from '../components/ui/BrandLogo';
 
@@ -9,7 +9,12 @@ import BrandLogo from '../components/ui/BrandLogo';
 const TerminalPage: React.FC = () => {
   const { user } = useAuth();
   const firstName = (user?.displayName ?? 'user').trim().split(/\s+/)[0] || 'user';
-  const termRef = useRef<CourseTerminalHandle>(null);
+  const termRef = useRef<TerminalSplitHandle>(null);
+  // Start split when opened as `#/terminal?split=1`.
+  const [split, setSplit] = useState(() => {
+    try { return new URLSearchParams(window.location.hash.split('?')[1] || '').get('split') === '1'; }
+    catch { return false; }
+  });
 
   const handleReset = async () => {
     const ok = await confirmDialog({
@@ -24,9 +29,6 @@ const TerminalPage: React.FC = () => {
     if (window.opener) window.close();
     else window.location.hash = '#/dashboard';
   };
-
-  // Open a second terminal (its own LAN IP) for the nc reverse-shell demo.
-  const openSecond = () => window.open(window.location.href, '_blank');
 
   return (
     <div className="fixed inset-0 flex flex-col bg-[#0a0e14]">
@@ -48,22 +50,23 @@ const TerminalPage: React.FC = () => {
         </div>
         <div className="flex items-center gap-4">
           <button
-            onClick={openSecond}
-            title="Open a second terminal for the nc reverse-shell demo"
-            className="inline-flex items-center gap-1.5 text-xs text-[#6e7a94] transition-colors hover:text-[#00c766]"
+            onClick={() => setSplit((s) => !s)}
+            title={split ? 'Back to one terminal' : 'Split into two terminals for the nc reverse-shell demo'}
+            aria-pressed={split}
+            className={`inline-flex items-center gap-1.5 text-xs transition-colors ${split ? 'text-[#00c766]' : 'text-[#6e7a94] hover:text-[#00c766]'}`}
           >
-            <Columns2 size={13} /> Second terminal
+            <Rows2 size={13} /> {split ? 'Single view' : 'Split'}
           </button>
           <button onClick={handleReset} className="inline-flex items-center gap-1.5 text-xs text-[#6e7a94] transition-colors hover:text-[#c9d3e0]">
             <RotateCcw size={13} /> Reset
           </button>
-          <button onClick={close} className="text-xs text-[#6e7a94] transition-colors hover:text-[#c9d3e0]">
-            Close
+          <button onClick={close} className="inline-flex items-center gap-1.5 text-xs text-[#6e7a94] transition-colors hover:text-[#c9d3e0]">
+            <X size={13} /> Close
           </button>
         </div>
       </div>
       <div className="min-h-0 flex-1">
-        <CourseTerminal ref={termRef} user={firstName} />
+        <TerminalSplit ref={termRef} user={firstName} split={split} />
       </div>
     </div>
   );

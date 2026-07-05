@@ -44,6 +44,11 @@ function randIp(): string {
   return `10.0.0.${Math.floor(Math.random() * 244) + 10}`;
 }
 
+/** A fresh random LAN IP (for split panes that each need their own address). */
+export function randomLanIp(): string {
+  return randIp();
+}
+
 function assignIp(): string {
   try {
     const existing = sessionStorage.getItem(IP_KEY);
@@ -56,7 +61,7 @@ function assignIp(): string {
   }
 }
 
-class CyberNet {
+export class CyberNet {
   readonly localIp: string;
   localHost = 'cyberkhana';
   private chan: BroadcastChannel | null;
@@ -65,8 +70,9 @@ class CyberNet {
   /** Known peers on the LAN (ip → host), refreshed via who/iam. */
   readonly peers = new Map<string, string>();
 
-  constructor() {
-    this.localIp = assignIp();
+  /** `ip` is set explicitly for split panes; otherwise the per-tab IP is used. */
+  constructor(ip?: string) {
+    this.localIp = ip ?? assignIp();
     let chan: BroadcastChannel | null = null;
     try {
       chan = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel(CHANNEL) : null;
@@ -234,4 +240,13 @@ let singleton: CyberNet | null = null;
 export function getNet(): CyberNet {
   if (!singleton) singleton = new CyberNet();
   return singleton;
+}
+
+/**
+ * Create an independent CyberNet with its own address — used by split panes so
+ * two terminals in the *same* tab each get a distinct IP and can talk to each
+ * other over the shared BroadcastChannel.
+ */
+export function createNet(ip?: string): CyberNet {
+  return new CyberNet(ip);
 }

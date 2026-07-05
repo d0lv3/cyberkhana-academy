@@ -45,13 +45,6 @@ const CourseTerminalLauncher: React.FC<{ user: string }> = ({ user }) => {
     setOpen(false);
   };
 
-  // Open a *second* terminal in a new tab (its own LAN IP) without closing this
-  // one — gives the two boxes needed for the nc reverse-shell demo.
-  const openSecond = () => {
-    const base = window.location.href.split('#')[0];
-    window.open(`${base}#/terminal`, '_blank');
-  };
-
   if (!open) {
     return (
       <button
@@ -93,7 +86,6 @@ const CourseTerminalLauncher: React.FC<{ user: string }> = ({ user }) => {
       onWidth={(w) => save(dock.side, w)}
       onClose={() => setOpen(false)}
       onPopOut={popOut}
-      onSecondTerminal={openSecond}
     />
   );
 };
