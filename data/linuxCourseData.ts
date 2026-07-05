@@ -13,7 +13,7 @@ const linuxCourse = {
           "title": "Introduction",
           "subtitle": "WHOAMI and Course Objectives",
           "videoId": "koojpqx0WG4",
-          "duration": "8:45",
+          "duration": "2:53",
           "quiz": null,
           "notes": [
             "Course overview and what you'll learn by the end",
@@ -26,7 +26,7 @@ const linuxCourse = {
           "title": "Linux History",
           "subtitle": "Unix, GNU and Linux Kernel",
           "videoId": "RWTb5PwVIMg",
-          "duration": "12:30",
+          "duration": "2:43",
           "quiz": null,
           "notes": [
             "Unix was created in 1969 at AT&T Bell Labs",
@@ -40,7 +40,7 @@ const linuxCourse = {
           "title": "What is Linux? Why Linux?",
           "subtitle": "What is Linux and why Linux?",
           "videoId": "7iwn_RBUCAo",
-          "duration": "10:15",
+          "duration": "3:03",
           "quiz": null,
           "notes": [
             "Linux is open-source: free to use, modify, and distribute",
@@ -54,7 +54,7 @@ const linuxCourse = {
           "title": "Linux Distros",
           "subtitle": "Ubuntu, Kali, CentOS, Fedora — when to use each",
           "videoId": "_GIBjo514YM",
-          "duration": "14:20",
+          "duration": "3:31",
           "quiz": null,
           "notes": [
             "Ubuntu — beginner-friendly, great for learning and development",
@@ -69,7 +69,7 @@ const linuxCourse = {
           "title": "Installing Linux",
           "subtitle": "VMware, WSL demo",
           "videoId": "RKagfRQARhM",
-          "duration": "18:50",
+          "duration": "8:55",
           "quiz": null,
           "notes": [
             "VMware/VirtualBox — run Linux inside a virtual machine (safest for beginners)",
@@ -89,7 +89,7 @@ const linuxCourse = {
           "title": "System & Terminal Overview & Shell",
           "subtitle": "bash & zsh, echo, whoami, CLI, GUI",
           "videoId": "t-NJIpRJ2yQ",
-          "duration": "16:40",
+          "duration": "8:52",
           "quiz": "Quiz2.1",
           "notes": [
             "CLI (Command Line Interface) vs GUI (Graphical User Interface)",
@@ -104,7 +104,7 @@ const linuxCourse = {
           "title": "File System & Navigating",
           "subtitle": "Understanding /etc, /home, /var, pwd, ls, cd",
           "videoId": "ZLyauY9TFns",
-          "duration": "20:15",
+          "duration": "14:32",
           "quiz": "Quiz2.2",
           "notes": [
             "Linux file system starts at `/` (root directory)",
@@ -120,7 +120,7 @@ const linuxCourse = {
           "title": "Creating & Managing Files",
           "subtitle": "touch, mkdir, cp, mv, rm, cat, tree, man, -h",
           "videoId": "4Azqa1uWcMA",
-          "duration": "22:30",
+          "duration": "12:27",
           "quiz": "Quiz2.3",
           "notes": [
             "`touch` creates an empty file, `mkdir` creates a directory",
@@ -135,7 +135,7 @@ const linuxCourse = {
           "title": "Other Commands",
           "subtitle": "Tab completion, nano, piping, less, more, grep, redirections, find",
           "videoId": "ysW_D8qhcog",
-          "duration": "25:10",
+          "duration": "17:14",
           "quiz": "Quiz2.4",
           "notes": [
             "Tab key auto-completes file names and commands",
@@ -157,7 +157,7 @@ const linuxCourse = {
           "title": "Managing Users & Groups",
           "subtitle": "adduser, useradd, usermod, userdel, groups, passwd, id",
           "videoId": "EEQHQN3vECk",
-          "duration": "18:25",
+          "duration": "12:13",
           "quiz": "Quiz3.1",
           "notes": [
             "`adduser` creates a new user interactively (preferred on Debian/Ubuntu)",
@@ -173,7 +173,7 @@ const linuxCourse = {
           "title": "Permissions & Ownership",
           "subtitle": "chmod, chown, ls -l explained",
           "videoId": "0RNQvb6b2T4",
-          "duration": "21:00",
+          "duration": "14:15",
           "quiz": "Quiz3.2",
           "notes": [
             "Every file has owner, group, and others permissions",
@@ -188,7 +188,7 @@ const linuxCourse = {
           "title": "Sudo & Root Explained",
           "subtitle": "What is sudo and root user?",
           "videoId": "cOGUXgtJNKE",
-          "duration": "12:45",
+          "duration": "3:39",
           "quiz": "Quiz3.3",
           "notes": [
             "`root` is the superuser with unrestricted access (UID 0)",
@@ -209,7 +209,7 @@ const linuxCourse = {
           "title": "Using APT Package Manager",
           "subtitle": "apt update, upgrade, install, remove",
           "videoId": "eo2atpxb1-s",
-          "duration": "15:30",
+          "duration": "3:49",
           "quiz": "Quiz4.1",
           "notes": [
             "`apt update` refreshes the package index (doesn't install anything)",
@@ -225,7 +225,7 @@ const linuxCourse = {
           "title": "Installing from External Sources",
           "subtitle": "dpkg explained",
           "videoId": "voW4xhcUkj0",
-          "duration": "11:20",
+          "duration": "3:15",
           "quiz": "Quiz4.2",
           "notes": [
             "`dpkg -i package.deb` installs a `.deb` file manually",
@@ -245,7 +245,7 @@ const linuxCourse = {
           "title": "IP Addressing & Interfaces",
           "subtitle": "IPv4 & IPv6, network interfaces, ip a, ifconfig, loopback, ping",
           "videoId": "XB5p9rTMThI",
-          "duration": "19:45",
+          "duration": "8:46",
           "quiz": "Quiz5.1",
           "notes": [
             "IPv4 addresses are 32-bit (e.g., 192.168.1.1), IPv6 are 128-bit",
@@ -260,7 +260,7 @@ const linuxCourse = {
           "title": "Basic Connectivity Tests",
           "subtitle": "DNS, dig",
           "videoId": "HeNzaNa8XN8",
-          "duration": "14:10",
+          "duration": "4:38",
           "quiz": "Quiz5.2",
           "notes": [
             "DNS translates domain names to IP addresses",
@@ -275,7 +275,7 @@ const linuxCourse = {
           "title": "Port & Service Scanning",
           "subtitle": "Protocols & ports, lsof, nmap basics",
           "videoId": "iUWzK4NZpME",
-          "duration": "23:35",
+          "duration": "7:57",
           "quiz": "Quiz5.3",
           "notes": [
             "Ports are numbered endpoints (0-65535) for network services",
@@ -296,7 +296,7 @@ const linuxCourse = {
           "title": "Shell Scripting Basics",
           "subtitle": "Writing .sh scripts, variables, if statements, loops",
           "videoId": "ZugtwpO-tsw",
-          "duration": "28:00",
+          "duration": "29:50",
           "quiz": "Quiz6.1",
           "notes": [
             "Scripts start with `#!/bin/bash` (shebang line)",
@@ -312,7 +312,7 @@ const linuxCourse = {
           "title": "Scheduled Tasks",
           "subtitle": "cron, crontab, automating scans or backups",
           "videoId": "UX_eD5Ml5kk",
-          "duration": "16:15",
+          "duration": "11:55",
           "quiz": "Quiz6.2",
           "notes": [
             "Cron is a time-based job scheduler daemon",
@@ -334,7 +334,7 @@ const linuxCourse = {
           "title": "Managing Processes",
           "subtitle": "ps, top, kill, jobs",
           "videoId": "_sbfT25hmeU",
-          "duration": "17:50",
+          "duration": "9:11",
           "quiz": "Quiz7.1",
           "notes": [
             "`ps aux` shows all running processes with details",
@@ -350,7 +350,7 @@ const linuxCourse = {
           "title": "System Monitoring Tools",
           "subtitle": "htop, watch, uptime, load average",
           "videoId": "YKdI4ATpAZo",
-          "duration": "13:40",
+          "duration": "8:46",
           "quiz": "Quiz7.2",
           "notes": [
             "`htop` is an interactive version of `top` with color and mouse support",
@@ -371,7 +371,7 @@ const linuxCourse = {
           "title": "Linux Services",
           "subtitle": "systemd, systemctl, managing services",
           "videoId": "vNW8ttCjVE0",
-          "duration": "15:25",
+          "duration": "14:44",
           "quiz": "Quiz8.1",
           "notes": [
             "`systemd` is the init system that manages services on modern Linux",
@@ -386,7 +386,7 @@ const linuxCourse = {
           "title": "Linux Logs Overview",
           "subtitle": "journalctl, /var/log/auth.log, dmesg",
           "videoId": "_AvC017aK2E",
-          "duration": "18:10",
+          "duration": "11:57",
           "quiz": "Quiz8.2",
           "notes": [
             "Logs are stored in `/var/log/` directory",
@@ -402,7 +402,7 @@ const linuxCourse = {
           "title": "Common Issues & Fixes",
           "subtitle": "Sudo not working, file not executable, broken config",
           "videoId": "VOB7o8thkTg",
-          "duration": "14:55",
+          "duration": "3:08",
           "quiz": "Quiz8.3",
           "notes": [
             "\"Permission denied\" — check file permissions with `ls -l`",
@@ -423,7 +423,7 @@ const linuxCourse = {
           "title": "Using Linux in Pentesting Labs",
           "subtitle": "Working in Kali, netcat, scp, ssh, curl",
           "videoId": "T2UtbjJdt5I",
-          "duration": "26:30",
+          "duration": "8:27",
           "quiz": "Quiz9.1",
           "notes": [
             "`ssh user@host` connects to a remote machine securely",
@@ -438,7 +438,7 @@ const linuxCourse = {
           "title": "Shells Explained",
           "subtitle": "Reverse, bind shells",
           "videoId": "aYXfH76R7I0",
-          "duration": "20:45",
+          "duration": "5:18",
           "quiz": "Quiz9.2",
           "notes": [
             "Bind shell: target listens on a port, attacker connects to it",
@@ -453,7 +453,7 @@ const linuxCourse = {
           "title": "Linux Final Cyber Challenge",
           "subtitle": "Hands-on challenge",
           "videoId": "pUoHv2f2UC8",
-          "duration": "32:15",
+          "duration": "1:15",
           "quiz": null,
           "notes": [
             "Hands-on challenge combining all skills learned in the course",
@@ -468,7 +468,7 @@ const linuxCourse = {
           "title": "Conclusion & Where to Go Next?",
           "subtitle": "Guided labs, HackTheBox, eJPT, privilege escalation",
           "videoId": "ogkd-yDapK0",
-          "duration": "10:30",
+          "duration": "4:32",
           "quiz": null,
           "notes": [
             "Guided training rooms — beginner-friendly, structured labs",
