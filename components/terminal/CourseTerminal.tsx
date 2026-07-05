@@ -169,7 +169,11 @@ const CourseTerminal = forwardRef<CourseTerminalHandle, CourseTerminalProps>(({ 
       return;
     }
     if (req.mode === 'listen') {
-      append({ kind: 'sys', text: `Listening on 0.0.0.0 ${req.port} (this box is ${net.localIp}) — Ctrl+C to stop.` });
+      append(
+        { kind: 'sys', text: `Listening on 0.0.0.0:${req.port} — this box is ${net.localIp}.` },
+        { kind: 'sys', text: `From the other terminal, run:  nc ${net.localIp} ${req.port}${req.exec ? '' : ' -e /bin/bash'}` },
+        { kind: 'sys', text: 'Ctrl+C to stop listening.' },
+      );
       const stop = net.listen(req.port, (socket) => {
         stopListenRef.current?.();
         stopListenRef.current = null;

@@ -802,10 +802,23 @@ function ncRun(args: string[], io: IO): number {
     if (a.startsWith('-')) continue;
     positional.push(a);
   }
-  const nums = positional.filter((p) => /^\d+$/.test(p));
-  const port = parseInt(nums[nums.length - 1] ?? '', 10);
-  const host = listen ? undefined : positional.find((p) => !/^\d+$/.test(p));
-  if (!port || Number.isNaN(port)) { w('nc: missing or invalid port number\n'); return 1; }
+  // Accept `host port`, `host:port`, and a trailing `/tcp`|`/udp` on the port,
+  // so `nc 10.0.0.5:4444` and `nc 10.0.0.5 4444` both work.
+  let host: string | undefined;
+  let portStr: string | undefined;
+  for (const p of positional) {
+    const hp = /^(.+):(\d{1,5})$/.exec(p); // host:port
+    if (hp) { host = host ?? hp[1]; portStr = hp[2]; continue; }
+    const pn = /^(\d{1,5})(?:\/(?:tcp|udp))?$/i.exec(p); // bare port [+ /proto]
+    if (pn) { portStr = pn[1]; continue; }
+    host = host ?? p; // hostname / ip
+  }
+  if (listen) host = undefined;
+  const port = parseInt(portStr ?? '', 10);
+  if (!port || Number.isNaN(port) || port > 65535) {
+    w(`nc: no valid port given. Usage: nc <host> <port>   e.g.  nc ${listen ? '-lvnp 4444' : '10.0.0.5 4444'}\n`);
+    return 1;
+  }
   if (!ctx.fs) { w('nc: live connections are only available in the interactive terminal.\n'); return 1; }
   ctx.net = { mode: listen ? 'listen' : 'connect', host, port, exec, verbose };
   return 0;
