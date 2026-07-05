@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { TerminalSquare, RotateCcw } from 'lucide-react';
+import { TerminalSquare, RotateCcw, Columns2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import CourseTerminal, { type CourseTerminalHandle } from '../components/terminal/CourseTerminal';
 import { confirmDialog } from '../components/ui/ConfirmHost';
@@ -25,6 +25,9 @@ const TerminalPage: React.FC = () => {
     else window.location.hash = '#/dashboard';
   };
 
+  // Open a second terminal (its own LAN IP) for the nc reverse-shell demo.
+  const openSecond = () => window.open(window.location.href, '_blank');
+
   return (
     <div className="fixed inset-0 flex flex-col bg-[#0a0e14]">
       <div className="flex items-center justify-between border-b border-[#263248] bg-[#0d1117] px-4 py-2.5">
@@ -44,6 +47,13 @@ const TerminalPage: React.FC = () => {
           </div>
         </div>
         <div className="flex items-center gap-4">
+          <button
+            onClick={openSecond}
+            title="Open a second terminal for the nc reverse-shell demo"
+            className="inline-flex items-center gap-1.5 text-xs text-[#6e7a94] transition-colors hover:text-[#00c766]"
+          >
+            <Columns2 size={13} /> Second terminal
+          </button>
           <button onClick={handleReset} className="inline-flex items-center gap-1.5 text-xs text-[#6e7a94] transition-colors hover:text-[#c9d3e0]">
             <RotateCcw size={13} /> Reset
           </button>

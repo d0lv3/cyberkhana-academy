@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef } from 'react';
-import { TerminalSquare, PanelLeft, PanelRight, ExternalLink, RotateCcw, X } from 'lucide-react';
+import { TerminalSquare, PanelLeft, PanelRight, ExternalLink, RotateCcw, Columns2, X } from 'lucide-react';
 import CourseTerminal, { type CourseTerminalHandle } from './CourseTerminal';
 import { confirmDialog } from '../ui/ConfirmHost';
 import { useLang } from '../../contexts/LangContext';
@@ -18,6 +18,8 @@ interface TerminalDockProps {
   onWidth: (width: number) => void;
   onClose: () => void;
   onPopOut: () => void;
+  /** Open a *second* terminal in a new tab (its own IP) for the nc demo. */
+  onSecondTerminal: () => void;
 }
 
 /**
@@ -25,7 +27,7 @@ interface TerminalDockProps {
  * content — it pushes the lesson aside rather than covering it. It can dock to
  * the left or right edge and mirrors correctly under RTL.
  */
-const TerminalDock: React.FC<TerminalDockProps> = ({ user, side, width, onSide, onWidth, onClose, onPopOut }) => {
+const TerminalDock: React.FC<TerminalDockProps> = ({ user, side, width, onSide, onWidth, onClose, onPopOut, onSecondTerminal }) => {
   const { isArabic } = useLang();
   const dragging = useRef(false);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -113,6 +115,9 @@ const TerminalDock: React.FC<TerminalDockProps> = ({ user, side, width, onSide, 
           </button>
           <button className={btn} title="Reset sandbox" aria-label="Reset sandbox" onClick={handleReset}>
             <RotateCcw size={14} />
+          </button>
+          <button className={btn} title="Open a second terminal (for the nc demo)" aria-label="Open a second terminal" onClick={onSecondTerminal}>
+            <Columns2 size={14} />
           </button>
           <button className={btn} title="Open in new tab" aria-label="Open in new tab" onClick={onPopOut}>
             <ExternalLink size={14} />
