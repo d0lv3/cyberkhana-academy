@@ -176,10 +176,10 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, mobileOpen, onMo
       {/* Mobile slide-out drawer */}
       <aside
         className={`
-          fixed top-0 left-0 h-screen z-50 flex flex-col bg-[#0d1117] border-r border-[#1e293b]
+          fixed top-0 start-0 h-screen z-50 flex flex-col bg-[#0d1117] border-e border-[#1e293b]
           transition-transform duration-300 ease-in-out w-64
           md:hidden
-          ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
+          ${mobileOpen ? 'translate-x-0' : lang === 'ar' ? 'translate-x-full' : '-translate-x-full'}
         `}
       >
         {sidebarContent}
@@ -188,21 +188,21 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, mobileOpen, onMo
       {/* Desktop sidebar */}
       <aside
         className={`
-          hidden md:flex flex-col flex-shrink-0 h-screen sticky top-0 bg-[#0d1117] border-r border-[#1e293b]
+          hidden md:flex flex-col flex-shrink-0 h-screen sticky top-0 bg-[#0d1117] border-e border-[#1e293b]
           transition-all duration-300 ease-in-out
           ${collapsed ? 'w-[68px]' : 'w-60'}
         `}
       >
         {sidebarContent}
 
-        {/* Floating collapse/expand toggle — rides the sidebar's edge */}
+        {/* Floating collapse/expand toggle — rides the sidebar's inner (content-facing) edge */}
         <button
           onClick={onToggle}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          className="absolute top-[68px] -right-3 z-40 flex h-6 w-6 items-center justify-center rounded-full border border-[#263248] bg-[#121a2a] text-[#6e7a94] shadow-md shadow-black/40 transition-all duration-200 hover:scale-110 hover:border-[#00a859]/60 hover:bg-[#0e1626] hover:text-[#00a859] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00a859]/50"
+          className="absolute top-[68px] -end-3 z-40 flex h-6 w-6 items-center justify-center rounded-full border border-[#263248] bg-[#121a2a] text-[#6e7a94] shadow-md shadow-black/40 transition-all duration-200 hover:scale-110 hover:border-[#00a859]/60 hover:bg-[#0e1626] hover:text-[#00a859] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00a859]/50"
         >
-          {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+          {collapsed ? <ChevronRight size={14} className="rtl-flip" /> : <ChevronLeft size={14} className="rtl-flip" />}
         </button>
       </aside>
     </>

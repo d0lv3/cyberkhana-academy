@@ -480,12 +480,6 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
         >
           <Layers size={15} />
           <span>Structure &amp; Content</span>
-          <span
-            className={`hidden sm:inline text-[10px] font-medium ${tab === 'content' ? 'text-[#00a859]/70' : 'text-[#4d5a73]'}`}
-            dir="ltr"
-          >
-            {chapters.length}·{totalSections}
-          </span>
         </button>
       </div>
 

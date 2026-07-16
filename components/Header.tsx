@@ -76,7 +76,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
             aria-label="Log out"
             className="w-9 h-9 rounded-lg bg-[#121a2a] border border-[#263248] flex items-center justify-center text-[#8390ac] hover:text-red-400 hover:border-red-500/30 transition-all"
           >
-            <LogOut size={16} />
+            <LogOut size={16} className="rtl-flip" />
           </button>
         </div>
       </div>
