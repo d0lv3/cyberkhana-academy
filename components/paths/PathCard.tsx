@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Clock, ListChecks, Route } from 'lucide-react';
+import { Clock, ListChecks } from 'lucide-react';
 import CardArt from '../fundamentals/CardArt';
 import DifficultyBadge from '../ui/DifficultyBadge';
 import { useLang } from '../../contexts/LangContext';
@@ -11,10 +11,10 @@ import type { CreatorPath } from '../../services/creatorTypes';
 
 /**
  * Learning-path tile. Shares the full-bleed cover-image look of the canonical
- * ModuleCard (cover / scrims / top tag / bottom title + meta) so paths sit
- * consistently beside modules — but sized for the wider 2-up paths grid and
- * carrying path specifics: a "Path" tag, step count, and an enrolment progress
- * bar. Falls back to the generated roadmap art when no cover is uploaded.
+ * ModuleCard (cover / scrims / bottom title + meta) so paths sit consistently
+ * beside modules — but sized for the wider 2-up paths grid and carrying path
+ * specifics: step count and an enrolment progress bar. Falls back to the
+ * generated roadmap art when no cover is uploaded.
  */
 const PathCard: React.FC<{ path: CreatorPath; index?: number }> = ({ path: p, index = 0 }) => {
   const { t, lang } = useLang();
@@ -56,14 +56,8 @@ const PathCard: React.FC<{ path: CreatorPath; index?: number }> = ({ path: p, in
       <div className="absolute inset-0 bg-gradient-to-t from-[#080c14] via-[#080c14]/55 to-transparent" />
       <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-[#080c14]/70 to-transparent" />
 
-      {/* Top: path tag + enrolled pill */}
-      <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3">
-        <span
-          className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-semibold backdrop-blur-sm"
-          style={{ color: p.color, backgroundColor: `${p.color}1f`, borderColor: `${p.color}55` }}
-        >
-          <Route size={12} /> {t('sidebar.paths')}
-        </span>
+      {/* Top: enrolled pill */}
+      <div className="absolute inset-x-0 top-0 flex items-start justify-end gap-2 p-3">
         {enrolled && (
           <span className="inline-flex items-center rounded-md border border-[#00a859]/30 bg-[#00a859]/15 px-2 py-0.5 text-xs font-semibold text-[#7ef0b0] backdrop-blur-sm">
             {t('paths.enrolled')}

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -6,23 +6,18 @@ import {
   Wifi,
   Monitor,
   Layers,
-  Route,
-  Clock,
   Zap,
-  BookOpen,
   ArrowRight,
   Network,
-  PenTool,
   ChevronRight,
   Play,
-  Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLang } from '../contexts/LangContext';
-import { getFundamentalsByCategory } from '../data/fundamentalsData';
+import { getFundamentalsByCategory, moduleViewerPath } from '../data/fundamentalsData';
+import { getAllModules } from '../data/modulesData';
 import { getNetworkingLessons } from '../data/networking';
 import { getProgrammingLanguages } from '../data/programming';
-import { getPublishedCreatorPaths } from '../services/creatorDataService';
 import {
   getProgrammingDone,
   getNetworkingDone,
@@ -30,24 +25,6 @@ import {
   getLastActivity,
 } from '../services/progressService';
 import SkillMatrix from '../components/skills/SkillMatrix';
-
-/* ── count-up hook ── */
-function useCountUp(target: number, duration = 1100) {
-  const [value, setValue] = useState(0);
-  useEffect(() => {
-    let raf = 0;
-    const start = performance.now();
-    const tick = (now: number) => {
-      const p = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - p, 3);
-      setValue(target * eased);
-      if (p < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [target, duration]);
-  return value;
-}
 
 /* ── circular progress ring ── */
 const ProgressRing: React.FC<{
@@ -82,38 +59,6 @@ const ProgressRing: React.FC<{
   );
 };
 
-/* ── stat card with count-up ── */
-const StatCard: React.FC<{
-  icon: React.ElementType;
-  label: string;
-  value: number;
-  decimals?: number;
-  color: string;
-  delay: number;
-}> = ({ icon: Icon, label, value, decimals = 0, color, delay }) => {
-  const animated = useCountUp(value);
-  const display = decimals > 0 ? animated.toFixed(decimals) : Math.round(animated).toString();
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.4 }}
-      className="group rounded-2xl border border-[#263248] bg-[#121a2a] p-5 transition-colors hover:border-[#354562]"
-    >
-      <div
-        className="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
-        style={{ backgroundColor: `${color}15`, border: `1px solid ${color}30` }}
-      >
-        <Icon size={20} style={{ color }} />
-      </div>
-      <p className="text-3xl font-black text-[#f3f6ff]" dir="ltr">
-        {display}
-      </p>
-      <p className="text-xs text-[#6e7a94] mt-1">{label}</p>
-    </motion.div>
-  );
-};
-
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const { t, lang } = useLang();
@@ -137,11 +82,8 @@ const DashboardPage: React.FC = () => {
       (s, m) => s + Math.min(getOSModuleDoneCount(m.slug), m.totalLessons),
       0
     );
-    const osHours = osModules.reduce((s, m) => s + m.estimatedHours, 0);
-
     const netLessons = getNetworkingLessons();
     const netTotal = netLessons.length;
-    const netMinutes = netLessons.reduce((s, l) => s + (l.estimatedMinutes || 0), 0);
     const netDoneSet = getNetworkingDone();
     const netDone = netLessons.filter((l) => netDoneSet.has(l.id)).length;
 
@@ -153,8 +95,6 @@ const DashboardPage: React.FC = () => {
     const level = Math.floor(xp / 100) + 1;
     const xpInLevel = xp % 100;
 
-    const totalHours = Math.round((osHours + netMinutes / 60) * 10) / 10;
-    const publishedPaths = getPublishedCreatorPaths().length;
     const lastActivity = getLastActivity();
 
     return {
@@ -172,21 +112,29 @@ const DashboardPage: React.FC = () => {
       xp,
       level,
       xpInLevel,
-      totalHours,
-      publishedPaths,
       lastActivity,
       started: completedUnits > 0,
     };
   }, []);
 
-  const firstName = user?.displayName?.split(' ')[0] ?? 'Student';
+  /* ── Modules the student has already started; falls back to a few to begin. ── */
+  const moduleShortlist = useMemo(() => {
+    const withProgress = getAllModules().map((m) => {
+      const done = Math.min(getOSModuleDoneCount(m.slug), m.totalLessons);
+      const pct = m.totalLessons > 0 ? Math.round((done / m.totalLessons) * 100) : 0;
+      return { mod: m, done, pct };
+    });
+    const inProgress = withProgress
+      .filter((x) => x.done > 0 && x.done < x.mod.totalLessons)
+      .sort((a, b) => b.pct - a.pct);
+    const fresh = withProgress.filter((x) => x.done === 0);
+    return {
+      started: inProgress.length > 0,
+      items: (inProgress.length ? inProgress : fresh).slice(0, 4),
+    };
+  }, []);
 
-  const stats = [
-    { icon: BookOpen, label: t('dashboard.lessonsCompleted'), value: data.completedUnits, color: '#00a859' },
-    { icon: Layers, label: t('dashboard.totalLessons'), value: data.totalUnits, color: '#60a5fa' },
-    { icon: Clock, label: t('dashboard.contentHours'), value: data.totalHours, decimals: 1, color: '#f3a43a' },
-    { icon: Route, label: t('dashboard.pathsStat'), value: data.publishedPaths, color: '#a78bfa' },
-  ];
+  const firstName = user?.displayName?.split(' ')[0] ?? 'Student';
 
   const tracks = [
     {
@@ -219,17 +167,6 @@ const DashboardPage: React.FC = () => {
       done: data.osDone,
       sub: `${data.osLessonsTotal} ${t('dashboard.lessonsLabel')}`,
     },
-  ];
-
-  const isCreator = user?.role === 'creator' || user?.role === 'admin';
-
-  const quickActions = [
-    { icon: BookOpen, label: t('sidebar.fundamentals'), route: '/fundamentals', color: '#00a859' },
-    { icon: Layers, label: t('sidebar.modules'), route: '/modules', color: '#60a5fa' },
-    { icon: Route, label: t('sidebar.paths'), route: '/paths', color: '#f3a43a' },
-    ...(isCreator
-      ? [{ icon: PenTool, label: t('dashboard.openStudio'), route: '/creators', color: '#9fef00' }]
-      : []),
   ];
 
   const nextLink = data.nextConcept
@@ -272,10 +209,6 @@ const DashboardPage: React.FC = () => {
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 sm:p-8">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00a859]/10 border border-[#00a859]/20 mb-4">
-              <Sparkles size={12} className="text-[#00a859]" />
-              <span className="text-[11px] font-semibold text-[#00a859]">{t('dashboard.recommended')}</span>
-            </div>
             <h1 className="text-2xl sm:text-3xl font-black text-[#f3f6ff]">
               {t('dashboard.welcome')}, {firstName} 👋
             </h1>
@@ -328,21 +261,6 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
       </motion.div>
-
-      {/* ── Stat cards ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((s, i) => (
-          <StatCard
-            key={s.label}
-            icon={s.icon}
-            label={s.label}
-            value={s.value}
-            decimals={s.decimals}
-            color={s.color}
-            delay={0.1 + i * 0.07}
-          />
-        ))}
-      </div>
 
       {/* ── Skill Matrix ── */}
       <SkillMatrix variant="compact" />
@@ -470,38 +388,78 @@ const DashboardPage: React.FC = () => {
             </div>
           </motion.div>
 
-          {/* Quick actions */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.4 }}
-            className="rounded-2xl border border-[#263248] bg-[#121a2a] p-4"
-          >
-            <h3 className="text-xs font-bold uppercase tracking-wider text-[#6e7a94] px-2 mb-3">
-              {t('dashboard.quickActions')}
-            </h3>
-            <div className="space-y-1">
-              {quickActions.map((a) => (
+          {/* Modules — resume the ones already started, else a few to begin */}
+          {moduleShortlist.items.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.4 }}
+              className="rounded-2xl border border-[#263248] bg-[#121a2a] p-4"
+            >
+              <div className="flex items-center justify-between px-2 mb-3 gap-2">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[#6e7a94]">
+                  {moduleShortlist.started
+                    ? lang === 'ar'
+                      ? 'وحدات قيد التقدم'
+                      : 'Modules in progress'
+                    : lang === 'ar'
+                    ? 'ابدأ وحدة'
+                    : 'Start a module'}
+                </h3>
                 <button
-                  key={a.route}
-                  onClick={() => navigate(a.route)}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-[#9aa5bf] hover:bg-[#182235] hover:text-[#f3f6ff] transition-all group"
+                  onClick={() => navigate('/modules')}
+                  className="text-[11px] font-semibold text-[#6e7a94] hover:text-[#00a859] transition-colors flex-shrink-0"
                 >
-                  <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: `${a.color}15` }}
-                  >
-                    <a.icon size={15} style={{ color: a.color }} />
-                  </div>
-                  <span className="flex-1 text-start font-medium">{a.label}</span>
-                  <ChevronRight
-                    size={15}
-                    className="text-[#4d5a73] group-hover:text-[#9aa5bf] transition-colors"
-                  />
+                  {lang === 'ar' ? 'عرض الكل' : 'View all'}
                 </button>
-              ))}
-            </div>
-          </motion.div>
+              </div>
+              <div className="space-y-1">
+                {moduleShortlist.items.map(({ mod, done, pct }) => (
+                  <button
+                    key={mod.id}
+                    onClick={() => navigate(moduleViewerPath(mod))}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#182235] transition-all group"
+                  >
+                    <div
+                      className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{
+                        backgroundColor: `${mod.iconColor}15`,
+                        border: `1px solid ${mod.iconColor}30`,
+                      }}
+                    >
+                      <Layers size={15} style={{ color: mod.iconColor }} />
+                    </div>
+                    <div className="flex-1 min-w-0 text-start">
+                      <p className="text-sm font-medium text-[#9aa5bf] group-hover:text-[#f3f6ff] transition-colors truncate">
+                        {mod.title[lang] || mod.title.en}
+                      </p>
+                      {done > 0 ? (
+                        <div className="mt-1.5 flex items-center gap-2" dir="ltr">
+                          <div className="h-1 flex-1 rounded-full bg-[#0a0f18] overflow-hidden">
+                            <div
+                              className="h-full rounded-full transition-all duration-700"
+                              style={{ width: `${pct}%`, backgroundColor: mod.iconColor }}
+                            />
+                          </div>
+                          <span className="text-[10px] text-[#4d5a73] tabular-nums flex-shrink-0">
+                            {done}/{mod.totalLessons}
+                          </span>
+                        </div>
+                      ) : (
+                        <p className="text-[10px] text-[#4d5a73] mt-0.5" dir="ltr">
+                          {mod.totalLessons} {t('dashboard.lessonsLabel')}
+                        </p>
+                      )}
+                    </div>
+                    <ChevronRight
+                      size={15}
+                      className="text-[#4d5a73] group-hover:text-[#9aa5bf] transition-colors flex-shrink-0 rtl-flip"
+                    />
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
         </div>
       </div>
     </div>
