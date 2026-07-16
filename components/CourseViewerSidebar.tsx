@@ -10,6 +10,7 @@ import {
   BookOpen,
 } from 'lucide-react';
 import ProgressBar from './ui/ProgressBar';
+import { useLang } from '../contexts/LangContext';
 
 /* ─── Types (generic enough for any video-based module) ─── */
 
@@ -62,6 +63,8 @@ const CourseViewerSidebar: React.FC<CourseViewerSidebarProps> = ({
   onMobileClose,
   collapsed = false,
 }) => {
+  const { isArabic } = useLang();
+
   // Which module contains the active lecture?
   const activeModuleId = useMemo(() => {
     for (const mod of modules) {
@@ -280,10 +283,10 @@ const CourseViewerSidebar: React.FC<CourseViewerSidebarProps> = ({
       {/* Sidebar panel */}
       <aside
         className={`
-          fixed top-14 bottom-0 left-0 z-50 w-full sm:w-80 bg-[#0f1520] border-r border-[#263248]
+          fixed top-14 bottom-0 start-0 z-50 w-full sm:w-80 bg-[#0f1520] border-e border-[#263248]
           flex flex-col transition-transform duration-300
           md:relative md:top-0 md:translate-x-0 md:w-80 md:flex-shrink-0
-          ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
+          ${mobileOpen ? 'translate-x-0' : isArabic ? 'translate-x-full' : '-translate-x-full'}
           ${collapsed ? 'md:hidden' : ''}
         `}
       >

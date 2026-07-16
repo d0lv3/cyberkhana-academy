@@ -125,6 +125,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [existing, setExisting] = useState<CreatorFundamentalModule | null>(null);
   const [mdLang, setMdLang] = useState<'en' | 'ar'>('en');
+  const [tab, setTab] = useState<'details' | 'content'>('details');
   const [adminCtx, setAdminCtx] = useState<{
     ownerId: string;
     ownerName: string;
@@ -349,10 +350,12 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
   /* ── Save ── */
   const handleSave = async () => {
     if (!titleEn.trim()) {
+      setTab('details');
       toast('error', 'An English title is required.');
       return;
     }
     if (totalSections === 0) {
+      setTab('content');
       toast('error', 'Add at least one section.');
       return;
     }
@@ -393,10 +396,12 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
    * in the real student viewer in a new tab. ── */
   const handlePreview = () => {
     if (!titleEn.trim()) {
+      setTab('details');
       toast('error', 'Add an English title before previewing.');
       return;
     }
     if (totalSections === 0) {
+      setTab('content');
       toast('error', 'Add at least one section to preview.');
       return;
     }
@@ -450,7 +455,42 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
         </div>
       )}
 
+      {/* ── Tabs ── */}
+      <div className="flex items-center gap-1 rounded-xl border border-[#263248] bg-[#0b1019] p-1">
+        <button
+          type="button"
+          onClick={() => setTab('details')}
+          className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+            tab === 'details'
+              ? 'bg-[#00a859]/12 text-[#00a859] border border-[#00a859]/30'
+              : 'text-[#6e7a94] hover:text-[#d2d7e3] border border-transparent'
+          }`}
+        >
+          <FileText size={15} />
+          <span>{noun} Details</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab('content')}
+          className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+            tab === 'content'
+              ? 'bg-[#00a859]/12 text-[#00a859] border border-[#00a859]/30'
+              : 'text-[#6e7a94] hover:text-[#d2d7e3] border border-transparent'
+          }`}
+        >
+          <Layers size={15} />
+          <span>Structure &amp; Content</span>
+          <span
+            className={`hidden sm:inline text-[10px] font-medium ${tab === 'content' ? 'text-[#00a859]/70' : 'text-[#4d5a73]'}`}
+            dir="ltr"
+          >
+            {chapters.length}·{totalSections}
+          </span>
+        </button>
+      </div>
+
       {/* ── Metadata ── */}
+      {tab === 'details' && (
       <EnhancedCard padding="lg">
         <h3 className="text-sm font-bold text-[#f3f6ff] mb-4">{noun} Details</h3>
         <div className="space-y-4">
@@ -538,8 +578,10 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
           )}
         </div>
       </EnhancedCard>
+      )}
 
       {/* ── Structure + Section editor ── */}
+      {tab === 'content' && (
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-6">
         {/* Outline */}
         <EnhancedCard padding="none" className="lg:col-span-2 overflow-hidden">
@@ -727,6 +769,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
           )}
         </div>
       </div>
+      )}
     </CreatorLayout>
   );
 };
