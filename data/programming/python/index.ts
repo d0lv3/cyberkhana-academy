@@ -7,6 +7,7 @@ import listsTuples from './05-lists-tuples';
 import setsDicts from './06-sets-dicts';
 import booleansOperators from './07-booleans-operators';
 import userInput from './08-input';
+import controlFlow from './09-control-flow';
 
 const python: ProgrammingLanguage = {
   id: 'python',
@@ -27,6 +28,7 @@ const python: ProgrammingLanguage = {
     setsDicts,
     booleansOperators,
     userInput,
+    controlFlow,
   ].sort((a, b) => a.order - b.order),
 };
 
