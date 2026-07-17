@@ -2,6 +2,7 @@ import type { ProgrammingLanguage } from '../types';
 import gettingStarted from './01-getting-started';
 import variables from './02-variables';
 import strings from './03-strings';
+import numbers from './04-numbers';
 
 const python: ProgrammingLanguage = {
   id: 'python',
@@ -13,7 +14,7 @@ const python: ProgrammingLanguage = {
     en: 'The most popular language in cybersecurity — used for scripting, automation, exploit development, and tool building.',
     ar: 'اللغة الأكثر شيوعا في الأمن السيبراني — تستخدم في البرمجة النصية، الأتمتة، تطوير الاستغلالات، وبناء الأدوات.',
   },
-  modules: [gettingStarted, variables, strings].sort((a, b) => a.order - b.order),
+  modules: [gettingStarted, variables, strings, numbers].sort((a, b) => a.order - b.order),
 };
 
 export default python;
