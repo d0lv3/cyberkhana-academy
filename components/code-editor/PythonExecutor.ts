@@ -19,6 +19,43 @@ const PYODIDE_LOCAL = '/pyodide/pyodide.mjs';
 const PYODIDE_CDN = 'https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.mjs';
 const MAX_TIMEOUT_MS = 10_000;
 
+/**
+ * Import name → Pyodide package, for the packages the curriculum actually
+ * teaches. This is an allowlist on purpose: every wheel here is vendored into
+ * /pyodide/ by scripts/copy-pyodide.mjs and SHA-256 checked at build time, so
+ * lesson code can never pull arbitrary third-party code off PyPI (or a CDN)
+ * into a student's browser. Anything not listed is simply never loaded and
+ * raises a normal ImportError.
+ *
+ * Keep in sync with PACKAGES in scripts/copy-pyodide.mjs — an entry here whose
+ * wheel isn't vendored would 404 at runtime.
+ */
+const IMPORT_TO_PACKAGE: Record<string, string> = {
+  PIL: 'pillow',
+};
+
+/** Top-level module names a snippet imports (`import x.y` / `from x import y`). */
+function detectImports(code: string): string[] {
+  const mods = new Set<string>();
+  const re = /^[ \t]*(?:import[ \t]+([A-Za-z_][\w.]*)|from[ \t]+([A-Za-z_][\w.]*)[ \t]+import)/gm;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(code)) !== null) {
+    const top = (m[1] || m[2] || '').split('.')[0];
+    if (top) mods.add(top);
+  }
+  return [...mods];
+}
+
+/** Resolve the allowlisted packages a snippet needs (deduped). */
+function packagesFor(code: string): string[] {
+  const pkgs = new Set<string>();
+  for (const mod of detectImports(code)) {
+    const pkg = IMPORT_TO_PACKAGE[mod];
+    if (pkg) pkgs.add(pkg);
+  }
+  return [...pkgs];
+}
+
 let pyodideInstance: any = null;
 let loadingPromise: Promise<any> | null = null;
 
@@ -60,6 +97,22 @@ export async function runPython(
 ): Promise<ExecutionResult> {
   const start = performance.now();
   const pyodide = await loadPyodide();
+
+  // Pull in any allowlisted package the snippet imports (e.g. `from PIL import
+  // Image` → pillow). Served from our own bundle; a failure here is reported as
+  // a normal error rather than being swallowed, so the lesson can say why.
+  const needed = packagesFor(code);
+  if (needed.length) {
+    try {
+      await pyodide.loadPackage(needed);
+    } catch (err: any) {
+      return {
+        output: '',
+        error: `Could not load required package(s): ${needed.join(', ')}\n${err?.message ?? String(err)}`,
+        durationMs: Math.round(performance.now() - start),
+      };
+    }
+  }
 
   // Set up stdout/stderr capture + optional stdin
   const setupCode = `
