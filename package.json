@@ -10,7 +10,8 @@
     "dev:full": "concurrently -k -n FRONTEND,BACKEND -c green,cyan \"npm run dev\" \"npm run dev:backend\"",
     "prebuild": "node scripts/copy-pyodide.mjs",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "verify:python": "node scripts/verify-python-module.mjs"
   },
   "dependencies": {
     "@codemirror/lang-cpp": "^6.0.3",
