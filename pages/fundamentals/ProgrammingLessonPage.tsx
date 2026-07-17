@@ -309,6 +309,7 @@ const ProgrammingLessonPage: React.FC = () => {
             <CodingEnvironment
               key={concept.id}
               starterCode={concept.starterCode}
+              sampleInput={concept.sampleInput}
               language={langSlug === 'bash' ? 'bash' : langSlug === 'c' || langSlug === 'cpp' || langSlug === 'c++' ? 'cpp' : 'python'}
               testCases={concept.testCases}
               hints={concept.hints}

@@ -8,6 +8,7 @@ import {
   Eye,
   ChevronRight,
   Loader2,
+  Keyboard,
 } from 'lucide-react';
 import CodeEditor from './CodeEditor';
 import OutputPanel from './OutputPanel';
@@ -18,10 +19,19 @@ import type { TestCase } from '../../data/programming/types';
 interface CodingEnvironmentProps {
   starterCode: string;
   language?: 'python' | 'cpp' | 'bash';
+  /** Prefills the stdin box for lessons that read input(). */
+  sampleInput?: string;
   testCases?: TestCase[];
   hints?: string[];
   solution?: string;
   onPass?: () => void;
+}
+
+/** Does this snippet read from stdin? Decides whether to offer the input box. */
+function readsInput(code: string, language: string): boolean {
+  if (language === 'python') return /(^|[^\w.])input\s*\(/m.test(code);
+  if (language === 'cpp') return /\b(cin|getline|scanf)\b/.test(code);
+  return /\bread\b|\$\(cat\)/.test(code);
 }
 
 type TestResult = {
@@ -35,12 +45,14 @@ type TestResult = {
 const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
   starterCode,
   language = 'python',
+  sampleInput,
   testCases,
   hints,
   solution,
   onPass,
 }) => {
   const [code, setCode] = useState(starterCode);
+  const [stdin, setStdin] = useState(sampleInput ?? '');
   const [output, setOutput] = useState('');
   const [error, setError] = useState<string | undefined>();
   const [durationMs, setDurationMs] = useState<number | undefined>();
@@ -60,7 +72,13 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
     setError(undefined);
     if (!isRunnerReady(language)) setIsLoading(true);
     try {
-      const result: ExecutionResult = await runCode(language, code);
+      // Only feed stdin when the code actually reads it, so an unused box
+      // can't change how a snippet behaves.
+      const result: ExecutionResult = await runCode(
+        language,
+        code,
+        readsInput(code, language) ? stdin : undefined
+      );
       setOutput(result.output);
       setError(result.error);
       setDurationMs(result.durationMs);
@@ -70,7 +88,7 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
       setIsRunning(false);
       setIsLoading(false);
     }
-  }, [code]);
+  }, [code, language, stdin]);
 
   const handleSubmit = useCallback(async () => {
     if (!testCases?.length) return;
@@ -185,6 +203,31 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
       <div className="flex-1 min-h-0 overflow-hidden border-x border-[#151d2e]">
         <CodeEditor value={code} onChange={setCode} language={language} minHeight="100%" />
       </div>
+
+      {/* ── Input (stdin) — only for code that reads it. Challenges feed their
+           own input per test case, so this is for the Run button on lessons. ── */}
+      {readsInput(code, language) && !isChallenge && (
+        <div className="border-x border-t border-[#151d2e] bg-[#0b1019]">
+          <label
+            htmlFor="stdin-box"
+            className="flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-[#8390ac]"
+          >
+            <Keyboard size={12} className="text-[#4d5a73]" />
+            Input
+            <span className="text-[#4d5a73]">— one line per input() call</span>
+          </label>
+          <textarea
+            id="stdin-box"
+            value={stdin}
+            onChange={(e) => setStdin(e.target.value)}
+            spellCheck={false}
+            rows={2}
+            dir="ltr"
+            placeholder="Type the lines your program should read..."
+            className="w-full resize-y bg-[#080c14] px-3 py-2 font-mono text-xs text-[#d2d7e3] placeholder:text-[#3d4a63] focus:outline-none"
+          />
+        </div>
+      )}
 
       {/* ── Test Results ── */}
       {testResults && (

@@ -17,6 +17,11 @@ export type ProgrammingConcept = {
   type: 'lesson' | 'challenge';
   markdownContent: string;
   starterCode: string;
+  /**
+   * Prefills the Run panel's stdin box for lessons whose starterCode calls
+   * input(). Challenges feed stdin per test case instead (see TestCase.input).
+   */
+  sampleInput?: string;
   /** For challenges: test cases the user must pass */
   testCases?: TestCase[];
   /** Hints shown progressively when stuck */

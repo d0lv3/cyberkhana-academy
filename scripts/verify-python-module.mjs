@@ -62,8 +62,8 @@ let fail = 0;
 for (const c of mod.concepts) {
   const label = `${c.type.padEnd(9)} ${c.slug}`;
 
-  // 1. starterCode must always run cleanly
-  const s = await run(c.starterCode, 'Sara\n21\n');
+  // 1. starterCode must always run cleanly, fed by its own sampleInput
+  const s = await run(c.starterCode, c.sampleInput);
   if (s.error) {
     console.log(`FAIL  ${label}\n      starterCode raised: ${s.error}`);
     fail++;

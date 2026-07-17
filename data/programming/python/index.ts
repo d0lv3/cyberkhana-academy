@@ -6,6 +6,7 @@ import numbers from './04-numbers';
 import listsTuples from './05-lists-tuples';
 import setsDicts from './06-sets-dicts';
 import booleansOperators from './07-booleans-operators';
+import userInput from './08-input';
 
 const python: ProgrammingLanguage = {
   id: 'python',
@@ -25,6 +26,7 @@ const python: ProgrammingLanguage = {
     listsTuples,
     setsDicts,
     booleansOperators,
+    userInput,
   ].sort((a, b) => a.order - b.order),
 };
 
