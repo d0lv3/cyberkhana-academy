@@ -10,6 +10,7 @@ import userInput from './08-input';
 import controlFlow from './09-control-flow';
 import loops from './10-loops';
 import functions from './11-functions';
+import filesBuiltins from './12-files-builtins';
 
 const python: ProgrammingLanguage = {
   id: 'python',
@@ -33,6 +34,7 @@ const python: ProgrammingLanguage = {
     controlFlow,
     loops,
     functions,
+    filesBuiltins,
   ].sort((a, b) => a.order - b.order),
 };
 
