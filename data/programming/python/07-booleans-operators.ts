@@ -432,7 +432,9 @@ s = "a"
 s += "b"   # 'ab'
 \`\`\`
 
-Strings are immutable, so this doesn't modify anything — it builds a **new** string and re-points \`s\`. Fine occasionally; in a big loop, collect into a list and \`"".join()\` at the end instead, which is much faster.
+Strings are immutable, so this doesn't modify anything — it builds a **new** string and re-points \`s\`.
+
+For building a string in a big loop, the usual advice is to collect the pieces in a list and \`"".join()\` them at the end. It's the better habit — clearer, and predictable across Python implementations. You'll often find it isn't actually faster in CPython, for a reason worth measuring rather than being told; Module 13 does exactly that.
 
 ---
 
