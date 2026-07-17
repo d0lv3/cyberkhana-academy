@@ -62,11 +62,15 @@ let fail = 0;
 for (const c of mod.concepts) {
   const label = `${c.type.padEnd(9)} ${c.slug}`;
 
-  // 1. starterCode must always run cleanly, fed by its own sampleInput
+  // 1. A lesson's starterCode must run cleanly — it's demonstration code the
+  //    student will Run as-is. A challenge's starter is deliberately
+  //    incomplete, so it may raise; only its solution has to work.
   const s = await run(c.starterCode, c.sampleInput);
-  if (s.error) {
+  if (s.error && c.type === 'lesson') {
     console.log(`FAIL  ${label}\n      starterCode raised: ${s.error}`);
     fail++;
+  } else if (s.error) {
+    console.log(`ok    ${label}  (starter incomplete by design: ${s.error.slice(0, 48)})`);
   } else {
     console.log(`ok    ${label}  (starter ran, ${s.out.split('\n').filter(Boolean).length} output lines)`);
   }
