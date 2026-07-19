@@ -425,14 +425,31 @@ const FundamentalsRoadmap: React.FC = () => {
               'radial-gradient(560px circle at 60% 8%, rgba(0,168,89,0.09), transparent 55%), radial-gradient(420px circle at 18% 85%, rgba(159,239,0,0.05), transparent 55%)',
           }}
         />
+        {/* Strapline, overlaid rather than stacked above the scene so it costs
+            no vertical space — height is what limits how big the diagram can
+            be. The art's top-left is empty (content starts at x=90), so it sits
+            clear of the islands in both directions. */}
+        <div className="pointer-events-none absolute top-0 start-0 z-10 p-5 sm:p-6 max-w-[min(15rem,26%)]">
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#00a859]">
+            {lang === 'ar' ? 'المسار' : 'The path'}
+          </p>
+          <p className="mt-1 text-sm leading-snug text-[#9aa5bf]">
+            {lang === 'ar'
+              ? 'رحلة من ثلاث مراحل نحو القمة: الأمن السيبراني.'
+              : 'A three-stage journey to the summit: Cybersecurity.'}
+          </p>
+        </div>
+
         {/* The scene is 1000x880, so at full width it would stand ~1100px tall
             and run off the screen. Cap it to the viewport (minus the app header,
-            page padding and PageHeader) and let preserveAspectRatio scale the
-            whole diagram down to fit — nothing is ever cropped. */}
+            page padding and title) and let preserveAspectRatio scale the whole
+            diagram down to fit — nothing is ever cropped. The content itself is
+            already tight (only ~22px of vertical slack in the viewBox), so this
+            cap is the only thing deciding how large the scene renders. */}
         <svg
           viewBox="0 0 1000 880"
           preserveAspectRatio="xMidYMid meet"
-          className="relative mx-auto block h-auto w-full max-h-[calc(100vh-15rem)]"
+          className="relative mx-auto block h-auto w-full max-h-[calc(100vh-12rem)]"
         >
           <defs>
             <filter id="island-blur" x="-60%" y="-60%" width="220%" height="220%">
@@ -486,6 +503,14 @@ const FundamentalsRoadmap: React.FC = () => {
 
       {/* ── Mobile: vertical roadmap (same journey, stacked) ── */}
       <div className="md:hidden space-y-0">
+        {/* The desktop scene carries this as an overlay; mobile has no scene,
+            so it leads the list instead. */}
+        <p className="mb-4 text-sm leading-snug text-[#9aa5bf]">
+          {lang === 'ar'
+            ? 'رحلة من ثلاث مراحل نحو القمة: الأمن السيبراني.'
+            : 'A three-stage journey to the summit: Cybersecurity.'}
+        </p>
+
         {ISLANDS.map((island, i) => {
           const pct = pctOf(island.trackKey);
           const Icon = island.icon;
