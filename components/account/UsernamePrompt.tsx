@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { AtSign, Loader2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLang } from '../../contexts/LangContext';
+import { ApiError } from '../../services/api';
 
 /**
  * Blocking first-run prompt claiming a public handle.
@@ -23,9 +24,16 @@ const UsernamePrompt: React.FC = () => {
   const [value, setValue] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  /* Safety valve. This modal is deliberately unskippable, which means a server
+     that CANNOT accept usernames — an older API that doesn't know the field —
+     would lock every user out of the app. 409 (taken/reserved) is the server
+     working correctly and must stay blocking; anything else suggests the
+     backend can't satisfy us, so we offer a way through rather than brick it. */
+  const [serverCannot, setServerCannot] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
 
   // Only when signed in and no handle claimed yet.
-  if (!user || user.username) return null;
+  if (!user || user.username || dismissed) return null;
 
   const trimmed = value.trim();
   const localValid = USERNAME_RE.test(trimmed);
@@ -38,6 +46,9 @@ const UsernamePrompt: React.FC = () => {
     try {
       await updateUsername(trimmed);
     } catch (err) {
+      // 409 = the server understood and refused this handle. Anything else
+      // (400 unknown field, 5xx, network) means it can't take usernames at all.
+      if (err instanceof ApiError && err.status !== 409) setServerCannot(true);
       setError(
         err instanceof Error
           ? err.message
@@ -117,6 +128,18 @@ const UsernamePrompt: React.FC = () => {
             {saving && <Loader2 size={15} className="animate-spin" />}
             {saving ? (ar ? 'جارٍ الحفظ...' : 'Saving...') : ar ? 'تأكيد' : 'Confirm'}
           </button>
+
+          {serverCannot && (
+            <button
+              type="button"
+              onClick={() => setDismissed(true)}
+              className="mt-3 w-full text-center text-xs text-[#6e7a94] hover:text-[#d2d7e3] transition-colors underline underline-offset-2"
+            >
+              {ar
+                ? 'المتابعة الآن — سنطلب اسم المستخدم لاحقا'
+                : "Continue for now — we'll ask again later"}
+            </button>
+          )}
         </form>
       </div>
     </div>
