@@ -15,6 +15,7 @@ import { getProgrammingLanguages } from '../data/programming';
 import { getNetworkingLessons } from '../data/networking';
 import { getFundamentalsByCategory, getMergedFundamentalModules } from '../data/fundamentalsData';
 import { buildCatalogIndex } from '../data/pathCatalog';
+import { recordStudyDay } from './streakService';
 import { queueProgressPush } from './syncService';
 import type { PathStep } from './creatorTypes';
 
@@ -118,6 +119,8 @@ export function recordActivity(activity: Omit<LastActivity, 'at'>): void {
   } catch {
     /* quota — non-critical */
   }
+  // Opening any lesson counts toward today's study streak.
+  recordStudyDay();
   emitProgressChange();
   queueProgressPush();
 }

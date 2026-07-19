@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import UniversityPrompt from './university/UniversityPrompt';
+import UsernamePrompt from './account/UsernamePrompt';
 
 const SIDEBAR_KEY = 'academy-sidebar-collapsed';
 
@@ -33,7 +34,9 @@ const AppLayout: React.FC = () => {
         </main>
       </div>
 
-      {/* First-run university prompt — shows until the student chooses. */}
+      {/* First-run prompts. A username is mandatory and comes first; the
+          university prompt waits until one is claimed. */}
+      <UsernamePrompt />
       <UniversityPrompt />
     </div>
   );

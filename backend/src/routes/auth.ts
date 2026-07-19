@@ -21,6 +21,7 @@ function publicUser(user: IUser) {
   return {
     id: String(user._id),
     email: user.email,
+    username: user.username,
     displayName: user.displayName,
     avatarUrl: user.avatarUrl,
     role: user.role,
@@ -147,6 +148,12 @@ router.get('/me', authenticate, (req: AuthRequest, res) => {
 const profileSchema = z
   .object({
     displayName: z.string().min(1).max(60).optional(),
+    username: z
+      .string()
+      .min(3)
+      .max(20)
+      .regex(/^[A-Za-z0-9_]+$/, 'Letters, numbers and underscores only')
+      .optional(),
     bio: z.string().max(500).optional(),
     university: z.string().max(120).optional(),
     country: z.string().max(80).optional(),
@@ -154,17 +161,52 @@ const profileSchema = z
   })
   .strict();
 
+/** Handles nobody may claim — they'd impersonate a route or a role. */
+const RESERVED_USERNAMES = new Set([
+  'admin', 'administrator', 'root', 'system', 'support', 'help', 'staff',
+  'moderator', 'mod', 'official', 'cyberkhana', 'academy', 'api', 'login',
+  'logout', 'profile', 'settings', 'dashboard', 'creators', 'me', 'null',
+  'undefined', 'anonymous',
+]);
+
 router.patch('/profile', authenticate, async (req: AuthRequest, res) => {
   const parsed = profileSchema.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: 'Invalid profile data' });
+    res.status(400).json({ error: parsed.error.issues[0]?.message ?? 'Invalid profile data' });
     return;
   }
+
+  const { username, ...rest } = parsed.data;
+
+  if (username !== undefined) {
+    const handle = username.toLowerCase();
+    if (RESERVED_USERNAMES.has(handle)) {
+      res.status(409).json({ error: 'That username is reserved' });
+      return;
+    }
+    // Case-insensitive check so "Sara" can't shadow an existing "sara".
+    const clash = await User.findOne({ username: handle, _id: { $ne: req.user!._id } })
+      .select('_id')
+      .lean();
+    if (clash) {
+      res.status(409).json({ error: 'That username is already taken' });
+      return;
+    }
+    req.user!.username = handle;
+  }
+
   try {
-    Object.assign(req.user!, parsed.data);
+    Object.assign(req.user!, rest);
     await req.user!.save();
     res.json({ user: publicUser(req.user!) });
-  } catch {
+  } catch (err) {
+    // A racing request can still win the unique index between our check and
+    // the save; report it as the conflict it is rather than a 500.
+    if ((err as { code?: number }).code === 11000) {
+      res.status(409).json({ error: 'That username is already taken' });
+      return;
+    }
+    logger.warn('auth.profile_update_failed', { error: String(err) });
     res.status(500).json({ error: 'Profile update failed' });
   }
 });

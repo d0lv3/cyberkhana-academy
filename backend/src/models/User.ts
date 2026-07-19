@@ -3,6 +3,9 @@ import type { UserRole } from '../types';
 
 export interface IUser extends Document {
   email: string;
+  /** Unique public handle, lowercase. Optional in the schema so existing
+   *  accounts stay valid; the app prompts for one on next sign-in. */
+  username?: string;
   displayName: string;
   avatarUrl?: string;
   role: UserRole;
@@ -35,6 +38,18 @@ export interface IUser extends Document {
 const UserSchema = new Schema<IUser>(
   {
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    username: {
+      type: String,
+      lowercase: true,
+      trim: true,
+      minlength: 3,
+      maxlength: 20,
+      match: /^[a-z0-9_]+$/,
+      // `sparse` so the many existing accounts without one don't all collide
+      // on null. Uniqueness is still enforced for anyone who sets one.
+      unique: true,
+      sparse: true,
+    },
     displayName: { type: String, required: true, trim: true },
     avatarUrl: { type: String },
     role: { type: String, enum: ['user', 'creator', 'admin'], default: 'user' },

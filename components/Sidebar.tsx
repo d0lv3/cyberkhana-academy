@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -29,6 +29,8 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, mobileOpen, onMo
   const { t, lang } = useLang();
   const { user } = useAuth();
   const progress = useOverallProgress();
+  /** Route whose icon is mid-shake, cleared when the animation ends. */
+  const [shaking, setShaking] = useState<string | null>(null);
 
   const isCreator = user?.role === 'creator' || user?.role === 'admin';
 
@@ -55,7 +57,10 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, mobileOpen, onMo
       <NavLink
         key={to}
         to={to}
-        onClick={onMobileClose}
+        onClick={() => {
+          setShaking(to);
+          onMobileClose();
+        }}
         title={collapsed ? label : undefined}
         className={({ isActive }) =>
           [
@@ -70,16 +75,21 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, mobileOpen, onMo
         {({ isActive }) => (
           <>
             {isActive && (
-              <span className="absolute left-0 w-0.5 h-6 bg-[#00a859] rounded-r" />
+              <span className="absolute start-0 w-0.5 h-6 bg-[#00a859] rounded-e" />
             )}
             <Icon
+              // Active tabs read as "filled": the glyph gets a translucent wash
+              // of the accent colour while the stroke keeps it legible.
+              fill={isActive ? 'currentColor' : 'none'}
+              fillOpacity={isActive ? 0.22 : 0}
+              onAnimationEnd={() => setShaking(null)}
               className={`flex-shrink-0 transition-colors ${
-                isActive ? 'text-[#00a859]' : 'text-[#6e7a94] group-hover:text-[#9aa5bf]'
-              }`}
+                shaking === to ? 'nav-shake' : ''
+              } ${isActive ? 'text-[#00a859]' : 'text-[#6e7a94] group-hover:text-[#9aa5bf]'}`}
               size={collapsed ? 20 : 17}
             />
             {!collapsed && <span className="flex-1">{label}</span>}
-            {!collapsed && isActive && <ChevronRight size={13} className="text-[#00a859]/60" />}
+            {!collapsed && isActive && <ChevronRight size={13} className="text-[#00a859]/60 rtl-flip" />}
           </>
         )}
       </NavLink>

@@ -4,6 +4,7 @@ import { Users, Search, ShieldCheck, PenTool, GraduationCap, RefreshCw, Ban, Rot
 import PageHeader from '../../components/ui/PageHeader';
 import EnhancedCard from '../../components/ui/EnhancedCard';
 import { confirmDialog } from '../../components/ui/ConfirmHost';
+import ReauthDialog from '../../components/admin/ReauthDialog';
 import { useToast } from '../../hooks/useToast';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLang } from '../../contexts/LangContext';
@@ -46,6 +47,9 @@ const MembersPage: React.FC = () => {
   /** Which creator's permission panel is open, and the toggles being edited. */
   const [permsOpenId, setPermsOpenId] = useState<string | null>(null);
   const [permsDraft, setPermsDraft] = useState<CreatorPermission[]>([]);
+  /** Pending permission change awaiting a fresh Google confirmation. */
+  const [reauthTarget, setReauthTarget] = useState<AdminUser | null>(null);
+  const [reauthError, setReauthError] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -143,15 +147,26 @@ const MembersPage: React.FC = () => {
     );
   };
 
-  const savePerms = async (target: AdminUser) => {
+  /* Saving permissions is gated behind a fresh Google confirmation, so the
+     click only opens the dialog — the write happens once we hold a credential. */
+  const savePerms = (target: AdminUser) => {
+    setReauthTarget(target);
+    setReauthError(null);
+  };
+
+  const commitPerms = async (credential: string) => {
+    const target = reauthTarget;
+    if (!target) return;
     setSavingId(target.id);
+    setReauthError(null);
     try {
       const { user: updated } = await api.patch<{ user: AdminUser }>(
         `/admin/users/${target.id}/permissions`,
-        { permissions: permsDraft }
+        { permissions: permsDraft, credential }
       );
       setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
       setPermsOpenId(null);
+      setReauthTarget(null);
       toast(
         'success',
         ar
@@ -159,7 +174,8 @@ const MembersPage: React.FC = () => {
           : `${updated.displayName}'s permissions updated.`
       );
     } catch (err) {
-      toast('error', err instanceof Error ? err.message : 'Permission update failed');
+      // Keep the dialog open so they can retry the confirmation.
+      setReauthError(err instanceof Error ? err.message : 'Permission update failed');
     } finally {
       setSavingId(null);
     }
@@ -432,6 +448,25 @@ const MembersPage: React.FC = () => {
           </div>
         </EnhancedCard>
       )}
+
+      {/* Step-up confirmation for permission changes */}
+      <ReauthDialog
+        open={!!reauthTarget}
+        busy={savingId === reauthTarget?.id}
+        error={reauthError}
+        actionLabel={
+          reauthTarget
+            ? ar
+              ? `تحديث صلاحيات ${reauthTarget.displayName} (${permsDraft.length})`
+              : `Update ${reauthTarget.displayName}'s permissions (${permsDraft.length} granted)`
+            : ''
+        }
+        onCancel={() => {
+          setReauthTarget(null);
+          setReauthError(null);
+        }}
+        onCredential={commitPerms}
+      />
     </div>
   );
 };

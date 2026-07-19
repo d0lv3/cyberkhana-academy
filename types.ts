@@ -1,6 +1,8 @@
 export interface AcademyUser {
   _id: string;
   email: string;
+  /** Unique public handle. Absent until the user claims one. */
+  username?: string;
   displayName: string;
   avatarUrl?: string;
   role: 'user' | 'creator' | 'admin';

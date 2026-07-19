@@ -16,8 +16,9 @@ const UniversityPrompt: React.FC = () => {
   const { lang } = useLang();
   const ar = lang === 'ar';
 
-  // Only when signed in and no choice recorded yet.
-  if (!user || user.university) return null;
+  // Only when signed in and no choice recorded yet. Claiming a username comes
+  // first, so wait our turn rather than stacking two blocking modals.
+  if (!user || !user.username || user.university) return null;
 
   const choose = (value: string) => {
     updateUser({ university: value });

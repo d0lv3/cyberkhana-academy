@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   UserCircle,
@@ -9,55 +8,22 @@ import {
   Pencil,
   Check,
   X,
-  Award,
-  Trophy,
-  BookOpen,
   Globe,
   LogOut,
-  Code,
-  Wifi,
-  Monitor,
+  AtSign,
 } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/EnhancedButton';
 import Input from '../components/ui/EnhancedInput';
 import { useAuth } from '../contexts/AuthContext';
 import { useLang } from '../contexts/LangContext';
-import { useOverallProgress, getTrackProgress, type TrackKey } from '../services/progressService';
-import { getTotalPoints } from '../services/pointsService';
-import SkillMatrix from '../components/skills/SkillMatrix';
 import UniversityPicker from '../components/university/UniversityPicker';
 import { universityLabel } from '../data/iraqUniversities';
 
-const TRACK_META: Record<
-  TrackKey,
-  { icon: React.ElementType; color: string; route: string; title: { en: string; ar: string } }
-> = {
-  programming: {
-    icon: Code,
-    color: '#9fef00',
-    route: '/fundamentals/programming',
-    title: { en: 'Programming', ar: 'البرمجة' },
-  },
-  networking: {
-    icon: Wifi,
-    color: '#60a5fa',
-    route: '/fundamentals/networking',
-    title: { en: 'Networking', ar: 'الشبكات' },
-  },
-  os: {
-    icon: Monitor,
-    color: '#f3a43a',
-    route: '/fundamentals/operating-systems',
-    title: { en: 'Operating Systems', ar: 'أنظمة التشغيل' },
-  },
-};
-
 const ProfilePage: React.FC = () => {
-  const { user, updateUser, logout } = useAuth();
+  const { user, updateUser, updateUsername, logout } = useAuth();
   const { t, lang, setLang } = useLang();
-  const navigate = useNavigate();
-  const progress = useOverallProgress();
+  const ar = lang === 'ar';
 
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
@@ -66,9 +32,15 @@ const ProfilePage: React.FC = () => {
     university: user?.university ?? '',
   });
 
-  if (!user) return null;
+  /* The handle is edited on its own, because it is the one field the server
+     can refuse (it must be unique) — so it needs its own error and pending
+     state rather than riding along with the optimistic profile save. */
+  const [handle, setHandle] = useState('');
+  const [handleError, setHandleError] = useState<string | null>(null);
+  const [handleSaving, setHandleSaving] = useState(false);
+  const [handleSaved, setHandleSaved] = useState(false);
 
-  const tracks = getTrackProgress();
+  if (!user) return null;
 
   const startEdit = () => {
     setForm({
@@ -76,6 +48,9 @@ const ProfilePage: React.FC = () => {
       bio: user.bio ?? '',
       university: user.university ?? '',
     });
+    setHandle(user.username ?? '');
+    setHandleError(null);
+    setHandleSaved(false);
     setEditing(true);
   };
 
@@ -86,6 +61,27 @@ const ProfilePage: React.FC = () => {
       university: form.university.trim(),
     });
     setEditing(false);
+  };
+
+  const trimmedHandle = handle.trim();
+  const handleChanged = trimmedHandle.toLowerCase() !== (user.username ?? '').toLowerCase();
+  const handleValid = /^[a-zA-Z0-9_]{3,20}$/.test(trimmedHandle);
+
+  const saveHandle = async () => {
+    if (!handleValid || !handleChanged || handleSaving) return;
+    setHandleSaving(true);
+    setHandleError(null);
+    setHandleSaved(false);
+    try {
+      await updateUsername(trimmedHandle);
+      setHandleSaved(true);
+    } catch (err) {
+      setHandleError(
+        err instanceof Error ? err.message : ar ? 'تعذر الحفظ.' : 'Could not save that username.'
+      );
+    } finally {
+      setHandleSaving(false);
+    }
   };
 
   const memberSince = (() => {
@@ -101,19 +97,6 @@ const ProfilePage: React.FC = () => {
 
   const roleLabel = user.role === 'admin' ? t('profile.role.admin') : t('profile.role.user');
   const roleColor = user.role === 'admin' ? '#9fef00' : '#00a859';
-
-  const points = getTotalPoints();
-  const stats = [
-    { icon: Award, label: t('profile.points'), value: points.toLocaleString('en-US'), color: '#f3c84b' },
-    { icon: Trophy, label: t('dashboard.level'), value: `${progress.level}`, color: '#9fef00' },
-    {
-      icon: BookOpen,
-      label: t('profile.lessonsDone'),
-      value: `${progress.completedUnits}`,
-      color: '#00a859',
-    },
-    { icon: UserCircle, label: t('dashboard.overall'), value: `${progress.pct}%`, color: '#60a5fa' },
-  ];
 
   return (
     <div className="space-y-6">
@@ -155,6 +138,66 @@ const ProfilePage: React.FC = () => {
                     value={form.displayName}
                     onChange={(e) => setForm((f) => ({ ...f, displayName: e.target.value }))}
                   />
+
+                  {/* Username — saved separately, since only the server can
+                      tell us whether the handle is free. */}
+                  <div>
+                    <label className="block text-sm font-medium text-[#d2d7e3] mb-2">
+                      {ar ? 'اسم المستخدم' : 'Username'}
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <span className="absolute inset-y-0 start-0 flex items-center ps-3 text-[#6e7a94] pointer-events-none">
+                          <AtSign size={15} />
+                        </span>
+                        <input
+                          value={handle}
+                          onChange={(e) => {
+                            setHandle(e.target.value);
+                            setHandleError(null);
+                            setHandleSaved(false);
+                          }}
+                          placeholder="sara_hunts"
+                          dir="ltr"
+                          maxLength={20}
+                          className="w-full ps-9 pe-3 py-2.5 rounded-lg bg-[#1a2332] border border-[#263248] text-[#f3f6ff] font-mono text-sm placeholder:text-[#3d4a63] focus:outline-none focus:border-[#00a859] transition-colors"
+                        />
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={saveHandle}
+                        disabled={!handleValid || !handleChanged || handleSaving}
+                      >
+                        {handleSaving
+                          ? ar ? 'جارٍ...' : 'Saving...'
+                          : ar ? 'حفظ' : 'Save'}
+                      </Button>
+                    </div>
+                    <p
+                      className={`mt-1.5 text-xs ${
+                        handleError
+                          ? 'text-[#ff6b6b]'
+                          : handleSaved
+                          ? 'text-[#00a859]'
+                          : trimmedHandle && !handleValid
+                          ? 'text-[#f3a43a]'
+                          : 'text-[#6e7a94]'
+                      }`}
+                    >
+                      {handleError
+                        ? handleError
+                        : handleSaved
+                        ? ar ? 'تم تحديث اسم المستخدم.' : 'Username updated.'
+                        : trimmedHandle && !handleValid
+                        ? ar
+                          ? '3 إلى 20 حرفا: أحرف وأرقام وشرطة سفلية فقط.'
+                          : '3–20 characters: letters, numbers and underscores only.'
+                        : ar
+                        ? 'اسمك العام — يظهر في لوحة المتصدرين.'
+                        : 'Your public handle — shown on the leaderboard.'}
+                    </p>
+                  </div>
                   <div>
                     <label className="block text-sm font-medium text-[#d2d7e3] mb-2">
                       {t('profile.bio')}
@@ -207,6 +250,12 @@ const ProfilePage: React.FC = () => {
                     </span>
                   </div>
 
+                  {user.username && (
+                    <p className="mt-1 text-sm font-mono text-[#00a859]" dir="ltr">
+                      @{user.username}
+                    </p>
+                  )}
+
                   <div className="mt-2 flex flex-col gap-1.5 text-sm text-[#9aa5bf]">
                     <span className="inline-flex items-center gap-2" dir="ltr">
                       <Mail size={14} className="text-[#6e7a94]" /> {user.email}
@@ -238,72 +287,6 @@ const ProfilePage: React.FC = () => {
               </Button>
             )}
           </div>
-        </div>
-      </motion.div>
-
-      {/* ── Stat strip ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((s, i) => (
-          <motion.div
-            key={s.label}
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.08 + i * 0.06, duration: 0.35 }}
-            className="rounded-2xl border border-[#263248] bg-[#121a2a] p-5"
-          >
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
-              style={{ backgroundColor: `${s.color}15`, border: `1px solid ${s.color}30` }}
-            >
-              <s.icon size={18} style={{ color: s.color }} />
-            </div>
-            <p className="text-2xl font-black text-[#f3f6ff]" dir="ltr">
-              {s.value}
-            </p>
-            <p className="text-xs text-[#6e7a94] mt-1">{s.label}</p>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* ── Skill Matrix ── */}
-      <SkillMatrix />
-
-      {/* ── Progress by track ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.4 }}
-        className="rounded-2xl border border-[#263248] bg-[#121a2a] p-6"
-      >
-        <h3 className="text-base font-bold text-[#f3f6ff] mb-5">{t('profile.progressTitle')}</h3>
-        <div className="space-y-5">
-          {tracks.map((track) => {
-            const meta = TRACK_META[track.key];
-            const pct = track.total > 0 ? Math.round((track.done / track.total) * 100) : 0;
-            return (
-              <button
-                key={track.key}
-                onClick={() => navigate(meta.route)}
-                className="w-full text-start group"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="inline-flex items-center gap-2 text-sm font-semibold text-[#d2d7e3] group-hover:text-[#f3f6ff]">
-                    <meta.icon size={16} style={{ color: meta.color }} />
-                    {meta.title[lang]}
-                  </span>
-                  <span className="text-xs text-[#6e7a94]" dir="ltr">
-                    {track.done}/{track.total} · {pct}%
-                  </span>
-                </div>
-                <div className="h-2 rounded-full bg-[#0a0f18] overflow-hidden" dir="ltr">
-                  <div
-                    className="h-full rounded-full transition-all duration-700"
-                    style={{ width: `${pct}%`, backgroundColor: meta.color }}
-                  />
-                </div>
-              </button>
-            );
-          })}
         </div>
       </motion.div>
 

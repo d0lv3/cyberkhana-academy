@@ -2,15 +2,14 @@ import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  Code,
-  Wifi,
-  Monitor,
   Layers,
   Zap,
   ArrowRight,
   Network,
   ChevronRight,
   Play,
+  Flame,
+  Check,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLang } from '../contexts/LangContext';
@@ -24,7 +23,14 @@ import {
   getOSModuleDoneCount,
   getLastActivity,
 } from '../services/progressService';
+import { getStreak } from '../services/streakService';
 import SkillMatrix from '../components/skills/SkillMatrix';
+
+/** Monday-first day initials for the streak pips. */
+const WEEK_LABELS: Record<'en' | 'ar', string[]> = {
+  en: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
+  ar: ['ن', 'ث', 'ر', 'خ', 'ج', 'س', 'ح'],
+};
 
 /* ── circular progress ring ── */
 const ProgressRing: React.FC<{
@@ -117,6 +123,8 @@ const DashboardPage: React.FC = () => {
     };
   }, []);
 
+  const streak = useMemo(() => getStreak(), []);
+
   /* ── Modules the student has already started; falls back to a few to begin. ── */
   const moduleShortlist = useMemo(() => {
     const withProgress = getAllModules().map((m) => {
@@ -136,56 +144,13 @@ const DashboardPage: React.FC = () => {
 
   const firstName = user?.displayName?.split(' ')[0] ?? 'Student';
 
-  const tracks = [
-    {
-      key: 'programming',
-      icon: Code,
-      title: lang === 'ar' ? 'البرمجة' : 'Programming',
-      color: '#9fef00',
-      route: '/fundamentals/programming',
-      total: data.pyConcepts.length,
-      done: data.pyDone,
-      sub: `${data.pyModules.length} ${lang === 'ar' ? 'وحدات' : 'modules'}`,
-    },
-    {
-      key: 'networking',
-      icon: Wifi,
-      title: lang === 'ar' ? 'الشبكات' : 'Networking',
-      color: '#60a5fa',
-      route: '/fundamentals/networking',
-      total: data.netTotal,
-      done: data.netDone,
-      sub: `${data.netTotal} ${t('dashboard.lessonsLabel')}`,
-    },
-    {
-      key: 'os',
-      icon: Monitor,
-      title: lang === 'ar' ? 'أنظمة التشغيل' : 'Operating Systems',
-      color: '#f3a43a',
-      route: '/fundamentals/operating-systems',
-      total: data.osLessonsTotal,
-      done: data.osDone,
-      sub: `${data.osLessonsTotal} ${t('dashboard.lessonsLabel')}`,
-    },
-  ];
-
   const nextLink = data.nextConcept
     ? `/fundamentals/programming/python/${data.nextConcept.moduleSlug}/${data.nextConcept.slug}`
     : '/fundamentals/programming';
 
-  /* ── "Jump back in" resumes the most recent activity on ANY track;
-     falls back to the next Python concept for brand-new students. ── */
-  const lastKind = data.lastActivity?.kind ?? 'programming';
-  const activeTrack = tracks.find((tr) => tr.key === lastKind) ?? tracks[0];
-  const activePct =
-    activeTrack.total > 0 ? Math.round((activeTrack.done / activeTrack.total) * 100) : 0;
+  /* The hero's Continue button resumes the most recent activity on any track,
+     falling back to the next Python concept for brand-new students. */
   const jumpRoute = data.lastActivity?.route ?? nextLink;
-  const jumpTitle = data.lastActivity
-    ? data.lastActivity.title[lang] || data.lastActivity.title.en
-    : data.nextConcept?.title[lang] ?? '';
-  const jumpContext = data.lastActivity
-    ? data.lastActivity.context ?? activeTrack.title
-    : 'Python';
 
   return (
     <div className="space-y-6">
@@ -269,93 +234,91 @@ const DashboardPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* LEFT column */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Jump back in — resumes the most recent activity on any track */}
-          {(data.lastActivity || data.nextConcept) && (
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25, duration: 0.4 }}
-              className="rounded-2xl border border-[#263248] bg-[#121a2a] overflow-hidden"
-            >
-              <div className="flex items-center justify-between px-6 py-4 border-b border-[#263248]">
-                <h2 className="text-base font-bold text-[#f3f6ff]">{t('dashboard.jumpBackIn')}</h2>
-                <span className="text-xs text-[#6e7a94]" dir="ltr">
-                  {activeTrack.done}/{activeTrack.total} · {activePct}% {t('dashboard.complete')}
-                </span>
-              </div>
-              <button
-                onClick={() => navigate(jumpRoute)}
-                className="w-full text-start p-6 group hover:bg-[#16203a]/40 transition-colors"
-              >
-                <div className="flex items-center gap-4">
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{
-                      backgroundColor: `${activeTrack.color}15`,
-                      border: `1px solid ${activeTrack.color}30`,
-                    }}
-                  >
-                    <activeTrack.icon size={22} style={{ color: activeTrack.color }} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-[#6e7a94]">
-                      {jumpContext}
-                    </p>
-                    <h3 className="text-lg font-bold text-[#f3f6ff] truncate group-hover:text-[#9fef00] transition-colors">
-                      {jumpTitle}
-                    </h3>
-                  </div>
-                  <ChevronRight size={20} className="text-[#6e7a94] group-hover:text-[#f3f6ff] flex-shrink-0" />
+          {/* Streak & weekly goal */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25, duration: 0.4 }}
+            className="rounded-2xl border border-[#263248] bg-[#121a2a] overflow-hidden"
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#263248]">
+              <h2 className="text-base font-bold text-[#f3f6ff] flex items-center gap-2">
+                <Flame size={17} className={streak.current > 0 ? 'text-[#f3a43a]' : 'text-[#4d5a73]'} />
+                {lang === 'ar' ? 'التتابع اليومي' : 'Daily streak'}
+              </h2>
+              <span className="text-xs text-[#6e7a94]" dir="ltr">
+                {lang === 'ar' ? 'الأطول' : 'best'} {streak.longest}
+              </span>
+            </div>
+
+            <div className="p-6">
+              <div className="flex items-center gap-6 flex-wrap">
+                {/* Current streak */}
+                <div className="flex items-baseline gap-2" dir="ltr">
+                  <span className="text-4xl font-black text-[#f3f6ff]">{streak.current}</span>
+                  <span className="text-sm text-[#9aa5bf]">
+                    {streak.current === 1
+                      ? lang === 'ar' ? 'يوم' : 'day'
+                      : lang === 'ar' ? 'أيام' : 'days'}
+                  </span>
                 </div>
-                {/* progress bar */}
-                <div className="mt-5 h-2 rounded-full bg-[#0a0f18] overflow-hidden" dir="ltr">
+
+                {/* Week pips, Monday-first */}
+                <div className="flex items-center gap-1.5" dir="ltr">
+                  {streak.week.map((d, di) => (
+                    <div
+                      key={d.key}
+                      title={d.key}
+                      className={`h-8 w-8 rounded-lg border flex items-center justify-center text-[10px] font-bold transition-colors ${
+                        d.done
+                          ? 'border-[#00a859]/40 bg-[#00a859]/15 text-[#00a859]'
+                          : d.isToday
+                          ? 'border-[#f3a43a]/40 bg-[#f3a43a]/10 text-[#f3a43a]'
+                          : d.isFuture
+                          ? 'border-[#1c2740] bg-[#0d1420] text-[#33415e]'
+                          : 'border-[#263248] bg-[#0d1420] text-[#4d5a73]'
+                      }`}
+                    >
+                      {d.done ? <Check size={13} /> : WEEK_LABELS[lang][di]}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Weekly goal */}
+              <div className="mt-6">
+                <div className="flex items-center justify-between mb-1.5 text-xs" dir="ltr">
+                  <span className="text-[#9aa5bf]">
+                    {lang === 'ar' ? 'هدف الأسبوع' : 'Weekly goal'}
+                  </span>
+                  <span className="font-bold text-[#00a859]">
+                    {streak.daysThisWeek}/{streak.weeklyGoal}
+                  </span>
+                </div>
+                <div className="h-2 rounded-full bg-[#0a0f18] overflow-hidden" dir="ltr">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-[#00a859] to-[#9fef00] transition-all duration-700"
-                    style={{ width: `${activePct}%` }}
+                    style={{
+                      width: `${Math.min(100, Math.round((streak.daysThisWeek / streak.weeklyGoal) * 100))}%`,
+                    }}
                   />
                 </div>
-              </button>
-            </motion.div>
-          )}
-
-          {/* Explore tracks */}
-          <div>
-            <h2 className="text-base font-bold text-[#f3f6ff] mb-4">{t('dashboard.exploreTracks')}</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {tracks.map((track, i) => {
-                const pct = track.total > 0 ? Math.round((track.done / track.total) * 100) : 0;
-                return (
-                  <motion.button
-                    key={track.key}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 + i * 0.08, duration: 0.4 }}
-                    onClick={() => navigate(track.route)}
-                    className="text-start rounded-2xl border border-[#263248] bg-[#121a2a] p-5 group hover:border-[var(--c)] transition-all"
-                    style={{ ['--c' as string]: track.color }}
-                  >
-                    <div
-                      className="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
-                      style={{ backgroundColor: `${track.color}15`, border: `1px solid ${track.color}30` }}
-                    >
-                      <track.icon size={20} style={{ color: track.color }} />
-                    </div>
-                    <h3 className="text-sm font-bold text-[#f3f6ff] mb-1">{track.title}</h3>
-                    <p className="text-xs text-[#6e7a94] mb-4">{track.sub}</p>
-                    <div className="h-1.5 rounded-full bg-[#0a0f18] overflow-hidden" dir="ltr">
-                      <div
-                        className="h-full rounded-full transition-all duration-700"
-                        style={{ width: `${pct}%`, backgroundColor: track.color }}
-                      />
-                    </div>
-                    <p className="text-[10px] text-[#4d5a73] mt-2" dir="ltr">
-                      {track.done}/{track.total}
-                    </p>
-                  </motion.button>
-                );
-              })}
+                <p className="text-[11px] text-[#6e7a94] mt-2">
+                  {streak.daysThisWeek >= streak.weeklyGoal
+                    ? lang === 'ar'
+                      ? 'أنجزت هدف هذا الأسبوع.'
+                      : "You've hit this week's goal."
+                    : streak.todayDone
+                    ? lang === 'ar'
+                      ? 'تم التسجيل اليوم — أحسنت.'
+                      : 'Today is logged — nice work.'
+                    : lang === 'ar'
+                    ? 'أكمل درسا واحدا اليوم للحفاظ على التتابع.'
+                    : 'Finish one lesson today to keep the streak alive.'}
+                </p>
+              </div>
             </div>
-          </div>
+          </motion.div>
         </div>
 
         {/* RIGHT column */}

@@ -6,6 +6,7 @@ import { hydrateFromServer, setSyncEnabled } from '../services/syncService';
 interface ServerUser {
   id: string;
   email: string;
+  username?: string;
   displayName: string;
   avatarUrl?: string;
   role: AcademyUser['role'];
@@ -28,6 +29,9 @@ interface AuthContextType {
   loginWithGoogle: (credential: string) => Promise<void>;
   logout: () => void;
   updateUser: (patch: Partial<AcademyUser>) => void;
+  /** Claim or change the public handle. Awaited, and throws with the server's
+   *  reason (taken / reserved / malformed) so the caller can show it. */
+  updateUsername: (username: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -38,12 +42,14 @@ const AuthContext = createContext<AuthContextType>({
   loginWithGoogle: async () => {},
   logout: () => {},
   updateUser: () => {},
+  updateUsername: async () => {},
 });
 
 function mapServerUser(u: ServerUser): AcademyUser {
   return {
     _id: u.id,
     email: u.email,
+    username: u.username,
     displayName: u.displayName,
     avatarUrl: u.avatarUrl,
     role: u.role,
@@ -139,6 +145,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  /* Usernames are unique, so this one can't be optimistic like updateUser:
+     the server is the only thing that knows whether a handle is free. We wait
+     for its answer and adopt the user it returns. */
+  const updateUsername = async (username: string) => {
+    const { user: serverUser } = await api.patch<{ user: ServerUser }>('/auth/profile', {
+      username,
+    });
+    setUser(mapServerUser(serverUser));
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -149,6 +165,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loginWithGoogle,
         logout,
         updateUser,
+        updateUsername,
       }}
     >
       {children}

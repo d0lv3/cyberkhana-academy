@@ -5,6 +5,7 @@ import User, { IUser } from '../models/User';
 import { authenticate, requireAdmin, AuthRequest } from '../middleware/auth';
 import { logger } from '../utils/logger';
 import { CREATOR_PERMISSIONS, effectivePermissions } from '../types';
+import { verifyStepUp } from '../middleware/reauth';
 
 const router = Router();
 
@@ -145,7 +146,13 @@ router.patch('/users/:id/ban', async (req: AuthRequest, res) => {
  * Only meaningful for creators (admins implicitly hold everything; students
  * hold nothing). The stored set is exactly what the admin toggled. */
 const permissionsSchema = z
-  .object({ permissions: z.array(z.enum(CREATOR_PERMISSIONS)).max(CREATOR_PERMISSIONS.length) })
+  .object({
+    permissions: z.array(z.enum(CREATOR_PERMISSIONS)).max(CREATOR_PERMISSIONS.length),
+    /* Fresh Google ID token proving the admin is still at the keyboard.
+       Granting capabilities is privilege escalation, so a live session alone
+       is not enough — see middleware/reauth.ts. */
+    credential: z.string().min(20).max(4096),
+  })
   .strict();
 
 router.patch('/users/:id/permissions', async (req: AuthRequest, res) => {
@@ -157,6 +164,17 @@ router.patch('/users/:id/permissions', async (req: AuthRequest, res) => {
   const parsed = permissionsSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: 'Invalid permissions' });
+    return;
+  }
+
+  // Step-up auth BEFORE touching anything.
+  const reauth = await verifyStepUp(parsed.data.credential, req.user!);
+  if (!reauth.ok) {
+    logger.warn('admin.permissions_reauth_failed', {
+      by: String(req.user!._id),
+      target: id,
+    });
+    res.status(reauth.status ?? 401).json({ error: reauth.error ?? 'Re-authentication required' });
     return;
   }
 

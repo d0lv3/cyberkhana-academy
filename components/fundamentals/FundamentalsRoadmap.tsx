@@ -425,7 +425,15 @@ const FundamentalsRoadmap: React.FC = () => {
               'radial-gradient(560px circle at 60% 8%, rgba(0,168,89,0.09), transparent 55%), radial-gradient(420px circle at 18% 85%, rgba(159,239,0,0.05), transparent 55%)',
           }}
         />
-        <svg viewBox="0 0 1000 880" className="relative w-full h-auto">
+        {/* The scene is 1000x880, so at full width it would stand ~1100px tall
+            and run off the screen. Cap it to the viewport (minus the app header,
+            page padding and PageHeader) and let preserveAspectRatio scale the
+            whole diagram down to fit — nothing is ever cropped. */}
+        <svg
+          viewBox="0 0 1000 880"
+          preserveAspectRatio="xMidYMid meet"
+          className="relative mx-auto block h-auto w-full max-h-[calc(100vh-15rem)]"
+        >
           <defs>
             <filter id="island-blur" x="-60%" y="-60%" width="220%" height="220%">
               <feGaussianBlur stdDeviation="9" />
