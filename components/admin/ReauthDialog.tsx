@@ -117,7 +117,7 @@ const ReauthDialog: React.FC<ReauthDialogProps> = ({
           </div>
           <div className="min-w-0 flex-1">
             <h2 className="text-lg font-black text-[#f3f6ff]">
-              {ar ? 'تأكيد هويتك' : 'Confirm it&apos;s you'}
+              {ar ? 'تأكيد هويتك' : "Confirm it's you"}
             </h2>
             <p className="text-sm text-[#9aa5bf] mt-1">
               {ar

@@ -53,7 +53,15 @@ router.get('/users', async (req: AuthRequest, res) => {
 });
 
 /* ── PATCH /api/admin/users/:id/role ── promote/demote a member. */
-const roleSchema = z.object({ role: z.enum(['user', 'creator', 'admin']) }).strict();
+const roleSchema = z
+  .object({
+    role: z.enum(['user', 'creator', 'admin']),
+    /* Fresh Google ID token. Promoting someone to admin is the single biggest
+       privilege escalation available here, so it needs step-up auth at least as
+       much as a permissions tweak does. */
+    credential: z.string().min(20).max(4096),
+  })
+  .strict();
 
 router.patch('/users/:id/role', async (req: AuthRequest, res) => {
   const { id } = req.params;
@@ -70,6 +78,14 @@ router.patch('/users/:id/role', async (req: AuthRequest, res) => {
   // yourself out of the last admin account).
   if (id === String(req.user!._id)) {
     res.status(400).json({ error: 'You cannot change your own role' });
+    return;
+  }
+
+  // Step-up auth BEFORE touching anything.
+  const reauth = await verifyStepUp(parsed.data.credential, req.user!);
+  if (!reauth.ok) {
+    logger.warn('admin.role_reauth_failed', { by: String(req.user!._id), target: id });
+    res.status(reauth.status ?? 401).json({ error: reauth.error ?? 'Re-authentication required' });
     return;
   }
 

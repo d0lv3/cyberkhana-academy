@@ -34,6 +34,11 @@ const ROLE_META: Record<Role, { color: string; icon: React.ElementType; label: {
 
 const ROLES: Role[] = ['user', 'creator', 'admin'];
 
+/** A privilege change held back until the admin re-confirms with Google. */
+type PendingAction =
+  | { kind: 'role'; target: AdminUser; role: Role }
+  | { kind: 'perms'; target: AdminUser };
+
 const MembersPage: React.FC = () => {
   const { user: me } = useAuth();
   const { lang } = useLang();
@@ -47,8 +52,10 @@ const MembersPage: React.FC = () => {
   /** Which creator's permission panel is open, and the toggles being edited. */
   const [permsOpenId, setPermsOpenId] = useState<string | null>(null);
   const [permsDraft, setPermsDraft] = useState<CreatorPermission[]>([]);
-  /** Pending permission change awaiting a fresh Google confirmation. */
-  const [reauthTarget, setReauthTarget] = useState<AdminUser | null>(null);
+  /** A privilege change awaiting a fresh Google confirmation. Both role and
+   *  permission changes go through here — granting admin is the bigger
+   *  escalation of the two, so neither is allowed on the session alone. */
+  const [pending, setPending] = useState<PendingAction | null>(null);
   const [reauthError, setReauthError] = useState<string | null>(null);
 
   const load = async () => {
@@ -76,26 +83,10 @@ const MembersPage: React.FC = () => {
     );
   }, [users, query]);
 
-  const changeRole = async (target: AdminUser, role: Role) => {
+  const changeRole = (target: AdminUser, role: Role) => {
     if (role === target.role) return;
-    setSavingId(target.id);
-    try {
-      const { user: updated } = await api.patch<{ user: AdminUser }>(
-        `/admin/users/${target.id}/role`,
-        { role }
-      );
-      setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
-      toast(
-        'success',
-        ar
-          ? `تم تغيير دور ${updated.displayName} إلى ${ROLE_META[updated.role].label.ar}.`
-          : `${updated.displayName} is now ${ROLE_META[updated.role].label.en}.`
-      );
-    } catch (err) {
-      toast('error', err instanceof Error ? err.message : 'Role update failed');
-    } finally {
-      setSavingId(null);
-    }
+    setPending({ kind: 'role', target, role });
+    setReauthError(null);
   };
 
   const toggleBan = async (target: AdminUser) => {
@@ -150,32 +141,46 @@ const MembersPage: React.FC = () => {
   /* Saving permissions is gated behind a fresh Google confirmation, so the
      click only opens the dialog — the write happens once we hold a credential. */
   const savePerms = (target: AdminUser) => {
-    setReauthTarget(target);
+    setPending({ kind: 'perms', target });
     setReauthError(null);
   };
 
-  const commitPerms = async (credential: string) => {
-    const target = reauthTarget;
-    if (!target) return;
+  /* Runs once the admin has re-confirmed with Google. The credential is
+     minted seconds earlier and the server checks both that it is theirs and
+     that it is fresh, so it can't be replayed. */
+  const commit = async (credential: string) => {
+    if (!pending) return;
+    const { target } = pending;
     setSavingId(target.id);
     setReauthError(null);
     try {
-      const { user: updated } = await api.patch<{ user: AdminUser }>(
-        `/admin/users/${target.id}/permissions`,
-        { permissions: permsDraft, credential }
-      );
+      const { user: updated } =
+        pending.kind === 'role'
+          ? await api.patch<{ user: AdminUser }>(`/admin/users/${target.id}/role`, {
+              role: pending.role,
+              credential,
+            })
+          : await api.patch<{ user: AdminUser }>(`/admin/users/${target.id}/permissions`, {
+              permissions: permsDraft,
+              credential,
+            });
+
       setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
-      setPermsOpenId(null);
-      setReauthTarget(null);
+      if (pending.kind === 'perms') setPermsOpenId(null);
+      setPending(null);
       toast(
         'success',
-        ar
+        pending.kind === 'role'
+          ? ar
+            ? `تم تغيير دور ${updated.displayName} إلى ${ROLE_META[updated.role].label.ar}.`
+            : `${updated.displayName} is now ${ROLE_META[updated.role].label.en}.`
+          : ar
           ? `تم تحديث صلاحيات ${updated.displayName}.`
           : `${updated.displayName}'s permissions updated.`
       );
     } catch (err) {
       // Keep the dialog open so they can retry the confirmation.
-      setReauthError(err instanceof Error ? err.message : 'Permission update failed');
+      setReauthError(err instanceof Error ? err.message : 'Update failed');
     } finally {
       setSavingId(null);
     }
@@ -449,23 +454,27 @@ const MembersPage: React.FC = () => {
         </EnhancedCard>
       )}
 
-      {/* Step-up confirmation for permission changes */}
+      {/* Step-up confirmation for any privilege change */}
       <ReauthDialog
-        open={!!reauthTarget}
-        busy={savingId === reauthTarget?.id}
+        open={!!pending}
+        busy={savingId === pending?.target.id}
         error={reauthError}
         actionLabel={
-          reauthTarget
+          !pending
+            ? ''
+            : pending.kind === 'role'
             ? ar
-              ? `تحديث صلاحيات ${reauthTarget.displayName} (${permsDraft.length})`
-              : `Update ${reauthTarget.displayName}'s permissions (${permsDraft.length} granted)`
-            : ''
+              ? `تغيير دور ${pending.target.displayName} إلى ${ROLE_META[pending.role].label.ar}`
+              : `Change ${pending.target.displayName} to ${ROLE_META[pending.role].label.en}`
+            : ar
+            ? `تحديث صلاحيات ${pending.target.displayName} (${permsDraft.length})`
+            : `Update ${pending.target.displayName}'s permissions (${permsDraft.length} granted)`
         }
         onCancel={() => {
-          setReauthTarget(null);
+          setPending(null);
           setReauthError(null);
         }}
-        onCredential={commitPerms}
+        onCredential={commit}
       />
     </div>
   );
