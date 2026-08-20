@@ -1,17 +1,22 @@
-/* ─── Built-in course → editable module ───
- * The flagship courses (e.g. Linux for Cybersecurity) ship as hardcoded static
- * data. To let an admin edit one "like any other module" we convert it into the
- * creator-module (chapters → sections) shape on the fly. IDs are preserved so
+/* ─── Built-in content → editable content ───
+ * Flagship courses, networking lessons and programming modules/lessons all ship
+ * as hardcoded static data. To let an admin edit one "like any other piece of
+ * content" we convert it into the creator shape on the fly. IDs are preserved so
  * student progress carries over, and the first save writes a DB-backed override
  * that shadows the static original (copy-on-write).
  */
 
 import type { FundamentalModule } from './fundamentalsData';
+import type { NetworkingLesson } from '../components/network-sim/types';
+import type { ProgrammingConcept, ProgrammingModule } from './programming/types';
 import quizBank from './linuxQuizData';
 import {
   makeCreatorMeta,
   type CreatorFundamentalModule,
   type CreatorModuleChapter,
+  type CreatorNetworkingLesson,
+  type CreatorProgrammingConcept,
+  type CreatorMeta,
   type QuizQuestion,
 } from '../services/creatorTypes';
 
@@ -79,5 +84,43 @@ export function builtinToEditableModule(mod: FundamentalModule): CreatorFundamen
     ...makeCreatorMeta('published', mod.author || 'CyberKhana'),
     showInModules: true,
     chapters,
+  };
+}
+
+/**
+ * Convert a built-in networking lesson into the editable creator shape. The id
+ * is what makes it an override: mergeNetworkingLessons() lets a creator lesson
+ * sharing a static lesson's id replace it.
+ */
+export function builtinToEditableLesson(lesson: NetworkingLesson): CreatorNetworkingLesson {
+  return {
+    ...lesson,
+    ...makeCreatorMeta('published', 'CyberKhana'),
+  };
+}
+
+/**
+ * Convert a built-in programming module into the editable creator shape.
+ *
+ * `concepts` is deliberately dropped: a module override carries metadata only,
+ * and mergeProgrammingLanguages() keeps serving the static lesson list beneath
+ * it. Copying the concepts in would duplicate every lesson body into the
+ * override and freeze the list at the moment of the edit.
+ */
+export function builtinToEditableProgrammingModule(
+  mod: ProgrammingModule
+): ProgrammingModule & CreatorMeta {
+  return {
+    ...mod,
+    concepts: [],
+    ...makeCreatorMeta('published', 'CyberKhana'),
+  };
+}
+
+/** Convert a built-in programming lesson/challenge into the editable shape. */
+export function builtinToEditableConcept(concept: ProgrammingConcept): CreatorProgrammingConcept {
+  return {
+    ...concept,
+    ...makeCreatorMeta('published', 'CyberKhana'),
   };
 }

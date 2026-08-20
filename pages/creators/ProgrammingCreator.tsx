@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit3, Trash2, BookOpen, Trophy, ChevronDown, ChevronRight, Eye, EyeOff, Image, Lock } from 'lucide-react';
+import { Plus, Edit3, Trash2, BookOpen, Trophy, ChevronDown, ChevronRight, Eye, EyeOff, Image, Lock, ShieldCheck, Code, Layers, User } from 'lucide-react';
 import EnhancedCard from '../../components/ui/EnhancedCard';
 import Button from '../../components/ui/EnhancedButton';
 import CreatorLayout from '../../components/creators/CreatorLayout';
@@ -20,11 +20,39 @@ import {
   saveProgrammingModule,
   saveProgrammingLanguage,
   saveProgrammingLanguageCoverSvg,
+  fetchAllProgrammingForAdmin,
+  type AdminProgrammingPatch,
 } from '../../services/creatorDataService';
-import { statusOf, type CreatorMeta } from '../../services/creatorTypes';
-import type { ProgrammingLanguage, ProgrammingModule } from '../../data/programming/types';
+import {
+  statusOf,
+  type CreatorMeta,
+  type CreatorProgrammingConcept,
+  type CreatorProgrammingLanguage,
+} from '../../services/creatorTypes';
+import type { ProgrammingConcept, ProgrammingLanguage, ProgrammingModule } from '../../data/programming/types';
+import { ADMIN_PROGRAMMING_STASH, type AdminProgrammingStash } from './programmingEditStash';
+import { ownerLabel } from './ownerLabel';
 
 type DisplayModule = ProgrammingModule & Partial<CreatorMeta>;
+
+/** An entry in someone else's published patch, with the owner resolved. */
+interface ForeignEntry<T> {
+  ownerId: string;
+  ownerName: string;
+  languageSlug: string;
+  moduleSlug?: string;
+  item: T;
+}
+
+/** One line in the admin's "all published programming content" list. */
+type PublishedRow =
+  | { kind: 'language'; entry: ForeignEntry<CreatorProgrammingLanguage> }
+  | { kind: 'module'; entry: ForeignEntry<DisplayModule> }
+  | { kind: 'concept'; entry: ForeignEntry<CreatorProgrammingConcept> };
+
+/** Display title for a row — languages carry a name, the rest carry a title. */
+const titleOf = (row: PublishedRow): string =>
+  row.kind === 'language' ? row.entry.item.name : row.entry.item.title.en || '';
 
 /** Short glyph drawn on the language card art. Matches LanguageCard. */
 const glyphFor = (l: Pick<ProgrammingLanguage, 'slug' | 'name'>): string =>
@@ -41,8 +69,74 @@ const ProgrammingCreator: React.FC = () => {
   // Capability gates — the admin grants these per creator.
   const canProgramming = hasPerm(user, 'programming');
   const canLanguages = hasPerm(user, 'programming-languages');
+  const isAdmin = user?.role === 'admin';
 
   const patches = getCreatorProgrammingPatches();
+
+  /* ── Admin: every published programming item on the platform ──
+   * Two jobs. The flat list at the bottom of the page is the "see everything"
+   * view, mirroring OS Modules — this admin's own published work included, so
+   * there is one place that shows what is actually live. The id-keyed maps put
+   * the owner back on the catalog rows above, since the merge collapses every
+   * author's patches into one list that otherwise carries no owner. */
+  const [publishedPatches, setPublishedPatches] = useState<AdminProgrammingPatch[]>([]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    let cancelled = false;
+
+    fetchAllProgrammingForAdmin()
+      .then((patches) => {
+        if (!cancelled) setPublishedPatches(patches);
+      })
+      .catch(() => {
+        if (!cancelled) setPublishedPatches([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAdmin, refreshKey]);
+
+  const { foreignModules, foreignConcepts, publishedRows } = useMemo(() => {
+    const mods = new Map<string, ForeignEntry<DisplayModule>>();
+    const concepts = new Map<string, ForeignEntry<CreatorProgrammingConcept>>();
+    const rows: PublishedRow[] = [];
+
+    for (const patch of publishedPatches) {
+      const owner = { ownerId: patch._ownerId, ownerName: patch._ownerName };
+      const languageSlug = patch.languageSlug;
+
+      if (patch.newLanguage) {
+        rows.push({ kind: 'language', entry: { ...owner, languageSlug, item: patch.newLanguage } });
+      }
+      for (const mod of patch.newModules ?? []) {
+        const entry = { ...owner, languageSlug, item: mod };
+        mods.set(mod.id, entry);
+        rows.push({ kind: 'module', entry });
+      }
+      for (const [moduleSlug, list] of Object.entries(patch.newConcepts ?? {})) {
+        for (const concept of list) {
+          const entry = { ...owner, languageSlug, moduleSlug, item: concept };
+          concepts.set(concept.id, entry);
+          rows.push({ kind: 'concept', entry });
+        }
+      }
+    }
+
+    // Group by language, then languages/modules before the lessons inside them.
+    const rank = { language: 0, module: 1, concept: 2 } as const;
+    rows.sort(
+      (a, b) =>
+        a.entry.languageSlug.localeCompare(b.entry.languageSlug) ||
+        rank[a.kind] - rank[b.kind] ||
+        titleOf(a).localeCompare(titleOf(b))
+    );
+
+    return { foreignModules: mods, foreignConcepts: concepts, publishedRows: rows };
+  }, [publishedPatches]);
+
+  const otherAuthorCount = publishedRows.filter((r) => r.entry.ownerId !== user?._id).length;
 
   // Catalog languages (static + published creator languages) + my own DRAFT
   // languages, which the public merge hides until published.
@@ -137,6 +231,78 @@ const ProgrammingCreator: React.FC = () => {
     return patch?.newModules.some((m) => m.id === moduleId) || false;
   };
 
+  /** Is this concept in MY patches? (Then it edits through the normal path.) */
+  const isOwnConcept = (langSlug: string, moduleSlug: string, conceptId: string) =>
+    getCreatorConcepts(langSlug, moduleSlug).some((c) => c.id === conceptId);
+
+  const stashAdminEdit = (stash: AdminProgrammingStash) => {
+    sessionStorage.setItem(ADMIN_PROGRAMMING_STASH, JSON.stringify(stash));
+  };
+
+  /* ── Open a row in the right editing mode ──
+   * mine → own bucket; another author's → admin in-place edit; neither → it's
+   * built-in, so copy-on-write. Only admins ever reach the last two. */
+
+  const editModule = (langSlug: string, mod: DisplayModule) => {
+    if (isCreatorModule(langSlug, mod.id)) {
+      navigate(`/creators/programming/edit-module/${langSlug}/${mod.id}`);
+      return;
+    }
+    const foreign = foreignModules.get(mod.id);
+    if (foreign) {
+      stashAdminEdit({
+        kind: 'module',
+        ownerId: foreign.ownerId,
+        ownerName: foreign.ownerName,
+        languageSlug: foreign.languageSlug,
+        item: foreign.item,
+      });
+      navigate(`/creators/programming/edit-module/${foreign.languageSlug}/${mod.id}?admin=1`);
+      return;
+    }
+    navigate(`/creators/programming/edit-module/${langSlug}/${mod.id}?builtin=1`);
+  };
+
+  /** Open a published language: mine goes through the normal own-bucket editor
+   * (local-first, so the cache stays in step); anyone else's goes through the
+   * server-side admin edit. */
+  const editForeignLanguage = (entry: ForeignEntry<CreatorProgrammingLanguage>) => {
+    if (entry.ownerId === user?._id) {
+      navigate(`/creators/programming/edit-language/${entry.languageSlug}`);
+      return;
+    }
+    stashAdminEdit({
+      kind: 'language',
+      ownerId: entry.ownerId,
+      ownerName: entry.ownerName,
+      languageSlug: entry.languageSlug,
+      item: entry.item,
+    });
+    navigate(`/creators/programming/edit-language/${entry.languageSlug}?admin=1`);
+  };
+
+  const editConcept = (langSlug: string, moduleSlug: string, concept: ProgrammingConcept) => {
+    const base = `/creators/programming/${langSlug}/${moduleSlug}/${concept.slug}`;
+    if (isOwnConcept(langSlug, moduleSlug, concept.id)) {
+      navigate(base);
+      return;
+    }
+    const foreign = foreignConcepts.get(concept.id);
+    if (foreign) {
+      stashAdminEdit({
+        kind: 'concept',
+        ownerId: foreign.ownerId,
+        ownerName: foreign.ownerName,
+        languageSlug: foreign.languageSlug,
+        moduleSlug: foreign.moduleSlug ?? moduleSlug,
+        item: foreign.item,
+      });
+      navigate(`${base}?admin=1`);
+      return;
+    }
+    navigate(`${base}?builtin=1`);
+  };
+
   // Modules to display in the studio: merged (published) + the creator's own
   // drafts (which the consumer merge hides until published).
   const getDisplayModules = (langSlug: string, mergedModules: ProgrammingModule[]): DisplayModule[] => {
@@ -164,6 +330,30 @@ const ProgrammingCreator: React.FC = () => {
       backLabel={t('studio.contentStudio')}
     >
       <div className="space-y-6">
+        {isAdmin && (
+          <div className="flex items-start gap-3 rounded-lg border border-[#f3a43a]/30 bg-[#f3a43a]/10 px-4 py-3">
+            <ShieldCheck size={16} className="text-[#f3a43a] mt-0.5 flex-shrink-0" />
+            <div className="text-xs text-[#d2d7e3]">
+              {uiLang === 'ar' ? (
+                <>
+                  <span className="font-bold text-[#f3a43a]">مشرف</span> — كل وحدة ودرس منشور أدناه
+                  قابل للتعديل مهما كان مؤلفه
+                  {otherAuthorCount > 0 ? ` (${otherAuthorCount} من مؤلفين آخرين)` : ''}. المحتوى المدمج
+                  يُفتح بنسخ-عند-التعديل: أول حفظ ينشئ نسخة قابلة للتعديل تحل محل الأصل.
+                </>
+              ) : (
+                <>
+                  <span className="font-bold text-[#f3a43a]">Admin</span> — every published module
+                  and lesson below is editable, whoever wrote it
+                  {otherAuthorCount > 0 ? ` (${otherAuthorCount} by other authors)` : ''}. Built-in content
+                  opens copy-on-write: the first save creates an editable copy that replaces the
+                  original.
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
         {canLanguages && (
           <div className="flex justify-between items-start gap-4">
             <p className="text-sm text-[#9aa5bf] max-w-lg">
@@ -217,6 +407,32 @@ const ProgrammingCreator: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  {/* Another author's published language: admin edit only */}
+                  {(() => {
+                    if (ownLanguageDef(lang.slug) || !isAdmin) return null;
+                    const foreignLang = publishedRows.find(
+                      (r): r is Extract<PublishedRow, { kind: 'language' }> =>
+                        r.kind === 'language' &&
+                        r.entry.languageSlug === lang.slug &&
+                        r.entry.ownerId !== user?._id
+                    );
+                    if (!foreignLang) return null;
+                    return (
+                      <div className="flex items-center gap-1.5" dir="ltr">
+                        <span className="hidden md:inline text-[10px] font-medium text-[#4d5a73]">
+                          {foreignLang.entry.ownerName}
+                        </span>
+                        <StatusBadge status={statusOf(foreignLang.entry.item)} />
+                        <button
+                          onClick={() => editForeignLanguage(foreignLang.entry)}
+                          title={uiLang === 'ar' ? 'تعديل (مشرف)' : 'Edit as admin'}
+                          className="w-7 h-7 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#f3a43a] hover:bg-[#f3a43a]/10 transition-all"
+                        >
+                          <Edit3 size={13} />
+                        </button>
+                      </div>
+                    );
+                  })()}
                   {/* Own creator language: lifecycle + edit + delete */}
                   {(() => {
                     const def = ownLanguageDef(lang.slug);
@@ -293,13 +509,24 @@ const ProgrammingCreator: React.FC = () => {
                 const isExpanded = expanded[key] ?? false;
                 const creatorConcepts = getCreatorConcepts(lang.slug, mod.slug);
                 const isCreatorMod = isCreatorModule(lang.slug, mod.id);
+                const foreignMod = isCreatorMod ? undefined : foreignModules.get(mod.id);
 
                 return (
                   <div key={mod.id}>
-                    {/* Module row */}
-                    <button
+                    {/* Module row. A div, not a button: it carries its own
+                        action buttons, and a button may not nest one. */}
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      aria-expanded={isExpanded}
                       onClick={() => toggleExpand(key)}
-                      className="w-full flex items-center gap-3 px-5 py-3 hover:bg-[#182235]/50 transition-colors text-left"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          toggleExpand(key);
+                        }
+                      }}
+                      className="w-full flex items-center gap-3 px-5 py-3 hover:bg-[#182235]/50 transition-colors text-left cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-[#00a859]/50"
                     >
                       {isExpanded ? (
                         <ChevronDown size={14} className="text-[#6e7a94] flex-shrink-0" />
@@ -317,90 +544,135 @@ const ProgrammingCreator: React.FC = () => {
                           )}
                         </span>
                       </div>
-                      {isCreatorMod && (
+                      {(isCreatorMod || isAdmin) && (
                         <div className="flex items-center gap-1.5 flex-shrink-0" dir="ltr">
-                          <StatusBadge status={statusOf(mod)} />
+                          {foreignMod && (
+                            <span className="hidden md:inline text-[10px] font-medium text-[#4d5a73]">
+                              {foreignMod.ownerName}
+                            </span>
+                          )}
+                          {(isCreatorMod || foreignMod) && <StatusBadge status={statusOf(mod)} />}
+                          {isCreatorMod && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleToggleModulePublish(lang.slug, mod);
+                              }}
+                              title={statusOf(mod) === 'published' ? t('studio.unpublish') : t('studio.publish')}
+                              className="w-6 h-6 flex items-center justify-center rounded text-[#4d5a73] hover:text-[#00a859] transition-colors"
+                            >
+                              {statusOf(mod) === 'published' ? <EyeOff size={12} /> : <Eye size={12} />}
+                            </button>
+                          )}
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleToggleModulePublish(lang.slug, mod);
+                              editModule(lang.slug, mod);
                             }}
-                            title={statusOf(mod) === 'published' ? t('studio.unpublish') : t('studio.publish')}
-                            className="w-6 h-6 flex items-center justify-center rounded text-[#4d5a73] hover:text-[#00a859] transition-colors"
-                          >
-                            {statusOf(mod) === 'published' ? <EyeOff size={12} /> : <Eye size={12} />}
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/creators/programming/edit-module/${lang.slug}/${mod.id}`);
-                            }}
-                            title={t('studio.editModule')}
-                            className="w-6 h-6 flex items-center justify-center rounded text-[#4d5a73] hover:text-[#60a5fa] transition-colors"
+                            title={
+                              isCreatorMod
+                                ? t('studio.editModule')
+                                : uiLang === 'ar'
+                                  ? 'تعديل (مشرف)'
+                                  : 'Edit as admin'
+                            }
+                            className={`w-6 h-6 flex items-center justify-center rounded text-[#4d5a73] transition-colors ${
+                              isCreatorMod
+                                ? 'hover:text-[#60a5fa]'
+                                : foreignMod
+                                  ? 'hover:text-[#f3a43a]'
+                                  : 'hover:text-[#9fef00]'
+                            }`}
                           >
                             <Edit3 size={12} />
                           </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteModule(lang.slug, mod.id);
-                            }}
-                            className="w-6 h-6 flex items-center justify-center rounded text-[#4d5a73] hover:text-red-400 transition-colors"
-                          >
-                            <Trash2 size={12} />
-                          </button>
+                          {isCreatorMod && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteModule(lang.slug, mod.id);
+                              }}
+                              className="w-6 h-6 flex items-center justify-center rounded text-[#4d5a73] hover:text-red-400 transition-colors"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          )}
                         </div>
                       )}
-                    </button>
+                    </div>
 
                     {/* Concepts */}
                     {isExpanded && (
                       <div className="bg-[#0a0f18] border-t border-[#263248]/50">
-                        {/* Static concepts */}
-                        {mod.concepts.map((concept) => (
-                          <div
-                            key={concept.id}
-                            className="flex items-center gap-3 px-8 py-2.5 border-b border-[#263248]/30"
-                          >
-                            {concept.type === 'challenge' ? (
-                              <Trophy size={12} className="text-[#f3a43a] flex-shrink-0" />
-                            ) : (
-                              <BookOpen size={12} className="text-[#6e7a94] flex-shrink-0" />
-                            )}
-                            <span className="text-xs text-[#c4cad6] flex-1 truncate">
-                              {concept.title.en}
-                            </span>
-                            <span className="text-[10px] text-[#4d5a73] flex-shrink-0">
-                              {(concept as any).isCreatorContent
-                                ? uiLang === 'ar'
-                                  ? 'مخصص'
-                                  : 'Custom'
-                                : t('studio.builtIn')}
-                            </span>
-                            {(concept as any).isCreatorContent && (
-                              <div className="flex items-center gap-1 flex-shrink-0">
-                                <button
-                                  onClick={() =>
-                                    navigate(
-                                      `/creators/programming/${lang.slug}/${mod.slug}/${concept.slug}`
-                                    )
-                                  }
-                                  className="w-6 h-6 flex items-center justify-center rounded text-[#4d5a73] hover:text-[#60a5fa] transition-colors"
-                                >
-                                  <Edit3 size={11} />
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    handleDeleteConcept(lang.slug, mod.slug, concept.id)
-                                  }
-                                  className="w-6 h-6 flex items-center justify-center rounded text-[#4d5a73] hover:text-red-400 transition-colors"
-                                >
-                                  <Trash2 size={11} />
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        ))}
+                        {/* Live concepts: built-in, mine, and other authors' published */}
+                        {mod.concepts.map((concept) => {
+                          const ownConcept = isOwnConcept(lang.slug, mod.slug, concept.id);
+                          const foreignConcept = ownConcept
+                            ? undefined
+                            : foreignConcepts.get(concept.id);
+                          const isCustom = (concept as Partial<CreatorMeta>).isCreatorContent === true;
+
+                          return (
+                            <div
+                              key={concept.id}
+                              className="flex items-center gap-3 px-8 py-2.5 border-b border-[#263248]/30"
+                            >
+                              {concept.type === 'challenge' ? (
+                                <Trophy size={12} className="text-[#f3a43a] flex-shrink-0" />
+                              ) : (
+                                <BookOpen size={12} className="text-[#6e7a94] flex-shrink-0" />
+                              )}
+                              <span className="text-xs text-[#c4cad6] flex-1 truncate">
+                                {concept.title.en}
+                              </span>
+                              {foreignConcept && (
+                                <span className="hidden md:inline text-[10px] text-[#4d5a73] flex-shrink-0">
+                                  {foreignConcept.ownerName}
+                                </span>
+                              )}
+                              <span className="text-[10px] text-[#4d5a73] flex-shrink-0">
+                                {isCustom
+                                  ? uiLang === 'ar'
+                                    ? 'مخصص'
+                                    : 'Custom'
+                                  : t('studio.builtIn')}
+                              </span>
+                              {(ownConcept || isAdmin) && (
+                                <div className="flex items-center gap-1 flex-shrink-0">
+                                  <button
+                                    onClick={() => editConcept(lang.slug, mod.slug, concept)}
+                                    title={
+                                      ownConcept
+                                        ? t('studio.edit')
+                                        : uiLang === 'ar'
+                                          ? 'تعديل (مشرف)'
+                                          : 'Edit as admin'
+                                    }
+                                    className={`w-6 h-6 flex items-center justify-center rounded text-[#4d5a73] transition-colors ${
+                                      ownConcept
+                                        ? 'hover:text-[#60a5fa]'
+                                        : foreignConcept
+                                          ? 'hover:text-[#f3a43a]'
+                                          : 'hover:text-[#9fef00]'
+                                    }`}
+                                  >
+                                    <Edit3 size={11} />
+                                  </button>
+                                  {ownConcept && (
+                                    <button
+                                      onClick={() =>
+                                        handleDeleteConcept(lang.slug, mod.slug, concept.id)
+                                      }
+                                      className="w-6 h-6 flex items-center justify-center rounded text-[#4d5a73] hover:text-red-400 transition-colors"
+                                    >
+                                      <Trash2 size={11} />
+                                    </button>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
 
                         {/* Creator concepts not yet in merged list */}
                         {creatorConcepts
@@ -462,6 +734,121 @@ const ProgrammingCreator: React.FC = () => {
             )}
           </EnhancedCard>
         ))}
+
+        {/* ── Admin: every published programming item (any author) ── */}
+        {isAdmin && publishedRows.length > 0 && (
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center gap-2">
+              <ShieldCheck size={14} className="text-[#f3a43a]" />
+              <h2 className="text-sm font-bold text-[#6e7a94] uppercase tracking-wider">
+                {uiLang === 'ar'
+                  ? 'كل المحتوى البرمجي المنشور'
+                  : 'All published programming content'}{' '}
+                ({publishedRows.length})
+              </h2>
+            </div>
+            <p className="text-xs text-[#6e7a94] -mt-1">
+              {uiLang === 'ar'
+                ? 'كل ما هو منشور على المنصة، بما في ذلك محتواك. يمكنك تعديل أي منه وتبقى ملكية المؤلف كما هي.'
+                : 'Everything live on the platform, your own content included. You can edit any of it; the original author is kept.'}
+            </p>
+
+            {publishedRows.map((row) => {
+              const { entry } = row;
+              const isLanguage = row.kind === 'language';
+              const isModule = row.kind === 'module';
+              const isChallenge = row.kind === 'concept' && row.entry.item.type === 'challenge';
+              const mine = entry.ownerId === user?._id;
+
+              return (
+                <EnhancedCard
+                  key={`${entry.ownerId}-${row.kind}-${
+                    isLanguage ? entry.languageSlug : (entry.item as { id: string }).id
+                  }`}
+                  padding="none"
+                  hoverable
+                  className="overflow-hidden group"
+                >
+                  <div className="flex items-center gap-4 px-5 py-4">
+                    <div
+                      className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                        mine
+                          ? 'bg-[#00a859]/10 border border-[#00a859]/20'
+                          : 'bg-[#f3a43a]/10 border border-[#f3a43a]/20'
+                      }`}
+                    >
+                      {(() => {
+                        const tint = mine ? 'text-[#00a859]' : 'text-[#f3a43a]';
+                        if (isLanguage) return <Code size={16} className={tint} />;
+                        if (isModule) return <Layers size={16} className={tint} />;
+                        if (isChallenge) return <Trophy size={16} className={tint} />;
+                        return <BookOpen size={16} className={tint} />;
+                      })()}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-bold text-[#f3f6ff] truncate">
+                        {titleOf(row) || t('studio.untitled')}
+                      </h3>
+                      <p className="text-xs text-[#6e7a94] truncate mt-0.5" dir="ltr">
+                        {entry.languageSlug}
+                        {entry.moduleSlug ? ` · ${entry.moduleSlug}` : ''}
+                        {' · '}
+                        {isLanguage
+                          ? uiLang === 'ar'
+                            ? 'لغة'
+                            : 'Language'
+                          : isModule
+                            ? uiLang === 'ar'
+                              ? 'وحدة'
+                              : 'Module'
+                            : isChallenge
+                              ? uiLang === 'ar'
+                                ? 'تحدٍّ'
+                                : 'Challenge'
+                              : uiLang === 'ar'
+                                ? 'درس'
+                                : 'Lesson'}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-shrink-0" dir="ltr">
+                      <span className="hidden md:flex text-[10px] font-medium text-[#4d5a73] items-center gap-1">
+                        <User size={10} />{' '}
+                        {ownerLabel(entry.ownerId, entry.ownerName, user?._id, uiLang)}
+                      </span>
+                      <StatusBadge status={statusOf(entry.item)} />
+
+                      <button
+                        onClick={() => {
+                          if (row.kind === 'language') editForeignLanguage(row.entry);
+                          else if (row.kind === 'module')
+                            editModule(row.entry.languageSlug, row.entry.item);
+                          else
+                            editConcept(
+                              row.entry.languageSlug,
+                              row.entry.moduleSlug!,
+                              row.entry.item
+                            );
+                        }}
+                        title={
+                          mine ? t('studio.edit') : uiLang === 'ar' ? 'تعديل (مشرف)' : 'Edit as admin'
+                        }
+                        className={`w-7 h-7 flex items-center justify-center rounded-md text-[#6e7a94] transition-all ${
+                          mine
+                            ? 'hover:text-[#60a5fa] hover:bg-[#60a5fa]/10'
+                            : 'hover:text-[#f3a43a] hover:bg-[#f3a43a]/10'
+                        }`}
+                      >
+                        <Edit3 size={13} />
+                      </button>
+                    </div>
+                  </div>
+                </EnhancedCard>
+              );
+            })}
+          </div>
+        )}
       </div>
     </CreatorLayout>
   );

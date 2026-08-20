@@ -20,6 +20,7 @@ import {
 } from '../../services/creatorDataService';
 import { statusOf, authorOf } from '../../services/creatorTypes';
 import { hasPerm } from '../../services/permissions';
+import { ownerLabel } from './ownerLabel';
 
 /** Stash a foreign module + its owner, then open it in the editor (admin mode). */
 function openAdminEdit(
@@ -45,16 +46,24 @@ const OSModulesCreator: React.FC = () => {
   const creatorModules = getCreatorOSModules();
   const canCreate = hasPerm(user, 'os-modules');
 
-  // Admin-only: every published OS module by other authors.
-  const [foreign, setForeign] = useState<AdminPublishedModule[]>([]);
+  // Admin-only: every published OS module on the platform, this admin's own
+  // included — one place to see what is actually live.
+  const [allPublished, setAllPublished] = useState<AdminPublishedModule[]>([]);
   useEffect(() => {
     if (user?.role !== 'admin') return;
     fetchAllPublishedModulesForAdmin()
-      .then((items) =>
-        setForeign(items.filter((m) => m._bucket === 'os-modules' && m._ownerId !== user._id))
-      )
-      .catch(() => setForeign([]));
+      .then((items) => setAllPublished(items.filter((m) => m._bucket === 'os-modules')))
+      .catch(() => setAllPublished([]));
   }, [user, refreshKey]);
+
+  const isMine = (mod: AdminPublishedModule) => mod._ownerId === user?._id;
+
+  /** Mine edits through the normal own-bucket editor (local-first, so the
+   * cache stays in step); anyone else's goes through the server-side admin edit. */
+  const editPublished = (mod: AdminPublishedModule) => {
+    if (isMine(mod)) navigate(`/creators/os-modules/edit/${mod.id}`);
+    else openAdminEdit(navigate, mod, '/creators/os-modules/edit');
+  };
 
   const handleDelete = async (id: string) => {
     if (
@@ -84,7 +93,7 @@ const OSModulesCreator: React.FC = () => {
   // (this admin's own, or any other author's). Hide it so it isn't listed twice.
   const overriddenIds = new Set<string>([
     ...creatorModules.map((m) => m.id),
-    ...foreign.map((m) => m.id),
+    ...allPublished.map((m) => m.id),
   ]);
   const visibleStatic = staticModules.filter((m) => !overriddenIds.has(m.id));
 
@@ -96,9 +105,9 @@ const OSModulesCreator: React.FC = () => {
       navigate(`/creators/os-modules/edit/${mod.id}`);
       return;
     }
-    const foreignOverride = foreign.find((m) => m.id === mod.id);
-    if (foreignOverride) {
-      openAdminEdit(navigate, foreignOverride, '/creators/os-modules/edit');
+    const override = allPublished.find((m) => m.id === mod.id);
+    if (override) {
+      editPublished(override);
       return;
     }
     sessionStorage.setItem(
@@ -275,12 +284,12 @@ const OSModulesCreator: React.FC = () => {
       </div>
 
       {/* ── Admin: every published OS module (any author) ── */}
-      {user?.role === 'admin' && foreign.length > 0 && (
+      {user?.role === 'admin' && allPublished.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <ShieldCheck size={14} className="text-[#f3a43a]" />
             <h2 className="text-sm font-bold text-[#6e7a94] uppercase tracking-wider">
-              {lang === 'ar' ? 'كل وحدات الأنظمة المنشورة' : 'All published OS modules'} ({foreign.length})
+              {lang === 'ar' ? 'كل وحدات الأنظمة المنشورة' : 'All published OS modules'} ({allPublished.length})
             </h2>
           </div>
           <p className="text-xs text-[#6e7a94] -mt-1">
@@ -289,12 +298,18 @@ const OSModulesCreator: React.FC = () => {
               : 'As an admin you can edit any published module. The original author is kept.'}
           </p>
 
-          {foreign.map((mod) => (
+          {allPublished.map((mod) => (
             <EnhancedCard key={`${mod._ownerId}-${mod.id}`} padding="none" hoverable className="overflow-hidden group">
               <div className="h-1" style={{ backgroundColor: mod.iconColor }} />
               <div className="flex items-center gap-4 px-5 py-4">
-                <div className="w-10 h-10 rounded-lg bg-[#f3a43a]/10 border border-[#f3a43a]/20 flex items-center justify-center flex-shrink-0">
-                  <Eye size={16} className="text-[#f3a43a]" />
+                <div
+                  className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                    isMine(mod)
+                      ? 'bg-[#00a859]/10 border border-[#00a859]/20'
+                      : 'bg-[#f3a43a]/10 border border-[#f3a43a]/20'
+                  }`}
+                >
+                  <Eye size={16} className={isMine(mod) ? 'text-[#00a859]' : 'text-[#f3a43a]'} />
                 </div>
 
                 <div className="flex-1 min-w-0">
@@ -304,15 +319,19 @@ const OSModulesCreator: React.FC = () => {
 
                 <div className="flex items-center gap-2 flex-shrink-0" dir="ltr">
                   <span className="hidden md:flex text-[10px] font-medium text-[#4d5a73] items-center gap-1">
-                    <User size={10} /> {mod._ownerName}
+                    <User size={10} /> {ownerLabel(mod._ownerId, mod._ownerName, user?._id, lang)}
                   </span>
                   <DifficultyBadge difficulty={mod.difficulty} />
                   <StatusBadge status={statusOf(mod)} />
 
                   <button
-                    onClick={() => openAdminEdit(navigate, mod, '/creators/os-modules/edit')}
-                    title={lang === 'ar' ? 'تعديل (مشرف)' : 'Edit as admin'}
-                    className="w-7 h-7 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#f3a43a] hover:bg-[#f3a43a]/10 transition-all"
+                    onClick={() => editPublished(mod)}
+                    title={isMine(mod) ? t('studio.edit') : lang === 'ar' ? 'تعديل (مشرف)' : 'Edit as admin'}
+                    className={`w-7 h-7 flex items-center justify-center rounded-md text-[#6e7a94] transition-all ${
+                      isMine(mod)
+                        ? 'hover:text-[#60a5fa] hover:bg-[#60a5fa]/10'
+                        : 'hover:text-[#f3a43a] hover:bg-[#f3a43a]/10'
+                    }`}
                   >
                     <Edit3 size={13} />
                   </button>

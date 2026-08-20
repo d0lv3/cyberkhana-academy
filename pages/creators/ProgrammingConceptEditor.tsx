@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   BookOpen,
   Trophy,
@@ -12,6 +12,7 @@ import {
   Edit3,
   MonitorPlay,
   Wand2,
+  ShieldCheck,
 } from 'lucide-react';
 import CreatorLayout from '../../components/creators/CreatorLayout';
 import BilingualInput from '../../components/creators/BilingualInput';
@@ -25,13 +26,20 @@ import { confirmDialog } from '../../components/ui/ConfirmHost';
 import { runPython } from '../../components/code-editor/PythonExecutor';
 import { useToast } from '../../hooks/useToast';
 import { useAuth } from '../../contexts/AuthContext';
-import { getCreatorProgrammingPatches, saveProgrammingConcept } from '../../services/creatorDataService';
+import {
+  getCreatorProgrammingPatches,
+  saveProgrammingConcept,
+  saveProgrammingAsAdmin,
+} from '../../services/creatorDataService';
 import {
   makeCreatorMeta,
   statusOf,
   type ContentStatus,
   type CreatorProgrammingConcept,
 } from '../../services/creatorTypes';
+import { programmingLanguages } from '../../data/programming';
+import { builtinToEditableConcept } from '../../data/builtinCourse';
+import { ADMIN_PROGRAMMING_STASH, type AdminProgrammingStash } from './programmingEditStash';
 import type { TestCase } from '../../data/programming/types';
 
 function generateId(): string {
@@ -134,10 +142,15 @@ const ProgrammingConceptEditor: React.FC = () => {
     moduleSlug: string;
     conceptSlug: string;
   }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast, ToastContainer } = useToast();
   const { user } = useAuth();
   const isEditing = !!conceptSlug && conceptSlug !== 'new';
+  // Admin editing another author's published lesson (in place, ownership kept).
+  const isAdminEdit = searchParams.get('admin') === '1' && user?.role === 'admin';
+  // Admin editing a built-in lesson: the first save writes an override.
+  const isBuiltinEdit = searchParams.get('builtin') === '1' && user?.role === 'admin';
 
   const [titleEn, setTitleEn] = useState('');
   const [titleAr, setTitleAr] = useState('');
@@ -153,6 +166,9 @@ const ProgrammingConceptEditor: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [createdAt, setCreatedAt] = useState<string | null>(null);
   const [authorName, setAuthorName] = useState<string | null>(null);
+  /** Id of the concept being edited — preserved so an override shadows its original. */
+  const [existingId, setExistingId] = useState<string | null>(null);
+  const [adminCtx, setAdminCtx] = useState<{ ownerId: string; ownerName: string } | null>(null);
 
   const [verifying, setVerifying] = useState(false);
   const [verifyResults, setVerifyResults] = useState<VerifyResult[] | null>(null);
@@ -164,27 +180,57 @@ const ProgrammingConceptEditor: React.FC = () => {
 
   // Load existing concept for editing
   useEffect(() => {
-    if (isEditing && langSlug && moduleSlug && conceptSlug) {
-      const patches = getCreatorProgrammingPatches();
-      const patch = patches.find((p) => p.languageSlug === langSlug);
-      const concept = patch?.newConcepts[moduleSlug]?.find((c) => c.slug === conceptSlug);
-      if (concept) {
-        setTitleEn(concept.title.en);
-        setTitleAr(concept.title.ar);
-        setSlug(concept.slug);
-        setOrder(concept.order);
-        setType(concept.type);
-        setMarkdownContent(concept.markdownContent);
-        setStarterCode(concept.starterCode);
-        setSolution(concept.solution || '');
-        setTestCases(concept.testCases || []);
-        setHints(concept.hints || []);
-        setStatus(statusOf(concept));
-        setCreatedAt(concept.createdAt);
-        setAuthorName(concept.authorName);
+    if (!isEditing || !langSlug || !moduleSlug || !conceptSlug) return;
+
+    let concept: CreatorProgrammingConcept | undefined;
+
+    if (isBuiltinEdit) {
+      // Built-in lessons ship in the bundle — resolve straight from static data.
+      const builtin = programmingLanguages
+        .find((l) => l.slug === langSlug)
+        ?.modules.find((m) => m.slug === moduleSlug)
+        ?.concepts.find((c) => c.slug === conceptSlug);
+      if (builtin) concept = builtinToEditableConcept(builtin);
+    } else if (isAdminEdit) {
+      try {
+        const raw = sessionStorage.getItem(ADMIN_PROGRAMMING_STASH);
+        const stash: AdminProgrammingStash | null = raw ? JSON.parse(raw) : null;
+        if (stash && stash.kind === 'concept' && stash.item.slug === conceptSlug) {
+          concept = stash.item;
+          setAdminCtx({ ownerId: stash.ownerId, ownerName: stash.ownerName });
+        }
+      } catch {
+        /* fall through to the error below */
       }
+    } else {
+      const patch = getCreatorProgrammingPatches().find((p) => p.languageSlug === langSlug);
+      concept = patch?.newConcepts[moduleSlug]?.find((c) => c.slug === conceptSlug);
     }
-  }, [isEditing, langSlug, moduleSlug, conceptSlug]);
+
+    if (!concept) {
+      if (isBuiltinEdit || isAdminEdit) {
+        toast('error', 'Could not open this lesson for editing. Open it again from the list.');
+        navigate('/creators/programming');
+      }
+      return;
+    }
+
+    setExistingId(concept.id);
+    setTitleEn(concept.title.en);
+    setTitleAr(concept.title.ar);
+    setSlug(concept.slug);
+    setOrder(concept.order);
+    setType(concept.type);
+    setMarkdownContent(concept.markdownContent);
+    setStarterCode(concept.starterCode);
+    setSolution(concept.solution || '');
+    setTestCases(concept.testCases || []);
+    setHints(concept.hints || []);
+    setStatus(statusOf(concept));
+    setCreatedAt(concept.createdAt);
+    setAuthorName(concept.authorName);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditing, langSlug, moduleSlug, conceptSlug, isBuiltinEdit, isAdminEdit]);
 
   // Auto-generate slug
   useEffect(() => {
@@ -273,7 +319,7 @@ const ProgrammingConceptEditor: React.FC = () => {
   }, [editorLang, solution, testCases, toast]);
 
   /* ── Save with publish guardrails ── */
-  const handleSave = () => {
+  const handleSave = async () => {
     let hadWarning = false;
     if (!titleEn.trim()) {
       toast('error', 'An English title is required.');
@@ -316,12 +362,9 @@ const ProgrammingConceptEditor: React.FC = () => {
     const author = authorName || user?.displayName || 'CyberKhana';
 
     const concept: CreatorProgrammingConcept = {
-      id:
-        (isEditing &&
-          getCreatorProgrammingPatches()
-            .find((p) => p.languageSlug === langSlug)
-            ?.newConcepts[moduleSlug]?.find((c) => c.slug === conceptSlug)?.id) ||
-        generateId(),
+      // Reusing the loaded id is what makes an edit an edit — and, for built-in
+      // content, what makes the saved copy shadow the original.
+      id: existingId || generateId(),
       slug: slug || generateSlug(titleEn),
       title: { en: titleEn, ar: titleAr },
       order,
@@ -341,7 +384,28 @@ const ProgrammingConceptEditor: React.FC = () => {
         : makeCreatorMeta(status, author)),
     };
 
-    saveProgrammingConcept(langSlug, moduleSlug, concept);
+    // Admin edit: write back into the original author's patch via the server.
+    if (adminCtx) {
+      try {
+        await saveProgrammingAsAdmin({
+          ownerId: adminCtx.ownerId,
+          languageSlug: langSlug,
+          kind: 'concept',
+          moduleSlug,
+          item: concept,
+        });
+        sessionStorage.removeItem(ADMIN_PROGRAMMING_STASH);
+      } catch (err) {
+        setIsSaving(false);
+        toast('error', err instanceof Error ? err.message : 'Could not save this lesson.');
+        return;
+      }
+    } else {
+      // Normal own-patch save. Copy-on-write of a built-in lesson lands here
+      // too: it writes a concept under the built-in's id, which overrides it.
+      saveProgrammingConcept(langSlug, moduleSlug, concept);
+    }
+
     toast('success', status === 'published' ? 'Concept published.' : 'Concept saved.');
     // Give the creator time to read publish warnings before redirecting
     setTimeout(() => {
@@ -367,6 +431,30 @@ const ProgrammingConceptEditor: React.FC = () => {
       onStatusChange={setStatus}
     >
       <ToastContainer />
+
+      {/* ── Built-in copy-on-write banner ── */}
+      {isBuiltinEdit && !adminCtx && (
+        <div className="flex items-start gap-3 rounded-lg border border-[#9fef00]/30 bg-[#9fef00]/10 px-4 py-3">
+          <BookOpen size={16} className="text-[#9fef00] mt-0.5 flex-shrink-0" />
+          <div className="text-xs text-[#d2d7e3]">
+            <span className="font-bold text-[#9fef00]">Editing a built-in lesson</span> — saving
+            creates an editable copy that replaces the original everywhere. Existing student
+            progress is preserved.
+          </div>
+        </div>
+      )}
+
+      {/* ── Admin moderation banner ── */}
+      {adminCtx && (
+        <div className="flex items-start gap-3 rounded-lg border border-[#f3a43a]/30 bg-[#f3a43a]/10 px-4 py-3">
+          <ShieldCheck size={16} className="text-[#f3a43a] mt-0.5 flex-shrink-0" />
+          <div className="text-xs text-[#d2d7e3]">
+            <span className="font-bold text-[#f3a43a]">Admin edit</span> — you're editing{' '}
+            <span className="font-semibold text-[#f3f6ff]">{adminCtx.ownerName}</span>'s published
+            lesson. Authorship is kept; saving updates the live lesson for everyone.
+          </div>
+        </div>
+      )}
 
       {/* ── View tabs ── */}
       <div className="flex items-center gap-1 bg-[#0b1019] border border-[#263248] rounded-xl p-1 w-fit" dir="ltr">

@@ -338,7 +338,15 @@ function getAllVisiblePatches(): ProgrammingPatch[] {
 
 /**
  * Merge static programming languages with creator patches.
- * Adds new modules and new concepts to existing modules.
+ *
+ * Two things happen here, and the id decides which:
+ *  - a patch entry with a NEW id is an addition (a creator's own module/lesson);
+ *  - a patch entry REUSING a built-in's id is an override — this is how an admin
+ *    edits built-in content (copy-on-write). A module override replaces the
+ *    built-in's metadata only; its concepts still come from the static course, so
+ *    editing a module title never freezes or duplicates its lesson list.
+ *
+ * Either way, only published entries reach students.
  */
 export function mergeProgrammingLanguages(staticLanguages: ProgrammingLanguage[]): ProgrammingLanguage[] {
   const patches = getAllVisiblePatches();
@@ -350,42 +358,46 @@ export function mergeProgrammingLanguages(staticLanguages: ProgrammingLanguage[]
     // Creator-overridden cover art (cosmetic, applies regardless of publish state).
     const coverSvg = patch.languageCoverSvg ?? lang.coverSvg;
 
-    // Merge new modules — only published ones reach students
-    const existingModuleIds = new Set(lang.modules.map((m) => m.id));
-    const additionalModules = patch.newModules.filter(
-      (m) => !existingModuleIds.has(m.id) && statusOf(m) === 'published'
-    );
+    /** Apply this module's published patch concepts: overrides first, then additions. */
+    const withPatchConcepts = (mod: ProgrammingModule): ProgrammingModule => {
+      const patchConcepts = (patch.newConcepts[mod.slug] ?? []).filter(
+        (c) => statusOf(c) === 'published'
+      );
+      if (patchConcepts.length === 0) return mod;
 
-    // Merge new concepts into existing modules
+      const overrideById = new Map(patchConcepts.map((c) => [c.id, c]));
+      const existingIds = new Set(mod.concepts.map((c) => c.id));
+
+      return {
+        ...mod,
+        concepts: [
+          ...mod.concepts.map((c) => overrideById.get(c.id) ?? c),
+          ...patchConcepts.filter((c) => !existingIds.has(c.id)),
+        ].sort((a, b) => a.order - b.order),
+      };
+    };
+
+    const publishedPatchModules = patch.newModules.filter((m) => statusOf(m) === 'published');
+    const overrideById = new Map(publishedPatchModules.map((m) => [m.id, m]));
+
+    // Built-in modules, with an admin's metadata override applied. The slug and
+    // concept list stay the built-in's: concepts are keyed by module slug, and a
+    // renamed slug would orphan them along with every existing lesson URL.
     const mergedModules = lang.modules.map((mod) => {
-      const newConcepts = patch.newConcepts[mod.slug];
-      if (!newConcepts || newConcepts.length === 0) return mod;
-
-      const publishedConcepts = newConcepts.filter((c) => c.isPublished);
-      const existingConceptIds = new Set(mod.concepts.map((c) => c.id));
-      const additional = publishedConcepts.filter((c) => !existingConceptIds.has(c.id));
-
-      return {
-        ...mod,
-        concepts: [...mod.concepts, ...additional].sort((a, b) => a.order - b.order),
-      };
+      const override = overrideById.get(mod.id);
+      const base = override ? { ...override, slug: mod.slug, concepts: mod.concepts } : mod;
+      return withPatchConcepts(base);
     });
 
-    // Also merge concepts into new modules
-    const newModulesWithConcepts = additionalModules.map((mod) => {
-      const newConcepts = patch.newConcepts[mod.slug];
-      if (!newConcepts) return mod;
-      const publishedConcepts = newConcepts.filter((c) => c.isPublished);
-      return {
-        ...mod,
-        concepts: [...mod.concepts, ...publishedConcepts].sort((a, b) => a.order - b.order),
-      };
-    });
+    const existingModuleIds = new Set(lang.modules.map((m) => m.id));
+    const additionalModules = publishedPatchModules
+      .filter((m) => !existingModuleIds.has(m.id))
+      .map(withPatchConcepts);
 
     return {
       ...lang,
       coverSvg,
-      modules: [...mergedModules, ...newModulesWithConcepts].sort((a, b) => a.order - b.order),
+      modules: [...mergedModules, ...additionalModules].sort((a, b) => a.order - b.order),
     };
   });
 }
@@ -666,37 +678,99 @@ export function getAllCreatorContent(): StudioContentItem[] {
 }
 
 /* ═══════════════════════════════════════════════
- * ADMIN — cross-author module moderation
- * Admins may edit ANY published module. Editing happens IN PLACE in the
+ * ADMIN — cross-author content moderation
+ * Admins may edit ANY published content. Editing happens IN PLACE in the
  * original author's bucket (ownership preserved); the server enforces the
- * admin role and that the module already exists, so these calls 403/404
+ * admin role and that the item already exists, so these calls 403/404
  * for everyone else.
  * ═══════════════════════════════════════════════ */
 
-export type AdminModuleBucket = 'os-modules' | 'standalone-modules';
+/** Buckets that store a flat, id-keyed array and share one admin endpoint. */
+export type AdminItemBucket = 'os-modules' | 'standalone-modules' | 'networking-lessons';
 
-export interface AdminPublishedModule extends CreatorFundamentalModule {
+/** The two module buckets — the subset the module studio pages care about. */
+export type AdminModuleBucket = Extract<AdminItemBucket, 'os-modules' | 'standalone-modules'>;
+
+/** Owner annotations the server adds to every admin-listed item. */
+export interface AdminOwned {
   /** Author's user id — the bucket the edit is written back to. */
   _ownerId: string;
   /** Author's display name (for the studio list). */
   _ownerName: string;
-  /** Which module bucket this lives in. */
+}
+
+export interface AdminPublishedModule extends CreatorFundamentalModule, AdminOwned {
   _bucket: AdminModuleBucket;
+}
+
+export interface AdminPublishedNetworkingLesson extends CreatorNetworkingLesson, AdminOwned {
+  _bucket: 'networking-lessons';
+}
+
+type AdminPublishedItem = (CreatorFundamentalModule | CreatorNetworkingLesson) &
+  AdminOwned & { _bucket: AdminItemBucket };
+
+/** Every published item across all authors, in every flat bucket. */
+async function fetchAllPublishedItemsForAdmin(): Promise<AdminPublishedItem[]> {
+  const { items } = await api.get<{ items: AdminPublishedItem[] }>('/content/admin/items');
+  return items;
 }
 
 /** Every published module across all authors (admin-only endpoint). */
 export async function fetchAllPublishedModulesForAdmin(): Promise<AdminPublishedModule[]> {
-  const { items } = await api.get<{ items: AdminPublishedModule[] }>('/content/admin/modules');
-  return items;
+  const items = await fetchAllPublishedItemsForAdmin();
+  return items.filter(
+    (i): i is AdminPublishedModule =>
+      i._bucket === 'os-modules' || i._bucket === 'standalone-modules'
+  );
+}
+
+/** Every published networking lesson across all authors (admin-only endpoint). */
+export async function fetchAllPublishedNetworkingForAdmin(): Promise<AdminPublishedNetworkingLesson[]> {
+  const items = await fetchAllPublishedItemsForAdmin();
+  return items.filter((i): i is AdminPublishedNetworkingLesson => i._bucket === 'networking-lessons');
 }
 
 /** Save an admin edit back into the original author's bucket, in place. */
+export async function saveItemAsAdmin(
+  ownerId: string,
+  bucket: AdminItemBucket,
+  item: CreatorFundamentalModule | CreatorNetworkingLesson
+): Promise<void> {
+  await api.patch('/content/admin/item', { ownerId, bucket, item });
+}
+
+/** Module-typed alias of {@link saveItemAsAdmin}, used by the module editors. */
 export async function saveModuleAsAdmin(
   ownerId: string,
   bucket: AdminModuleBucket,
   item: CreatorFundamentalModule
 ): Promise<void> {
-  await api.patch('/content/admin/module', { ownerId, bucket, item });
+  await saveItemAsAdmin(ownerId, bucket, item);
+}
+
+/* ── Admin: programming ──
+ * Programming content is nested (language → modules / concepts / language
+ * definition) rather than a flat id-keyed array, so it gets its own pair. */
+
+export interface AdminProgrammingPatch extends ProgrammingPatch, AdminOwned {}
+
+/** Every author's published programming patches (admin-only endpoint). */
+export async function fetchAllProgrammingForAdmin(): Promise<AdminProgrammingPatch[]> {
+  const { items } = await api.get<{ items: AdminProgrammingPatch[] }>('/content/admin/programming');
+  return items;
+}
+
+/** Replace one module / concept / language inside its author's patch, in place. */
+export async function saveProgrammingAsAdmin(args: {
+  ownerId: string;
+  languageSlug: string;
+  kind: 'module' | 'concept' | 'language';
+  /** Required when kind is 'concept'. */
+  moduleSlug?: string;
+  item: unknown;
+}): Promise<void> {
+  await api.patch('/content/admin/programming', args);
 }
 
 /** Most recently updated content first. */

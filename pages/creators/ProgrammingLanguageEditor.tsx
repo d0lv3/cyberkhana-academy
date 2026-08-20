@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Code } from 'lucide-react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Code, ShieldCheck } from 'lucide-react';
 import CreatorLayout from '../../components/creators/CreatorLayout';
 import BilingualInput from '../../components/creators/BilingualInput';
 import EnhancedCard from '../../components/ui/EnhancedCard';
@@ -10,8 +10,15 @@ import { getProgrammingLanguages } from '../../data/programming';
 import {
   getCreatorLanguageBySlug,
   saveProgrammingLanguage,
+  saveProgrammingAsAdmin,
 } from '../../services/creatorDataService';
-import { makeCreatorMeta, statusOf, type ContentStatus } from '../../services/creatorTypes';
+import {
+  makeCreatorMeta,
+  statusOf,
+  type ContentStatus,
+  type CreatorProgrammingLanguage,
+} from '../../services/creatorTypes';
+import { ADMIN_PROGRAMMING_STASH, type AdminProgrammingStash } from './programmingEditStash';
 
 const inputCls =
   'w-full bg-[#0a0f18] border border-[#263248] rounded-lg px-3 py-2 text-sm text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#3d4a63]';
@@ -28,10 +35,13 @@ const generateSlug = (name: string) =>
  */
 const ProgrammingLanguageEditor: React.FC = () => {
   const { slug: editSlug } = useParams<{ slug: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast, ToastContainer } = useToast();
   const { user } = useAuth();
   const isEditing = !!editSlug;
+  // Admin editing another author's published language (in place, ownership kept).
+  const isAdminEdit = searchParams.get('admin') === '1' && user?.role === 'admin';
 
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
@@ -40,11 +50,33 @@ const ProgrammingLanguageEditor: React.FC = () => {
   const [descAr, setDescAr] = useState('');
   const [status, setStatus] = useState<ContentStatus>('draft');
   const [isSaving, setIsSaving] = useState(false);
+  const [adminDef, setAdminDef] = useState<CreatorProgrammingLanguage | null>(null);
+  const [adminCtx, setAdminCtx] = useState<{ ownerId: string; ownerName: string } | null>(null);
 
   // Load an existing definition when editing.
   useEffect(() => {
     if (!editSlug) return;
-    const def = getCreatorLanguageBySlug(editSlug);
+
+    let def: CreatorProgrammingLanguage | undefined;
+
+    if (isAdminEdit) {
+      // Another author's language: the list page hands it over, since it lives
+      // in their bucket rather than mine.
+      try {
+        const raw = sessionStorage.getItem(ADMIN_PROGRAMMING_STASH);
+        const stash: AdminProgrammingStash | null = raw ? JSON.parse(raw) : null;
+        if (stash && stash.kind === 'language' && stash.item.slug === editSlug) {
+          def = stash.item;
+          setAdminDef(stash.item);
+          setAdminCtx({ ownerId: stash.ownerId, ownerName: stash.ownerName });
+        }
+      } catch {
+        /* fall through to the error below */
+      }
+    } else {
+      def = getCreatorLanguageBySlug(editSlug);
+    }
+
     if (!def) {
       toast('error', 'Language not found.');
       navigate('/creators/programming');
@@ -57,14 +89,14 @@ const ProgrammingLanguageEditor: React.FC = () => {
     setDescAr(def.description?.ar ?? '');
     setStatus(statusOf(def));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editSlug]);
+  }, [editSlug, isAdminEdit]);
 
   // Auto-slug for new languages.
   useEffect(() => {
     if (!isEditing) setSlug(generateSlug(name));
   }, [name, isEditing]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name.trim()) {
       toast('error', 'A language name is required.');
       return;
@@ -87,8 +119,8 @@ const ProgrammingLanguageEditor: React.FC = () => {
     }
 
     setIsSaving(true);
-    const existing = isEditing ? getCreatorLanguageBySlug(editSlug!) : undefined;
-    saveProgrammingLanguage({
+    const existing = adminDef ?? (isEditing ? getCreatorLanguageBySlug(editSlug!) : undefined);
+    const def: CreatorProgrammingLanguage = {
       slug: finalSlug,
       name: name.trim(),
       color,
@@ -103,7 +135,27 @@ const ProgrammingLanguageEditor: React.FC = () => {
             updatedAt: new Date().toISOString(),
           }
         : makeCreatorMeta(status, user?.displayName || 'CyberKhana')),
-    });
+    };
+
+    // Admin edit: write back into the original author's patch via the server.
+    if (adminCtx) {
+      try {
+        await saveProgrammingAsAdmin({
+          ownerId: adminCtx.ownerId,
+          languageSlug: finalSlug,
+          kind: 'language',
+          item: def,
+        });
+        sessionStorage.removeItem(ADMIN_PROGRAMMING_STASH);
+      } catch (err) {
+        setIsSaving(false);
+        toast('error', err instanceof Error ? err.message : 'Could not save this language.');
+        return;
+      }
+    } else {
+      saveProgrammingLanguage(def);
+    }
+
     toast('success', status === 'published' ? 'Language published.' : 'Language saved.');
     setTimeout(() => {
       setIsSaving(false);
@@ -123,6 +175,18 @@ const ProgrammingLanguageEditor: React.FC = () => {
       onStatusChange={setStatus}
     >
       <ToastContainer />
+
+      {/* ── Admin moderation banner ── */}
+      {adminCtx && (
+        <div className="flex items-start gap-3 rounded-lg border border-[#f3a43a]/30 bg-[#f3a43a]/10 px-4 py-3 mb-4">
+          <ShieldCheck size={16} className="text-[#f3a43a] mt-0.5 flex-shrink-0" />
+          <div className="text-xs text-[#d2d7e3]">
+            <span className="font-bold text-[#f3a43a]">Admin edit</span> — you're editing{' '}
+            <span className="font-semibold text-[#f3f6ff]">{adminCtx.ownerName}</span>'s published
+            language. Authorship is kept; saving updates the live language for everyone.
+          </div>
+        </div>
+      )}
 
       <EnhancedCard padding="lg">
         <div className="flex items-center gap-2 mb-4">

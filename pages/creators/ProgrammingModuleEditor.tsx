@@ -1,13 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { BookOpen, ShieldCheck } from 'lucide-react';
 import CreatorLayout from '../../components/creators/CreatorLayout';
 import BilingualInput from '../../components/creators/BilingualInput';
 import EnhancedCard from '../../components/ui/EnhancedCard';
 import { useToast } from '../../hooks/useToast';
 import { useAuth } from '../../contexts/AuthContext';
-import { saveProgrammingModule, getCreatorProgrammingPatches } from '../../services/creatorDataService';
+import {
+  saveProgrammingModule,
+  getCreatorProgrammingPatches,
+  saveProgrammingAsAdmin,
+} from '../../services/creatorDataService';
 import { makeCreatorMeta, statusOf, type ContentStatus, type CreatorMeta } from '../../services/creatorTypes';
 import { parseYouTubeId, youtubeEmbedUrl } from '../../services/youtube';
+import { programmingLanguages } from '../../data/programming';
+import { builtinToEditableProgrammingModule } from '../../data/builtinCourse';
+import { ADMIN_PROGRAMMING_STASH, type AdminProgrammingStash } from './programmingEditStash';
 import type { ProgrammingModule } from '../../data/programming/types';
 
 function generateSlug(title: string): string {
@@ -27,10 +35,15 @@ type CreatorModule = ProgrammingModule & Partial<CreatorMeta>;
 
 const ProgrammingModuleEditor: React.FC = () => {
   const { langSlug, moduleId } = useParams<{ langSlug: string; moduleId: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast, ToastContainer } = useToast();
   const { user } = useAuth();
   const isEditing = !!moduleId;
+  // Admin editing another author's published module (in place, ownership kept).
+  const isAdminEdit = searchParams.get('admin') === '1' && user?.role === 'admin';
+  // Admin editing a built-in module: the first save writes an override.
+  const isBuiltinEdit = searchParams.get('builtin') === '1' && user?.role === 'admin';
 
   const [titleEn, setTitleEn] = useState('');
   const [titleAr, setTitleAr] = useState('');
@@ -42,32 +55,62 @@ const ProgrammingModuleEditor: React.FC = () => {
   const [status, setStatus] = useState<ContentStatus>('draft');
   const [isSaving, setIsSaving] = useState(false);
   const [existing, setExisting] = useState<CreatorModule | null>(null);
+  const [adminCtx, setAdminCtx] = useState<{ ownerId: string; ownerName: string } | null>(null);
 
   // Load existing module for editing
   useEffect(() => {
-    if (langSlug && moduleId) {
-      const patch = getCreatorProgrammingPatches().find((p) => p.languageSlug === langSlug);
-      const mod = patch?.newModules.find((m) => m.id === moduleId);
-      if (mod) {
-        setExisting(mod);
-        setTitleEn(mod.title.en);
-        setTitleAr(mod.title.ar);
-        setDescEn(mod.description.en);
-        setDescAr(mod.description.ar);
-        setSlug(mod.slug);
-        setVideoInput(mod.videoId || '');
-        setOrder(mod.order);
-        setStatus(statusOf(mod));
+    if (!langSlug || !moduleId) return;
+
+    let mod: CreatorModule | undefined;
+
+    if (isBuiltinEdit) {
+      // Built-in modules ship in the bundle — resolve straight from static data.
+      const builtin = programmingLanguages
+        .find((l) => l.slug === langSlug)
+        ?.modules.find((m) => m.id === moduleId);
+      if (builtin) mod = builtinToEditableProgrammingModule(builtin);
+    } else if (isAdminEdit) {
+      try {
+        const raw = sessionStorage.getItem(ADMIN_PROGRAMMING_STASH);
+        const stash: AdminProgrammingStash | null = raw ? JSON.parse(raw) : null;
+        if (stash && stash.kind === 'module' && stash.item.id === moduleId) {
+          mod = stash.item;
+          setAdminCtx({ ownerId: stash.ownerId, ownerName: stash.ownerName });
+        }
+      } catch {
+        /* fall through to the error below */
       }
+    } else {
+      const patch = getCreatorProgrammingPatches().find((p) => p.languageSlug === langSlug);
+      mod = patch?.newModules.find((m) => m.id === moduleId);
     }
-  }, [langSlug, moduleId]);
+
+    if (!mod) {
+      if (isBuiltinEdit || isAdminEdit) {
+        toast('error', 'Could not open this module for editing. Open it again from the list.');
+        navigate('/creators/programming');
+      }
+      return;
+    }
+
+    setExisting(mod);
+    setTitleEn(mod.title.en);
+    setTitleAr(mod.title.ar);
+    setDescEn(mod.description.en);
+    setDescAr(mod.description.ar);
+    setSlug(mod.slug);
+    setVideoInput(mod.videoId || '');
+    setOrder(mod.order);
+    setStatus(statusOf(mod));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [langSlug, moduleId, isBuiltinEdit, isAdminEdit]);
 
   // Auto-generate slug (new modules only — concepts are keyed by module slug)
   useEffect(() => {
     if (!isEditing) setSlug(generateSlug(titleEn));
   }, [titleEn, isEditing]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!titleEn.trim()) {
       toast('error', 'An English title is required.');
       return;
@@ -101,7 +144,27 @@ const ProgrammingModuleEditor: React.FC = () => {
         : makeCreatorMeta(status, author)),
     };
 
-    saveProgrammingModule(langSlug, mod);
+    // Admin edit: write back into the original author's patch via the server.
+    if (adminCtx) {
+      try {
+        await saveProgrammingAsAdmin({
+          ownerId: adminCtx.ownerId,
+          languageSlug: langSlug,
+          kind: 'module',
+          item: mod,
+        });
+        sessionStorage.removeItem(ADMIN_PROGRAMMING_STASH);
+      } catch (err) {
+        setIsSaving(false);
+        toast('error', err instanceof Error ? err.message : 'Could not save this module.');
+        return;
+      }
+    } else {
+      // Normal own-patch save. Copy-on-write of a built-in module lands here
+      // too: it writes a module under the built-in's id, which overrides it.
+      saveProgrammingModule(langSlug, mod);
+    }
+
     toast('success', status === 'published' ? 'Module published.' : isEditing ? 'Module updated.' : 'Module created.');
     setTimeout(() => {
       setIsSaving(false);
@@ -123,6 +186,31 @@ const ProgrammingModuleEditor: React.FC = () => {
       onStatusChange={setStatus}
     >
       <ToastContainer />
+
+      {/* ── Built-in copy-on-write banner ── */}
+      {isBuiltinEdit && !adminCtx && (
+        <div className="flex items-start gap-3 rounded-lg border border-[#9fef00]/30 bg-[#9fef00]/10 px-4 py-3 mb-4 max-w-2xl">
+          <BookOpen size={16} className="text-[#9fef00] mt-0.5 flex-shrink-0" />
+          <div className="text-xs text-[#d2d7e3]">
+            <span className="font-bold text-[#9fef00]">Editing a built-in module</span> — saving
+            creates an editable copy that replaces the original everywhere. Its lessons stay where
+            they are; edit those individually from the list.
+          </div>
+        </div>
+      )}
+
+      {/* ── Admin moderation banner ── */}
+      {adminCtx && (
+        <div className="flex items-start gap-3 rounded-lg border border-[#f3a43a]/30 bg-[#f3a43a]/10 px-4 py-3 mb-4 max-w-2xl">
+          <ShieldCheck size={16} className="text-[#f3a43a] mt-0.5 flex-shrink-0" />
+          <div className="text-xs text-[#d2d7e3]">
+            <span className="font-bold text-[#f3a43a]">Admin edit</span> — you're editing{' '}
+            <span className="font-semibold text-[#f3f6ff]">{adminCtx.ownerName}</span>'s published
+            module. Authorship is kept; saving updates the live module for everyone.
+          </div>
+        </div>
+      )}
+
       <EnhancedCard padding="lg" className="max-w-2xl">
         <h3 className="text-sm font-bold text-[#f3f6ff] mb-4">Module Details</h3>
         <div className="space-y-4">

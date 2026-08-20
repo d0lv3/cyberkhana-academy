@@ -16,11 +16,17 @@ const router = Router();
 
 const MAX_ITEMS_PER_BUCKET = 300;
 
-/** Buckets an admin may moderate across all authors (the two "module" kinds). */
-const MODULE_BUCKETS: ContentBucketKey[] = ['os-modules', 'standalone-modules'];
+/** Buckets an admin may moderate across all authors. These all store a flat,
+ * id-keyed array, so one list/patch pair serves them. `programming-patches` is
+ * nested (language → modules/concepts) and has its own pair further down. */
+const ADMIN_ITEM_BUCKETS: ContentBucketKey[] = [
+  'os-modules',
+  'standalone-modules',
+  'networking-lessons',
+];
 
-function isModuleBucket(value: string): value is ContentBucketKey {
-  return (MODULE_BUCKETS as readonly string[]).includes(value);
+function isAdminItemBucket(value: string): value is ContentBucketKey {
+  return (ADMIN_ITEM_BUCKETS as readonly string[]).includes(value);
 }
 
 /** Which creator permission a bucket write requires. */
@@ -209,12 +215,14 @@ router.put('/:bucket', authenticate, requireRole('creator', 'admin'), async (req
   }
 });
 
-/* ── GET /api/content/admin/modules ── every PUBLISHED module across ALL
- * authors, each annotated with its owner. Admin-only: the studio surfaces
- * these so an admin can moderate/fix any creator's live module. */
-router.get('/admin/modules', authenticate, requireRole('admin'), async (_req: AuthRequest, res) => {
+/* ── GET /api/content/admin/items ── every PUBLISHED item across ALL authors
+ * in the flat, id-keyed buckets (OS modules, standalone modules, networking
+ * lessons), each annotated with its owner. Admin-only: the studio surfaces
+ * these so an admin can moderate/fix any creator's live content.
+ * `/admin/modules` is the original path, kept so an older client keeps working. */
+router.get(['/admin/items', '/admin/modules'], authenticate, requireRole('admin'), async (_req: AuthRequest, res) => {
   try {
-    const docs = await ContentBucket.find({ bucket: { $in: MODULE_BUCKETS } }).lean();
+    const docs = await ContentBucket.find({ bucket: { $in: ADMIN_ITEM_BUCKETS } }).lean();
 
     const ownerIds = [...new Set(docs.map((d) => String(d.ownerId)))];
     const owners = await User.find({ _id: { $in: ownerIds } }).select('displayName').lean();
@@ -234,68 +242,225 @@ router.get('/admin/modules', authenticate, requireRole('admin'), async (_req: Au
     }
     res.json({ items });
   } catch (err) {
-    logger.error('content.admin_modules_failed', { error: String(err) });
-    res.status(500).json({ error: 'Could not load modules' });
+    logger.error('content.admin_items_failed', { error: String(err) });
+    res.status(500).json({ error: 'Could not load content' });
   }
 });
 
-/* ── PATCH /api/content/admin/module ── replace a single module in its
- * author's bucket, IN PLACE (ownership preserved). Admin-only. The module must
- * already exist in the named owner's bucket — admins edit existing modules,
- * they never inject new items into another account. A wrong/forged ownerId
- * simply 404s. */
-router.patch('/admin/module', authenticate, requireRole('admin'), async (req: AuthRequest, res) => {
-  const { ownerId, bucket, item } = (req.body ?? {}) as {
+/* ── PATCH /api/content/admin/item ── replace a single item in its author's
+ * bucket, IN PLACE (ownership preserved). Admin-only. The item must already
+ * exist in the named owner's bucket — admins edit existing content, they never
+ * inject new items into another account. A wrong/forged ownerId simply 404s.
+ * `/admin/module` is the original path, kept for older clients. */
+router.patch(
+  ['/admin/item', '/admin/module'],
+  authenticate,
+  requireRole('admin'),
+  async (req: AuthRequest, res) => {
+    const { ownerId, bucket, item } = (req.body ?? {}) as {
+      ownerId?: unknown;
+      bucket?: unknown;
+      item?: unknown;
+    };
+
+    if (typeof bucket !== 'string' || !isAdminItemBucket(bucket)) {
+      res.status(404).json({ error: 'Unknown content bucket' });
+      return;
+    }
+    if (typeof ownerId !== 'string' || !mongoose.isValidObjectId(ownerId)) {
+      res.status(400).json({ error: 'Invalid owner' });
+      return;
+    }
+    if (!isPlainObject(item) || typeof item.id !== 'string' || !item.id) {
+      res.status(400).json({ error: 'An item with an id is required' });
+      return;
+    }
+    const problem = validateBucketItems(bucket, [item]);
+    if (problem) {
+      res.status(400).json({ error: problem });
+      return;
+    }
+
+    try {
+      const doc = await ContentBucket.findOne({ ownerId, bucket });
+      if (!doc) {
+        res.status(404).json({ error: 'Content not found' });
+        return;
+      }
+      const list = doc.items as AnyItem[];
+      const idx = list.findIndex((i) => isPlainObject(i) && i.id === item.id);
+      if (idx < 0) {
+        res.status(404).json({ error: 'Content not found' });
+        return;
+      }
+
+      list[idx] = item;
+      doc.markModified('items');
+      await doc.save();
+
+      logger.info('content.admin_item_edited', {
+        by: String(req.user!._id),
+        owner: ownerId,
+        bucket,
+        itemId: item.id,
+      });
+      res.json({ ok: true });
+    } catch (err) {
+      logger.error('content.admin_item_patch_failed', { error: String(err) });
+      res.status(500).json({ error: 'Could not save content' });
+    }
+  }
+);
+
+/* ── GET /api/content/admin/programming ── every author's PUBLISHED programming
+ * content, patch by patch. Programming lives in a nested shape (language →
+ * newModules / newConcepts / newLanguage), so it cannot ride the flat item
+ * endpoints above. Unpublished entries are stripped out, not merely flagged. */
+router.get('/admin/programming', authenticate, requireRole('admin'), async (_req: AuthRequest, res) => {
+  try {
+    const docs = await ContentBucket.find({ bucket: 'programming-patches' }).lean();
+
+    const ownerIds = [...new Set(docs.map((d) => String(d.ownerId)))];
+    const owners = await User.find({ _id: { $in: ownerIds } }).select('displayName').lean();
+    const nameById = new Map(owners.map((u) => [String(u._id), u.displayName as string]));
+
+    const items: AnyItem[] = [];
+    for (const doc of docs) {
+      for (const patch of ((doc.items as AnyItem[]) ?? [])) {
+        if (!isPlainObject(patch) || typeof patch.languageSlug !== 'string') continue;
+
+        const newModules = (Array.isArray(patch.newModules) ? patch.newModules : []).filter(
+          (m): m is AnyItem => isPlainObject(m) && isPublishedItem(m)
+        );
+        const newConcepts: Record<string, AnyItem[]> = {};
+        if (isPlainObject(patch.newConcepts)) {
+          for (const [modSlug, concepts] of Object.entries(patch.newConcepts)) {
+            const pub = (Array.isArray(concepts) ? concepts : []).filter(
+              (c): c is AnyItem => isPlainObject(c) && isPublishedItem(c)
+            );
+            if (pub.length) newConcepts[modSlug] = pub;
+          }
+        }
+        const newLanguage =
+          isPlainObject(patch.newLanguage) && isPublishedItem(patch.newLanguage)
+            ? patch.newLanguage
+            : undefined;
+
+        if (!newModules.length && !Object.keys(newConcepts).length && !newLanguage) continue;
+
+        items.push({
+          languageSlug: patch.languageSlug,
+          newModules,
+          newConcepts,
+          ...(newLanguage ? { newLanguage } : {}),
+          _ownerId: String(doc.ownerId),
+          _ownerName: nameById.get(String(doc.ownerId)) ?? 'Unknown',
+        });
+      }
+    }
+    res.json({ items });
+  } catch (err) {
+    logger.error('content.admin_programming_failed', { error: String(err) });
+    res.status(500).json({ error: 'Could not load programming content' });
+  }
+});
+
+/* ── PATCH /api/content/admin/programming ── replace one module, concept or
+ * language definition inside its author's patch, IN PLACE. Admin-only, and
+ * strictly an edit: the target patch and the entry itself must already exist. */
+router.patch('/admin/programming', authenticate, requireRole('admin'), async (req: AuthRequest, res) => {
+  const { ownerId, languageSlug, kind, moduleSlug, item } = (req.body ?? {}) as {
     ownerId?: unknown;
-    bucket?: unknown;
+    languageSlug?: unknown;
+    kind?: unknown;
+    moduleSlug?: unknown;
     item?: unknown;
   };
 
-  if (typeof bucket !== 'string' || !isModuleBucket(bucket)) {
-    res.status(404).json({ error: 'Unknown module bucket' });
-    return;
-  }
   if (typeof ownerId !== 'string' || !mongoose.isValidObjectId(ownerId)) {
     res.status(400).json({ error: 'Invalid owner' });
     return;
   }
-  if (!isPlainObject(item) || typeof item.id !== 'string' || !item.id) {
-    res.status(400).json({ error: 'A module with an id is required' });
+  if (typeof languageSlug !== 'string' || !languageSlug || languageSlug.length > 80) {
+    res.status(400).json({ error: 'A languageSlug is required' });
     return;
   }
-  const problem = validateBucketItems(bucket, [item]);
-  if (problem) {
-    res.status(400).json({ error: problem });
+  if (kind !== 'module' && kind !== 'concept' && kind !== 'language') {
+    res.status(400).json({ error: 'kind must be module, concept or language' });
+    return;
+  }
+  if (kind === 'concept' && (typeof moduleSlug !== 'string' || !moduleSlug)) {
+    res.status(400).json({ error: 'A moduleSlug is required for a concept' });
+    return;
+  }
+  if (!isPlainObject(item)) {
+    res.status(400).json({ error: 'An item is required' });
+    return;
+  }
+  if (kind !== 'language' && (typeof item.id !== 'string' || !item.id)) {
+    res.status(400).json({ error: 'An item with an id is required' });
+    return;
+  }
+  const safety = checkSafeJson(item);
+  if (!safety.ok) {
+    res.status(400).json({ error: safety.reason ?? 'Unsafe payload' });
     return;
   }
 
   try {
-    const doc = await ContentBucket.findOne({ ownerId, bucket });
+    const doc = await ContentBucket.findOne({ ownerId, bucket: 'programming-patches' });
     if (!doc) {
-      res.status(404).json({ error: 'Module not found' });
+      res.status(404).json({ error: 'Programming content not found' });
       return;
     }
-    const list = doc.items as AnyItem[];
-    const idx = list.findIndex((i) => isPlainObject(i) && i.id === item.id);
-    if (idx < 0) {
-      res.status(404).json({ error: 'Module not found' });
+    const patches = doc.items as AnyItem[];
+    const patch = patches.find((p) => isPlainObject(p) && p.languageSlug === languageSlug);
+    if (!patch || !isPlainObject(patch)) {
+      res.status(404).json({ error: 'Programming content not found' });
       return;
     }
 
-    list[idx] = item;
+    if (kind === 'language') {
+      if (!isPlainObject(patch.newLanguage)) {
+        res.status(404).json({ error: 'Language definition not found' });
+        return;
+      }
+      patch.newLanguage = item;
+    } else if (kind === 'module') {
+      const list = Array.isArray(patch.newModules) ? (patch.newModules as AnyItem[]) : [];
+      const idx = list.findIndex((m) => isPlainObject(m) && m.id === item.id);
+      if (idx < 0) {
+        res.status(404).json({ error: 'Module not found' });
+        return;
+      }
+      list[idx] = item;
+    } else {
+      const byModule = isPlainObject(patch.newConcepts)
+        ? (patch.newConcepts as Record<string, AnyItem[]>)
+        : null;
+      const list = byModule?.[moduleSlug as string];
+      const idx = Array.isArray(list) ? list.findIndex((c) => isPlainObject(c) && c.id === item.id) : -1;
+      if (idx < 0 || !list) {
+        res.status(404).json({ error: 'Concept not found' });
+        return;
+      }
+      list[idx] = item;
+    }
+
     doc.markModified('items');
     await doc.save();
 
-    logger.info('content.admin_module_edited', {
+    logger.info('content.admin_programming_edited', {
       by: String(req.user!._id),
       owner: ownerId,
-      bucket,
-      itemId: item.id,
+      languageSlug,
+      kind,
+      itemId: typeof item.id === 'string' ? item.id : languageSlug,
     });
     res.json({ ok: true });
   } catch (err) {
-    logger.error('content.admin_module_patch_failed', { error: String(err) });
-    res.status(500).json({ error: 'Could not save module' });
+    logger.error('content.admin_programming_patch_failed', { error: String(err) });
+    res.status(500).json({ error: 'Could not save programming content' });
   }
 });
 

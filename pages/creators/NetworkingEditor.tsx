@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { FileText, Network, Eye, HelpCircle } from 'lucide-react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { FileText, Network, Eye, HelpCircle, BookOpen, ShieldCheck } from 'lucide-react';
 import CreatorLayout from '../../components/creators/CreatorLayout';
 import BilingualInput from '../../components/creators/BilingualInput';
 import TagInput from '../../components/creators/TagInput';
@@ -13,7 +13,11 @@ import NetworkSimulator from '../../components/network-sim/NetworkSimulator';
 import EnhancedCard from '../../components/ui/EnhancedCard';
 import { useToast } from '../../hooks/useToast';
 import { useAuth } from '../../contexts/AuthContext';
-import { saveNetworkingLesson, getNetworkingLessonById } from '../../services/creatorDataService';
+import {
+  saveNetworkingLesson,
+  getNetworkingLessonById,
+  saveItemAsAdmin,
+} from '../../services/creatorDataService';
 import {
   makeCreatorMeta,
   statusOf,
@@ -21,6 +25,9 @@ import {
   type CreatorNetworkingLesson,
   type QuizQuestion,
 } from '../../services/creatorTypes';
+import { networkingLessons } from '../../data/networking';
+import { builtinToEditableLesson } from '../../data/builtinCourse';
+import { ADMIN_NETWORKING_STASH, type AdminNetworkingStash } from './networkingEditStash';
 import type { NetworkSimulation } from '../../components/network-sim/types';
 
 function generateSlug(title: string): string {
@@ -47,10 +54,15 @@ type Tab = 'lesson' | 'simulation';
 
 const NetworkingEditor: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast, ToastContainer } = useToast();
   const { user } = useAuth();
   const isEditing = !!id;
+  // Admin editing another author's published lesson (in place, ownership kept).
+  const isAdminEdit = searchParams.get('admin') === '1' && user?.role === 'admin';
+  // Admin editing a built-in lesson: the first save writes an override (copy-on-write).
+  const isBuiltinEdit = searchParams.get('builtin') === '1' && user?.role === 'admin';
 
   const [tab, setTab] = useState<Tab>('lesson');
   const [titleEn, setTitleEn] = useState('');
@@ -68,36 +80,67 @@ const NetworkingEditor: React.FC = () => {
   const [status, setStatus] = useState<ContentStatus>('draft');
   const [isSaving, setIsSaving] = useState(false);
   const [existingLesson, setExistingLesson] = useState<CreatorNetworkingLesson | null>(null);
+  const [adminCtx, setAdminCtx] = useState<{ ownerId: string; ownerName: string } | null>(null);
 
   // Load existing lesson for editing
   useEffect(() => {
-    if (id) {
-      const lesson = getNetworkingLessonById(id);
-      if (lesson) {
-        setExistingLesson(lesson);
-        setTitleEn(lesson.title.en);
-        setTitleAr(lesson.title.ar);
-        setDescEn(lesson.description.en);
-        setDescAr(lesson.description.ar);
-        setSlug(lesson.slug);
-        setOrder(lesson.order);
-        setEstimatedMinutes(lesson.estimatedMinutes);
-        setTags(lesson.tags);
-        setCoverSvg(lesson.coverSvg ?? '');
-        setMarkdownContent(lesson.markdownContent);
-        setQuiz(lesson.quiz ?? []);
-        setSimulation(lesson.simulation ?? emptySimulation(lesson.slug));
-        setStatus(statusOf(lesson));
+    if (!id) return;
+
+    let lesson: CreatorNetworkingLesson | undefined;
+
+    if (isBuiltinEdit) {
+      // Built-in lessons ship in the bundle, so resolve straight from static
+      // data — no stash to go stale on a refresh.
+      const builtin = networkingLessons.find((l) => l.id === id);
+      if (builtin) lesson = builtinToEditableLesson(builtin);
+    } else if (isAdminEdit) {
+      // Another author's lesson: it came from an admin-only endpoint, so the
+      // list page hands it over through sessionStorage.
+      try {
+        const raw = sessionStorage.getItem(ADMIN_NETWORKING_STASH);
+        const stash: AdminNetworkingStash | null = raw ? JSON.parse(raw) : null;
+        if (stash && stash.id === id && stash.lesson) {
+          lesson = stash.lesson;
+          setAdminCtx({ ownerId: stash.ownerId, ownerName: stash.ownerName });
+        }
+      } catch {
+        /* fall through to the error below */
       }
+    } else {
+      lesson = getNetworkingLessonById(id);
     }
-  }, [id]);
+
+    if (!lesson) {
+      if (isBuiltinEdit || isAdminEdit) {
+        toast('error', 'Could not open this lesson for editing. Open it again from the list.');
+        navigate('/creators/networking');
+      }
+      return;
+    }
+
+    setExistingLesson(lesson);
+    setTitleEn(lesson.title.en);
+    setTitleAr(lesson.title.ar);
+    setDescEn(lesson.description.en);
+    setDescAr(lesson.description.ar);
+    setSlug(lesson.slug);
+    setOrder(lesson.order);
+    setEstimatedMinutes(lesson.estimatedMinutes);
+    setTags(lesson.tags);
+    setCoverSvg(lesson.coverSvg ?? '');
+    setMarkdownContent(lesson.markdownContent);
+    setQuiz(lesson.quiz ?? []);
+    setSimulation(lesson.simulation ?? emptySimulation(lesson.slug));
+    setStatus(statusOf(lesson));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, isBuiltinEdit, isAdminEdit]);
 
   // Auto-generate slug from English title
   useEffect(() => {
     if (!isEditing) setSlug(generateSlug(titleEn));
   }, [titleEn, isEditing]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!titleEn.trim()) {
       toast('error', 'An English title is required before saving.');
       setTab('lesson');
@@ -137,7 +180,22 @@ const NetworkingEditor: React.FC = () => {
         : makeCreatorMeta(status, author)),
     };
 
-    saveNetworkingLesson(lesson);
+    // Admin edit: write back into the original author's bucket via the server.
+    if (adminCtx) {
+      try {
+        await saveItemAsAdmin(adminCtx.ownerId, 'networking-lessons', lesson);
+        sessionStorage.removeItem(ADMIN_NETWORKING_STASH);
+      } catch (err) {
+        setIsSaving(false);
+        toast('error', err instanceof Error ? err.message : 'Could not save this lesson.');
+        return;
+      }
+    } else {
+      // Normal own-bucket save. Copy-on-write of a built-in lesson lands here
+      // too: it writes a lesson under the built-in's id, which overrides it.
+      saveNetworkingLesson(lesson);
+    }
+
     toast('success', status === 'published' ? 'Lesson published.' : 'Lesson saved.');
     setTimeout(() => {
       setIsSaving(false);
@@ -163,6 +221,30 @@ const NetworkingEditor: React.FC = () => {
       previewHref={isEditing && slug ? `#/fundamentals/networking/lesson/${slug}` : undefined}
     >
       <ToastContainer />
+
+      {/* ── Built-in copy-on-write banner ── */}
+      {isBuiltinEdit && !adminCtx && (
+        <div className="flex items-start gap-3 rounded-lg border border-[#9fef00]/30 bg-[#9fef00]/10 px-4 py-3 mb-4">
+          <BookOpen size={16} className="text-[#9fef00] mt-0.5 flex-shrink-0" />
+          <div className="text-xs text-[#d2d7e3]">
+            <span className="font-bold text-[#9fef00]">Editing a built-in lesson</span> — saving
+            creates an editable copy that replaces the original everywhere. Existing student
+            progress is preserved.
+          </div>
+        </div>
+      )}
+
+      {/* ── Admin moderation banner ── */}
+      {adminCtx && (
+        <div className="flex items-start gap-3 rounded-lg border border-[#f3a43a]/30 bg-[#f3a43a]/10 px-4 py-3 mb-4">
+          <ShieldCheck size={16} className="text-[#f3a43a] mt-0.5 flex-shrink-0" />
+          <div className="text-xs text-[#d2d7e3]">
+            <span className="font-bold text-[#f3a43a]">Admin edit</span> — you're editing{' '}
+            <span className="font-semibold text-[#f3f6ff]">{adminCtx.ownerName}</span>'s published
+            lesson. Authorship is kept; saving updates the live lesson for everyone.
+          </div>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex items-center gap-1 bg-[#0b1019] border border-[#263248] rounded-xl p-1 w-fit mb-6" dir="ltr">
