@@ -21,6 +21,12 @@
   --brand-green-neon:      #9fef00;
   --brand-gold:            #f3a43a;
   --font-mono:             'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  /* Arabic UI chrome. */
+  --font-ar:               'IBM Plex Sans Arabic', 'Poppins', sans-serif;
+  /* English terminology sitting inside Arabic lesson prose. IBM ships no
+     Arabic mono, so the Arabic itself stays in Plex Sans Arabic and only the
+     Latin runs take Plex Mono — see the .lat rule at the bottom of this file. */
+  --font-ar-term:          'IBM Plex Mono', ui-monospace, monospace;
 }
 
 /* ── BASE ──────────────────────────────────────────────────── */
@@ -37,8 +43,12 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  :lang(ar), [lang='ar'], [dir='rtl'] {
-    font-family: 'IBM Plex Sans Arabic', 'Poppins', sans-serif;
+  /* Arabic UI chrome. Keyed on dir only — `:lang(ar)` would match every
+     descendant of a lang-tagged element *directly*, and a direct match
+     always beats an inherited value, which stops lesson prose (which does
+     tag itself lang="ar" for screen readers) from setting its own type. */
+  [dir='rtl'] {
+    font-family: var(--font-ar);
     font-weight: 700;
   }
 
@@ -249,4 +259,80 @@
   *::after {
     scroll-behavior: auto !important;
   }
+}
+
+/* ── LESSON PROSE ────────────────────────────────────────────
+   Typography for rendered lesson markdown (components/ui/LessonMarkdown).
+   Unlayered and last in the file so it wins over the base RTL defaults
+   without needing !important.
+
+   Arabic lessons pair IBM Plex Sans Arabic for the prose with IBM Plex
+   Mono for the Latin runs, so an English term sitting inside an Arabic
+   sentence reads as terminology instead of dissolving into it. */
+
+.lesson-prose[dir='rtl'] {
+  font-family: var(--font-ar);
+  font-weight: 400;          /* long-form Arabic must not inherit the UI's 700 */
+  text-align: start;
+  letter-spacing: 0;
+}
+
+/* Latin runs, tagged by the renderer (rehypeWrapLatinRuns). Mono sets English
+   terminology apart from the Arabic sentence carrying it; the size step-down
+   corrects for Plex Mono running optically larger than Plex Sans Arabic.
+   Deliberately NOT bidi-isolated — isolating runs individually would let the
+   paragraph reorder the words of an English phrase right-to-left. */
+.lesson-prose[dir='rtl'] .lat {
+  font-family: var(--font-ar-term);
+  font-size: 0.92em;
+  font-weight: inherit;
+}
+
+/* An English lesson opened while the UI is in Arabic reads in the Latin face. */
+.lesson-prose[dir='ltr'] {
+  font-family: 'Poppins', 'Montserrat', sans-serif;
+  font-weight: 400;
+}
+
+.lesson-prose[dir='rtl'] :is(p, li, blockquote, td, th, dd) {
+  line-height: 2;            /* Arabic ascenders/descenders need more leading */
+}
+
+.lesson-prose[dir='rtl'] :is(h1, h2, h3, h4) {
+  font-weight: 700;
+  line-height: 1.75;
+}
+
+/* Bidi isolation: keep punctuation at a script boundary — parentheses,
+   colons, slashes — attached to the run it belongs to. */
+.lesson-prose :is(code, kbd, samp, var, .katex) {
+  unicode-bidi: isolate;
+}
+
+/* ── KaTeX ──
+   Math is always left-to-right, even mid-Arabic-sentence, and a wide
+   display equation scrolls inside its own box rather than the page. */
+.lesson-prose .katex {
+  direction: ltr;
+  font-size: 1.05em;
+}
+
+.lesson-prose .katex-display {
+  direction: ltr;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5rem 0;
+  margin: 1.25rem 0;
+}
+
+.lesson-prose .katex-display > .katex {
+  white-space: nowrap;
+}
+
+/* Unparseable TeX renders as red source instead of silently vanishing. */
+.lesson-prose .katex-error {
+  color: #f87171;
+  font-family: var(--font-mono);
+  font-size: 0.9em;
 }

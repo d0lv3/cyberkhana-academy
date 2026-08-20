@@ -34,6 +34,14 @@ export default defineConfig({
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           'vendor-motion': ['framer-motion'],
+          // Markdown + KaTeX only load once a lesson is opened.
+          'vendor-markdown': [
+            'react-markdown',
+            'remark-gfm',
+            'remark-math',
+            'rehype-katex',
+            'katex',
+          ],
         },
       },
     },
