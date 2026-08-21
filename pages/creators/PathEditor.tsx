@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Plus,
   Check,
@@ -12,6 +12,7 @@ import {
   GripVertical,
   Eye,
   Clock,
+  Users,
 } from 'lucide-react';
 import CreatorLayout from '../../components/creators/CreatorLayout';
 import BilingualInput from '../../components/creators/BilingualInput';
@@ -23,6 +24,8 @@ import { coverImageSrc } from '../../data/fundamentalsData';
 import { useToast } from '../../hooks/useToast';
 import { useAuth } from '../../contexts/AuthContext';
 import { savePath, getPathById } from '../../services/creatorDataService';
+import { saveSharedItem } from '../../services/collabService';
+import { SHARED_PATH_STASH, type SharedPathStash } from './sharedPathStash';
 import {
   makeCreatorMeta,
   statusOf,
@@ -52,6 +55,11 @@ const inputCls =
 
 const PathEditor: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  /* A path the owner shared with me. The client only checks the stash; the
+   * server authorises the write by grant. */
+  const viaShare = searchParams.get('shared') === '1';
+  const [sharedCtx, setSharedCtx] = useState<{ ownerId: string; ownerName: string } | null>(null);
   const navigate = useNavigate();
   const { toast, ToastContainer } = useToast();
   const { user } = useAuth();
@@ -79,7 +87,24 @@ const PathEditor: React.FC = () => {
   // Load existing path
   useEffect(() => {
     if (id) {
-      const p = getPathById(id);
+      let p = getPathById(id);
+      if (viaShare) {
+        p = undefined;
+        try {
+          const raw = sessionStorage.getItem(SHARED_PATH_STASH);
+          const stash: SharedPathStash | null = raw ? JSON.parse(raw) : null;
+          if (stash && stash.id === id) {
+            p = stash.path;
+            setSharedCtx({ ownerId: stash.ownerId, ownerName: stash.ownerName });
+          }
+        } catch {
+          /* falls through to the guard below */
+        }
+        if (!p) {
+          navigate('/creators/paths');
+          return;
+        }
+      }
       if (p) {
         setExisting(p);
         setTitleEn(p.title.en);
@@ -96,7 +121,8 @@ const PathEditor: React.FC = () => {
         setStatus(statusOf(p));
       }
     }
-  }, [id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, viaShare]);
 
   // Auto-slug for new paths
   useEffect(() => {
@@ -129,7 +155,7 @@ const PathEditor: React.FC = () => {
       .filter((g) => g.items.length > 0);
   }, [catalog, query]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!titleEn.trim()) {
       toast('error', 'An English title is required.');
       return;
@@ -165,7 +191,20 @@ const PathEditor: React.FC = () => {
         : makeCreatorMeta(status, author)),
     };
 
-    savePath(path);
+    // A shared path is written back into its owner's bucket, through the server.
+    if (sharedCtx) {
+      try {
+        await saveSharedItem(sharedCtx.ownerId, 'paths', path);
+        sessionStorage.removeItem(SHARED_PATH_STASH);
+      } catch (err) {
+        setIsSaving(false);
+        toast('error', err instanceof Error ? err.message : 'Could not save this path.');
+        return;
+      }
+    } else {
+      savePath(path);
+    }
+
     toast('success', status === 'published' ? 'Path published.' : 'Path saved.');
     setTimeout(() => {
       setIsSaving(false);
@@ -185,6 +224,17 @@ const PathEditor: React.FC = () => {
       onStatusChange={setStatus}
     >
       <ToastContainer />
+
+      {sharedCtx && (
+        <div className="flex items-start gap-3 rounded-lg border border-[#60a5fa]/30 bg-[#60a5fa]/10 px-4 py-3 mb-4">
+          <Users size={16} className="text-[#60a5fa] mt-0.5 flex-shrink-0" />
+          <div className="text-xs text-[#d2d7e3]">
+            <span className="font-bold text-[#60a5fa]">Shared with you</span> you're editing{' '}
+            <span className="font-semibold text-[#f3f6ff]">{sharedCtx.ownerName}</span>'s path.
+            Authorship is kept; saving updates it for everyone who can see it.
+          </div>
+        </div>
+      )}
 
       {/* ── Details ── */}
       <EnhancedCard padding="lg">

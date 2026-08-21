@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit3, Trash2, Eye, EyeOff, Clock, Activity, Lock, User, ShieldCheck } from 'lucide-react';
 import EnhancedCard from '../../components/ui/EnhancedCard';
@@ -17,9 +17,17 @@ import {
   fetchAllPublishedNetworkingForAdmin,
   type AdminPublishedNetworkingLesson,
 } from '../../services/creatorDataService';
-import { statusOf, authorOf } from '../../services/creatorTypes';
+import { statusOf, authorOf, type CreatorNetworkingLesson } from '../../services/creatorTypes';
 import { ADMIN_NETWORKING_STASH } from './networkingEditStash';
 import { ownerLabel } from './ownerLabel';
+import ShareTab from '../../components/creators/ShareTab';
+import SharedWithMe, { type SharedGroup } from '../../components/creators/SharedWithMe';
+import {
+  fetchSharedWithMe,
+  saveSharedItem,
+  deleteSharedItem,
+  BUCKET_LABEL,
+} from '../../services/collabService';
 
 /** Stash a foreign lesson + its owner, then open it in the editor (admin mode). */
 function openAdminEdit(
@@ -56,6 +64,61 @@ const NetworkingCreator: React.FC = () => {
   }, [isAdmin, refreshKey]);
 
   const isMine = (lesson: AdminPublishedNetworkingLesson) => lesson._ownerId === user?._id;
+
+  /* ── Lessons another creator has shared with me ── */
+  const [shared, setShared] = useState<SharedGroup<CreatorNetworkingLesson>[]>([]);
+  const loadShared = useCallback(() => {
+    fetchSharedWithMe<CreatorNetworkingLesson>()
+      .then((buckets) =>
+        setShared(
+          buckets
+            .filter((b) => b.bucket === 'networking-lessons')
+            .map((b) => ({ grantId: b.grantId, owner: b.owner, items: b.items }))
+        )
+      )
+      .catch(() => setShared([]));
+  }, []);
+  useEffect(loadShared, [loadShared, refreshKey]);
+
+  /** Open a shared lesson in the editor, writing back to its owner's bucket. */
+  const editShared = (ownerId: string, lesson: CreatorNetworkingLesson) => {
+    const owner = shared.find((g) => g.owner?.id === ownerId)?.owner;
+    sessionStorage.setItem(
+      ADMIN_NETWORKING_STASH,
+      JSON.stringify({
+        id: lesson.id,
+        ownerId,
+        ownerName: owner?.displayName ?? '',
+        lesson,
+      })
+    );
+    navigate(`/creators/networking/edit/${lesson.id}?shared=1`);
+  };
+
+  const toggleSharedPublish = async (ownerId: string, lesson: CreatorNetworkingLesson) => {
+    const next = statusOf(lesson) === 'published' ? 'draft' : 'published';
+    await saveSharedItem(ownerId, 'networking-lessons', {
+      ...lesson,
+      status: next,
+      isPublished: next === 'published',
+      updatedAt: new Date().toISOString(),
+    });
+    setRefreshKey((k) => k + 1);
+  };
+
+  const deleteShared = async (ownerId: string, lesson: CreatorNetworkingLesson) => {
+    const ok = await confirmDialog({
+      title: lang === 'ar' ? 'حذف الدرس؟' : 'Delete lesson?',
+      message:
+        lang === 'ar'
+          ? 'سيُحذف هذا الدرس نهائيًا من محتوى مالكه.'
+          : "This lesson will be permanently removed from its owner's content.",
+      confirmLabel: t('studio.delete'),
+    });
+    if (!ok) return;
+    await deleteSharedItem(ownerId, 'networking-lessons', lesson.id);
+    setRefreshKey((k) => k + 1);
+  };
 
   // A built-in is "overridden" once a published lesson shares its id (this
   // admin's own, or another author's). Hide it so it isn't listed twice.
@@ -116,9 +179,14 @@ const NetworkingCreator: React.FC = () => {
       backTo="/creators"
       backLabel={t('studio.contentStudio')}
     >
-      {/* New lesson button (permission-gated) */}
+      {/* New lesson + share this tab (both permission-gated) */}
       {canCreate && (
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
+          <ShareTab
+            bucket="networking-lessons"
+            label={BUCKET_LABEL['networking-lessons'][lang]}
+            onChange={() => setRefreshKey((k) => k + 1)}
+          />
           <Button
             size="sm"
             leftIcon={<Plus size={14} />}
@@ -271,6 +339,22 @@ const NetworkingCreator: React.FC = () => {
           ))
         )}
       </div>
+
+      <SharedWithMe
+        groups={shared}
+        label={BUCKET_LABEL['networking-lessons'][lang]}
+        title={(l) => l.title.en || t('studio.untitled')}
+        subtitle={(l) => l.description.en || t('studio.noDescription')}
+        meta={(l) => (
+          <span className="flex items-center gap-1 text-[10px] font-medium text-[#4d5a73]">
+            <Clock size={10} /> {l.estimatedMinutes}m
+          </span>
+        )}
+        onEdit={editShared}
+        onTogglePublish={toggleSharedPublish}
+        onDelete={deleteShared}
+        onChange={() => setRefreshKey((k) => k + 1)}
+      />
 
       {/* ── Admin: every published networking lesson (any author, mine too) ── */}
       {isAdmin && allPublished.length > 0 && (

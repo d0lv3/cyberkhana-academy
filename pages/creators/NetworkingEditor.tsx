@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { FileText, Network, Eye, HelpCircle, BookOpen, ShieldCheck } from 'lucide-react';
+import { FileText, Network, Eye, HelpCircle, BookOpen, ShieldCheck, Users } from 'lucide-react';
 import CreatorLayout from '../../components/creators/CreatorLayout';
 import BilingualInput from '../../components/creators/BilingualInput';
 import TagInput from '../../components/creators/TagInput';
@@ -59,8 +59,12 @@ const NetworkingEditor: React.FC = () => {
   const { toast, ToastContainer } = useToast();
   const { user } = useAuth();
   const isEditing = !!id;
-  // Admin editing another author's published lesson (in place, ownership kept).
-  const isAdminEdit = searchParams.get('admin') === '1' && user?.role === 'admin';
+  /* Editing someone else's lesson in place, ownership kept. Two ways to get
+   * here: platform moderation (?admin=1) or a share the owner gave you
+   * (?shared=1). Neither is gated on the client beyond the stash being present:
+   * the server authorises every write on its own, by role or by grant. */
+  const isAdminEdit = searchParams.get('admin') === '1' || searchParams.get('shared') === '1';
+  const viaShare = searchParams.get('shared') === '1';
   // Admin editing a built-in lesson: the first save writes an override (copy-on-write).
   const isBuiltinEdit = searchParams.get('builtin') === '1' && user?.role === 'admin';
 
@@ -234,14 +238,27 @@ const NetworkingEditor: React.FC = () => {
         </div>
       )}
 
-      {/* ── Admin moderation banner ── */}
+      {/* ── Editing on someone else's behalf ── */}
       {adminCtx && (
-        <div className="flex items-start gap-3 rounded-lg border border-[#f3a43a]/30 bg-[#f3a43a]/10 px-4 py-3 mb-4">
-          <ShieldCheck size={16} className="text-[#f3a43a] mt-0.5 flex-shrink-0" />
+        <div
+          className={`flex items-start gap-3 rounded-lg border px-4 py-3 mb-4 ${
+            viaShare
+              ? 'border-[#60a5fa]/30 bg-[#60a5fa]/10'
+              : 'border-[#f3a43a]/30 bg-[#f3a43a]/10'
+          }`}
+        >
+          {viaShare ? (
+            <Users size={16} className="text-[#60a5fa] mt-0.5 flex-shrink-0" />
+          ) : (
+            <ShieldCheck size={16} className="text-[#f3a43a] mt-0.5 flex-shrink-0" />
+          )}
           <div className="text-xs text-[#d2d7e3]">
-            <span className="font-bold text-[#f3a43a]">Admin edit</span> — you're editing{' '}
-            <span className="font-semibold text-[#f3f6ff]">{adminCtx.ownerName}</span>'s published
-            lesson. Authorship is kept; saving updates the live lesson for everyone.
+            <span className={`font-bold ${viaShare ? 'text-[#60a5fa]' : 'text-[#f3a43a]'}`}>
+              {viaShare ? 'Shared with you' : 'Admin edit'}
+            </span>{' '}
+            you're editing{' '}
+            <span className="font-semibold text-[#f3f6ff]">{adminCtx.ownerName}</span>'s lesson.
+            Authorship is kept; saving updates it for everyone who can see it.
           </div>
         </div>
       )}

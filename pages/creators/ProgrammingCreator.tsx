@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit3, Trash2, BookOpen, Trophy, ChevronDown, ChevronRight, Eye, EyeOff, Image, Lock, ShieldCheck, Code, Layers, User } from 'lucide-react';
+import { Plus, Edit3, Trash2, BookOpen, Trophy, ChevronDown, ChevronRight, Eye, EyeOff, Image, Lock, ShieldCheck, Code, Layers, User, Users } from 'lucide-react';
 import EnhancedCard from '../../components/ui/EnhancedCard';
 import Button from '../../components/ui/EnhancedButton';
 import CreatorLayout from '../../components/creators/CreatorLayout';
@@ -32,6 +32,15 @@ import {
 import type { ProgrammingConcept, ProgrammingLanguage, ProgrammingModule } from '../../data/programming/types';
 import { ADMIN_PROGRAMMING_STASH, type AdminProgrammingStash } from './programmingEditStash';
 import { ownerLabel } from './ownerLabel';
+import ShareTab from '../../components/creators/ShareTab';
+import {
+  fetchSharedWithMe,
+  saveSharedProgramming,
+  deleteSharedProgramming,
+  BUCKET_LABEL,
+  type CollabPerson,
+} from '../../services/collabService';
+import type { ProgrammingPatch } from '../../services/creatorTypes';
 
 type DisplayModule = ProgrammingModule & Partial<CreatorMeta>;
 
@@ -137,6 +146,122 @@ const ProgrammingCreator: React.FC = () => {
   }, [publishedPatches]);
 
   const otherAuthorCount = publishedRows.filter((r) => r.entry.ownerId !== user?._id).length;
+
+  /* ── Programming content another creator has shared with me ──
+   * Patches are nested rather than id-keyed, so this flattens them into the
+   * same language / module / lesson rows the admin list uses. */
+  const [sharedPatches, setSharedPatches] = useState<
+    { grantId: string; owner: CollabPerson | null; patches: ProgrammingPatch[] }[]
+  >([]);
+
+  const loadShared = useCallback(() => {
+    fetchSharedWithMe<ProgrammingPatch>()
+      .then((buckets) =>
+        setSharedPatches(
+          buckets
+            .filter((b) => b.bucket === 'programming-patches')
+            .map((b) => ({ grantId: b.grantId, owner: b.owner, patches: b.items }))
+        )
+      )
+      .catch(() => setSharedPatches([]));
+  }, []);
+  useEffect(loadShared, [loadShared, refreshKey]);
+
+  const sharedGroups = useMemo(
+    () =>
+      sharedPatches.map((group) => {
+        const rows: PublishedRow[] = [];
+        const ownerId = group.owner?.id ?? '';
+        const ownerName = group.owner?.displayName ?? '';
+        for (const patch of group.patches) {
+          const base = { ownerId, ownerName, languageSlug: patch.languageSlug };
+          if (patch.newLanguage) rows.push({ kind: 'language', entry: { ...base, item: patch.newLanguage } });
+          for (const mod of patch.newModules ?? []) rows.push({ kind: 'module', entry: { ...base, item: mod } });
+          for (const [moduleSlug, list] of Object.entries(patch.newConcepts ?? {})) {
+            for (const concept of list) {
+              rows.push({ kind: 'concept', entry: { ...base, moduleSlug, item: concept } });
+            }
+          }
+        }
+        const rank = { language: 0, module: 1, concept: 2 } as const;
+        rows.sort(
+          (a, b) =>
+            a.entry.languageSlug.localeCompare(b.entry.languageSlug) ||
+            rank[a.kind] - rank[b.kind] ||
+            titleOf(a).localeCompare(titleOf(b))
+        );
+        return { ...group, rows };
+      }),
+    [sharedPatches]
+  );
+
+  /** Open a shared row in its editor, writing back to the owner's patch. */
+  const editSharedRow = (row: PublishedRow) => {
+    const { entry } = row;
+    if (row.kind === 'language') {
+      stashAdminEdit({ kind: 'language', ownerId: entry.ownerId, ownerName: entry.ownerName, languageSlug: entry.languageSlug, item: row.entry.item });
+      navigate(`/creators/programming/edit-language/${entry.languageSlug}?shared=1`);
+      return;
+    }
+    if (row.kind === 'module') {
+      stashAdminEdit({ kind: 'module', ownerId: entry.ownerId, ownerName: entry.ownerName, languageSlug: entry.languageSlug, item: row.entry.item });
+      navigate(`/creators/programming/edit-module/${entry.languageSlug}/${row.entry.item.id}?shared=1`);
+      return;
+    }
+    stashAdminEdit({
+      kind: 'concept',
+      ownerId: entry.ownerId,
+      ownerName: entry.ownerName,
+      languageSlug: entry.languageSlug,
+      moduleSlug: row.entry.moduleSlug!,
+      item: row.entry.item,
+    });
+    navigate(
+      `/creators/programming/${entry.languageSlug}/${row.entry.moduleSlug}/${row.entry.item.slug}?shared=1`
+    );
+  };
+
+  const toggleSharedRowPublish = async (row: PublishedRow) => {
+    const { entry } = row;
+    const next = statusOf(entry.item) === 'published' ? 'draft' : 'published';
+    await saveSharedProgramming({
+      ownerId: entry.ownerId,
+      languageSlug: entry.languageSlug,
+      kind: row.kind,
+      moduleSlug: entry.moduleSlug,
+      item: { ...entry.item, status: next, isPublished: next === 'published', updatedAt: new Date().toISOString() },
+    });
+    setRefreshKey((k) => k + 1);
+  };
+
+  const deleteSharedRow = async (row: PublishedRow) => {
+    const { entry } = row;
+    const ok = await confirmDialog({
+      title: uiLang === 'ar' ? 'حذف من محتوى مالكه؟' : "Delete from its owner's content?",
+      message:
+        row.kind === 'language'
+          ? uiLang === 'ar'
+            ? 'ستُحذف هذه اللغة وكل وحداتها ودروسها نهائيًا.'
+            : 'This language and ALL of its modules and lessons will be permanently removed.'
+          : row.kind === 'module'
+            ? uiLang === 'ar'
+              ? 'ستُحذف هذه الوحدة وكل دروسها نهائيًا.'
+              : 'This module and all of its lessons will be permanently removed.'
+            : uiLang === 'ar'
+              ? 'سيُحذف هذا الدرس نهائيًا.'
+              : 'This lesson will be permanently removed.',
+      confirmLabel: t('studio.delete'),
+    });
+    if (!ok) return;
+    await deleteSharedProgramming({
+      ownerId: entry.ownerId,
+      languageSlug: entry.languageSlug,
+      kind: row.kind,
+      moduleSlug: entry.moduleSlug,
+      itemId: row.kind === 'language' ? undefined : (entry.item as { id: string }).id,
+    });
+    setRefreshKey((k) => k + 1);
+  };
 
   // Catalog languages (static + published creator languages) + my own DRAFT
   // languages, which the public merge hides until published.
@@ -354,20 +479,33 @@ const ProgrammingCreator: React.FC = () => {
           </div>
         )}
 
-        {canLanguages && (
+        {(canLanguages || canProgramming) && (
           <div className="flex justify-between items-start gap-4">
             <p className="text-sm text-[#9aa5bf] max-w-lg">
-              {uiLang === 'ar'
-                ? 'يمكنك إنشاء لغات برمجة جديدة في الكتالوج، ثم إضافة الوحدات والدروس إليها.'
-                : 'You can create new programming languages in the catalog, then fill them with modules and lessons.'}
+              {canLanguages
+                ? uiLang === 'ar'
+                  ? 'يمكنك إنشاء لغات برمجة جديدة في الكتالوج، ثم إضافة الوحدات والدروس إليها.'
+                  : 'You can create new programming languages in the catalog, then fill them with modules and lessons.'
+                : uiLang === 'ar'
+                  ? 'أضف الوحدات والدروس إلى اللغات الموجودة.'
+                  : 'Add modules and lessons to the existing languages.'}
             </p>
-            <Button
-              size="sm"
-              leftIcon={<Plus size={14} />}
-              onClick={() => navigate('/creators/programming/new-language')}
-            >
-              {uiLang === 'ar' ? 'لغة جديدة' : 'New Language'}
-            </Button>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <ShareTab
+                bucket="programming-patches"
+                label={BUCKET_LABEL['programming-patches'][uiLang]}
+                onChange={() => setRefreshKey((k) => k + 1)}
+              />
+              {canLanguages && (
+                <Button
+                  size="sm"
+                  leftIcon={<Plus size={14} />}
+                  onClick={() => navigate('/creators/programming/new-language')}
+                >
+                  {uiLang === 'ar' ? 'لغة جديدة' : 'New Language'}
+                </Button>
+              )}
+            </div>
           </div>
         )}
 
@@ -734,6 +872,106 @@ const ProgrammingCreator: React.FC = () => {
             )}
           </EnhancedCard>
         ))}
+
+        {/* ── Shared with me: another creator's programming content ── */}
+        {sharedGroups.some((g) => g.rows.length > 0) && (
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center gap-2">
+              <Users size={14} className="text-[#60a5fa]" />
+              <h2 className="text-sm font-bold text-[#6e7a94] uppercase tracking-wider">
+                {uiLang === 'ar' ? 'مشارَك معك' : 'Shared with you'}
+              </h2>
+            </div>
+            <p className="text-xs text-[#6e7a94] -mt-1">
+              {uiLang === 'ar'
+                ? 'لديك نفس صلاحيات المالك هنا: التعديل والنشر والحذف.'
+                : "You have the owner's rights here: edit, publish and delete."}
+            </p>
+
+            {sharedGroups
+              .filter((g) => g.rows.length > 0)
+              .map((group) => (
+                <div key={group.grantId} className="space-y-2">
+                  <p className="px-1 text-xs font-semibold text-[#9aa5bf]">
+                    {uiLang === 'ar' ? 'من' : 'From'}{' '}
+                    <span className="text-[#f3f6ff]">
+                      {group.owner?.displayName ?? (uiLang === 'ar' ? 'مستخدم محذوف' : 'Removed user')}
+                    </span>
+                  </p>
+
+                  {group.rows.map((row) => {
+                    const isLanguage = row.kind === 'language';
+                    const isModule = row.kind === 'module';
+                    const isChallenge = row.kind === 'concept' && row.entry.item.type === 'challenge';
+                    const key = `${group.grantId}-${row.kind}-${
+                      isLanguage ? row.entry.languageSlug : (row.entry.item as { id: string }).id
+                    }`;
+
+                    return (
+                      <EnhancedCard key={key} padding="none" hoverable className="overflow-hidden group">
+                        <div className="flex items-center gap-4 px-5 py-4">
+                          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg border border-[#60a5fa]/20 bg-[#60a5fa]/10">
+                            {isLanguage ? (
+                              <Code size={16} className="text-[#60a5fa]" />
+                            ) : isModule ? (
+                              <Layers size={16} className="text-[#60a5fa]" />
+                            ) : isChallenge ? (
+                              <Trophy size={16} className="text-[#60a5fa]" />
+                            ) : (
+                              <BookOpen size={16} className="text-[#60a5fa]" />
+                            )}
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <h3 className="truncate text-sm font-bold text-[#f3f6ff]">
+                              {titleOf(row) || t('studio.untitled')}
+                            </h3>
+                            <p className="mt-0.5 truncate text-xs text-[#6e7a94]" dir="ltr">
+                              {row.entry.languageSlug}
+                              {row.entry.moduleSlug ? ` · ${row.entry.moduleSlug}` : ''}
+                            </p>
+                          </div>
+
+                          <div className="flex flex-shrink-0 items-center gap-2" dir="ltr">
+                            <StatusBadge status={statusOf(row.entry.item)} />
+                            <button
+                              onClick={() => toggleSharedRowPublish(row)}
+                              title={
+                                statusOf(row.entry.item) === 'published'
+                                  ? t('studio.unpublish')
+                                  : t('studio.publish')
+                              }
+                              className="flex h-7 w-7 items-center justify-center rounded-md text-[#6e7a94] transition-all hover:bg-[#00a859]/10 hover:text-[#00a859]"
+                            >
+                              {statusOf(row.entry.item) === 'published' ? (
+                                <EyeOff size={13} />
+                              ) : (
+                                <Eye size={13} />
+                              )}
+                            </button>
+                            <button
+                              onClick={() => editSharedRow(row)}
+                              title={t('studio.edit')}
+                              className="flex h-7 w-7 items-center justify-center rounded-md text-[#6e7a94] transition-all hover:bg-[#60a5fa]/10 hover:text-[#60a5fa]"
+                            >
+                              <Edit3 size={13} />
+                            </button>
+                            <button
+                              onClick={() => deleteSharedRow(row)}
+                              title={t('studio.delete')}
+                              className="flex h-7 w-7 items-center justify-center rounded-md text-[#6e7a94] transition-all hover:bg-red-500/10 hover:text-red-400"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        </div>
+                      </EnhancedCard>
+                    );
+                  })}
+                </div>
+              ))}
+          </div>
+        )}
 
         {/* ── Admin: every published programming item (any author) ── */}
         {isAdmin && publishedRows.length > 0 && (

@@ -40,8 +40,11 @@ const ProgrammingLanguageEditor: React.FC = () => {
   const { toast, ToastContainer } = useToast();
   const { user } = useAuth();
   const isEditing = !!editSlug;
-  // Admin editing another author's published language (in place, ownership kept).
-  const isAdminEdit = searchParams.get('admin') === '1' && user?.role === 'admin';
+  /* Editing someone else's language in place, ownership kept: platform
+   * moderation (?admin=1) or a share the owner gave you (?shared=1). The server
+   * authorises the write itself, by role or by grant. */
+  const isAdminEdit = searchParams.get('admin') === '1' || searchParams.get('shared') === '1';
+  const viaShare = searchParams.get('shared') === '1';
 
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
@@ -176,14 +179,23 @@ const ProgrammingLanguageEditor: React.FC = () => {
     >
       <ToastContainer />
 
-      {/* ── Admin moderation banner ── */}
+      {/* ── Editing on someone else's behalf ── */}
       {adminCtx && (
-        <div className="flex items-start gap-3 rounded-lg border border-[#f3a43a]/30 bg-[#f3a43a]/10 px-4 py-3 mb-4">
-          <ShieldCheck size={16} className="text-[#f3a43a] mt-0.5 flex-shrink-0" />
+        <div
+          className={`flex items-start gap-3 rounded-lg border px-4 py-3 mb-4 ${
+            viaShare ? 'border-[#60a5fa]/30 bg-[#60a5fa]/10' : 'border-[#f3a43a]/30 bg-[#f3a43a]/10'
+          }`}
+        >
+          <ShieldCheck
+            size={16}
+            className={`mt-0.5 flex-shrink-0 ${viaShare ? 'text-[#60a5fa]' : 'text-[#f3a43a]'}`}
+          />
           <div className="text-xs text-[#d2d7e3]">
-            <span className="font-bold text-[#f3a43a]">Admin edit</span> — you're editing{' '}
-            <span className="font-semibold text-[#f3f6ff]">{adminCtx.ownerName}</span>'s published
-            language. Authorship is kept; saving updates the live language for everyone.
+            <span className={`font-bold ${viaShare ? 'text-[#60a5fa]' : 'text-[#f3a43a]'}`}>
+              {viaShare ? 'Shared with you' : 'Admin edit'}
+            </span>{' '}
+            you're editing <span className="font-semibold text-[#f3f6ff]">{adminCtx.ownerName}</span>'s
+            language. Authorship is kept; saving updates it for everyone who can see it.
           </div>
         </div>
       )}

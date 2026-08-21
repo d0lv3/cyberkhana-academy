@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit3, Trash2, Eye, EyeOff, Clock, Layers, User, Box, ShieldCheck } from 'lucide-react';
 import EnhancedCard from '../../components/ui/EnhancedCard';
@@ -16,9 +16,17 @@ import {
   fetchAllPublishedModulesForAdmin,
   type AdminPublishedModule,
 } from '../../services/creatorDataService';
-import { statusOf, authorOf } from '../../services/creatorTypes';
+import { statusOf, authorOf, type CreatorFundamentalModule } from '../../services/creatorTypes';
 import { hasPerm } from '../../services/permissions';
 import { ownerLabel } from './ownerLabel';
+import ShareTab from '../../components/creators/ShareTab';
+import SharedWithMe, { type SharedGroup } from '../../components/creators/SharedWithMe';
+import {
+  fetchSharedWithMe,
+  saveSharedItem,
+  deleteSharedItem,
+  BUCKET_LABEL,
+} from '../../services/collabService';
 
 /** Stash a foreign module + its owner, then open it in the editor (admin mode). */
 function openAdminEdit(
@@ -54,6 +62,62 @@ const ModulesCreator: React.FC = () => {
   }, [user, refreshKey]);
 
   const isMine = (mod: AdminPublishedModule) => mod._ownerId === user?._id;
+
+  /* ── Modules another creator has shared with me ── */
+  const [shared, setShared] = useState<SharedGroup<CreatorFundamentalModule>[]>([]);
+  const loadShared = useCallback(() => {
+    fetchSharedWithMe<CreatorFundamentalModule>()
+      .then((buckets) =>
+        setShared(
+          buckets
+            .filter((b) => b.bucket === 'standalone-modules')
+            .map((b) => ({ grantId: b.grantId, owner: b.owner, items: b.items }))
+        )
+      )
+      .catch(() => setShared([]));
+  }, []);
+  useEffect(loadShared, [loadShared, refreshKey]);
+
+  /** Open a shared module in the editor, writing back to its owner's bucket. */
+  const editShared = (ownerId: string, mod: CreatorFundamentalModule) => {
+    const owner = shared.find((g) => g.owner?.id === ownerId)?.owner;
+    sessionStorage.setItem(
+      'academy-admin-module-edit',
+      JSON.stringify({
+        id: mod.id,
+        ownerId,
+        ownerName: owner?.displayName ?? '',
+        bucket: 'standalone-modules',
+        module: mod,
+      })
+    );
+    navigate(`/creators/modules/edit/${mod.id}?shared=1`);
+  };
+
+  const toggleSharedPublish = async (ownerId: string, mod: CreatorFundamentalModule) => {
+    const next = statusOf(mod) === 'published' ? 'draft' : 'published';
+    await saveSharedItem(ownerId, 'standalone-modules', {
+      ...mod,
+      status: next,
+      isPublished: next === 'published',
+      updatedAt: new Date().toISOString(),
+    });
+    setRefreshKey((k) => k + 1);
+  };
+
+  const deleteShared = async (ownerId: string, mod: CreatorFundamentalModule) => {
+    const ok = await confirmDialog({
+      title: lang === 'ar' ? 'حذف الوحدة؟' : 'Delete module?',
+      message:
+        lang === 'ar'
+          ? 'ستُحذف هذه الوحدة نهائيًا من محتوى مالكها.'
+          : "This module will be permanently removed from its owner's content.",
+      confirmLabel: t('studio.delete'),
+    });
+    if (!ok) return;
+    await deleteSharedItem(ownerId, 'standalone-modules', mod.id);
+    setRefreshKey((k) => k + 1);
+  };
 
   /** Mine edits through the normal own-bucket editor (local-first, so the
    * cache stays in step); anyone else's goes through the server-side admin edit. */
@@ -94,9 +158,16 @@ const ModulesCreator: React.FC = () => {
               : 'Standalone, section-divided modules that appear on the Modules hub. Each module is split into chapters and sections, just like a course.'}
           </p>
           {canCreate && (
-            <Button size="sm" leftIcon={<Plus size={14} />} onClick={() => navigate('/creators/modules/new')}>
-              {t('studio.newModule')}
-            </Button>
+            <div className="flex items-center gap-2">
+              <ShareTab
+                bucket="standalone-modules"
+                label={BUCKET_LABEL['standalone-modules'][lang]}
+                onChange={() => setRefreshKey((k) => k + 1)}
+              />
+              <Button size="sm" leftIcon={<Plus size={14} />} onClick={() => navigate('/creators/modules/new')}>
+                {t('studio.newModule')}
+              </Button>
+            </div>
           )}
         </div>
 
@@ -177,6 +248,19 @@ const ModulesCreator: React.FC = () => {
             ))
           )}
         </div>
+
+        <SharedWithMe
+          groups={shared}
+          label={BUCKET_LABEL['standalone-modules'][lang]}
+          title={(m) => m.title.en || t('studio.untitled')}
+          subtitle={(m) => m.description.en || t('studio.noDescription')}
+          accent={(m) => m.iconColor}
+          meta={(m) => <DifficultyBadge difficulty={m.difficulty} />}
+          onEdit={editShared}
+          onTogglePublish={toggleSharedPublish}
+          onDelete={deleteShared}
+          onChange={() => setRefreshKey((k) => k + 1)}
+        />
 
         {/* ── Admin: every published module (any author) ── */}
         {user?.role === 'admin' && allPublished.length > 0 && (

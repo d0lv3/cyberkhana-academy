@@ -69,8 +69,11 @@ class ApiService {
     });
   }
 
-  delete<T>(path: string) {
-    return this.request<T>(path, { method: 'DELETE' });
+  delete<T>(path: string, body?: unknown) {
+    return this.request<T>(path, {
+      method: 'DELETE',
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
   }
 
   /** Multipart upload — the browser sets the Content-Type boundary itself. */

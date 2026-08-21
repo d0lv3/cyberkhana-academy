@@ -10,6 +10,7 @@ import {
   type ContentBucketKey,
   type CreatorPermission,
 } from '../types';
+import { canEditOthersBucket } from '../utils/grants';
 import { logger } from '../utils/logger';
 
 const router = Router();
@@ -253,9 +254,9 @@ router.get(['/admin/items', '/admin/modules'], authenticate, requireRole('admin'
  * inject new items into another account. A wrong/forged ownerId simply 404s.
  * `/admin/module` is the original path, kept for older clients. */
 router.patch(
-  ['/admin/item', '/admin/module'],
+  ['/collab/item', '/admin/item', '/admin/module'],
   authenticate,
-  requireRole('admin'),
+  requireRole('creator', 'admin'),
   async (req: AuthRequest, res) => {
     const { ownerId, bucket, item } = (req.body ?? {}) as {
       ownerId?: unknown;
@@ -273,6 +274,14 @@ router.patch(
     }
     if (!isPlainObject(item) || typeof item.id !== 'string' || !item.id) {
       res.status(400).json({ error: 'An item with an id is required' });
+      return;
+    }
+    if (!canWriteBucket(req.user!, bucket)) {
+      res.status(403).json({ error: 'You do not have permission to author this content type' });
+      return;
+    }
+    if (!(await canEditOthersBucket(req.user!, ownerId, bucket))) {
+      res.status(403).json({ error: 'This content has not been shared with you' });
       return;
     }
     const problem = validateBucketItems(bucket, [item]);
@@ -298,7 +307,7 @@ router.patch(
       doc.markModified('items');
       await doc.save();
 
-      logger.info('content.admin_item_edited', {
+      logger.info('content.delegated_item_edited', {
         by: String(req.user!._id),
         owner: ownerId,
         bucket,
@@ -308,6 +317,73 @@ router.patch(
     } catch (err) {
       logger.error('content.admin_item_patch_failed', { error: String(err) });
       res.status(500).json({ error: 'Could not save content' });
+    }
+  }
+);
+
+/* ── DELETE /api/content/collab/item ── remove one item from a bucket that is
+ * not yours. A collaborator holds the same rights as the owner inside a shared
+ * bucket, deletion included, so this is authorised exactly like the edit above
+ * and is equally irreversible. */
+router.delete(
+  '/collab/item',
+  authenticate,
+  requireRole('creator', 'admin'),
+  async (req: AuthRequest, res) => {
+    const { ownerId, bucket, itemId } = (req.body ?? {}) as {
+      ownerId?: unknown;
+      bucket?: unknown;
+      itemId?: unknown;
+    };
+
+    if (typeof bucket !== 'string' || !isAdminItemBucket(bucket)) {
+      res.status(404).json({ error: 'Unknown content bucket' });
+      return;
+    }
+    if (typeof ownerId !== 'string' || !mongoose.isValidObjectId(ownerId)) {
+      res.status(400).json({ error: 'Invalid owner' });
+      return;
+    }
+    if (typeof itemId !== 'string' || !itemId) {
+      res.status(400).json({ error: 'An itemId is required' });
+      return;
+    }
+    if (!canWriteBucket(req.user!, bucket)) {
+      res.status(403).json({ error: 'You do not have permission to author this content type' });
+      return;
+    }
+    if (!(await canEditOthersBucket(req.user!, ownerId, bucket))) {
+      res.status(403).json({ error: 'This content has not been shared with you' });
+      return;
+    }
+
+    try {
+      const doc = await ContentBucket.findOne({ ownerId, bucket });
+      if (!doc) {
+        res.status(404).json({ error: 'Content not found' });
+        return;
+      }
+      const list = doc.items as AnyItem[];
+      const idx = list.findIndex((i) => isPlainObject(i) && i.id === itemId);
+      if (idx < 0) {
+        res.status(404).json({ error: 'Content not found' });
+        return;
+      }
+
+      list.splice(idx, 1);
+      doc.markModified('items');
+      await doc.save();
+
+      logger.info('content.delegated_item_deleted', {
+        by: String(req.user!._id),
+        owner: ownerId,
+        bucket,
+        itemId,
+      });
+      res.json({ ok: true });
+    } catch (err) {
+      logger.error('content.delegated_item_delete_failed', { error: String(err) });
+      res.status(500).json({ error: 'Could not delete this content' });
     }
   }
 );
@@ -368,7 +444,11 @@ router.get('/admin/programming', authenticate, requireRole('admin'), async (_req
 /* ── PATCH /api/content/admin/programming ── replace one module, concept or
  * language definition inside its author's patch, IN PLACE. Admin-only, and
  * strictly an edit: the target patch and the entry itself must already exist. */
-router.patch('/admin/programming', authenticate, requireRole('admin'), async (req: AuthRequest, res) => {
+router.patch(
+  ['/collab/programming', '/admin/programming'],
+  authenticate,
+  requireRole('creator', 'admin'),
+  async (req: AuthRequest, res) => {
   const { ownerId, languageSlug, kind, moduleSlug, item } = (req.body ?? {}) as {
     ownerId?: unknown;
     languageSlug?: unknown;
@@ -404,6 +484,14 @@ router.patch('/admin/programming', authenticate, requireRole('admin'), async (re
   const safety = checkSafeJson(item);
   if (!safety.ok) {
     res.status(400).json({ error: safety.reason ?? 'Unsafe payload' });
+    return;
+  }
+  if (!canWriteBucket(req.user!, 'programming-patches')) {
+    res.status(403).json({ error: 'You do not have permission to author this content type' });
+    return;
+  }
+  if (!(await canEditOthersBucket(req.user!, ownerId, 'programming-patches'))) {
+    res.status(403).json({ error: 'This content has not been shared with you' });
     return;
   }
 
@@ -450,7 +538,7 @@ router.patch('/admin/programming', authenticate, requireRole('admin'), async (re
     doc.markModified('items');
     await doc.save();
 
-    logger.info('content.admin_programming_edited', {
+    logger.info('content.delegated_programming_edited', {
       by: String(req.user!._id),
       owner: ownerId,
       languageSlug,
@@ -459,9 +547,114 @@ router.patch('/admin/programming', authenticate, requireRole('admin'), async (re
     });
     res.json({ ok: true });
   } catch (err) {
-    logger.error('content.admin_programming_patch_failed', { error: String(err) });
+    logger.error('content.delegated_programming_patch_failed', { error: String(err) });
     res.status(500).json({ error: 'Could not save programming content' });
   }
 });
+
+/* ── DELETE /api/content/collab/programming ── remove one module, concept or
+ * language definition from its author's patch. Same rights and same
+ * irreversibility as the owner has. */
+router.delete(
+  '/collab/programming',
+  authenticate,
+  requireRole('creator', 'admin'),
+  async (req: AuthRequest, res) => {
+    const { ownerId, languageSlug, kind, moduleSlug, itemId } = (req.body ?? {}) as {
+      ownerId?: unknown;
+      languageSlug?: unknown;
+      kind?: unknown;
+      moduleSlug?: unknown;
+      itemId?: unknown;
+    };
+
+    if (typeof ownerId !== 'string' || !mongoose.isValidObjectId(ownerId)) {
+      res.status(400).json({ error: 'Invalid owner' });
+      return;
+    }
+    if (typeof languageSlug !== 'string' || !languageSlug) {
+      res.status(400).json({ error: 'A languageSlug is required' });
+      return;
+    }
+    if (kind !== 'module' && kind !== 'concept' && kind !== 'language') {
+      res.status(400).json({ error: 'kind must be module, concept or language' });
+      return;
+    }
+    if (kind !== 'language' && (typeof itemId !== 'string' || !itemId)) {
+      res.status(400).json({ error: 'An itemId is required' });
+      return;
+    }
+    if (kind === 'concept' && (typeof moduleSlug !== 'string' || !moduleSlug)) {
+      res.status(400).json({ error: 'A moduleSlug is required for a concept' });
+      return;
+    }
+    if (!canWriteBucket(req.user!, 'programming-patches')) {
+      res.status(403).json({ error: 'You do not have permission to author this content type' });
+      return;
+    }
+    if (!(await canEditOthersBucket(req.user!, ownerId, 'programming-patches'))) {
+      res.status(403).json({ error: 'This content has not been shared with you' });
+      return;
+    }
+
+    try {
+      const doc = await ContentBucket.findOne({ ownerId, bucket: 'programming-patches' });
+      if (!doc) {
+        res.status(404).json({ error: 'Programming content not found' });
+        return;
+      }
+      const patches = doc.items as AnyItem[];
+      const patch = patches.find((p) => isPlainObject(p) && p.languageSlug === languageSlug);
+      if (!patch || !isPlainObject(patch)) {
+        res.status(404).json({ error: 'Programming content not found' });
+        return;
+      }
+
+      if (kind === 'language') {
+        // Dropping the definition takes the whole patch with it: its modules
+        // and lessons have no language left to belong to.
+        doc.items = patches.filter((p) => !(isPlainObject(p) && p.languageSlug === languageSlug));
+      } else if (kind === 'module') {
+        const list = Array.isArray(patch.newModules) ? (patch.newModules as AnyItem[]) : [];
+        const idx = list.findIndex((m) => isPlainObject(m) && m.id === itemId);
+        if (idx < 0) {
+          res.status(404).json({ error: 'Module not found' });
+          return;
+        }
+        const [removed] = list.splice(idx, 1);
+        // Its lessons are keyed by the module's slug, so they go too.
+        const slug = isPlainObject(removed) ? removed.slug : undefined;
+        if (typeof slug === 'string' && isPlainObject(patch.newConcepts)) {
+          delete (patch.newConcepts as Record<string, unknown>)[slug];
+        }
+      } else {
+        const byModule = isPlainObject(patch.newConcepts)
+          ? (patch.newConcepts as Record<string, AnyItem[]>)
+          : null;
+        const list = byModule?.[moduleSlug as string];
+        const idx = Array.isArray(list) ? list.findIndex((c) => isPlainObject(c) && c.id === itemId) : -1;
+        if (idx < 0 || !list) {
+          res.status(404).json({ error: 'Concept not found' });
+          return;
+        }
+        list.splice(idx, 1);
+      }
+
+      doc.markModified('items');
+      await doc.save();
+
+      logger.info('content.delegated_programming_deleted', {
+        by: String(req.user!._id),
+        owner: ownerId,
+        languageSlug,
+        kind,
+      });
+      res.json({ ok: true });
+    } catch (err) {
+      logger.error('content.delegated_programming_delete_failed', { error: String(err) });
+      res.status(500).json({ error: 'Could not delete this content' });
+    }
+  }
+);
 
 export default router;

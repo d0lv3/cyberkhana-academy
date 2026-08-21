@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit3, Trash2, Eye, EyeOff, Clock, ListChecks, User, Route } from 'lucide-react';
 import EnhancedCard from '../../components/ui/EnhancedCard';
@@ -11,7 +11,16 @@ import { useLang } from '../../contexts/LangContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { hasPerm } from '../../services/permissions';
 import { getCreatorPaths, deletePath, savePath } from '../../services/creatorDataService';
-import { statusOf, authorOf } from '../../services/creatorTypes';
+import { statusOf, authorOf, type CreatorPath } from '../../services/creatorTypes';
+import ShareTab from '../../components/creators/ShareTab';
+import SharedWithMe, { type SharedGroup } from '../../components/creators/SharedWithMe';
+import {
+  fetchSharedWithMe,
+  saveSharedItem,
+  deleteSharedItem,
+  BUCKET_LABEL,
+} from '../../services/collabService';
+import { SHARED_PATH_STASH } from './sharedPathStash';
 import { coverImageSrc } from '../../data/fundamentalsData';
 
 const PathsCreator: React.FC = () => {
@@ -22,6 +31,55 @@ const PathsCreator: React.FC = () => {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const paths = getCreatorPaths();
+
+  /* ── Paths another creator has shared with me ── */
+  const [shared, setShared] = useState<SharedGroup<CreatorPath>[]>([]);
+  const loadShared = useCallback(() => {
+    fetchSharedWithMe<CreatorPath>()
+      .then((buckets) =>
+        setShared(
+          buckets
+            .filter((b) => b.bucket === 'paths')
+            .map((b) => ({ grantId: b.grantId, owner: b.owner, items: b.items }))
+        )
+      )
+      .catch(() => setShared([]));
+  }, []);
+  useEffect(loadShared, [loadShared, refreshKey]);
+
+  const editShared = (ownerId: string, path: CreatorPath) => {
+    const owner = shared.find((g) => g.owner?.id === ownerId)?.owner;
+    sessionStorage.setItem(
+      SHARED_PATH_STASH,
+      JSON.stringify({ id: path.id, ownerId, ownerName: owner?.displayName ?? '', path })
+    );
+    navigate(`/creators/paths/edit/${path.id}?shared=1`);
+  };
+
+  const toggleSharedPublish = async (ownerId: string, path: CreatorPath) => {
+    const next = statusOf(path) === 'published' ? 'draft' : 'published';
+    await saveSharedItem(ownerId, 'paths', {
+      ...path,
+      status: next,
+      isPublished: next === 'published',
+      updatedAt: new Date().toISOString(),
+    });
+    setRefreshKey((k) => k + 1);
+  };
+
+  const deleteShared = async (ownerId: string, path: CreatorPath) => {
+    const ok = await confirmDialog({
+      title: lang === 'ar' ? 'حذف المسار؟' : 'Delete path?',
+      message:
+        lang === 'ar'
+          ? 'سيُحذف هذا المسار نهائيًا من محتوى مالكه.'
+          : "This path will be permanently removed from its owner's content.",
+      confirmLabel: t('studio.delete'),
+    });
+    if (!ok) return;
+    await deleteSharedItem(ownerId, 'paths', path.id);
+    setRefreshKey((k) => k + 1);
+  };
 
   const handleDelete = async (id: string) => {
     if (
@@ -59,9 +117,16 @@ const PathsCreator: React.FC = () => {
               : 'Sequence existing modules, lessons, and challenges into a guided curriculum. Published paths appear on the Paths page for all students.'}
           </p>
           {canCreate && (
-            <Button size="sm" leftIcon={<Plus size={14} />} onClick={() => navigate('/creators/paths/new')}>
-              {t('studio.newPath')}
-            </Button>
+            <div className="flex items-center gap-2">
+              <ShareTab
+                bucket="paths"
+                label={BUCKET_LABEL.paths[lang]}
+                onChange={() => setRefreshKey((k) => k + 1)}
+              />
+              <Button size="sm" leftIcon={<Plus size={14} />} onClick={() => navigate('/creators/paths/new')}>
+                {t('studio.newPath')}
+              </Button>
+            </div>
           )}
         </div>
 
@@ -154,6 +219,19 @@ const PathsCreator: React.FC = () => {
             ))
           )}
         </div>
+
+        <SharedWithMe
+          groups={shared}
+          label={BUCKET_LABEL.paths[lang]}
+          title={(p) => p.title.en || t('studio.untitled')}
+          subtitle={(p) => p.description.en || t('studio.noDescription')}
+          accent={(p) => p.color}
+          meta={(p) => <DifficultyBadge difficulty={p.difficulty} />}
+          onEdit={editShared}
+          onTogglePublish={toggleSharedPublish}
+          onDelete={deleteShared}
+          onChange={() => setRefreshKey((k) => k + 1)}
+        />
       </div>
     </CreatorLayout>
   );
