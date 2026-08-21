@@ -7,6 +7,7 @@ import Button from '../../components/ui/EnhancedButton';
 import LessonMarkdown from '../../components/ui/LessonMarkdown';
 import LessonQuiz from '../../components/ui/LessonQuiz';
 import { useLang } from '../../contexts/LangContext';
+import { useScrollToTop } from '../../hooks/useScrollToTop';
 import { isNetworkingDone, markNetworkingDone, recordActivity } from '../../services/progressService';
 
 type Tab = 'content' | 'simulation';
@@ -16,6 +17,9 @@ const NetworkingLessonPage: React.FC = () => {
   const navigate = useNavigate();
   const { lang } = useLang();
   const lesson = getNetworkingLesson(slug || '');
+
+  // Each lesson is a fresh document: the prose pane starts at the top.
+  const proseRef = useScrollToTop<HTMLDivElement>(slug);
 
   const [mobileTab, setMobileTab] = useState<Tab>('content');
   const [done, setDone] = useState(() => (lesson ? isNetworkingDone(lesson.id) : false));

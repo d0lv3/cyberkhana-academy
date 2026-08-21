@@ -126,6 +126,14 @@ function rehypeWrapLatinRuns() {
  * module stays RTL for a student browsing in English, and an English module
  * stays LTR for one browsing in Arabic. Code, math and URLs are Latin by
  * nature, so they are stripped before the two scripts are weighed.
+ *
+ * It is decided ONCE, for the whole lesson, and every block inherits it. Per
+ * block `dir="auto"` looks correct until you meet Arabic technical writing:
+ * it resolves from the first strong character, so a key point opening with a
+ * term like **NAT** flips that bullet to LTR and throws its marker to the
+ * other side of the page while its neighbours stay RTL. Inline runs are still
+ * isolated by the bidi algorithm, which is the part that actually needs to be
+ * per-run.
  */
 const ARABIC_RANGE =
   /[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]/g;
@@ -173,24 +181,23 @@ const LessonMarkdown: React.FC<LessonMarkdownProps> = ({ content, dir }) => {
         components={{
           h1: ({ children }) => (
             <h1
-              dir="auto"
               className="text-2xl md:text-3xl font-bold text-[#f3f6ff] mb-6 pb-4 border-b border-[#263248]"
             >
               {children}
             </h1>
           ),
           h2: ({ children }) => (
-            <h2 dir="auto" className="text-xl font-bold text-[#f3f6ff] mt-10 mb-4">
+            <h2 className="text-xl font-bold text-[#f3f6ff] mt-10 mb-4">
               {children}
             </h2>
           ),
           h3: ({ children }) => (
-            <h3 dir="auto" className="text-base font-semibold text-[#f3f6ff] mt-6 mb-3">
+            <h3 className="text-base font-semibold text-[#f3f6ff] mt-6 mb-3">
               {children}
             </h3>
           ),
           p: ({ children }) => (
-            <p dir="auto" className="text-sm text-[#c4cad6] leading-relaxed mb-4">
+            <p className="text-sm text-[#c4cad6] leading-relaxed mb-4">
               {children}
             </p>
           ),
@@ -204,7 +211,6 @@ const LessonMarkdown: React.FC<LessonMarkdownProps> = ({ content, dir }) => {
           ),
           li: ({ children }) => (
             <li
-              dir="auto"
               className="text-sm text-[#c4cad6] leading-relaxed flex items-start gap-2"
             >
               <span className="mt-2 h-1.5 w-1.5 rounded-full bg-[#00a859] flex-shrink-0" />
@@ -213,7 +219,6 @@ const LessonMarkdown: React.FC<LessonMarkdownProps> = ({ content, dir }) => {
           ),
           blockquote: ({ children }) => (
             <blockquote
-              dir="auto"
               className="border-s-2 border-[#00a859]/40 bg-[#121a2a] rounded-e-lg px-4 py-3 my-4 text-sm text-[#9aa5bf] italic"
             >
               {children}
@@ -255,7 +260,6 @@ const LessonMarkdown: React.FC<LessonMarkdownProps> = ({ content, dir }) => {
           ),
           th: ({ children }) => (
             <th
-              dir="auto"
               className="px-4 py-2.5 text-start text-xs font-semibold text-[#9aa5bf] uppercase tracking-wider"
             >
               {children}
@@ -263,7 +267,6 @@ const LessonMarkdown: React.FC<LessonMarkdownProps> = ({ content, dir }) => {
           ),
           td: ({ children }) => (
             <td
-              dir="auto"
               className="px-4 py-2.5 text-sm text-[#c4cad6] border-t border-[#263248]/50"
             >
               {children}

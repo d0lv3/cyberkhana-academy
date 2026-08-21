@@ -18,6 +18,7 @@ import Button from '../../components/ui/EnhancedButton';
 import LessonMarkdown from '../../components/ui/LessonMarkdown';
 import { youtubeEmbedUrl } from '../../services/youtube';
 import { useLang } from '../../contexts/LangContext';
+import { useScrollToTop } from '../../hooks/useScrollToTop';
 import { getProgrammingDone, markProgrammingDone, recordActivity } from '../../services/progressService';
 
 type Tab = 'content' | 'code';
@@ -34,6 +35,10 @@ const ProgrammingLessonPage: React.FC = () => {
   const language = getLanguage(langSlug || '');
   const mod = getModule(langSlug || '', moduleSlug || '');
   const concept = getConcept(langSlug || '', moduleSlug || '', conceptSlug || '');
+
+  // Each concept is a fresh document: both panes start at the top.
+  const proseRef = useScrollToTop<HTMLDivElement>(conceptSlug);
+  const workspaceRef = useScrollToTop<HTMLDivElement>(conceptSlug);
 
   const [mobileTab, setMobileTab] = useState<Tab>('content');
   const [videoOpen, setVideoOpen] = useState(true);
@@ -192,7 +197,7 @@ const ProgrammingLessonPage: React.FC = () => {
             ${mobileTab === 'content' ? 'w-full' : 'hidden md:flex'}
           `}
         >
-          <div className="flex-1 overflow-y-auto custom-scrollbar">
+          <div ref={proseRef} className="flex-1 overflow-y-auto custom-scrollbar">
             {mod.videoId && (
               <div className="max-w-2xl mx-auto px-6 pt-6 md:px-8">
                 <div className="rounded-xl border border-[#263248] bg-[#0e1522] overflow-hidden">
@@ -305,7 +310,7 @@ const ProgrammingLessonPage: React.FC = () => {
             ${mobileTab === 'code' ? 'w-full' : 'hidden md:flex'}
           `}
         >
-          <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-3 md:p-4">
+          <div ref={workspaceRef} className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-3 md:p-4">
             <CodingEnvironment
               key={concept.id}
               starterCode={concept.starterCode}

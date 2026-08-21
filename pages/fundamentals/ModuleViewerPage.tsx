@@ -30,6 +30,7 @@ import Button from '../../components/ui/EnhancedButton';
 import DifficultyBadge from '../../components/ui/DifficultyBadge';
 import CourseViewerSidebar, { SidebarModule } from '../../components/CourseViewerSidebar';
 import { useLang } from '../../contexts/LangContext';
+import { useScrollToTop } from '../../hooks/useScrollToTop';
 import { useAuth } from '../../contexts/AuthContext';
 import CourseTerminalLauncher from '../../components/terminal/CourseTerminalLauncher';
 import { mdFor, type LocalizedMarkdown } from '../../services/creatorTypes';
@@ -334,6 +335,10 @@ const ModuleViewerPage: React.FC = () => {
 
   const activeLectureInfo = allLectures.find((l) => l.lecture.id === activeLectureId);
   const activeLecture = activeLectureInfo?.lecture;
+
+  // Switching lecture swaps the body under a pane that keeps its offset, so
+  // the next one would open partway down. Send it back to the top.
+  const bodyRef = useScrollToTop<HTMLElement>(activeLecture?.id);
   const activeModule = activeLectureInfo?.module;
 
   const totalLectures = allLectures.length;
@@ -421,7 +426,7 @@ const ModuleViewerPage: React.FC = () => {
         />
 
         {/* ── MAIN CONTENT ── */}
-        <main className="min-w-0 flex-1 overflow-y-auto custom-scrollbar bg-[#0d1117]">
+        <main ref={bodyRef} className="min-w-0 flex-1 overflow-y-auto custom-scrollbar bg-[#0d1117]">
           {activeLecture && activeModule ? (
             <motion.div
               key={activeLecture.id}
