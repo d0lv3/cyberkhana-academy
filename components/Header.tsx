@@ -22,12 +22,12 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
         <div className="flex items-center gap-3">
           <button
             onClick={onMenuToggle}
-            className="md:hidden w-9 h-9 rounded-lg bg-[#121a2a] border border-[#263248] flex items-center justify-center text-[#8390ac] hover:text-[#d2d7e3] transition-all"
+            className="md:hidden w-9 h-9 touch:w-11 touch:h-11 rounded-lg bg-[#121a2a] border border-[#263248] flex items-center justify-center text-[#8390ac] hover:text-[#d2d7e3] transition-all"
             aria-label="Open menu"
           >
             <Menu size={18} />
           </button>
-          <Link to="/dashboard" className="md:hidden">
+          <Link to="/dashboard" aria-label="CyberKhana Academy" className="md:hidden inline-flex items-center justify-center touch:min-h-tap touch:min-w-tap">
             <BrandLogo variant="mark" loading="eager" className="h-7 w-7 object-contain" />
           </Link>
         </div>
@@ -55,7 +55,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
             to="/profile"
             aria-label={lang === 'ar' ? 'الملف الشخصي' : 'Profile'}
             title={lang === 'ar' ? 'الملف الشخصي' : 'Profile'}
-            className="w-9 h-9 rounded-lg bg-[#121a2a] border border-[#263248] flex items-center justify-center text-[#8390ac] hover:text-[#00a859] hover:border-[#00a859]/40 transition-all"
+            className="w-9 h-9 touch:w-11 touch:h-11 rounded-lg bg-[#121a2a] border border-[#263248] flex items-center justify-center text-[#8390ac] hover:text-[#00a859] hover:border-[#00a859]/40 transition-all"
           >
             <UserCircle size={16} />
           </Link>
@@ -63,7 +63,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
           {/* Language toggle */}
           <button
             onClick={() => setLang(lang === 'en' ? 'ar' : 'en')}
-            className="w-9 h-9 rounded-lg bg-[#121a2a] border border-[#263248] flex items-center justify-center text-[#8390ac] hover:text-[#00a859] hover:border-[#00a859]/40 transition-all"
+            className="w-9 h-9 touch:w-11 touch:h-11 rounded-lg bg-[#121a2a] border border-[#263248] flex items-center justify-center text-[#8390ac] hover:text-[#00a859] hover:border-[#00a859]/40 transition-all"
             aria-label="Toggle language"
             title={lang === 'en' ? 'العربية' : 'English'}
           >
@@ -74,7 +74,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
           <button
             onClick={logout}
             aria-label="Log out"
-            className="w-9 h-9 rounded-lg bg-[#121a2a] border border-[#263248] flex items-center justify-center text-[#8390ac] hover:text-red-400 hover:border-red-500/30 transition-all"
+            className="w-9 h-9 touch:w-11 touch:h-11 rounded-lg bg-[#121a2a] border border-[#263248] flex items-center justify-center text-[#8390ac] hover:text-red-400 hover:border-red-500/30 transition-all"
           >
             <LogOut size={16} className="rtl-flip" />
           </button>

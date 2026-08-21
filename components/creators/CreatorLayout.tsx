@@ -41,28 +41,34 @@ const CreatorLayout: React.FC<CreatorLayoutProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-4 min-w-0">
+      {/* Header. Stacked below sm: the action cluster (preview + status +
+          save) is close to a phone's full width on its own, so keeping it
+          beside the title could only push something off-screen. */}
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+        <div className="flex items-start gap-2 sm:gap-4 min-w-0">
+          {/* Below sm the label is hidden and only a 16px chevron remains, so
+              the button carries its own tap area rather than inheriting the
+              icon's size. */}
           <button
             onClick={() => navigate(backTo)}
-            className="mt-1 flex items-center gap-2 text-sm text-[#6e7a94] hover:text-[#d2d7e3] transition-colors flex-shrink-0"
+            aria-label={backLabel ?? t('studio.backDefault')}
+            className="flex items-center justify-center sm:justify-start gap-2 text-sm text-[#6e7a94] hover:text-[#d2d7e3] transition-colors flex-shrink-0 min-h-tap min-w-tap sm:min-w-0 sm:mt-1 -ms-2 sm:ms-0"
           >
             <ArrowLeft size={16} className="rtl-flip" />
             <span className="hidden sm:inline">{backLabel ?? t('studio.backDefault')}</span>
           </button>
-          <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold text-[#f3f6ff] truncate">{title}</h1>
+          <div className="min-w-0 self-center sm:self-auto">
+            <h1 className="text-lg sm:text-2xl font-bold text-[#f3f6ff] truncate">{title}</h1>
             {subtitle && <p className="text-sm text-[#6e7a94] mt-0.5 truncate">{subtitle}</p>}
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
           {onPreview && (
             <button
               type="button"
               onClick={onPreview}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-[#9fef00] bg-[#9fef00]/10 border border-[#9fef00]/25 hover:bg-[#9fef00]/15 transition-all"
+              className="flex items-center gap-1.5 px-3 py-2 touch:min-h-tap rounded-lg text-xs font-semibold text-[#9fef00] bg-[#9fef00]/10 border border-[#9fef00]/25 hover:bg-[#9fef00]/15 transition-all select-none"
             >
               <ExternalLink size={13} /> {t('studio.preview')}
             </button>

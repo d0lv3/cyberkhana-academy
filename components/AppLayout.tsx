@@ -18,17 +18,20 @@ const AppLayout: React.FC = () => {
   }, [collapsed]);
 
   return (
-    <div className="flex h-screen text-[#d2d7e3] bg-[#0d1117]">
+    <div className="flex app-shell text-[#d2d7e3] bg-[#0d1117]">
       <Sidebar
         collapsed={collapsed}
         onToggle={() => setCollapsed(!collapsed)}
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}
       />
-      <div className="flex flex-col flex-1 overflow-hidden">
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <Header onMenuToggle={() => setMobileOpen(true)} />
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
-          <div className="max-w-7xl mx-auto">
+        {/* overflow-x-hidden, not auto: a child that outgrows the phone should
+            scroll inside its own box, never pan the whole shell sideways and
+            take the header with it. */}
+        <main className="flex-1 overflow-y-auto overflow-x-hidden scroll-contain p-4 sm:p-6 md:p-8">
+          <div className="max-w-7xl mx-auto min-w-0 pb-[env(safe-area-inset-bottom,0px)]">
             <Outlet />
           </div>
         </main>

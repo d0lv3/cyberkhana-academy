@@ -44,7 +44,7 @@ const CategoryPage: React.FC<CategoryPageProps> = ({
           description={lang === 'ar' ? 'هذا القسم قيد التطوير. عد قريباً!' : 'Modules for this section are being developed. Check back soon!'}
         />
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+        <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
           {modules.map((mod, i) => (
             <ModuleCard key={mod.id} module={mod} index={i} />
           ))}

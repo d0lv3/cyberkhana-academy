@@ -197,19 +197,19 @@ const PathsCreator: React.FC = () => {
                     <button
                       onClick={() => handleTogglePublish(path)}
                       title={statusOf(path) === 'published' ? t('studio.unpublish') : t('studio.publish')}
-                      className="w-7 h-7 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#00a859] hover:bg-[#00a859]/10 transition-all"
+                      className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#00a859] hover:bg-[#00a859]/10 transition-all"
                     >
                       {statusOf(path) === 'published' ? <EyeOff size={13} /> : <Eye size={13} />}
                     </button>
                     <button
                       onClick={() => navigate(`/creators/paths/edit/${path.id}`)}
-                      className="w-7 h-7 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#60a5fa] hover:bg-[#60a5fa]/10 transition-all"
+                      className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#60a5fa] hover:bg-[#60a5fa]/10 transition-all"
                     >
                       <Edit3 size={13} />
                     </button>
                     <button
                       onClick={() => handleDelete(path.id)}
-                      className="w-7 h-7 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-red-400 hover:bg-red-500/10 transition-all"
+                      className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-red-400 hover:bg-red-500/10 transition-all"
                     >
                       <Trash2 size={13} />
                     </button>

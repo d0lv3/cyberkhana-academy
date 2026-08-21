@@ -27,7 +27,7 @@ const LandingPage: React.FC = () => {
   const handleLogin = () => navigate('/login');
 
   return (
-    <div className="min-h-screen bg-[#0d1117]">
+    <div className="app-min-shell bg-[#0d1117] overflow-x-hidden">
       {/* Navbar */}
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${

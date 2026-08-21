@@ -39,7 +39,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
       {backTo && (
         <button
           onClick={() => navigate(backTo)}
-          className="inline-flex items-center gap-2 text-sm text-[#6e7a94] hover:text-[#d2d7e3] transition-colors mb-4"
+          className="inline-flex items-center gap-2 touch:min-h-tap text-sm text-[#6e7a94] hover:text-[#d2d7e3] transition-colors mb-3 sm:mb-4 select-none"
         >
           <ArrowLeft size={16} className="rtl-flip" />
           <span>{backLabel ?? 'Back'}</span>

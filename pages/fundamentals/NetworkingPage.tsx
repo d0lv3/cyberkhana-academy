@@ -42,7 +42,7 @@ const NetworkingPage: React.FC = () => {
           }
         />
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+        <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
           {lessons.map((lesson, i) => (
             <NetworkingLessonCard key={lesson.id} lesson={lesson} index={i} />
           ))}
@@ -53,7 +53,7 @@ const NetworkingPage: React.FC = () => {
       {categoryModules.length > 0 && (
         <section>
           <h2 className="text-lg font-bold text-[#f3f6ff] mb-4">{t('sidebar.modules')}</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+          <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
             {categoryModules.map((mod, i) => (
               <ModuleCard key={mod.id} module={mod} index={i} />
             ))}

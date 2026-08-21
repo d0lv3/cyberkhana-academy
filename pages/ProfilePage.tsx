@@ -256,9 +256,12 @@ const ProfilePage: React.FC = () => {
                     </p>
                   )}
 
-                  <div className="mt-2 flex flex-col gap-1.5 text-sm text-[#9aa5bf]">
-                    <span className="inline-flex items-center gap-2" dir="ltr">
-                      <Mail size={14} className="text-[#6e7a94]" /> {user.email}
+                  <div className="mt-2 flex flex-col gap-1.5 text-sm text-[#9aa5bf] min-w-0">
+                    {/* An email address is a single unbreakable token, so on a
+                        phone it either truncates or runs out of the card. */}
+                    <span className="inline-flex items-center gap-2 min-w-0 max-w-full" dir="ltr">
+                      <Mail size={14} className="text-[#6e7a94] shrink-0" />
+                      <span className="truncate" title={user.email}>{user.email}</span>
                     </span>
                     <span className="inline-flex items-center gap-2">
                       <GraduationCap size={14} className="text-[#6e7a94]" />
@@ -308,7 +311,7 @@ const ProfilePage: React.FC = () => {
               <button
                 key={l}
                 onClick={() => setLang(l)}
-                className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${
+                className={`px-3 py-1 touch:min-h-tap touch:px-4 rounded-md text-xs font-bold transition-all select-none ${
                   lang === l ? 'bg-[#00a859] text-white' : 'text-[#9aa5bf] hover:text-[#f3f6ff]'
                 }`}
               >
@@ -318,7 +321,7 @@ const ProfilePage: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-4 min-w-0">
           <span className="text-sm text-[#9aa5bf]">{user.email}</span>
           <Button variant="outline" size="sm" onClick={logout} leftIcon={<LogOut size={14} />}>
             {t('profile.signOut')}

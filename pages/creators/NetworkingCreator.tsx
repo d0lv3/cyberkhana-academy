@@ -238,7 +238,7 @@ const NetworkingCreator: React.FC = () => {
                     <button
                       onClick={() => editBuiltin(lesson.id)}
                       title={lang === 'ar' ? 'تعديل (مشرف)' : 'Edit as admin'}
-                      className="w-7 h-7 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#9fef00] hover:bg-[#9fef00]/10 transition-all"
+                      className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#9fef00] hover:bg-[#9fef00]/10 transition-all"
                     >
                       <Edit3 size={13} />
                     </button>
@@ -312,7 +312,7 @@ const NetworkingCreator: React.FC = () => {
 
                   <button
                     onClick={() => handleTogglePublish(lesson)}
-                    className="w-7 h-7 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#00a859] hover:bg-[#00a859]/10 transition-all"
+                    className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#00a859] hover:bg-[#00a859]/10 transition-all"
                     title={statusOf(lesson) === 'published' ? t('studio.unpublish') : t('studio.publish')}
                   >
                     {statusOf(lesson) === 'published' ? <EyeOff size={13} /> : <Eye size={13} />}
@@ -320,7 +320,7 @@ const NetworkingCreator: React.FC = () => {
 
                   <button
                     onClick={() => navigate(`/creators/networking/edit/${lesson.id}`)}
-                    className="w-7 h-7 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#60a5fa] hover:bg-[#60a5fa]/10 transition-all"
+                    className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#60a5fa] hover:bg-[#60a5fa]/10 transition-all"
                     title={t('studio.edit')}
                   >
                     <Edit3 size={13} />
@@ -328,7 +328,7 @@ const NetworkingCreator: React.FC = () => {
 
                   <button
                     onClick={() => handleDelete(lesson.id)}
-                    className="w-7 h-7 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-red-400 hover:bg-red-500/10 transition-all"
+                    className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-red-400 hover:bg-red-500/10 transition-all"
                     title={t('studio.delete')}
                   >
                     <Trash2 size={13} />
@@ -418,7 +418,7 @@ const NetworkingCreator: React.FC = () => {
                           ? 'تعديل (مشرف)'
                           : 'Edit as admin'
                     }
-                    className={`w-7 h-7 flex items-center justify-center rounded-md text-[#6e7a94] transition-all ${
+                    className={`w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] transition-all ${
                       isMine(lesson)
                         ? 'hover:text-[#60a5fa] hover:bg-[#60a5fa]/10'
                         : 'hover:text-[#f3a43a] hover:bg-[#f3a43a]/10'

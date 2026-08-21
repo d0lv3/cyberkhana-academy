@@ -115,7 +115,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, mobileOpen, onMo
         {/* Mobile close button */}
         <button
           onClick={onMobileClose}
-          className="md:hidden w-7 h-7 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#d2d7e3] hover:bg-[#182235] transition-all"
+          className="md:hidden w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#d2d7e3] hover:bg-[#182235] transition-all"
           aria-label="Close menu"
         >
           <X size={18} />

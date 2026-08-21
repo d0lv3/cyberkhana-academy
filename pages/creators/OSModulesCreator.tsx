@@ -187,7 +187,7 @@ const OSModulesCreator: React.FC = () => {
       backTo="/creators"
       backLabel={t('studio.contentStudio')}
     >
-      <div className="flex justify-between items-start">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 min-w-0">
         <p className="text-sm text-[#9aa5bf] max-w-lg">
           {lang === 'ar'
             ? 'الوحدات المُنشأة هنا تظهر في صفحة أساسيات أنظمة التشغيل وصفحة الوحدات معًا.'
@@ -227,15 +227,15 @@ const OSModulesCreator: React.FC = () => {
           {visibleStatic.map((mod) => (
             <EnhancedCard key={mod.id} padding="none" className="overflow-hidden">
               <div className="h-1" style={{ backgroundColor: mod.iconColor }} />
-              <div className="flex items-center gap-4 px-5 py-4">
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4 px-4 sm:px-5 py-4 min-w-0">
                 <div className="w-10 h-10 rounded-lg bg-[#1a2332] border border-[#263248] flex items-center justify-center flex-shrink-0">
                   <Lock size={16} className="text-[#6e7a94]" />
                 </div>
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-[9rem]">
                   <h3 className="text-sm font-bold text-[#f3f6ff] truncate">{mod.title.en}</h3>
                   <p className="text-xs text-[#6e7a94] truncate mt-0.5">{mod.description.en}</p>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0" dir="ltr">
+                <div className="flex flex-wrap items-center gap-2 ms-auto sm:ms-0 sm:flex-shrink-0" dir="ltr">
                   <DifficultyBadge difficulty={mod.difficulty} />
                   <span className="text-[10px] text-[#4d5a73] flex items-center gap-1">
                     <Clock size={10} /> {mod.estimatedHours}h
@@ -250,7 +250,7 @@ const OSModulesCreator: React.FC = () => {
                     <button
                       onClick={() => editBuiltin(mod)}
                       title={lang === 'ar' ? 'تعديل (مشرف)' : 'Edit as admin'}
-                      className="w-7 h-7 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#9fef00] hover:bg-[#9fef00]/10 transition-all"
+                      className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#9fef00] hover:bg-[#9fef00]/10 transition-all"
                     >
                       <Edit3 size={13} />
                     </button>
@@ -289,7 +289,7 @@ const OSModulesCreator: React.FC = () => {
           creatorModules.map((mod) => (
             <EnhancedCard key={mod.id} padding="none" hoverable className="overflow-hidden group">
               <div className="h-1" style={{ backgroundColor: mod.iconColor }} />
-              <div className="flex items-center gap-4 px-5 py-4">
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4 px-4 sm:px-5 py-4 min-w-0">
                 <div
                   className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
                     mod.isPublished
@@ -304,7 +304,7 @@ const OSModulesCreator: React.FC = () => {
                   )}
                 </div>
 
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-[9rem]">
                   <h3 className="text-sm font-bold text-[#f3f6ff] truncate">
                     {mod.title.en || t('studio.untitled')}
                   </h3>
@@ -329,21 +329,21 @@ const OSModulesCreator: React.FC = () => {
 
                   <button
                     onClick={() => handleTogglePublish(mod)}
-                    className="w-7 h-7 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#00a859] hover:bg-[#00a859]/10 transition-all"
+                    className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#00a859] hover:bg-[#00a859]/10 transition-all"
                   >
                     {statusOf(mod) === 'published' ? <EyeOff size={13} /> : <Eye size={13} />}
                   </button>
 
                   <button
                     onClick={() => navigate(`/creators/os-modules/edit/${mod.id}`)}
-                    className="w-7 h-7 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#60a5fa] hover:bg-[#60a5fa]/10 transition-all"
+                    className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#60a5fa] hover:bg-[#60a5fa]/10 transition-all"
                   >
                     <Edit3 size={13} />
                   </button>
 
                   <button
                     onClick={() => handleDelete(mod.id)}
-                    className="w-7 h-7 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-red-400 hover:bg-red-500/10 transition-all"
+                    className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-red-400 hover:bg-red-500/10 transition-all"
                   >
                     <Trash2 size={13} />
                   </button>
@@ -385,7 +385,7 @@ const OSModulesCreator: React.FC = () => {
           {allPublished.map((mod) => (
             <EnhancedCard key={`${mod._ownerId}-${mod.id}`} padding="none" hoverable className="overflow-hidden group">
               <div className="h-1" style={{ backgroundColor: mod.iconColor }} />
-              <div className="flex items-center gap-4 px-5 py-4">
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4 px-4 sm:px-5 py-4 min-w-0">
                 <div
                   className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
                     isMine(mod)
@@ -396,12 +396,12 @@ const OSModulesCreator: React.FC = () => {
                   <Eye size={16} className={isMine(mod) ? 'text-[#00a859]' : 'text-[#f3a43a]'} />
                 </div>
 
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-[9rem]">
                   <h3 className="text-sm font-bold text-[#f3f6ff] truncate">{mod.title.en || t('studio.untitled')}</h3>
                   <p className="text-xs text-[#6e7a94] truncate mt-0.5">{mod.description.en || t('studio.noDescription')}</p>
                 </div>
 
-                <div className="flex items-center gap-2 flex-shrink-0" dir="ltr">
+                <div className="flex flex-wrap items-center gap-2 ms-auto sm:ms-0 sm:flex-shrink-0" dir="ltr">
                   <span className="hidden md:flex text-[10px] font-medium text-[#4d5a73] items-center gap-1">
                     <User size={10} /> {ownerLabel(mod._ownerId, mod._ownerName, user?._id, lang)}
                   </span>
@@ -411,7 +411,7 @@ const OSModulesCreator: React.FC = () => {
                   <button
                     onClick={() => editPublished(mod)}
                     title={isMine(mod) ? t('studio.edit') : lang === 'ar' ? 'تعديل (مشرف)' : 'Edit as admin'}
-                    className={`w-7 h-7 flex items-center justify-center rounded-md text-[#6e7a94] transition-all ${
+                    className={`w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] transition-all ${
                       isMine(mod)
                         ? 'hover:text-[#60a5fa] hover:bg-[#60a5fa]/10'
                         : 'hover:text-[#f3a43a] hover:bg-[#f3a43a]/10'

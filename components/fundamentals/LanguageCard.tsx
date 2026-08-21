@@ -75,7 +75,7 @@ const LanguageCard: React.FC<{ language: ProgrammingLanguage; index?: number }> 
       )}
 
       {/* Top badges */}
-      <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3">
+      <div className="absolute inset-x-0 top-0 flex flex-wrap items-start justify-between gap-1.5 p-2.5 sm:p-3 min-w-0">
         <span
           className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-semibold backdrop-blur-sm"
           style={{

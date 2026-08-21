@@ -111,7 +111,7 @@ const PodiumCard: React.FC<{ entry: PodiumEntry; highlight?: boolean; isMe?: boo
           className="absolute inset-[2px] overflow-hidden bg-[#121a2a]"
           style={{ clipPath: SHIELD }}
         >
-          <div className="relative z-10 h-full flex flex-col items-center justify-center px-4 text-center">
+          <div className="relative z-10 h-full flex flex-col items-center justify-center px-3 sm:px-4 text-center min-w-0 w-full">
             <div
               className="rounded-full bg-[#0e1522] flex items-center justify-center overflow-hidden"
               style={{
@@ -130,14 +130,14 @@ const PodiumCard: React.FC<{ entry: PodiumEntry; highlight?: boolean; isMe?: boo
             </div>
 
             <p
-              className="mt-3 font-bold text-[#eef2fb] truncate max-w-[170px]"
+              className="mt-3 font-bold text-[#eef2fb] truncate max-w-full"
               title={entry.displayName}
             >
               {entry.displayName}
               {isMe && <span className="ms-1.5 text-[10px] font-black text-[#00a859] uppercase">•</span>}
             </p>
 
-            <p className="mt-1 inline-flex items-center gap-1 text-[11px] text-[#9aa5bf] max-w-[170px]">
+            <p className="mt-1 inline-flex items-center gap-1 text-[11px] text-[#9aa5bf] max-w-full">
               <GraduationCap size={11} className="flex-shrink-0" />
               <span className="truncate">
                 {(() => {

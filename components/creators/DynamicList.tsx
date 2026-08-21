@@ -91,7 +91,7 @@ function DynamicList<T>({
             <button
               type="button"
               onClick={() => removeItem(index)}
-              className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-md text-[#4d5a73] hover:text-red-400 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100"
+              className="flex-shrink-0 w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#4d5a73] hover:text-red-400 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100"
             >
               <Trash2 size={13} />
             </button>

@@ -341,7 +341,7 @@ const LegalPage: React.FC<{ kind: 'privacy' | 'terms' }> = ({ kind }) => {
           </Link>
           <button
             onClick={() => setLang(lang === 'en' ? 'ar' : 'en')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#9aa5bf] hover:text-[#9fef00] hover:bg-[#182235] transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 touch:min-h-tap touch:px-4 rounded-lg text-xs font-semibold text-[#9aa5bf] hover:text-[#9fef00] hover:bg-[#182235] transition-all"
           >
             <Globe size={14} />
             <span>{lang === 'en' ? 'العربية' : 'English'}</span>
@@ -354,7 +354,7 @@ const LegalPage: React.FC<{ kind: 'privacy' | 'terms' }> = ({ kind }) => {
         <article className="max-w-3xl mx-auto">
           <Link
             to="/"
-            className="inline-flex items-center gap-1.5 text-sm text-[#6e7a94] hover:text-[#9fef00] transition-colors mb-8"
+            className="inline-flex items-center gap-1.5 touch:min-h-tap text-sm text-[#6e7a94] hover:text-[#9fef00] transition-colors mb-6 sm:mb-8"
           >
             <ArrowLeft size={15} className="rtl:rotate-180" />
             {lang === 'ar' ? 'العودة إلى الرئيسية' : 'Back to home'}

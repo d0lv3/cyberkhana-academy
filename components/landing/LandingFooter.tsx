@@ -11,7 +11,7 @@ const SOCIALS = [
 ];
 
 const socialBtn =
-  'inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-[#263248] bg-white/[0.02] text-xs font-bold text-[#d2d7e3] hover:border-[#9fef00]/40 hover:bg-[#9fef00]/10 hover:text-[#9fef00] transition-all';
+  'inline-flex items-center gap-1.5 px-3.5 py-2 touch:min-h-tap rounded-lg border border-[#263248] bg-white/[0.02] text-xs font-bold text-[#d2d7e3] hover:border-[#9fef00]/40 hover:bg-[#9fef00]/10 hover:text-[#9fef00] transition-all';
 
 const LandingFooter: React.FC = () => {
   const { t, lang } = useLang();
@@ -68,7 +68,7 @@ const LandingFooter: React.FC = () => {
               href="https://www.cyberkhana.tech"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-[#00a859]/40 bg-[#00a859]/10 text-xs font-bold text-[#00a859] hover:bg-[#00a859]/20 hover:shadow-[0_0_16px_rgba(0,168,89,0.25)] transition-all"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 touch:min-h-tap rounded-lg border border-[#00a859]/40 bg-[#00a859]/10 text-xs font-bold text-[#00a859] hover:bg-[#00a859]/20 hover:shadow-[0_0_16px_rgba(0,168,89,0.25)] transition-all"
             >
               <Globe size={13} />
               {lang === 'ar' ? 'منصة CyberKhana' : 'CyberKhana Platform'}
@@ -95,10 +95,10 @@ const LandingFooter: React.FC = () => {
         <div className="mt-8 pt-6 border-t border-[#1a2332] flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-[#6e7a94]">{t('footer.copyright')}</p>
           <div className="flex items-center gap-4">
-            <Link to="/privacy" className="text-xs text-[#6e7a94] hover:text-[#9fef00] transition-colors">
+            <Link to="/privacy" className="inline-flex items-center touch:min-h-tap touch:px-2 text-xs text-[#6e7a94] hover:text-[#9fef00] transition-colors">
               {t('footer.privacy')}
             </Link>
-            <Link to="/terms" className="text-xs text-[#6e7a94] hover:text-[#9fef00] transition-colors">
+            <Link to="/terms" className="inline-flex items-center touch:min-h-tap touch:px-2 text-xs text-[#6e7a94] hover:text-[#9fef00] transition-colors">
               {t('footer.terms')}
             </Link>
             <span className="text-xs text-[#6e7a94] flex items-center gap-1.5">

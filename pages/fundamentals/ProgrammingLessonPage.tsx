@@ -109,7 +109,7 @@ const ProgrammingLessonPage: React.FC = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate(`/fundamentals/programming/${langSlug}`)}
-            className="text-[#9aa5bf] hover:text-[#f3f6ff] transition-colors"
+            className="text-[#9aa5bf] hover:text-[#f3f6ff] transition-colors inline-flex items-center justify-center touch:min-h-tap touch:min-w-tap -ms-2"
           >
             <ArrowLeft className="w-5 h-5 rtl-flip" />
           </button>
@@ -143,12 +143,12 @@ const ProgrammingLessonPage: React.FC = () => {
         </div>
 
         {/* Concept progress indicator */}
-        <div className="flex items-center gap-1.5" dir="ltr">
+        <div className="flex items-center gap-1.5 touch:gap-2.5" dir="ltr">
           {concepts.map((c, i) => (
             <button
               key={c.id}
               onClick={() => goTo(c)}
-              className={`w-2 h-2 rounded-full transition-all ${
+              className={`tap-expand-y w-2 h-2 rounded-full transition-all ${
                 c.slug === conceptSlug
                   ? 'w-5 bg-[#00a859]'
                   : completed.has(c.id)
@@ -274,7 +274,7 @@ const ProgrammingLessonPage: React.FC = () => {
             {prevConcept ? (
               <button
                 onClick={() => goTo(prevConcept)}
-                className="flex items-center gap-2 text-xs text-[#9aa5bf] hover:text-[#f3f6ff] transition-colors"
+                className="flex items-center gap-2 text-xs text-[#9aa5bf] hover:text-[#f3f6ff] transition-colors touch:min-h-tap px-1 select-none"
               >
                 <ChevronLeft size={14} />
                 <span className="hidden sm:inline">{prevConcept.title[lang]}</span>
@@ -291,7 +291,7 @@ const ProgrammingLessonPage: React.FC = () => {
             {nextConcept ? (
               <button
                 onClick={() => goTo(nextConcept)}
-                className="flex items-center gap-2 text-xs text-[#9aa5bf] hover:text-[#f3f6ff] transition-colors"
+                className="flex items-center gap-2 text-xs text-[#9aa5bf] hover:text-[#f3f6ff] transition-colors touch:min-h-tap px-1 select-none"
               >
                 <span className="hidden sm:inline">{nextConcept.title[lang]}</span>
                 <span className="sm:hidden">Next</span>

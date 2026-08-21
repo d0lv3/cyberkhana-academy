@@ -50,7 +50,7 @@ const PathDetailPage: React.FC = () => {
       {/* Back link */}
       <button
         onClick={() => navigate('/paths')}
-        className="inline-flex items-center gap-2 text-sm text-[#6e7a94] hover:text-[#d2d7e3] transition-colors"
+        className="inline-flex items-center gap-2 touch:min-h-tap text-sm text-[#6e7a94] hover:text-[#d2d7e3] transition-colors select-none"
       >
         <ArrowLeft size={16} className="rtl-flip" />
         <span>{t('sidebar.paths')}</span>

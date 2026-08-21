@@ -104,7 +104,7 @@ const LeaderboardPage: React.FC = () => {
             <button
               key={s}
               onClick={() => setScope(s)}
-              className={`px-3.5 py-2 rounded-md text-xs font-bold transition-colors ${
+              className={`px-3.5 py-2 touch:min-h-tap touch:px-4 rounded-md text-xs font-bold transition-colors select-none ${
                 scope === s ? 'bg-[#1a2332] text-[#f3f6ff]' : 'text-[#6e7a94] hover:text-[#d2d7e3]'
               }`}
             >

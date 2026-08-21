@@ -358,7 +358,7 @@ const ModuleViewerPage: React.FC = () => {
       {/* ── HEADER ── */}
       <header className="flex-shrink-0 h-14 border-b border-[#263248] bg-[#121a2a] px-4 md:px-6 flex items-center justify-between z-20">
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="text-[#9aa5bf] hover:text-[#f3f6ff] transition-colors">
+          <button onClick={() => navigate(-1)} className="text-[#9aa5bf] hover:text-[#f3f6ff] transition-colors inline-flex items-center justify-center touch:min-h-tap touch:min-w-tap -ms-2">
             <ArrowLeft className="w-5 h-5 rtl-flip" />
           </button>
           <button className="md:hidden text-[#9aa5bf] hover:text-[#f3f6ff]" onClick={() => setTocMobileOpen(true)}>

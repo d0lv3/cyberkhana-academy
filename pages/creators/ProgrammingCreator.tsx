@@ -564,7 +564,7 @@ const ProgrammingCreator: React.FC = () => {
                         <button
                           onClick={() => editForeignLanguage(foreignLang.entry)}
                           title={uiLang === 'ar' ? 'تعديل (مشرف)' : 'Edit as admin'}
-                          className="w-7 h-7 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#f3a43a] hover:bg-[#f3a43a]/10 transition-all"
+                          className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#f3a43a] hover:bg-[#f3a43a]/10 transition-all"
                         >
                           <Edit3 size={13} />
                         </button>
@@ -581,21 +581,21 @@ const ProgrammingCreator: React.FC = () => {
                         <button
                           onClick={() => handleToggleLanguagePublish(lang.slug)}
                           title={statusOf(def) === 'published' ? t('studio.unpublish') : t('studio.publish')}
-                          className="w-7 h-7 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#00a859] hover:bg-[#00a859]/10 transition-all"
+                          className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#00a859] hover:bg-[#00a859]/10 transition-all"
                         >
                           {statusOf(def) === 'published' ? <EyeOff size={13} /> : <Eye size={13} />}
                         </button>
                         <button
                           onClick={() => navigate(`/creators/programming/edit-language/${lang.slug}`)}
                           title={uiLang === 'ar' ? 'تعديل اللغة' : 'Edit language'}
-                          className="w-7 h-7 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#60a5fa] hover:bg-[#60a5fa]/10 transition-all"
+                          className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#60a5fa] hover:bg-[#60a5fa]/10 transition-all"
                         >
                           <Edit3 size={13} />
                         </button>
                         <button
                           onClick={() => handleDeleteLanguage(lang.slug, lang.name)}
                           title={uiLang === 'ar' ? 'حذف اللغة' : 'Delete language'}
-                          className="w-7 h-7 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-red-400 hover:bg-red-500/10 transition-all"
+                          className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-red-400 hover:bg-red-500/10 transition-all"
                         >
                           <Trash2 size={13} />
                         </button>
@@ -697,7 +697,7 @@ const ProgrammingCreator: React.FC = () => {
                                 handleToggleModulePublish(lang.slug, mod);
                               }}
                               title={statusOf(mod) === 'published' ? t('studio.unpublish') : t('studio.publish')}
-                              className="w-6 h-6 flex items-center justify-center rounded text-[#4d5a73] hover:text-[#00a859] transition-colors"
+                              className="w-6 h-6 touch:w-11 touch:h-11 flex items-center justify-center rounded text-[#4d5a73] hover:text-[#00a859] transition-colors"
                             >
                               {statusOf(mod) === 'published' ? <EyeOff size={12} /> : <Eye size={12} />}
                             </button>
@@ -714,7 +714,7 @@ const ProgrammingCreator: React.FC = () => {
                                   ? 'تعديل (مشرف)'
                                   : 'Edit as admin'
                             }
-                            className={`w-6 h-6 flex items-center justify-center rounded text-[#4d5a73] transition-colors ${
+                            className={`w-6 h-6 touch:w-11 touch:h-11 flex items-center justify-center rounded text-[#4d5a73] transition-colors ${
                               isCreatorMod
                                 ? 'hover:text-[#60a5fa]'
                                 : foreignMod
@@ -730,7 +730,7 @@ const ProgrammingCreator: React.FC = () => {
                                 e.stopPropagation();
                                 handleDeleteModule(lang.slug, mod.id);
                               }}
-                              className="w-6 h-6 flex items-center justify-center rounded text-[#4d5a73] hover:text-red-400 transition-colors"
+                              className="w-6 h-6 touch:w-11 touch:h-11 flex items-center justify-center rounded text-[#4d5a73] hover:text-red-400 transition-colors"
                             >
                               <Trash2 size={12} />
                             </button>
@@ -786,7 +786,7 @@ const ProgrammingCreator: React.FC = () => {
                                           ? 'تعديل (مشرف)'
                                           : 'Edit as admin'
                                     }
-                                    className={`w-6 h-6 flex items-center justify-center rounded text-[#4d5a73] transition-colors ${
+                                    className={`w-6 h-6 touch:w-11 touch:h-11 flex items-center justify-center rounded text-[#4d5a73] transition-colors ${
                                       ownConcept
                                         ? 'hover:text-[#60a5fa]'
                                         : foreignConcept
@@ -801,7 +801,7 @@ const ProgrammingCreator: React.FC = () => {
                                       onClick={() =>
                                         handleDeleteConcept(lang.slug, mod.slug, concept.id)
                                       }
-                                      className="w-6 h-6 flex items-center justify-center rounded text-[#4d5a73] hover:text-red-400 transition-colors"
+                                      className="w-6 h-6 touch:w-11 touch:h-11 flex items-center justify-center rounded text-[#4d5a73] hover:text-red-400 transition-colors"
                                     >
                                       <Trash2 size={11} />
                                     </button>
@@ -836,7 +836,7 @@ const ProgrammingCreator: React.FC = () => {
                                       `/creators/programming/${lang.slug}/${mod.slug}/${concept.slug}`
                                     )
                                   }
-                                  className="w-6 h-6 flex items-center justify-center rounded text-[#4d5a73] hover:text-[#60a5fa] transition-colors"
+                                  className="w-6 h-6 touch:w-11 touch:h-11 flex items-center justify-center rounded text-[#4d5a73] hover:text-[#60a5fa] transition-colors"
                                 >
                                   <Edit3 size={11} />
                                 </button>
@@ -844,7 +844,7 @@ const ProgrammingCreator: React.FC = () => {
                                   onClick={() =>
                                     handleDeleteConcept(lang.slug, mod.slug, concept.id)
                                   }
-                                  className="w-6 h-6 flex items-center justify-center rounded text-[#4d5a73] hover:text-red-400 transition-colors"
+                                  className="w-6 h-6 touch:w-11 touch:h-11 flex items-center justify-center rounded text-[#4d5a73] hover:text-red-400 transition-colors"
                                 >
                                   <Trash2 size={11} />
                                 </button>
@@ -1072,7 +1072,7 @@ const ProgrammingCreator: React.FC = () => {
                         title={
                           mine ? t('studio.edit') : uiLang === 'ar' ? 'تعديل (مشرف)' : 'Edit as admin'
                         }
-                        className={`w-7 h-7 flex items-center justify-center rounded-md text-[#6e7a94] transition-all ${
+                        className={`w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] transition-all ${
                           mine
                             ? 'hover:text-[#60a5fa] hover:bg-[#60a5fa]/10'
                             : 'hover:text-[#f3a43a] hover:bg-[#f3a43a]/10'

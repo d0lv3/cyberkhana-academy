@@ -65,7 +65,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted, onLogin }) => {
   const typed = useTypewriter(words);
 
   return (
-    <section className="relative min-h-screen w-full flex items-center px-6 py-28 lg:py-0 overflow-hidden bg-[#0d1117]">
+    <section className="relative app-hero-min w-full flex items-center px-5 sm:px-6 py-24 sm:py-28 lg:py-0 overflow-hidden bg-[#0d1117]">
       {/* Neon grid */}
       <div
         className="absolute inset-0 opacity-[0.04]"

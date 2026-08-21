@@ -136,7 +136,7 @@ const CyberSecurity101Page: React.FC = () => {
       {/* ── Back to the roadmap ── */}
       <button
         onClick={() => navigate('/fundamentals')}
-        className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6e7a94] hover:text-[#00a859] transition-colors"
+        className="inline-flex items-center gap-1.5 touch:min-h-tap text-xs font-semibold text-[#6e7a94] hover:text-[#00a859] transition-colors select-none"
       >
         <ArrowLeft size={14} className="rtl:rotate-180" />
         {lang === 'ar' ? 'العودة إلى خارطة الأساسيات' : 'Back to the Fundamentals roadmap'}

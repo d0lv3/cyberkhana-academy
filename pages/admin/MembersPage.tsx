@@ -270,7 +270,7 @@ const MembersPage: React.FC = () => {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: Math.min(i * 0.03, 0.3), duration: 0.3 }}
-                  className={`flex items-center gap-4 px-5 py-3.5 ${u.isBanned ? 'opacity-50' : ''}`}
+                  className={`flex flex-wrap items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3.5 min-w-0 ${u.isBanned ? 'opacity-50' : ''}`}
                 >
                   {/* avatar */}
                   {u.avatarUrl ? (
@@ -361,7 +361,7 @@ const MembersPage: React.FC = () => {
                       onClick={() => togglePermsPanel(u)}
                       disabled={savingId === u.id}
                       title={ar ? 'الصلاحيات' : 'Permissions'}
-                      className={`w-8 h-8 rounded-lg border flex items-center justify-center flex-shrink-0 transition-all disabled:opacity-30 ${
+                      className={`w-8 h-8 touch:w-11 touch:h-11 rounded-lg border flex items-center justify-center flex-shrink-0 transition-all disabled:opacity-30 ${
                         permsOpenId === u.id
                           ? 'border-[#f3a43a]/50 text-[#f3a43a] bg-[#f3a43a]/10'
                           : 'border-[#263248] text-[#6e7a94] hover:text-[#f3a43a] hover:border-[#f3a43a]/40 hover:bg-[#f3a43a]/10'
@@ -392,7 +392,7 @@ const MembersPage: React.FC = () => {
                         ? 'حظر'
                         : 'Ban'
                     }
-                    className={`w-8 h-8 rounded-lg border flex items-center justify-center flex-shrink-0 transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
+                    className={`w-8 h-8 touch:w-11 touch:h-11 rounded-lg border flex items-center justify-center flex-shrink-0 transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
                       u.isBanned
                         ? 'border-[#00a859]/30 text-[#00a859] hover:bg-[#00a859]/10'
                         : 'border-[#263248] text-[#6e7a94] hover:text-red-400 hover:border-red-500/40 hover:bg-red-500/10'

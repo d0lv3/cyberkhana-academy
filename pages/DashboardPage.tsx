@@ -251,11 +251,11 @@ const DashboardPage: React.FC = () => {
               </span>
             </div>
 
-            <div className="p-6">
-              <div className="flex items-center gap-6 flex-wrap">
+            <div className="p-4 sm:p-6">
+              <div className="flex items-center gap-4 sm:gap-6 flex-wrap min-w-0">
                 {/* Current streak */}
                 <div className="flex items-baseline gap-2" dir="ltr">
-                  <span className="text-4xl font-black text-[#f3f6ff]">{streak.current}</span>
+                  <span className="text-3xl sm:text-4xl font-black text-[#f3f6ff]">{streak.current}</span>
                   <span className="text-sm text-[#9aa5bf]">
                     {streak.current === 1
                       ? lang === 'ar' ? 'يوم' : 'day'
@@ -263,13 +263,15 @@ const DashboardPage: React.FC = () => {
                   </span>
                 </div>
 
-                {/* Week pips, Monday-first */}
-                <div className="flex items-center gap-1.5" dir="ltr">
+                {/* Week pips, Monday-first. Seven 32px pips plus their gaps
+                    come to 260px, which does not fit a 320px phone, so they
+                    step down below xs. */}
+                <div className="flex items-center gap-1 xs:gap-1.5" dir="ltr">
                   {streak.week.map((d, di) => (
                     <div
                       key={d.key}
                       title={d.key}
-                      className={`h-8 w-8 rounded-lg border flex items-center justify-center text-[10px] font-bold transition-colors ${
+                      className={`h-7 w-7 xs:h-8 xs:w-8 rounded-lg border flex items-center justify-center text-[10px] font-bold transition-colors ${
                         d.done
                           ? 'border-[#00a859]/40 bg-[#00a859]/15 text-[#00a859]'
                           : d.isToday
@@ -371,7 +373,7 @@ const DashboardPage: React.FC = () => {
                 </h3>
                 <button
                   onClick={() => navigate('/modules')}
-                  className="text-[11px] font-semibold text-[#6e7a94] hover:text-[#00a859] transition-colors flex-shrink-0"
+                  className="text-[11px] font-semibold text-[#6e7a94] hover:text-[#00a859] transition-colors flex-shrink-0 touch:min-h-tap touch:px-2 -me-2 select-none"
                 >
                   {lang === 'ar' ? 'عرض الكل' : 'View all'}
                 </button>

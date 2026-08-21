@@ -207,7 +207,7 @@ const CreatorDashboard: React.FC = () => {
               }}
             />
           </div>
-          <div className="relative flex flex-col sm:flex-row sm:items-center gap-5 justify-between">
+          <div className="relative flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-5 justify-between min-w-0">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-2xl bg-[#0e1522] border border-[#263248] flex items-center justify-center flex-shrink-0">
                 <span className="text-2xl font-black text-[#9fef00]">
@@ -357,9 +357,15 @@ const CreatorDashboard: React.FC = () => {
             <h2 className="text-sm font-bold text-[#d2d7e3] uppercase tracking-wider">{t('studio.yourContent')}</h2>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Four filter chips plus a 160px search field come to more than a
+              phone's width, so below sm the search drops onto its own
+              full-width row and the chip strip scrolls. */}
+          <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 w-full sm:w-auto min-w-0">
             {/* Filter tabs */}
-            <div className="flex items-center bg-[#0b1019] border border-[#263248] rounded-lg p-0.5" dir="ltr">
+            <div
+              className="scroll-x flex items-center bg-[#0b1019] border border-[#263248] rounded-lg p-0.5 self-start sm:self-auto max-w-full"
+              dir="ltr"
+            >
               {(['all', 'published', 'in_review', 'draft'] as FilterKey[]).map((f) => {
                 const labels: Record<FilterKey, string> = {
                   all: t('studio.all'),
@@ -371,7 +377,7 @@ const CreatorDashboard: React.FC = () => {
                   <button
                     key={f}
                     onClick={() => setFilter(f)}
-                    className={`px-2.5 py-1.5 rounded-md text-[11px] font-semibold transition-colors ${
+                    className={`flex-shrink-0 whitespace-nowrap px-2.5 py-1.5 touch:min-h-tap touch:px-3.5 rounded-md text-[11px] font-semibold transition-colors select-none ${
                       filter === f ? 'bg-[#1a2332] text-[#f3f6ff]' : 'text-[#6e7a94] hover:text-[#d2d7e3]'
                     }`}
                   >
@@ -382,14 +388,14 @@ const CreatorDashboard: React.FC = () => {
             </div>
 
             {/* Search */}
-            <div className="relative">
+            <div className="relative w-full sm:w-auto min-w-0">
               <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#4d5a73]" />
               <input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t('studio.search')}
-                className="w-40 bg-[#0b1019] border border-[#263248] rounded-lg pl-8 pr-3 py-2 text-xs text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#3d4a63]"
+                className="w-full sm:w-40 bg-[#0b1019] border border-[#263248] rounded-lg pl-8 pr-3 py-2 text-xs text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#3d4a63]"
                 dir="ltr"
               />
             </div>

@@ -170,7 +170,7 @@ const ModulesPage: React.FC = () => {
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+            <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
               {filtered.map((mod, i) => (
                 <ModuleCard key={mod.id} module={mod} index={i} />
               ))}
