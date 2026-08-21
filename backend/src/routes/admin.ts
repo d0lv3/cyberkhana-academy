@@ -16,6 +16,7 @@ function adminUserShape(user: IUser) {
   return {
     id: String(user._id),
     email: user.email,
+    username: user.username,
     displayName: user.displayName,
     avatarUrl: user.avatarUrl,
     role: user.role,
@@ -39,6 +40,7 @@ router.get('/users', async (req: AuthRequest, res) => {
       ? {
           $or: [
             { email: { $regex: escapeRegex(q), $options: 'i' } },
+            { username: { $regex: escapeRegex(q), $options: 'i' } },
             { displayName: { $regex: escapeRegex(q), $options: 'i' } },
           ],
         }

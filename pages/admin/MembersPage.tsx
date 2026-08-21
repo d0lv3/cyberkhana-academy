@@ -16,6 +16,8 @@ type Role = 'user' | 'creator' | 'admin';
 interface AdminUser {
   id: string;
   email: string;
+  /** Public handle. Optional: accounts predating handles have none. */
+  username?: string;
   displayName: string;
   avatarUrl?: string;
   role: Role;
@@ -79,7 +81,10 @@ const MembersPage: React.FC = () => {
     const q = query.trim().toLowerCase();
     if (!q) return users;
     return users.filter(
-      (u) => u.email.toLowerCase().includes(q) || u.displayName.toLowerCase().includes(q)
+      (u) =>
+        u.email.toLowerCase().includes(q) ||
+        u.displayName.toLowerCase().includes(q) ||
+        (u.username ?? '').toLowerCase().includes(q)
     );
   }, [users, query]);
 
@@ -224,7 +229,9 @@ const MembersPage: React.FC = () => {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={ar ? 'ابحث بالاسم أو البريد...' : 'Search by name or email...'}
+            placeholder={
+              ar ? 'ابحث بالاسم أو المعرّف أو البريد...' : 'Search by name, username or email...'
+            }
             className="w-full bg-[#121a2a] border border-[#263248] rounded-lg ps-10 pe-4 py-2.5 text-sm text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#3d4a63]"
           />
         </div>
@@ -295,6 +302,17 @@ const MembersPage: React.FC = () => {
                       )}
                     </p>
                     <p className="text-[11px] text-[#6e7a94] truncate" dir="ltr">
+                      {u.username ? (
+                        <span className="font-mono text-[#9aa5bf]">@{u.username}</span>
+                      ) : (
+                        /* Worth surfacing rather than hiding: a member with no
+                           handle cannot be found by one, so sharing a studio
+                           tab with them will fail until they claim it. */
+                        <span className="italic text-[#4d5a73]" dir="auto">
+                          {ar ? 'بلا معرّف' : 'no username'}
+                        </span>
+                      )}
+                      <span className="mx-1.5 text-[#354562]">·</span>
                       {u.email}
                     </p>
                   </div>
