@@ -13,6 +13,8 @@ function glyphFor(language: ProgrammingLanguage): string {
       return 'Py';
     case 'c':
       return 'C';
+    case 'cpp':
+      return 'C++';
     case 'bash':
       return '$_';
     default:

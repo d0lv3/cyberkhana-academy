@@ -11,7 +11,8 @@
     "prebuild": "node scripts/copy-pyodide.mjs",
     "build": "vite build",
     "preview": "vite preview",
-    "verify:python": "node scripts/verify-python-module.mjs"
+    "verify:python": "node scripts/verify-python-module.mjs",
+    "verify:cpp": "node scripts/verify-cpp-module.mjs"
   },
   "dependencies": {
     "@codemirror/lang-cpp": "^6.0.3",

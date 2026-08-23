@@ -65,7 +65,7 @@ const titleOf = (row: PublishedRow): string =>
 
 /** Short glyph drawn on the language card art. Matches LanguageCard. */
 const glyphFor = (l: Pick<ProgrammingLanguage, 'slug' | 'name'>): string =>
-  l.slug === 'python' ? 'Py' : l.slug === 'c' ? 'C' : l.slug === 'bash' ? '$_' : l.name.slice(0, 2);
+  l.slug === 'python' ? 'Py' : l.slug === 'c' ? 'C' : l.slug === 'cpp' ? 'C++' : l.slug === 'bash' ? '$_' : l.name.slice(0, 2);
 
 const ProgrammingCreator: React.FC = () => {
   const navigate = useNavigate();

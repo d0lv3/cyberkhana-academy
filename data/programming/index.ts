@@ -1,10 +1,11 @@
 import type { ProgrammingLanguage, ProgrammingModule, ProgrammingConcept } from './types';
 import python from './python';
 import c from './c';
+import cpp from './cpp';
 import bash from './bash';
 import { mergeProgrammingLanguages, getVisibleCreatorLanguages } from '../../services/creatorDataService';
 
-const staticLanguages: ProgrammingLanguage[] = [python, c, bash];
+const staticLanguages: ProgrammingLanguage[] = [python, c, cpp, bash];
 
 /** Static languages (used for backwards-compat) */
 export const programmingLanguages: ProgrammingLanguage[] = staticLanguages;
