@@ -14,7 +14,7 @@ import {
   getCreatorNetworkingLessons,
   deleteNetworkingLesson,
   saveNetworkingLesson,
-  fetchAllPublishedNetworkingForAdmin,
+  fetchAllModeratableNetworkingForAdmin,
   type AdminPublishedNetworkingLesson,
 } from '../../services/creatorDataService';
 import { statusOf, authorOf, type CreatorNetworkingLesson } from '../../services/creatorTypes';
@@ -58,7 +58,7 @@ const NetworkingCreator: React.FC = () => {
   const [allPublished, setAllPublished] = useState<AdminPublishedNetworkingLesson[]>([]);
   useEffect(() => {
     if (!isAdmin) return;
-    fetchAllPublishedNetworkingForAdmin()
+    fetchAllModeratableNetworkingForAdmin()
       .then(setAllPublished)
       .catch(() => setAllPublished([]));
   }, [isAdmin, refreshKey]);
@@ -362,14 +362,14 @@ const NetworkingCreator: React.FC = () => {
           <div className="flex items-center gap-2">
             <ShieldCheck size={14} className="text-[#f3a43a]" />
             <h2 className="text-sm font-bold text-[#6e7a94] uppercase tracking-wider">
-              {lang === 'ar' ? 'كل دروس الشبكات المنشورة' : 'All published networking lessons'} (
+              {lang === 'ar' ? 'دروس الشبكات المنشورة وقيد المراجعة' : 'Published & in-review networking lessons'} (
               {allPublished.length})
             </h2>
           </div>
           <p className="text-xs text-[#6e7a94] -mt-1">
             {lang === 'ar'
               ? 'كل ما هو منشور على المنصة، بما في ذلك دروسك. يمكنك تعديل أي منها وتبقى ملكية المؤلف كما هي.'
-              : "Everything live on the platform, your own lessons included. You can edit any of them; the original author is kept."}
+              : "Everything live on the platform plus everything submitted for review, your own lessons included. You can edit any of them; the original author is kept."}
           </p>
 
           {allPublished.map((lesson) => (

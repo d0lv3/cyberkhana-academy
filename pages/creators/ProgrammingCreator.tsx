@@ -20,7 +20,7 @@ import {
   saveProgrammingModule,
   saveProgrammingLanguage,
   saveProgrammingLanguageCoverSvg,
-  fetchAllProgrammingForAdmin,
+  fetchAllModeratableProgrammingForAdmin,
   type AdminProgrammingPatch,
 } from '../../services/creatorDataService';
 import {
@@ -94,7 +94,7 @@ const ProgrammingCreator: React.FC = () => {
     if (!isAdmin) return;
     let cancelled = false;
 
-    fetchAllProgrammingForAdmin()
+    fetchAllModeratableProgrammingForAdmin()
       .then((patches) => {
         if (!cancelled) setPublishedPatches(patches);
       })
@@ -133,10 +133,15 @@ const ProgrammingCreator: React.FC = () => {
       }
     }
 
-    // Group by language, then languages/modules before the lessons inside them.
+    // Anything awaiting review floats to the top — that is the queue an admin
+    // opened this page to work through, and it would otherwise be scattered
+    // among the far more numerous published rows. Below it, group by language,
+    // then languages/modules before the lessons inside them.
     const rank = { language: 0, module: 1, concept: 2 } as const;
+    const pending = (r: PublishedRow) => (statusOf(r.entry.item) === 'in_review' ? 0 : 1);
     rows.sort(
       (a, b) =>
+        pending(a) - pending(b) ||
         a.entry.languageSlug.localeCompare(b.entry.languageSlug) ||
         rank[a.kind] - rank[b.kind] ||
         titleOf(a).localeCompare(titleOf(b))
@@ -980,15 +985,15 @@ const ProgrammingCreator: React.FC = () => {
               <ShieldCheck size={14} className="text-[#f3a43a]" />
               <h2 className="text-sm font-bold text-[#6e7a94] uppercase tracking-wider">
                 {uiLang === 'ar'
-                  ? 'كل المحتوى البرمجي المنشور'
-                  : 'All published programming content'}{' '}
+                  ? 'المحتوى البرمجي المنشور وقيد المراجعة'
+                  : 'Published & in-review programming content'}{' '}
                 ({publishedRows.length})
               </h2>
             </div>
             <p className="text-xs text-[#6e7a94] -mt-1">
               {uiLang === 'ar'
-                ? 'كل ما هو منشور على المنصة، بما في ذلك محتواك. يمكنك تعديل أي منه وتبقى ملكية المؤلف كما هي.'
-                : 'Everything live on the platform, your own content included. You can edit any of it; the original author is kept.'}
+                ? 'كل ما هو منشور على المنصة وكل ما أُرسل للمراجعة، بما في ذلك محتواك. يمكنك تعديل أي منه وتبقى ملكية المؤلف كما هي. المسودات تبقى خاصة بمؤلفها.'
+                : 'Everything live on the platform plus everything submitted for review, your own content included. You can edit any of it; the original author is kept. Drafts stay private to their author.'}
             </p>
 
             {publishedRows.map((row) => {

@@ -57,6 +57,16 @@ function isPublishedItem(item: AnyItem): boolean {
   return item.isPublished === true;
 }
 
+/** What an admin may see and edit across every author: live content plus the
+ * review queue. Drafts stay private to their author — 'in_review' is the point
+ * at which a creator hands the work over, so it is also the point at which it
+ * becomes visible to a moderator. Never use this for the student-facing
+ * /published feed, which must stay published-only. */
+function isModeratableItem(item: AnyItem): boolean {
+  if (typeof item.status === 'string') return item.status === 'published' || item.status === 'in_review';
+  return item.isPublished === true;
+}
+
 function isPlainObject(v: unknown): v is AnyItem {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
@@ -216,10 +226,11 @@ router.put('/:bucket', authenticate, requireRole('creator', 'admin'), async (req
   }
 });
 
-/* ── GET /api/content/admin/items ── every PUBLISHED item across ALL authors
- * in the flat, id-keyed buckets (OS modules, standalone modules, networking
- * lessons), each annotated with its owner. Admin-only: the studio surfaces
- * these so an admin can moderate/fix any creator's live content.
+/* ── GET /api/content/admin/items ── every PUBLISHED or IN-REVIEW item across
+ * ALL authors in the flat, id-keyed buckets (OS modules, standalone modules,
+ * networking lessons), each annotated with its owner. Admin-only: the studio
+ * surfaces these so an admin can moderate/fix any creator's live content, and
+ * review what has been submitted for approval. Drafts never appear.
  * `/admin/modules` is the original path, kept so an older client keeps working. */
 router.get(['/admin/items', '/admin/modules'], authenticate, requireRole('admin'), async (_req: AuthRequest, res) => {
   try {
@@ -232,7 +243,7 @@ router.get(['/admin/items', '/admin/modules'], authenticate, requireRole('admin'
     const items: AnyItem[] = [];
     for (const doc of docs) {
       for (const item of ((doc.items as AnyItem[]) ?? [])) {
-        if (!isPlainObject(item) || !isPublishedItem(item)) continue;
+        if (!isPlainObject(item) || !isModeratableItem(item)) continue;
         items.push({
           ...item,
           _ownerId: String(doc.ownerId),
@@ -391,7 +402,8 @@ router.delete(
 /* ── GET /api/content/admin/programming ── every author's PUBLISHED programming
  * content, patch by patch. Programming lives in a nested shape (language →
  * newModules / newConcepts / newLanguage), so it cannot ride the flat item
- * endpoints above. Unpublished entries are stripped out, not merely flagged. */
+ * endpoints above. Drafts are stripped out, not merely flagged; published and
+ * in-review entries both come through, since in_review IS the moderation queue. */
 router.get('/admin/programming', authenticate, requireRole('admin'), async (_req: AuthRequest, res) => {
   try {
     const docs = await ContentBucket.find({ bucket: 'programming-patches' }).lean();
@@ -406,19 +418,19 @@ router.get('/admin/programming', authenticate, requireRole('admin'), async (_req
         if (!isPlainObject(patch) || typeof patch.languageSlug !== 'string') continue;
 
         const newModules = (Array.isArray(patch.newModules) ? patch.newModules : []).filter(
-          (m): m is AnyItem => isPlainObject(m) && isPublishedItem(m)
+          (m): m is AnyItem => isPlainObject(m) && isModeratableItem(m)
         );
         const newConcepts: Record<string, AnyItem[]> = {};
         if (isPlainObject(patch.newConcepts)) {
           for (const [modSlug, concepts] of Object.entries(patch.newConcepts)) {
-            const pub = (Array.isArray(concepts) ? concepts : []).filter(
-              (c): c is AnyItem => isPlainObject(c) && isPublishedItem(c)
+            const visible = (Array.isArray(concepts) ? concepts : []).filter(
+              (c): c is AnyItem => isPlainObject(c) && isModeratableItem(c)
             );
-            if (pub.length) newConcepts[modSlug] = pub;
+            if (visible.length) newConcepts[modSlug] = visible;
           }
         }
         const newLanguage =
-          isPlainObject(patch.newLanguage) && isPublishedItem(patch.newLanguage)
+          isPlainObject(patch.newLanguage) && isModeratableItem(patch.newLanguage)
             ? patch.newLanguage
             : undefined;
 

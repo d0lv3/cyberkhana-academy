@@ -15,7 +15,7 @@ import {
   getCreatorOSModules,
   deleteOSModule,
   saveOSModule,
-  fetchAllPublishedModulesForAdmin,
+  fetchAllModeratableModulesForAdmin,
   type AdminPublishedModule,
 } from '../../services/creatorDataService';
 import { statusOf, authorOf, type CreatorFundamentalModule } from '../../services/creatorTypes';
@@ -59,7 +59,7 @@ const OSModulesCreator: React.FC = () => {
   const [allPublished, setAllPublished] = useState<AdminPublishedModule[]>([]);
   useEffect(() => {
     if (user?.role !== 'admin') return;
-    fetchAllPublishedModulesForAdmin()
+    fetchAllModeratableModulesForAdmin()
       .then((items) => setAllPublished(items.filter((m) => m._bucket === 'os-modules')))
       .catch(() => setAllPublished([]));
   }, [user, refreshKey]);
@@ -373,7 +373,7 @@ const OSModulesCreator: React.FC = () => {
           <div className="flex items-center gap-2">
             <ShieldCheck size={14} className="text-[#f3a43a]" />
             <h2 className="text-sm font-bold text-[#6e7a94] uppercase tracking-wider">
-              {lang === 'ar' ? 'كل وحدات الأنظمة المنشورة' : 'All published OS modules'} ({allPublished.length})
+              {lang === 'ar' ? 'وحدات الأنظمة المنشورة وقيد المراجعة' : 'Published & in-review OS modules'} ({allPublished.length})
             </h2>
           </div>
           <p className="text-xs text-[#6e7a94] -mt-1">

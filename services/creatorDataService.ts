@@ -710,14 +710,16 @@ export interface AdminPublishedNetworkingLesson extends CreatorNetworkingLesson,
 type AdminPublishedItem = (CreatorFundamentalModule | CreatorNetworkingLesson) &
   AdminOwned & { _bucket: AdminItemBucket };
 
-/** Every published item across all authors, in every flat bucket. */
+/** Every published or in-review item across all authors, in every flat bucket.
+ *  Drafts are never returned — a creator's unfinished work stays private until
+ *  they move it to review. */
 async function fetchAllPublishedItemsForAdmin(): Promise<AdminPublishedItem[]> {
   const { items } = await api.get<{ items: AdminPublishedItem[] }>('/content/admin/items');
   return items;
 }
 
-/** Every published module across all authors (admin-only endpoint). */
-export async function fetchAllPublishedModulesForAdmin(): Promise<AdminPublishedModule[]> {
+/** Every published or in-review module across all authors (admin-only). */
+export async function fetchAllModeratableModulesForAdmin(): Promise<AdminPublishedModule[]> {
   const items = await fetchAllPublishedItemsForAdmin();
   return items.filter(
     (i): i is AdminPublishedModule =>
@@ -725,8 +727,8 @@ export async function fetchAllPublishedModulesForAdmin(): Promise<AdminPublished
   );
 }
 
-/** Every published networking lesson across all authors (admin-only endpoint). */
-export async function fetchAllPublishedNetworkingForAdmin(): Promise<AdminPublishedNetworkingLesson[]> {
+/** Every published or in-review networking lesson across all authors (admin-only). */
+export async function fetchAllModeratableNetworkingForAdmin(): Promise<AdminPublishedNetworkingLesson[]> {
   const items = await fetchAllPublishedItemsForAdmin();
   return items.filter((i): i is AdminPublishedNetworkingLesson => i._bucket === 'networking-lessons');
 }
@@ -755,8 +757,8 @@ export async function saveModuleAsAdmin(
 
 export interface AdminProgrammingPatch extends ProgrammingPatch, AdminOwned {}
 
-/** Every author's published programming patches (admin-only endpoint). */
-export async function fetchAllProgrammingForAdmin(): Promise<AdminProgrammingPatch[]> {
+/** Every author's published or in-review programming patches (admin-only). */
+export async function fetchAllModeratableProgrammingForAdmin(): Promise<AdminProgrammingPatch[]> {
   const { items } = await api.get<{ items: AdminProgrammingPatch[] }>('/content/admin/programming');
   return items;
 }

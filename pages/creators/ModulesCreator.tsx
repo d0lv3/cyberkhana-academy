@@ -13,7 +13,7 @@ import {
   getCreatorStandaloneModules,
   deleteStandaloneModule,
   saveStandaloneModule,
-  fetchAllPublishedModulesForAdmin,
+  fetchAllModeratableModulesForAdmin,
   type AdminPublishedModule,
 } from '../../services/creatorDataService';
 import { statusOf, authorOf, type CreatorFundamentalModule } from '../../services/creatorTypes';
@@ -56,7 +56,7 @@ const ModulesCreator: React.FC = () => {
   const [allPublished, setAllPublished] = useState<AdminPublishedModule[]>([]);
   useEffect(() => {
     if (user?.role !== 'admin') return;
-    fetchAllPublishedModulesForAdmin()
+    fetchAllModeratableModulesForAdmin()
       .then((items) => setAllPublished(items.filter((m) => m._bucket === 'standalone-modules')))
       .catch(() => setAllPublished([]));
   }, [user, refreshKey]);
@@ -268,7 +268,7 @@ const ModulesCreator: React.FC = () => {
             <div className="flex items-center gap-2">
               <ShieldCheck size={14} className="text-[#f3a43a]" />
               <h2 className="text-sm font-bold text-[#6e7a94] uppercase tracking-wider">
-                {lang === 'ar' ? 'كل الوحدات المنشورة' : 'All published modules'} ({allPublished.length})
+                {lang === 'ar' ? 'الوحدات المنشورة وقيد المراجعة' : 'Published & in-review modules'} ({allPublished.length})
               </h2>
             </div>
             <p className="text-xs text-[#6e7a94] -mt-1">
