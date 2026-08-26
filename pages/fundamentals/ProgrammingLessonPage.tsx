@@ -18,6 +18,7 @@ import Button from '../../components/ui/EnhancedButton';
 import LessonMarkdown from '../../components/ui/LessonMarkdown';
 import { youtubeEmbedUrl } from '../../services/youtube';
 import { useLang } from '../../contexts/LangContext';
+import { mdFor } from '../../services/creatorTypes';
 import { useScrollToTop } from '../../hooks/useScrollToTop';
 import { getProgrammingDone, markProgrammingDone, recordActivity } from '../../services/progressService';
 
@@ -226,7 +227,7 @@ const ProgrammingLessonPage: React.FC = () => {
               </div>
             )}
             <article className="max-w-2xl mx-auto px-6 py-8 md:px-8 md:py-10">
-              <LessonMarkdown content={concept.markdownContent} />
+              <LessonMarkdown content={mdFor(concept.markdownContent, lang)} />
             </article>
           </div>
 

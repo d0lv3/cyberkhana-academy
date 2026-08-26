@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import CreatorLayout from '../../components/creators/CreatorLayout';
 import BilingualInput from '../../components/creators/BilingualInput';
-import MarkdownUploader from '../../components/creators/MarkdownUploader';
+import BilingualMarkdown from '../../components/creators/BilingualMarkdown';
 import MarkdownPreview from '../../components/creators/MarkdownPreview';
 import DynamicList from '../../components/creators/DynamicList';
 import EnhancedCard from '../../components/ui/EnhancedCard';
@@ -34,6 +34,8 @@ import {
 import {
   makeCreatorMeta,
   statusOf,
+  mdFor,
+  toLocalizedMarkdown,
   type ContentStatus,
   type CreatorProgrammingConcept,
 } from '../../services/creatorTypes';
@@ -162,7 +164,9 @@ const ProgrammingConceptEditor: React.FC = () => {
   const [slug, setSlug] = useState('');
   const [order, setOrder] = useState(100);
   const [type, setType] = useState<'lesson' | 'challenge'>('lesson');
-  const [markdownContent, setMarkdownContent] = useState('');
+  const [markdownContent, setMarkdownContent] = useState<{ en: string; ar: string }>({ en: '', ar: '' });
+  /** Which language tab the body editor and its preview are showing. */
+  const [mdLang, setMdLang] = useState<'en' | 'ar'>('en');
   const [starterCode, setStarterCode] = useState('# Write your code here\n');
   const [solution, setSolution] = useState('');
   const [testCases, setTestCases] = useState<TestCase[]>([]);
@@ -226,7 +230,7 @@ const ProgrammingConceptEditor: React.FC = () => {
     setSlug(concept.slug);
     setOrder(concept.order);
     setType(concept.type);
-    setMarkdownContent(concept.markdownContent);
+    setMarkdownContent(toLocalizedMarkdown(concept.markdownContent));
     setStarterCode(concept.starterCode);
     setSolution(concept.solution || '');
     setTestCases(concept.testCases || []);
@@ -255,17 +259,20 @@ const ProgrammingConceptEditor: React.FC = () => {
   /* ── Templates ── */
   const insertMarkdownTemplate = async () => {
     if (
-      markdownContent.trim() &&
+      markdownContent[mdLang].trim() &&
       !(await confirmDialog({
         title: 'Replace content?',
-        message: 'Your current markdown will be replaced with the template.',
+        message: `Your current ${mdLang === 'ar' ? 'Arabic' : 'English'} markdown will be replaced with the template.`,
         confirmLabel: 'Replace',
         tone: 'default',
       }))
     ) {
       return;
     }
-    setMarkdownContent(type === 'challenge' ? CHALLENGE_MD_TEMPLATE : LESSON_MD_TEMPLATE);
+    setMarkdownContent((prev) => ({
+      ...prev,
+      [mdLang]: type === 'challenge' ? CHALLENGE_MD_TEMPLATE : LESSON_MD_TEMPLATE,
+    }));
   };
 
   const insertStarterTemplate = async () => {
@@ -336,8 +343,8 @@ const ProgrammingConceptEditor: React.FC = () => {
     }
 
     if (status === 'published') {
-      if (!markdownContent.trim()) {
-        toast('error', 'Add lesson content (markdown) before publishing.');
+      if (!markdownContent.en.trim()) {
+        toast('error', 'Add English lesson content (markdown) before publishing.');
         return;
       }
       if (!starterCode.trim()) {
@@ -499,8 +506,8 @@ const ProgrammingConceptEditor: React.FC = () => {
               <span className="text-xs font-bold text-[#f3f6ff] truncate">{titleEn || 'Untitled concept'}</span>
             </div>
             <div className="h-[600px] overflow-y-auto custom-scrollbar p-6 md:p-8">
-              {markdownContent.trim() ? (
-                <MarkdownPreview content={markdownContent} />
+              {mdFor(markdownContent, mdLang).trim() ? (
+                <MarkdownPreview content={mdFor(markdownContent, mdLang)} />
               ) : (
                 <p className="text-sm text-[#6e7a94] italic">No markdown content yet — switch to the Editor tab to add some.</p>
               )}
@@ -637,10 +644,11 @@ const ProgrammingConceptEditor: React.FC = () => {
                   <Wand2 size={12} /> {type === 'challenge' ? 'Challenge template' : 'Lesson template'}
                 </button>
               </div>
-              <MarkdownUploader
+              <BilingualMarkdown
                 value={markdownContent}
                 onChange={setMarkdownContent}
-                placeholder={'# Lesson Title\n\nContent here...'}
+                lang={mdLang}
+                onLangChange={setMdLang}
               />
             </EnhancedCard>
 
@@ -793,9 +801,12 @@ const ProgrammingConceptEditor: React.FC = () => {
               <div className="px-4 py-3 border-b border-[#263248] bg-[#0b1019] flex items-center gap-2">
                 <Eye size={13} className="text-[#6e7a94]" />
                 <span className="text-xs font-bold uppercase tracking-wider text-[#6e7a94]">Content Preview</span>
+                <span className="ms-auto text-[10px] font-semibold text-[#6e7a94]">
+                  {mdLang === 'ar' ? 'العربية' : 'English'}
+                </span>
               </div>
               <div className="max-h-[calc(100vh-220px)] overflow-y-auto custom-scrollbar p-6">
-                <MarkdownPreview content={markdownContent} />
+                <MarkdownPreview content={mdFor(markdownContent, mdLang)} />
               </div>
             </EnhancedCard>
           </div>

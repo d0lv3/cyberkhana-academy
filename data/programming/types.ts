@@ -15,7 +15,14 @@ export type ProgrammingConcept = {
   title: { en: string; ar: string };
   order: number;
   type: 'lesson' | 'challenge';
-  markdownContent: string;
+  /**
+   * Lesson body. Bilingual `{ en, ar }` with an English fallback, matching how
+   * module sections store theirs (services/creatorTypes' LocalizedMarkdown —
+   * declared inline here because creatorTypes imports THIS file, so importing
+   * it back would close a cycle). Reads go through `mdFor`, which tolerates the
+   * plain string the built-in courses still use.
+   */
+  markdownContent: string | { en: string; ar: string };
   starterCode: string;
   /**
    * Prefills the Run panel's stdin box for lessons whose starterCode calls
