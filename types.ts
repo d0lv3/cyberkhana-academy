@@ -5,6 +5,9 @@ export interface AcademyUser {
   username?: string;
   displayName: string;
   avatarUrl?: string;
+  /** Read-only: the photo Google has on file, so a removed picture can be
+   *  restored. Server-managed — PATCH /auth/profile rejects it. */
+  googlePhotoUrl?: string;
   role: 'user' | 'creator' | 'admin';
   /** Effective creator capabilities, resolved by the server (admins get all). */
   permissions?: string[];

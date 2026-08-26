@@ -24,6 +24,7 @@ function publicUser(user: IUser) {
     username: user.username,
     displayName: user.displayName,
     avatarUrl: user.avatarUrl,
+    googlePhotoUrl: user.googlePhotoUrl,
     role: user.role,
     permissions: effectivePermissions(user),
     preferredLang: user.preferredLang,
@@ -82,6 +83,11 @@ router.post('/google', async (req, res) => {
         });
       }
     }
+    /* Keep the Google photo on file, refreshed every sign-in, whatever the
+       member is currently displaying. Only `avatarUrl` is theirs to clear, so
+       this is what makes removing a picture reversible — and it also means a
+       photo changed on the Google account stops going stale here. */
+    if (payload.picture) user.googlePhotoUrl = payload.picture;
     if (user.isBanned) {
       res.status(403).json({ error: 'Account unavailable' });
       return;

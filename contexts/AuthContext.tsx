@@ -9,6 +9,7 @@ interface ServerUser {
   username?: string;
   displayName: string;
   avatarUrl?: string;
+  googlePhotoUrl?: string;
   role: AcademyUser['role'];
   permissions?: string[];
   preferredLang: 'en' | 'ar';
@@ -52,6 +53,7 @@ function mapServerUser(u: ServerUser): AcademyUser {
     username: u.username,
     displayName: u.displayName,
     avatarUrl: u.avatarUrl,
+    googlePhotoUrl: u.googlePhotoUrl,
     role: u.role,
     permissions: u.permissions,
     preferredLang: u.preferredLang,

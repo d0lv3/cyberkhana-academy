@@ -7,7 +7,13 @@ export interface IUser extends Document {
    *  accounts stay valid; the app prompts for one on next sign-in. */
   username?: string;
   displayName: string;
+  /** The picture actually shown. A built-in `avatar:<id>`, a photo URL, or
+   *  unset for the initial. The member owns this one. */
   avatarUrl?: string;
+  /** Last photo Google gave us, refreshed on every Google sign-in and never
+   *  cleared by a profile edit. Its only job is to survive `avatarUrl` being
+   *  removed, so "use my Google photo" can put it back later. */
+  googlePhotoUrl?: string;
   role: UserRole;
   oauthProviders: {
     google?: { id: string; email: string };
@@ -52,6 +58,7 @@ const UserSchema = new Schema<IUser>(
     },
     displayName: { type: String, required: true, trim: true },
     avatarUrl: { type: String },
+    googlePhotoUrl: { type: String },
     role: { type: String, enum: ['user', 'creator', 'admin'], default: 'user' },
     oauthProviders: {
       google: {
