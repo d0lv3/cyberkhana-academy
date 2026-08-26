@@ -11,8 +11,9 @@ import {
   Globe,
   LogOut,
   AtSign,
-  Trash2,
   ImagePlus,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/EnhancedButton';
@@ -21,8 +22,37 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLang } from '../contexts/LangContext';
 import UniversityPicker from '../components/university/UniversityPicker';
 import Avatar from '../components/ui/Avatar';
-import CyberAvatar, { AVATAR_PRESETS, avatarValue } from '../components/ui/CyberAvatar';
+import AvatarPicker from '../components/account/AvatarPicker';
 import { universityLabel } from '../data/iraqUniversities';
+
+const BIO_MAX = 500;
+const HANDLE_RE = /^[a-zA-Z0-9_]{3,20}$/;
+
+/* ── Form section ──
+ * The editor used to be a single stack of controls in a column beside the
+ * avatar, which gave no clue that "display name" and "university" are
+ * different kinds of decision. Grouping them under headed sections lets
+ * someone find the one field they came to change without reading the rest.
+ */
+const Section: React.FC<{
+  icon: React.ElementType;
+  title: string;
+  hint?: string;
+  children: React.ReactNode;
+}> = ({ icon: Icon, title, hint, children }) => (
+  <section className="border-t border-[#1e293b] py-5 first:border-t-0 first:pt-0">
+    <div className="mb-4 flex items-start gap-2.5">
+      <span className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border border-[#263248] bg-[#0e1522] text-[#6e7a94]">
+        <Icon size={13} />
+      </span>
+      <div className="min-w-0">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-[#9aa5bf]">{title}</h3>
+        {hint && <p className="mt-0.5 text-xs text-[#6e7a94]">{hint}</p>}
+      </div>
+    </div>
+    {children}
+  </section>
+);
 
 const ProfilePage: React.FC = () => {
   const { user, updateUser, updateUsername, logout } = useAuth();
@@ -30,72 +60,84 @@ const ProfilePage: React.FC = () => {
   const ar = lang === 'ar';
 
   const [editing, setEditing] = useState(false);
+  /* One draft for the whole form, the picture included. Everything commits on
+     Save and everything reverts on Cancel — previously the picture wrote
+     straight through on click, so Cancel silently left it changed. */
   const [form, setForm] = useState({
-    displayName: user?.displayName ?? '',
-    bio: user?.bio ?? '',
-    university: user?.university ?? '',
+    displayName: '',
+    bio: '',
+    university: '',
+    avatarUrl: '',
+    username: '',
   });
-
-  /* The handle is edited on its own, because it is the one field the server
-     can refuse (it must be unique) — so it needs its own error and pending
-     state rather than riding along with the optimistic profile save. */
-  const [pickingAvatar, setPickingAvatar] = useState(false);
-  const [handle, setHandle] = useState('');
+  const [saving, setSaving] = useState(false);
+  /* The handle is the only field the server can refuse (it must be unique), so
+     its rejection has to land on the field rather than as a page-level error. */
   const [handleError, setHandleError] = useState<string | null>(null);
-  const [handleSaving, setHandleSaving] = useState(false);
-  const [handleSaved, setHandleSaved] = useState(false);
 
   if (!user) return null;
 
+  const current = {
+    displayName: user.displayName ?? '',
+    bio: user.bio ?? '',
+    university: user.university ?? '',
+    avatarUrl: user.avatarUrl ?? '',
+    username: user.username ?? '',
+  };
+
   const startEdit = () => {
-    setForm({
-      displayName: user.displayName ?? '',
-      bio: user.bio ?? '',
-      university: user.university ?? '',
-    });
-    setHandle(user.username ?? '');
+    setForm(current);
     setHandleError(null);
-    setHandleSaved(false);
-    setPickingAvatar(false);
     setEditing(true);
   };
 
-  /* Pictures save on click rather than waiting for the form's Save button:
-     picking one IS the confirmation, and seeing it land immediately is the
-     whole point of a gallery. '' clears it back to the initial. */
-  const chooseAvatar = (value: string) => {
-    updateUser({ avatarUrl: value });
-    setPickingAvatar(false);
-  };
+  const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
+    setForm((f) => ({ ...f, [key]: value }));
 
-  const save = () => {
+  const trimmedHandle = form.username.trim();
+  const handleChanged = trimmedHandle.toLowerCase() !== current.username.toLowerCase();
+  const handleMalformed = trimmedHandle !== '' && !HANDLE_RE.test(trimmedHandle);
+
+  const nameEmpty = form.displayName.trim() === '';
+  const bioTooLong = form.bio.length > BIO_MAX;
+
+  const dirty =
+    form.displayName.trim() !== current.displayName ||
+    form.bio.trim() !== current.bio ||
+    form.university.trim() !== current.university ||
+    form.avatarUrl !== current.avatarUrl ||
+    handleChanged;
+
+  const blocked = nameEmpty || bioTooLong || handleMalformed;
+
+  const save = async () => {
+    if (saving || !dirty || blocked) return;
+    setSaving(true);
+    setHandleError(null);
+
+    /* Handle first. It is the one round-trip that can fail, and if it does the
+       form has to stay open on the offending field — so nothing else is
+       committed until the server has accepted it. */
+    if (handleChanged && trimmedHandle) {
+      try {
+        await updateUsername(trimmedHandle);
+      } catch (err) {
+        setHandleError(
+          err instanceof Error ? err.message : ar ? 'تعذر الحفظ.' : 'Could not save that username.'
+        );
+        setSaving(false);
+        return;
+      }
+    }
+
     updateUser({
-      displayName: form.displayName.trim() || user.displayName,
+      displayName: form.displayName.trim(),
       bio: form.bio.trim(),
       university: form.university.trim(),
+      avatarUrl: form.avatarUrl,
     });
+    setSaving(false);
     setEditing(false);
-  };
-
-  const trimmedHandle = handle.trim();
-  const handleChanged = trimmedHandle.toLowerCase() !== (user.username ?? '').toLowerCase();
-  const handleValid = /^[a-zA-Z0-9_]{3,20}$/.test(trimmedHandle);
-
-  const saveHandle = async () => {
-    if (!handleValid || !handleChanged || handleSaving) return;
-    setHandleSaving(true);
-    setHandleError(null);
-    setHandleSaved(false);
-    try {
-      await updateUsername(trimmedHandle);
-      setHandleSaved(true);
-    } catch (err) {
-      setHandleError(
-        err instanceof Error ? err.message : ar ? 'تعذر الحفظ.' : 'Could not save that username.'
-      );
-    } finally {
-      setHandleSaving(false);
-    }
   };
 
   const memberSince = (() => {
@@ -112,6 +154,36 @@ const ProfilePage: React.FC = () => {
   const roleLabel = user.role === 'admin' ? t('profile.role.admin') : t('profile.role.user');
   const roleColor = user.role === 'admin' ? '#9fef00' : '#00a859';
 
+  /* Handle field state, resolved once so the input border and the message
+     below it can never disagree about whether something is wrong. */
+  const handleState: { tone: 'error' | 'warn' | 'ok' | 'muted'; message: string } = handleError
+    ? { tone: 'error', message: handleError }
+    : handleMalformed
+      ? {
+          tone: 'warn',
+          message: ar
+            ? '3 إلى 20 حرفا: أحرف وأرقام وشرطة سفلية فقط.'
+            : '3–20 characters: letters, numbers and underscores only.',
+        }
+      : handleChanged && trimmedHandle
+        ? {
+            tone: 'ok',
+            message: ar ? 'سيُحفظ عند الحفظ.' : 'Will be claimed when you save.',
+          }
+        : {
+            tone: 'muted',
+            message: ar
+              ? 'اسمك العام — يظهر في لوحة المتصدرين.'
+              : 'Your public handle — shown on the leaderboard.',
+          };
+
+  const handleToneClass = {
+    error: 'text-[#ff6b6b]',
+    warn: 'text-[#f3a43a]',
+    ok: 'text-[#00a859]',
+    muted: 'text-[#6e7a94]',
+  }[handleState.tone];
+
   return (
     <div className="space-y-6">
       <PageHeader icon={UserCircle} iconColor="#00a859" title={t('profile.title')} subtitle={t('profile.subtitle')} />
@@ -125,244 +197,237 @@ const ProfilePage: React.FC = () => {
       >
         <div className="absolute -top-20 -right-10 w-64 h-64 bg-[#00a859]/10 rounded-full blur-[90px]" />
         <div className="relative z-10 p-6 sm:p-7">
-          <div className="flex items-start gap-5">
-            {/* Avatar */}
-            <div className="flex-shrink-0 flex flex-col items-center gap-2">
-              <Avatar
-                avatarUrl={user.avatarUrl}
-                name={user.displayName}
-                className="w-20 h-20 rounded-2xl"
-                initialClassName="text-3xl"
-              />
-              {editing && (
-                <div className="flex items-center gap-1" dir="ltr">
-                  <button
-                    type="button"
-                    onClick={() => setPickingAvatar((v) => !v)}
-                    title={ar ? 'تغيير الصورة' : 'Change picture'}
-                    aria-expanded={pickingAvatar}
-                    className={`flex h-8 w-8 touch:h-11 touch:w-11 items-center justify-center rounded-lg border transition-colors ${
-                      pickingAvatar
-                        ? 'border-[#00a859]/45 bg-[#00a859]/10 text-[#00a859]'
-                        : 'border-[#263248] text-[#6e7a94] hover:border-[#00a859]/45 hover:text-[#00a859]'
-                    }`}
-                  >
-                    <ImagePlus size={14} />
-                  </button>
-                  {user.avatarUrl && (
-                    <button
-                      type="button"
-                      onClick={() => chooseAvatar('')}
-                      title={ar ? 'إزالة الصورة' : 'Remove picture'}
-                      className="flex h-8 w-8 touch:h-11 touch:w-11 items-center justify-center rounded-lg border border-[#263248] text-[#6e7a94] transition-colors hover:border-red-400/45 hover:text-red-400"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  )}
+          {editing ? (
+            /* ── Edit mode ──
+               Takes the full width of the card rather than a column beside the
+               avatar: the picture grid and the university picker were both
+               being squeezed into half a card for no reason. */
+            <div>
+              <div className="mb-5 flex items-start justify-between gap-3 border-b border-[#1e293b] pb-4">
+                <div className="min-w-0">
+                  <h2 className="text-lg font-bold text-[#f3f6ff]">
+                    {ar ? 'تعديل الملف الشخصي' : 'Edit profile'}
+                  </h2>
+                  <p className="mt-0.5 text-xs text-[#6e7a94]">
+                    {ar
+                      ? 'لا شيء يُحفظ حتى تضغط حفظ.'
+                      : 'Nothing is saved until you press Save.'}
+                  </p>
                 </div>
-              )}
-            </div>
+                <button
+                  type="button"
+                  onClick={() => setEditing(false)}
+                  title={t('profile.cancel')}
+                  className="flex h-8 w-8 touch:h-11 touch:w-11 flex-shrink-0 items-center justify-center rounded-lg text-[#6e7a94] transition-colors hover:bg-[#1a2332] hover:text-[#f3f6ff]"
+                >
+                  <X size={16} />
+                </button>
+              </div>
 
-            {/* Identity / edit form */}
-            <div className="flex-1 min-w-0">
-              {editing ? (
-                <div className="space-y-3 max-w-md">
+              <Section
+                icon={ImagePlus}
+                title={ar ? 'الصورة' : 'Picture'}
+                hint={ar ? 'اختر صورة أو أحد الرموز.' : 'Pick your photo or one of the built-in icons.'}
+              >
+                <AvatarPicker
+                  value={form.avatarUrl}
+                  onChange={(v) => set('avatarUrl', v)}
+                  googlePhotoUrl={user.googlePhotoUrl}
+                  displayName={form.displayName || user.displayName}
+                  lang={lang}
+                />
+              </Section>
+
+              <Section icon={UserCircle} title={ar ? 'الهوية' : 'Identity'}>
+                <div className="grid gap-4 sm:grid-cols-2">
                   <Input
                     label={t('profile.displayName')}
                     value={form.displayName}
-                    onChange={(e) => setForm((f) => ({ ...f, displayName: e.target.value }))}
+                    onChange={(e) => set('displayName', e.target.value)}
+                    maxLength={60}
+                    error={
+                      nameEmpty
+                        ? ar
+                          ? 'الاسم مطلوب.'
+                          : 'A display name is required.'
+                        : undefined
+                    }
                   />
 
-                  {/* Username — saved separately, since only the server can
-                      tell us whether the handle is free. */}
                   <div>
                     <label className="block text-sm font-medium text-[#d2d7e3] mb-2">
                       {ar ? 'اسم المستخدم' : 'Username'}
                     </label>
-                    <div className="flex items-center gap-2">
-                      <div className="relative flex-1">
-                        <span className="absolute inset-y-0 start-0 flex items-center ps-3 text-[#6e7a94] pointer-events-none">
-                          <AtSign size={15} />
-                        </span>
-                        <input
-                          value={handle}
-                          onChange={(e) => {
-                            setHandle(e.target.value);
-                            setHandleError(null);
-                            setHandleSaved(false);
-                          }}
-                          placeholder="sara_hunts"
-                          dir="ltr"
-                          maxLength={20}
-                          className="w-full ps-9 pe-3 py-2.5 rounded-lg bg-[#1a2332] border border-[#263248] text-[#f3f6ff] font-mono text-sm placeholder:text-[#3d4a63] focus:outline-none focus:border-[#00a859] transition-colors"
-                        />
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={saveHandle}
-                        disabled={!handleValid || !handleChanged || handleSaving}
-                      >
-                        {handleSaving
-                          ? ar ? 'جارٍ...' : 'Saving...'
-                          : ar ? 'حفظ' : 'Save'}
-                      </Button>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 start-0 flex items-center ps-3 text-[#6e7a94] pointer-events-none">
+                        <AtSign size={15} />
+                      </span>
+                      <input
+                        value={form.username}
+                        onChange={(e) => {
+                          set('username', e.target.value);
+                          setHandleError(null);
+                        }}
+                        placeholder="sara_hunts"
+                        dir="ltr"
+                        maxLength={20}
+                        aria-invalid={handleState.tone === 'error' || handleState.tone === 'warn'}
+                        className={`w-full ps-9 pe-3 py-2.5 rounded-lg bg-[#1a2332] border text-[#f3f6ff] font-mono text-sm placeholder:text-[#3d4a63] focus:outline-none transition-colors ${
+                          handleState.tone === 'error'
+                            ? 'border-red-500 focus:border-red-500'
+                            : handleState.tone === 'warn'
+                              ? 'border-[#f3a43a]/60 focus:border-[#f3a43a]'
+                              : 'border-[#263248] focus:border-[#00a859]'
+                        }`}
+                      />
                     </div>
-                    <p
-                      className={`mt-1.5 text-xs ${
-                        handleError
-                          ? 'text-[#ff6b6b]'
-                          : handleSaved
-                          ? 'text-[#00a859]'
-                          : trimmedHandle && !handleValid
-                          ? 'text-[#f3a43a]'
-                          : 'text-[#6e7a94]'
-                      }`}
-                    >
-                      {handleError
-                        ? handleError
-                        : handleSaved
-                        ? ar ? 'تم تحديث اسم المستخدم.' : 'Username updated.'
-                        : trimmedHandle && !handleValid
-                        ? ar
-                          ? '3 إلى 20 حرفا: أحرف وأرقام وشرطة سفلية فقط.'
-                          : '3–20 characters: letters, numbers and underscores only.'
-                        : ar
-                        ? 'اسمك العام — يظهر في لوحة المتصدرين.'
-                        : 'Your public handle — shown on the leaderboard.'}
+                    <p className={`mt-1.5 flex items-center gap-1.5 text-xs ${handleToneClass}`}>
+                      {handleState.tone === 'error' && <AlertCircle size={12} className="flex-shrink-0" />}
+                      {handleState.message}
                     </p>
                   </div>
+                </div>
+              </Section>
+
+              <Section icon={GraduationCap} title={ar ? 'نبذة' : 'About'}>
+                <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-[#d2d7e3] mb-2">
-                      {t('profile.bio')}
-                    </label>
+                    <div className="mb-2 flex items-baseline justify-between gap-2">
+                      <label className="block text-sm font-medium text-[#d2d7e3]">
+                        {t('profile.bio')}
+                      </label>
+                      <span
+                        className={`text-[11px] tabular-nums ${
+                          bioTooLong ? 'text-[#ff6b6b]' : 'text-[#6e7a94]'
+                        }`}
+                        dir="ltr"
+                      >
+                        {form.bio.length} / {BIO_MAX}
+                      </span>
+                    </div>
                     <textarea
                       value={form.bio}
-                      onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
+                      onChange={(e) => set('bio', e.target.value)}
                       placeholder={t('profile.bioPlaceholder')}
                       rows={3}
-                      className="w-full bg-[#1a2332] border border-[#263248] rounded-lg text-[#f3f6ff] placeholder-[#6e7a94] focus:outline-none focus:ring-2 focus:ring-[#00a859] focus:border-[#00a859] transition-all p-3 resize-none"
+                      className={`w-full bg-[#1a2332] border rounded-lg text-[#f3f6ff] placeholder-[#6e7a94] focus:outline-none focus:ring-2 transition-all p-3 resize-none ${
+                        bioTooLong
+                          ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                          : 'border-[#263248] focus:ring-[#00a859] focus:border-[#00a859]'
+                      }`}
                     />
                   </div>
+
                   <div>
                     <label className="block text-sm font-medium text-[#d2d7e3] mb-2">
                       {t('profile.university')}
                     </label>
                     <UniversityPicker
                       value={form.university}
-                      onSelect={(v) => setForm((f) => ({ ...f, university: v }))}
+                      onSelect={(v) => set('university', v)}
                       lang={lang}
                     />
                   </div>
-                  {pickingAvatar && (
-                    <div className="rounded-xl border border-[#263248] bg-[#0e1522] p-3">
-                      <div className="mb-3 flex items-center justify-between gap-2">
-                        <p className="text-xs font-semibold text-[#d2d7e3]">
-                          {ar ? 'اختر صورة' : 'Pick a picture'}
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => chooseAvatar('')}
-                          className="text-[11px] font-semibold text-[#6e7a94] transition-colors hover:text-red-400"
-                        >
-                          {ar ? 'بدون صورة' : 'No picture'}
-                        </button>
-                      </div>
-                      <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
-                        {AVATAR_PRESETS.map((preset) => {
-                          const value = avatarValue(preset.id);
-                          const active = user.avatarUrl === value;
-                          return (
-                            <button
-                              key={preset.id}
-                              type="button"
-                              onClick={() => chooseAvatar(value)}
-                              title={preset.label[lang]}
-                              aria-pressed={active}
-                              className={`aspect-square overflow-hidden rounded-lg border transition-all hover:-translate-y-0.5 ${
-                                active
-                                  ? 'border-[#00a859] ring-2 ring-[#00a859]/35'
-                                  : 'border-[#263248] hover:border-[#3d4a63]'
-                              }`}
-                            >
-                              <CyberAvatar preset={preset} className="h-full w-full" />
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-2 pt-1">
-                    <Button variant="primary" size="sm" onClick={save} leftIcon={<Check size={15} />}>
-                      {t('profile.save')}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setEditing(false)}
-                      leftIcon={<X size={15} />}
-                    >
-                      {t('profile.cancel')}
-                    </Button>
-                  </div>
                 </div>
-              ) : (
-                <>
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <h2 className="text-xl font-black text-[#f3f6ff]">{user.displayName}</h2>
-                    <span
-                      className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide"
-                      style={{
-                        color: roleColor,
-                        backgroundColor: `${roleColor}15`,
-                        border: `1px solid ${roleColor}33`,
-                      }}
-                    >
-                      {roleLabel}
-                    </span>
-                  </div>
+              </Section>
 
-                  {user.username && (
-                    <p className="mt-1 text-sm font-mono text-[#00a859]" dir="ltr">
-                      @{user.username}
-                    </p>
-                  )}
-
-                  <div className="mt-2 flex flex-col gap-1.5 text-sm text-[#9aa5bf] min-w-0">
-                    {/* An email address is a single unbreakable token, so on a
-                        phone it either truncates or runs out of the card. */}
-                    <span className="inline-flex items-center gap-2 min-w-0 max-w-full" dir="ltr">
-                      <Mail size={14} className="text-[#6e7a94] shrink-0" />
-                      <span className="truncate" title={user.email}>{user.email}</span>
-                    </span>
-                    <span className="inline-flex items-center gap-2">
-                      <GraduationCap size={14} className="text-[#6e7a94]" />
-                      {(() => {
-                        const uni = universityLabel(user.university, lang);
-                        return uni.isSet ? uni.text : <span className="text-[#6e7a94]">{t('profile.notSet')}</span>;
-                      })()}
-                    </span>
-                    <span className="inline-flex items-center gap-2">
-                      <CalendarDays size={14} className="text-[#6e7a94]" /> {t('profile.memberSince')}{' '}
-                      {memberSince}
-                    </span>
-                  </div>
-
-                  <p className="mt-3 text-sm text-[#d2d7e3] max-w-lg">
-                    {user.bio || <span className="text-[#6e7a94]">{t('profile.noBio')}</span>}
-                  </p>
-                </>
-              )}
+              {/* Action bar. Save states its own reason for being disabled, so
+                  a greyed-out button is never a dead end. */}
+              <div className="flex flex-wrap items-center gap-3 border-t border-[#1e293b] pt-4">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={save}
+                  disabled={!dirty || blocked || saving}
+                  leftIcon={saving ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
+                >
+                  {saving ? (ar ? 'جارٍ الحفظ...' : 'Saving…') : t('profile.save')}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditing(false)}
+                  disabled={saving}
+                  leftIcon={<X size={15} />}
+                >
+                  {t('profile.cancel')}
+                </Button>
+                <span className="text-xs text-[#6e7a94]">
+                  {blocked
+                    ? ar
+                      ? 'أصلح الحقول المميزة أولا.'
+                      : 'Fix the highlighted fields first.'
+                    : dirty
+                      ? ar
+                        ? 'لديك تغييرات غير محفوظة.'
+                        : 'You have unsaved changes.'
+                      : ar
+                        ? 'لا تغييرات.'
+                        : 'No changes yet.'}
+                </span>
+              </div>
             </div>
+          ) : (
+            /* ── View mode ── */
+            <div className="flex items-start gap-5">
+              <Avatar
+                avatarUrl={user.avatarUrl}
+                name={user.displayName}
+                className="w-20 h-20 rounded-2xl"
+                initialClassName="text-3xl"
+              />
 
-            {/* Edit toggle */}
-            {!editing && (
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h2 className="text-xl font-black text-[#f3f6ff]">{user.displayName}</h2>
+                  <span
+                    className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide"
+                    style={{
+                      color: roleColor,
+                      backgroundColor: `${roleColor}15`,
+                      border: `1px solid ${roleColor}33`,
+                    }}
+                  >
+                    {roleLabel}
+                  </span>
+                </div>
+
+                {user.username && (
+                  <p className="mt-1 text-sm font-mono text-[#00a859]" dir="ltr">
+                    @{user.username}
+                  </p>
+                )}
+
+                <div className="mt-2 flex flex-col gap-1.5 text-sm text-[#9aa5bf] min-w-0">
+                  {/* An email address is a single unbreakable token, so on a
+                      phone it either truncates or runs out of the card. */}
+                  <span className="inline-flex items-center gap-2 min-w-0 max-w-full" dir="ltr">
+                    <Mail size={14} className="text-[#6e7a94] shrink-0" />
+                    <span className="truncate" title={user.email}>{user.email}</span>
+                  </span>
+                  <span className="inline-flex items-center gap-2">
+                    <GraduationCap size={14} className="text-[#6e7a94]" />
+                    {(() => {
+                      const uni = universityLabel(user.university, lang);
+                      return uni.isSet ? uni.text : <span className="text-[#6e7a94]">{t('profile.notSet')}</span>;
+                    })()}
+                  </span>
+                  <span className="inline-flex items-center gap-2">
+                    <CalendarDays size={14} className="text-[#6e7a94]" /> {t('profile.memberSince')}{' '}
+                    {memberSince}
+                  </span>
+                </div>
+
+                <p className="mt-3 text-sm text-[#d2d7e3] max-w-lg">
+                  {user.bio || <span className="text-[#6e7a94]">{t('profile.noBio')}</span>}
+                </p>
+              </div>
+
               <Button variant="outline" size="sm" onClick={startEdit} leftIcon={<Pencil size={14} />}>
                 {t('profile.edit')}
               </Button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </motion.div>
 
