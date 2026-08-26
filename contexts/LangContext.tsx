@@ -33,16 +33,6 @@ const translations: Record<string, Record<Lang, string>> = {
   'features.paths.title': { en: 'Learning Paths', ar: 'مسارات التعلم' },
   'features.paths.desc': { en: 'Structured sequences of modules organized by career track. SOC Analyst, Penetration Tester, and more.', ar: 'تسلسلات منظمة من الوحدات حسب التخصص المهني. محلل SOC، مختبر اختراق، والمزيد.' },
 
-  // Why / Differentiators
-  'why.heading': { en: 'Built for how you actually learn', ar: 'مصمّمة لطريقة تعلّمك الحقيقية' },
-  'why.subtitle': { en: 'Not another video course. CyberKhana Academy is interactive, hands-on, and bilingual from day one.', ar: 'ليست مجرد دورة فيديو أخرى. أكاديمية سايبر خانة تفاعلية وعملية وثنائية اللغة منذ اليوم الأول.' },
-  'why.sim.title': { en: 'Interactive Simulations', ar: 'محاكاة تفاعلية' },
-  'why.sim.desc': { en: 'Watch real network traffic flow packet by packet — NAT, routing, and protocols come alive on screen.', ar: 'شاهد حركة الشبكة الحقيقية حزمة تلو الأخرى — NAT والتوجيه والبروتوكولات تنبض بالحياة أمامك.' },
-  'why.code.title': { en: 'Code in Your Browser', ar: 'برمج داخل المتصفح' },
-  'why.code.desc': { en: 'Write and run real code instantly. No installs, no setup — just open a lesson and start typing.', ar: 'اكتب ونفّذ كودًا حقيقيًا فورًا. بدون تثبيت أو إعداد — افتح الدرس وابدأ الكتابة.' },
-  'why.lang.title': { en: 'Arabic & English', ar: 'بالعربية والإنجليزية' },
-  'why.lang.desc': { en: 'Every concept, lesson, and challenge is fully bilingual, with proper right-to-left support.', ar: 'كل مفهوم ودرس وتحدٍّ ثنائي اللغة بالكامل، مع دعم كامل للكتابة من اليمين لليسار.' },
-
   // Product preview — "See it in action"
   'preview.heading': { en: 'See it in action', ar: 'شاهدها أثناء العمل' },
   'preview.subtitle': { en: 'No slides, no passive videos. Every lesson runs in a real, interactive environment — right in your browser.', ar: 'لا شرائح ولا فيديوهات سلبية. كل درس يعمل في بيئة تفاعلية حقيقية — داخل متصفحك مباشرة.' },
@@ -52,16 +42,9 @@ const translations: Record<string, Record<Lang, string>> = {
   'preview.sim.tag': { en: 'Interactive Simulations', ar: 'محاكاة تفاعلية' },
   'preview.sim.title': { en: 'Visualize how networks really work', ar: 'تصوّر كيف تعمل الشبكات فعلاً' },
   'preview.sim.desc': { en: 'Watch packets travel, NAT translate, and protocols negotiate — step by step, on a live topology.', ar: 'شاهد الحزم تنتقل وNAT يترجم والبروتوكولات تتفاوض — خطوة بخطوة على طوبولوجيا حية.' },
-
-  // Skill progression — surfaces the in-app skill matrix + ranks
-  'skills.heading': { en: 'Watch your mastery take shape', ar: 'شاهد إتقانك يتشكّل' },
-  'skills.subtitle': { en: 'Every lesson you finish feeds a live skill matrix across six security pillars — so you can see exactly where you’re strong and what to train next.', ar: 'كل درس تُنهيه يغذّي مصفوفة مهارات حيّة عبر ست ركائز أمنية — لترى بالضبط أين تتفوّق وما الذي يجب أن تتدرّب عليه تالياً.' },
-  'skills.matrixLabel': { en: 'Live Skill Matrix', ar: 'مصفوفة مهارات حيّة' },
-  'skills.rankLabel': { en: 'Your Rank', ar: 'رتبتك' },
-  'skills.point1.title': { en: 'Six security pillars', ar: 'ست ركائز أمنية' },
-  'skills.point1.desc': { en: 'Offensive, defensive, networking, programming, systems, and fundamentals — each scored by what you complete.', ar: 'هجومي، دفاعي، شبكات، برمجة، أنظمة، وأساسيات — كلٌّ يُقيَّم بما تُكمله.' },
-  'skills.point2.title': { en: 'See your strengths', ar: 'اعرف نقاط قوّتك' },
-  'skills.point2.desc': { en: 'Your matrix highlights which pillars you’ve mastered and which still need work — so every session has a clear focus.', ar: 'تُبرز مصفوفتك الركائز التي أتقنتها وتلك التي ما زالت بحاجة إلى عمل — ليكون لكل جلسة هدف واضح.' },
+  'preview.practice.tag': { en: 'Practice As You Go', ar: 'تدرّب أثناء تعلّمك' },
+  'preview.practice.title': { en: 'Every module ships with its own lab', ar: 'كل وحدة تأتي بمختبرها الخاص' },
+  'preview.practice.desc': { en: 'Read a concept, then immediately do it. Each module opens into an interactive lab with a real shell and a real editor — write the exploit, compile it, run it, and see exactly what it does. Hands-on, not hypothetical.', ar: 'اقرأ المفهوم ثم طبّقه فوراً. كل وحدة تفتح على مختبر تفاعلي بطرفية حقيقية ومحرّر حقيقي — اكتب الاستغلال وصرّفه ونفّذه وشاهد ما يفعله بالضبط. عمليّاً لا نظريّاً.' },
 
   // Landing stats
   'landing.stats.tracks': { en: 'Learning Tracks', ar: 'مسارات تعليمية' },

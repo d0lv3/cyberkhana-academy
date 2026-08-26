@@ -3,9 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Globe } from 'lucide-react';
 import HeroSection from '../components/landing/HeroSection';
 import FeaturesSection from '../components/landing/FeaturesSection';
-import WhyAcademy from '../components/landing/WhyAcademy';
 import ProductPreviewSection from '../components/landing/ProductPreviewSection';
-import SkillProgressionSection from '../components/landing/SkillProgressionSection';
 import StatsBand from '../components/landing/StatsBand';
 import CTASection from '../components/landing/CTASection';
 import LandingFooter from '../components/landing/LandingFooter';
@@ -40,10 +38,10 @@ const LandingPage: React.FC = () => {
           <BrandLogo
             variant="full"
             loading="eager"
-            className="h-8 w-auto max-w-[170px] object-contain"
+            className="hidden sm:block h-8 w-auto max-w-[170px] object-contain"
           />
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 ms-auto">
             {/* Language toggle */}
             <button
               onClick={() => setLang(lang === 'en' ? 'ar' : 'en')}
@@ -56,12 +54,20 @@ const LandingPage: React.FC = () => {
             {/* Login (text) */}
             <button
               onClick={handleLogin}
-              className="hidden sm:inline-flex px-2 text-sm font-medium text-[#d2d7e3] hover:text-[#00a859] transition-colors"
+              className="inline-flex items-center px-2 text-sm font-medium text-[#d2d7e3] hover:text-[#00a859] transition-colors whitespace-nowrap"
             >
               {t('nav.login')}
             </button>
 
-            <Button variant="neon" size="sm" onClick={handleLogin}>
+            {/* Opts out of the touch size bump: this one sits in a 64px bar
+                beside two other controls, where a full 44px pill dominates the
+                row. 38px still clears the WCAG 2.2 target size. */}
+            <Button
+              variant="neon"
+              size="sm"
+              onClick={handleLogin}
+              className="whitespace-nowrap touch:!min-h-[38px] touch:!px-3.5 touch:!py-1.5"
+            >
               {t('nav.getStarted')}
             </Button>
           </div>
@@ -74,14 +80,8 @@ const LandingPage: React.FC = () => {
       {/* Three pillars */}
       <FeaturesSection />
 
-      {/* What makes it different */}
-      <WhyAcademy />
-
       {/* See the interactive surfaces in action */}
       <ProductPreviewSection />
-
-      {/* Skill matrix + rank progression */}
-      <SkillProgressionSection />
 
       {/* Numbers */}
       <StatsBand />

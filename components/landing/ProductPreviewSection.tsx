@@ -1,6 +1,6 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Play, CheckCircle2 } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { motion, useInView } from 'framer-motion';
+import { Play, CheckCircle2, FlaskConical } from 'lucide-react';
 import { useLang } from '../../contexts/LangContext';
 import SectionHeading from './SectionHeading';
 import DeviceIcon from '../network-sim/DeviceIcon';
@@ -157,6 +157,124 @@ const NetSimMockup: React.FC = () => (
   </div>
 );
 
+/* ── Mockup 3: hands-on lab — a C exploit stub typed out, compiled, and run ──
+   The stub types itself character by character, then the shell below picks it
+   up: compile, run, crash, objective ticked. One loop = one lab attempt. */
+const EXPLOIT_LINES: readonly (readonly (readonly [string, string])[])[] = [
+  [['#include ', '#c084fc'], ['<string.h>', '#f3a43a']],
+  [],
+  [['void', '#c084fc'], [' vuln(', '#60a5fa'], ['char', '#c084fc'], [' *in) {', '#d2d7e3']],
+  [['  char', '#c084fc'], [' buf[', '#d2d7e3'], ['64', '#9fef00'], ['];', '#d2d7e3']],
+  [['  strcpy(buf, in);', '#d2d7e3'], ['  // no bounds check', '#4d5a73']],
+  [['}', '#d2d7e3']],
+];
+
+const RUN_LINES: readonly (readonly (readonly [string, string])[])[] = [
+  [['$ ', '#00a859'], ['gcc -fno-stack-protector exploit.c -o lab', '#d2d7e3']],
+  [['$ ', '#00a859'], ['./lab $(python3 -c "print(\'A\'*88)")', '#d2d7e3']],
+  [['[!] ', '#f3a43a'], ['SIGSEGV — saved return address overwritten', '#8b98ae']],
+  [['[✓] ', '#9fef00'], ['Objective 2 of 3 — control the return address', '#d2d7e3']],
+];
+
+const LINE_LENGTHS = EXPLOIT_LINES.map((line) => line.reduce((n, [txt]) => n + txt.length, 0));
+const TOTAL_CHARS = LINE_LENGTHS.reduce((a, b) => a + b, 0);
+
+/* One tick ≈ one keystroke. The rest of the cycle is measured in the same unit
+   so the whole loop is a single counter. */
+const TICK_MS = 38;
+const PAUSE_TICKS = 12; // beat between the last keystroke and the first command
+const RUN_STEP_TICKS = 14; // between shell lines
+const HOLD_TICKS = 36; // finished state, before the loop restarts
+const CYCLE_TICKS = TOTAL_CHARS + PAUSE_TICKS + RUN_LINES.length * RUN_STEP_TICKS + HOLD_TICKS;
+
+const PracticeLabMockup: React.FC = () => {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { amount: 0.4 });
+  const [tick, setTick] = useState(0);
+
+  useEffect(() => {
+    if (!inView) return;
+    const id = setInterval(() => setTick((t) => (t + 1) % CYCLE_TICKS), TICK_MS);
+    return () => clearInterval(id);
+  }, [inView]);
+
+  const typed = Math.min(tick, TOTAL_CHARS);
+  const shellShown = Math.min(
+    RUN_LINES.length,
+    Math.max(0, Math.floor((tick - TOTAL_CHARS - PAUSE_TICKS) / RUN_STEP_TICKS) + 1)
+  );
+
+  return (
+    <div ref={ref} className="relative w-full" dir="ltr">
+      <div className="absolute -inset-4 bg-[#f3a43a]/8 rounded-full blur-[80px]" />
+      <div className="relative rounded-2xl border border-[#263248] bg-[#0b1019] shadow-2xl shadow-black/40 overflow-hidden">
+        {/* chrome */}
+        <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-[#1a2332] bg-[#0d1117]">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#2c3a54]" />
+          <span className="w-2.5 h-2.5 rounded-full bg-[#2c3a54]" />
+          <span className="w-2.5 h-2.5 rounded-full bg-[#2c3a54]" />
+          <span className="ml-2 text-[10px] font-semibold text-[#4d5a73]" style={{ fontFamily: MONO }}>
+            exploit.c
+          </span>
+          <span className="ml-auto inline-flex items-center gap-1 text-[9px] px-2 py-0.5 rounded bg-[#f3a43a]/10 border border-[#f3a43a]/30 text-[#f3a43a] font-bold">
+            <FlaskConical size={9} /> LAB 03 · BUFFER OVERFLOWS
+          </span>
+        </div>
+
+        {/* editor — the stub types itself in */}
+        <div className="px-4 py-3.5 text-[11px] leading-relaxed" style={{ fontFamily: MONO }}>
+          {EXPLOIT_LINES.map((line, i) => {
+            const before = LINE_LENGTHS.slice(0, i).reduce((a, b) => a + b, 0);
+            const shown = Math.max(0, Math.min(LINE_LENGTHS[i], typed - before));
+            const active = typed > before && typed <= before + LINE_LENGTHS[i];
+            let cursor = 0;
+            return (
+              <div key={i} className="flex min-h-[18px]">
+                <span className="w-6 text-[#3a465c] select-none">{i + 1}</span>
+                <span className="whitespace-pre">
+                  {line.map(([txt, color], j) => {
+                    const start = cursor;
+                    cursor += txt.length;
+                    return (
+                      <span key={j} style={{ color }}>
+                        {txt.slice(0, Math.max(0, Math.min(txt.length, shown - start)))}
+                      </span>
+                    );
+                  })}
+                  {active && (
+                    <span className="inline-block w-1.5 h-3.5 bg-[#9fef00] align-middle ml-0.5 animate-pulse" />
+                  )}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* shell — compiles and runs what was just written */}
+        <div
+          className="border-t border-[#1a2332] bg-[#080c14] px-4 py-3 text-[10.5px] min-h-[106px]"
+          style={{ fontFamily: MONO }}
+        >
+          {RUN_LINES.map((line, i) => (
+            <p
+              key={i}
+              className={`leading-relaxed transition-opacity duration-200 ${
+                i < shellShown ? 'opacity-100' : 'opacity-0'
+              }`}
+            >
+              {line.map(([txt, color], j) => (
+                <span key={j} style={{ color }}>
+                  {txt}
+                </span>
+              ))}
+            </p>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 /* One alternating row: mockup + copy. `reverse` swaps column order on desktop. */
 const PreviewRow: React.FC<{
   tag: string;
@@ -218,6 +336,13 @@ const ProductPreviewSection: React.FC = () => {
             accent="#60a5fa"
             mockup={<NetSimMockup />}
             reverse
+          />
+          <PreviewRow
+            tag={t('preview.practice.tag')}
+            title={t('preview.practice.title')}
+            desc={t('preview.practice.desc')}
+            accent="#f3a43a"
+            mockup={<PracticeLabMockup />}
           />
         </div>
       </div>

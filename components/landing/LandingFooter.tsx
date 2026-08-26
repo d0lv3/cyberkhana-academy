@@ -11,7 +11,7 @@ const SOCIALS = [
 ];
 
 const socialBtn =
-  'inline-flex items-center gap-1.5 px-3.5 py-2 touch:min-h-tap rounded-lg border border-[#263248] bg-white/[0.02] text-xs font-bold text-[#d2d7e3] hover:border-[#9fef00]/40 hover:bg-[#9fef00]/10 hover:text-[#9fef00] transition-all';
+  'inline-flex items-center justify-center gap-1.5 px-3.5 py-2 touch:min-h-tap rounded-lg border border-[#263248] bg-white/[0.02] text-xs font-bold text-[#d2d7e3] hover:border-[#9fef00]/40 hover:bg-[#9fef00]/10 hover:text-[#9fef00] transition-all';
 
 const LandingFooter: React.FC = () => {
   const { t, lang } = useLang();
@@ -27,7 +27,7 @@ const LandingFooter: React.FC = () => {
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-10">
           {/* Brand */}
-          <div className="flex flex-col items-center md:items-start gap-3 max-w-xs text-center md:text-start">
+          <div className="flex flex-col items-center md:items-start gap-3 max-w-xs mx-auto md:mx-0 text-center md:text-start">
             <p className="text-sm text-[#6e7a94] leading-relaxed">
               {t('footer.tagline')}
             </p>
@@ -52,7 +52,7 @@ const LandingFooter: React.FC = () => {
 
         {/* ── Connect bar — brand | motto · platform + socials ── */}
         <div className="mt-12 rounded-2xl border border-[#263248] bg-[#121a2a] px-5 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
-          <div className="flex items-center justify-center md:justify-start gap-4 min-w-0">
+          <div className="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-3 sm:gap-4 min-w-0">
             <BrandLogo variant="full" loading="lazy" className="h-9 w-auto max-w-[160px] object-contain flex-shrink-0" />
             <span className="hidden sm:block w-px h-9 bg-[#263248] flex-shrink-0" />
             <p className="text-sm text-[#9aa5bf] leading-snug max-w-[340px] text-center md:text-start">
@@ -62,39 +62,41 @@ const LandingFooter: React.FC = () => {
             </p>
           </div>
 
-          <div className="flex items-center justify-center md:justify-end gap-2 flex-wrap">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap items-center justify-center md:justify-end gap-2 w-full md:w-auto">
             {/* Main platform */}
             <a
               href="https://www.cyberkhana.tech"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 touch:min-h-tap rounded-lg border border-[#00a859]/40 bg-[#00a859]/10 text-xs font-bold text-[#00a859] hover:bg-[#00a859]/20 hover:shadow-[0_0_16px_rgba(0,168,89,0.25)] transition-all"
+              className="inline-flex items-center justify-center gap-1.5 w-full sm:w-auto px-3.5 py-2 touch:min-h-tap rounded-lg border border-[#00a859]/40 bg-[#00a859]/10 text-xs font-bold text-[#00a859] hover:bg-[#00a859]/20 hover:shadow-[0_0_16px_rgba(0,168,89,0.25)] transition-all"
             >
               <Globe size={13} />
               {lang === 'ar' ? 'منصة CyberKhana' : 'CyberKhana Platform'}
               <ExternalLink size={11} />
             </a>
 
-            {/* Socials */}
-            {SOCIALS.map((s) => (
-              <a
-                key={s.label}
-                href={s.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={socialBtn}
-              >
-                <s.icon size={13} />
-                {s.label}
-              </a>
-            ))}
+            {/* Socials — an even three-up on phones, back in the row at sm+ */}
+            <div className="grid grid-cols-3 gap-2 w-full sm:contents">
+              {SOCIALS.map((s) => (
+                <a
+                  key={s.label}
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={socialBtn}
+                >
+                  <s.icon size={13} />
+                  {s.label}
+                </a>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* Bottom bar */}
         <div className="mt-8 pt-6 border-t border-[#1a2332] flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-[#6e7a94]">{t('footer.copyright')}</p>
-          <div className="flex items-center gap-4">
+          <p className="text-xs text-[#6e7a94] text-center sm:text-start">{t('footer.copyright')}</p>
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
             <Link to="/privacy" className="inline-flex items-center touch:min-h-tap touch:px-2 text-xs text-[#6e7a94] hover:text-[#9fef00] transition-colors">
               {t('footer.privacy')}
             </Link>
