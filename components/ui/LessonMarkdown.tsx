@@ -3,6 +3,8 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
+import rehypeRaw from 'rehype-raw';
+import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
 import 'katex/dist/katex.min.css';
 
 interface LessonMarkdownProps {
@@ -56,6 +58,34 @@ function normalizeMath(markdown: string): string {
  *  stays with the Arabic sentence rather than being pulled into the run. */
 const LATIN_WORD = '[A-Za-z0-9]+(?:[._+\\-/][A-Za-z0-9]+)*';
 const LATIN_RUN = new RegExp(`${LATIN_WORD}(?:[ \\t]+${LATIN_WORD})*`, 'g');
+
+/* ── Raw HTML in authored lessons ──
+ * Course authors write collapsible solutions the GitHub way — a <details>
+ * block wrapping a <summary> — and markdown alone renders those as literal
+ * text. rehype-raw parses them, which means the pipeline is now handling
+ * author-supplied HTML that students will load, so rehype-sanitize runs
+ * straight after it.
+ *
+ * The default schema already permits details/summary and the `open`
+ * attribute. What it does not permit is className on div/span, which remark
+ * -math needs: it marks equations with `math-display`/`math-inline` and
+ * rehype-katex finds them by exactly those classes. Allowing only that fixed
+ * pair keeps arbitrary class injection out while leaving math intact.
+ *
+ * Order matters. raw → sanitize → katex: sanitising before katex means
+ * KaTeX's own markup (hundreds of spans, classes and inline styles) is
+ * generated after the gate rather than being stripped by it.
+ */
+const MATH_CLASSES = ['math', 'math-display', 'math-inline'];
+
+const lessonSchema = {
+  ...defaultSchema,
+  attributes: {
+    ...defaultSchema.attributes,
+    div: [...(defaultSchema.attributes?.div ?? []), ['className', ...MATH_CLASSES]],
+    span: [...(defaultSchema.attributes?.span ?? []), ['className', ...MATH_CLASSES]],
+  },
+};
 
 /** Subtrees whose text is already typeset by something else. */
 const OPAQUE_TAGS = new Set(['code', 'pre', 'math', 'svg', 'annotation', 'style', 'script']);
@@ -175,8 +205,17 @@ const LessonMarkdown: React.FC<LessonMarkdownProps> = ({ content, dir }) => {
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={
           isRtl
-            ? [[rehypeKatex, { throwOnError: false, strict: false }], rehypeWrapLatinRuns]
-            : [[rehypeKatex, { throwOnError: false, strict: false }]]
+            ? [
+                rehypeRaw,
+                [rehypeSanitize, lessonSchema],
+                [rehypeKatex, { throwOnError: false, strict: false }],
+                rehypeWrapLatinRuns,
+              ]
+            : [
+                rehypeRaw,
+                [rehypeSanitize, lessonSchema],
+                [rehypeKatex, { throwOnError: false, strict: false }],
+              ]
         }
         components={{
           h1: ({ children }) => (
@@ -271,6 +310,19 @@ const LessonMarkdown: React.FC<LessonMarkdownProps> = ({ content, dir }) => {
             >
               {children}
             </td>
+          ),
+          /* Collapsible solution blocks. The marker is drawn by CSS (see
+             .lesson-prose summary in index.css) so it can flip side with the
+             text direction, which a lucide icon in here could not do. */
+          details: ({ children }) => (
+            <details className="group mb-5 rounded-lg border border-[#263248] bg-[#121a2a] px-4 py-3 open:pb-4">
+              {children}
+            </details>
+          ),
+          summary: ({ children }) => (
+            <summary className="cursor-pointer list-none text-sm font-semibold text-[#f3f6ff] hover:text-[#9fef00] transition-colors touch:min-h-tap flex items-center gap-2 select-none">
+              {children}
+            </summary>
           ),
           hr: () => <hr className="my-8 border-[#263248]" />,
           a: ({ href, children }) => (
