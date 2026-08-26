@@ -155,6 +155,18 @@ const profileSchema = z
       .regex(/^[A-Za-z0-9_]+$/, 'Letters, numbers and underscores only')
       .optional(),
     bio: z.string().max(500).optional(),
+    /* Either a built-in avatar id, an https photo URL, or '' to go back to the
+     * initial. The shape is checked here because this field is rendered as an
+     * <img src> for every member on the leaderboard — an unconstrained string
+     * would let one account put an arbitrary URL in front of everyone else. */
+    avatarUrl: z
+      .string()
+      .max(512)
+      .refine(
+        (v) => v === '' || /^avatar:[a-z0-9-]{1,40}$/.test(v) || /^https:\/\/\S+$/.test(v),
+        'Must be a built-in avatar or an https URL'
+      )
+      .optional(),
     university: z.string().max(120).optional(),
     country: z.string().max(80).optional(),
     preferredLang: z.enum(['en', 'ar']).optional(),
@@ -197,6 +209,10 @@ router.patch('/profile', authenticate, async (req: AuthRequest, res) => {
 
   try {
     Object.assign(req.user!, rest);
+    // '' is how the client says "remove my picture". Clear the path outright
+    // rather than storing an empty string, so `avatarUrl` is either a real
+    // value or absent — never a third, falsy-but-present state to reason about.
+    if (rest.avatarUrl === '') req.user!.set('avatarUrl', undefined);
     await req.user!.save();
     res.json({ user: publicUser(req.user!) });
   } catch (err) {

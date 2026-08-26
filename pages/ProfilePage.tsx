@@ -11,6 +11,8 @@ import {
   Globe,
   LogOut,
   AtSign,
+  Trash2,
+  ImagePlus,
 } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/EnhancedButton';
@@ -18,6 +20,8 @@ import Input from '../components/ui/EnhancedInput';
 import { useAuth } from '../contexts/AuthContext';
 import { useLang } from '../contexts/LangContext';
 import UniversityPicker from '../components/university/UniversityPicker';
+import Avatar from '../components/ui/Avatar';
+import CyberAvatar, { AVATAR_PRESETS, avatarValue } from '../components/ui/CyberAvatar';
 import { universityLabel } from '../data/iraqUniversities';
 
 const ProfilePage: React.FC = () => {
@@ -35,6 +39,7 @@ const ProfilePage: React.FC = () => {
   /* The handle is edited on its own, because it is the one field the server
      can refuse (it must be unique) — so it needs its own error and pending
      state rather than riding along with the optimistic profile save. */
+  const [pickingAvatar, setPickingAvatar] = useState(false);
   const [handle, setHandle] = useState('');
   const [handleError, setHandleError] = useState<string | null>(null);
   const [handleSaving, setHandleSaving] = useState(false);
@@ -51,7 +56,16 @@ const ProfilePage: React.FC = () => {
     setHandle(user.username ?? '');
     setHandleError(null);
     setHandleSaved(false);
+    setPickingAvatar(false);
     setEditing(true);
+  };
+
+  /* Pictures save on click rather than waiting for the form's Save button:
+     picking one IS the confirmation, and seeing it land immediately is the
+     whole point of a gallery. '' clears it back to the initial. */
+  const chooseAvatar = (value: string) => {
+    updateUser({ avatarUrl: value });
+    setPickingAvatar(false);
   };
 
   const save = () => {
@@ -113,18 +127,38 @@ const ProfilePage: React.FC = () => {
         <div className="relative z-10 p-6 sm:p-7">
           <div className="flex items-start gap-5">
             {/* Avatar */}
-            <div className="flex-shrink-0">
-              {user.avatarUrl ? (
-                <img
-                  src={user.avatarUrl}
-                  alt={user.displayName}
-                  className="w-20 h-20 rounded-2xl object-cover border border-[#263248]"
-                />
-              ) : (
-                <div className="w-20 h-20 rounded-2xl bg-[#0e1522] border border-[#263248] flex items-center justify-center">
-                  <span className="text-3xl font-black text-[#9fef00]">
-                    {(user.displayName || 'U').charAt(0).toUpperCase()}
-                  </span>
+            <div className="flex-shrink-0 flex flex-col items-center gap-2">
+              <Avatar
+                avatarUrl={user.avatarUrl}
+                name={user.displayName}
+                className="w-20 h-20 rounded-2xl"
+                initialClassName="text-3xl"
+              />
+              {editing && (
+                <div className="flex items-center gap-1" dir="ltr">
+                  <button
+                    type="button"
+                    onClick={() => setPickingAvatar((v) => !v)}
+                    title={ar ? 'تغيير الصورة' : 'Change picture'}
+                    aria-expanded={pickingAvatar}
+                    className={`flex h-8 w-8 touch:h-11 touch:w-11 items-center justify-center rounded-lg border transition-colors ${
+                      pickingAvatar
+                        ? 'border-[#00a859]/45 bg-[#00a859]/10 text-[#00a859]'
+                        : 'border-[#263248] text-[#6e7a94] hover:border-[#00a859]/45 hover:text-[#00a859]'
+                    }`}
+                  >
+                    <ImagePlus size={14} />
+                  </button>
+                  {user.avatarUrl && (
+                    <button
+                      type="button"
+                      onClick={() => chooseAvatar('')}
+                      title={ar ? 'إزالة الصورة' : 'Remove picture'}
+                      className="flex h-8 w-8 touch:h-11 touch:w-11 items-center justify-center rounded-lg border border-[#263248] text-[#6e7a94] transition-colors hover:border-red-400/45 hover:text-red-400"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -220,6 +254,45 @@ const ProfilePage: React.FC = () => {
                       lang={lang}
                     />
                   </div>
+                  {pickingAvatar && (
+                    <div className="rounded-xl border border-[#263248] bg-[#0e1522] p-3">
+                      <div className="mb-3 flex items-center justify-between gap-2">
+                        <p className="text-xs font-semibold text-[#d2d7e3]">
+                          {ar ? 'اختر صورة' : 'Pick a picture'}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => chooseAvatar('')}
+                          className="text-[11px] font-semibold text-[#6e7a94] transition-colors hover:text-red-400"
+                        >
+                          {ar ? 'بدون صورة' : 'No picture'}
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
+                        {AVATAR_PRESETS.map((preset) => {
+                          const value = avatarValue(preset.id);
+                          const active = user.avatarUrl === value;
+                          return (
+                            <button
+                              key={preset.id}
+                              type="button"
+                              onClick={() => chooseAvatar(value)}
+                              title={preset.label[lang]}
+                              aria-pressed={active}
+                              className={`aspect-square overflow-hidden rounded-lg border transition-all hover:-translate-y-0.5 ${
+                                active
+                                  ? 'border-[#00a859] ring-2 ring-[#00a859]/35'
+                                  : 'border-[#263248] hover:border-[#3d4a63]'
+                              }`}
+                            >
+                              <CyberAvatar preset={preset} className="h-full w-full" />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex items-center gap-2 pt-1">
                     <Button variant="primary" size="sm" onClick={save} leftIcon={<Check size={15} />}>
                       {t('profile.save')}

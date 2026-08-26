@@ -66,7 +66,7 @@ function mapServerUser(u: ServerUser): AcademyUser {
 }
 
 /** Fields the server accepts on PATCH /auth/profile. */
-const PROFILE_FIELDS = ['displayName', 'bio', 'university', 'preferredLang'] as const;
+const PROFILE_FIELDS = ['displayName', 'bio', 'university', 'preferredLang', 'avatarUrl'] as const;
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AcademyUser | null>(null);

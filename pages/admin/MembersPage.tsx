@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Users, Search, ShieldCheck, PenTool, GraduationCap, RefreshCw, Ban, RotateCcw, KeyRound, Check } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import EnhancedCard from '../../components/ui/EnhancedCard';
+import Avatar from '../../components/ui/Avatar';
 import { confirmDialog } from '../../components/ui/ConfirmHost';
 import ReauthDialog from '../../components/admin/ReauthDialog';
 import { useToast } from '../../hooks/useToast';
@@ -273,20 +274,12 @@ const MembersPage: React.FC = () => {
                   className={`flex flex-wrap items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3.5 min-w-0 ${u.isBanned ? 'opacity-50' : ''}`}
                 >
                   {/* avatar */}
-                  {u.avatarUrl ? (
-                    <img
-                      src={u.avatarUrl}
-                      alt={u.displayName}
-                      className="w-10 h-10 rounded-full object-cover border border-[#263248] flex-shrink-0"
-                      referrerPolicy="no-referrer"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-[#0e1522] border border-[#263248] flex items-center justify-center flex-shrink-0">
-                      <span className="text-sm font-black text-[#9fef00]">
-                        {u.displayName.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                  )}
+                  <Avatar
+                    avatarUrl={u.avatarUrl}
+                    name={u.displayName}
+                    className="w-10 h-10 rounded-full"
+                    initialClassName="text-sm"
+                  />
 
                   {/* identity */}
                   <div className="flex-1 min-w-0">

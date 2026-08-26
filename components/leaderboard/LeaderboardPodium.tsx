@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Crown, Medal, GraduationCap } from 'lucide-react';
 import { useLang } from '../../contexts/LangContext';
 import { universityLabel } from '../../data/iraqUniversities';
+import CyberAvatar, { presetFor } from '../ui/CyberAvatar';
 
 export interface PodiumEntry {
   rank: number;
@@ -120,13 +121,17 @@ const PodiumCard: React.FC<{ entry: PodiumEntry; highlight?: boolean; isMe?: boo
                 border: `2px solid ${tier.accent}`,
               }}
             >
-              {entry.avatarUrl ? (
-                <img src={entry.avatarUrl} alt={entry.displayName} className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-2xl font-black text-[#9fef00]">
-                  {(entry.displayName || 'U').charAt(0).toUpperCase()}
-                </span>
-              )}
+              {(() => {
+                const preset = presetFor(entry.avatarUrl);
+                if (preset) return <CyberAvatar preset={preset} className="w-full h-full" title={entry.displayName} />;
+                if (entry.avatarUrl)
+                  return <img src={entry.avatarUrl} alt={entry.displayName} className="w-full h-full object-cover" />;
+                return (
+                  <span className="text-2xl font-black text-[#9fef00]">
+                    {(entry.displayName || 'U').charAt(0).toUpperCase()}
+                  </span>
+                );
+              })()}
             </div>
 
             <p

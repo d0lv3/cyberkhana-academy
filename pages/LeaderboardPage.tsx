@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, GraduationCap, Loader2 } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
+import Avatar from '../components/ui/Avatar';
 import LeaderboardPodium from '../components/leaderboard/LeaderboardPodium';
 import { useAuth } from '../contexts/AuthContext';
 import { useLang } from '../contexts/LangContext';
@@ -186,19 +187,12 @@ const LeaderboardPage: React.FC = () => {
 
                       {/* Student */}
                       <div className="flex items-center gap-3 min-w-0">
-                        {e.avatarUrl ? (
-                          <img
-                            src={e.avatarUrl}
-                            alt={e.displayName}
-                            className="w-9 h-9 rounded-full object-cover border border-[#263248] flex-shrink-0"
-                          />
-                        ) : (
-                          <div className="w-9 h-9 rounded-full bg-[#0e1522] border border-[#263248] flex items-center justify-center flex-shrink-0">
-                            <span className="text-sm font-black text-[#9fef00]">
-                              {(e.displayName || 'U').charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                        )}
+                        <Avatar
+                          avatarUrl={e.avatarUrl}
+                          name={e.displayName}
+                          className="w-9 h-9 rounded-full"
+                          initialClassName="text-sm"
+                        />
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-[#f3f6ff] truncate">
                             {e.displayName}
