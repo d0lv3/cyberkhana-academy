@@ -1,10 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
+import { Copy, Check } from 'lucide-react';
 import 'katex/dist/katex.min.css';
 
 interface LessonMarkdownProps {
@@ -85,6 +86,86 @@ const lessonSchema = {
     div: [...(defaultSchema.attributes?.div ?? []), ['className', ...MATH_CLASSES]],
     span: [...(defaultSchema.attributes?.span ?? []), ['className', ...MATH_CLASSES]],
   },
+};
+
+/* ── Code blocks ──
+ * Two things the plain <code> could not do.
+ *
+ * First, the stray blank line. mdast-util-to-hast renders a code node as
+ * `node.value` with a newline appended, and `whitespace-pre` faithfully draws
+ * that newline as an empty final line inside every fenced block. Nothing upstream
+ * lets us turn it off, so it is trimmed here — once, at the end, so a
+ * deliberate blank line in the middle of a snippet survives.
+ *
+ * Second, lessons are full of code students are meant to run, and the only way
+ * to get it was to select it by hand. The button is always visible rather than
+ * hover-only: on a phone there is no hover, and an affordance nobody can see
+ * is not an affordance.
+ */
+
+/** Flatten a code element's children to the text the student would copy. */
+function codeText(children: React.ReactNode): string {
+  if (typeof children === 'string') return children;
+  if (typeof children === 'number') return String(children);
+  if (Array.isArray(children)) return children.map(codeText).join('');
+  if (React.isValidElement(children)) {
+    return codeText((children.props as { children?: React.ReactNode }).children);
+  }
+  return '';
+}
+
+const CodeBlock: React.FC<{ text: string; isRtl: boolean }> = ({ text, isRtl }) => {
+  const [copied, setCopied] = useState(false);
+
+  const copy = useCallback(async () => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        /* The async clipboard API needs a secure context, so a site served
+           over plain http (a LAN preview, say) has to fall back to the old
+           execCommand path rather than silently doing nothing. */
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.cssText = 'position:absolute;left:-9999px;top:0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+      }
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      /* Denied permission or no clipboard at all — leave the label alone
+         rather than claiming a copy that did not happen. */
+    }
+  }, [text]);
+
+  return (
+    <span className="relative block">
+      <button
+        type="button"
+        onClick={copy}
+        dir="ltr"
+        aria-label={copied ? (isRtl ? 'تم النسخ' : 'Copied') : isRtl ? 'نسخ الكود' : 'Copy code'}
+        className={`absolute end-2 top-2 z-10 inline-flex items-center gap-1 rounded-md border px-2 py-1 touch:min-h-tap touch:px-3 text-[11px] font-semibold backdrop-blur-sm transition-colors ${
+          copied
+            ? 'border-[#00a859]/45 bg-[#00a859]/15 text-[#00a859]'
+            : 'border-[#263248] bg-[#121a2a]/85 text-[#6e7a94] hover:border-[#3d4a63] hover:text-[#d2d7e3]'
+        }`}
+      >
+        {copied ? <Check size={12} /> : <Copy size={12} />}
+        <span>{copied ? (isRtl ? 'تم النسخ' : 'Copied') : isRtl ? 'نسخ' : 'Copy'}</span>
+      </button>
+      <code
+        className="block bg-[#0a0f18] rounded-lg p-4 pe-24 text-[13px] text-[#c4cad6] font-mono overflow-x-auto border border-[#263248] whitespace-pre"
+        dir="ltr"
+      >
+        {text}
+      </code>
+    </span>
+  );
 };
 
 /** Subtrees whose text is already typeset by something else. */
@@ -263,30 +344,29 @@ const LessonMarkdown: React.FC<LessonMarkdownProps> = ({ content, dir }) => {
               {children}
             </blockquote>
           ),
-          code: ({ className, children }) => {
-            const isBlock = className?.includes('language-');
-            if (isBlock) {
-              return (
-                <code
-                  className="block bg-[#0a0f18] rounded-lg p-4 text-[13px] text-[#c4cad6] font-mono overflow-x-auto border border-[#263248] whitespace-pre"
-                  dir="ltr"
-                >
-                  {children}
-                </code>
-              );
-            }
-            return (
-              <code
-                className="px-1.5 py-0.5 rounded bg-[#1a2332] border border-[#263248] text-[#9fef00] text-[13px] font-mono"
-                dir="ltr"
-              >
-                {children}
-              </code>
-            );
-          },
+          /* Only inline spans reach here. Blocks are handled by `pre` below,
+             because a fence with no language (```\ntext\n```) carries no
+             `language-*` class and used to be mistaken for inline code —
+             rendering an expected-output block as a little pill. */
+          code: ({ children }) => (
+            <code
+              className="px-1.5 py-0.5 rounded bg-[#1a2332] border border-[#263248] text-[#9fef00] text-[13px] font-mono"
+              dir="ltr"
+            >
+              {children}
+            </code>
+          ),
+          /* `pre` wraps block code and nothing else, so it is the reliable
+             place to decide a fence is a fence. Trim only the trailing newline
+             that to-hast adds, never a blank line the author wrote. */
           pre: ({ children }) => (
             <pre dir="ltr" className="mb-5 overflow-hidden rounded-lg">
-              {children}
+              {/* CRLF is normalised so a lesson authored on Windows does not
+                  paste stray carriage returns into the code editor. */}
+              <CodeBlock
+                text={codeText(children).replace(/\r\n?/g, '\n').replace(/\n$/, '')}
+                isRtl={isRtl}
+              />
             </pre>
           ),
           table: ({ children }) => (
