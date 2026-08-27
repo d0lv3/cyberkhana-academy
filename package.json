@@ -12,7 +12,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "verify:python": "node scripts/verify-python-module.mjs",
-    "verify:cpp": "node scripts/verify-cpp-module.mjs"
+    "verify:cpp": "node scripts/verify-cpp-module.mjs",
+    "verify:cpp-stdlib": "node scripts/verify-cpp-stdlib.mjs"
   },
   "dependencies": {
     "@codemirror/lang-cpp": "^6.0.3",

@@ -9,15 +9,21 @@
  * Scope (JSCPP is an interpreter of a subset, not a full compiler): good for
  * C/C++ FUNDAMENTALS — cin/cout, `\n`/endl, variables, arithmetic, control
  * flow, functions, arrays, and the bundled headers `<iostream> <cmath>
- * <cstdio> <cstdlib> <cstring> <cctype> <ctime> <iomanip>`. It does NOT bundle
- * `<string>` (std::string), `<vector>`, or other STL containers/algorithms, so
- * author exercises with plain types / C-strings. Known quirk: it collapses a
- * comma-then-space (`", "`) inside a string literal to just `","`, so avoid
- * that exact sequence in printed strings (`"a, b"` prints `"a,b"`). `maxTimeout`
- * aborts runaway loops so the tab can't freeze.
+ * <cstdio> <cstdlib> <cstring> <cctype> <ctime> <iomanip>`.
+ *
+ * Three things JSCPP does not do are supplied here (see ./cpp-stdlib):
+ *   - `std::string`  — a real type, usable with or without `#include <string>`
+ *   - `std::vector`  — with its template argument erased before parsing
+ *   - `const`        — enforced by a source check, since the interpreter ignores it
+ *
+ * Still missing, and worth knowing before authoring exercises: classes and
+ * structs (the grammar rejects a class body outright), references, other STL
+ * containers, and `<algorithm>`. `maxTimeout` aborts runaway loops so the tab
+ * cannot freeze.
  */
 
 import type { ExecutionResult } from './PythonExecutor';
+import { CPP_STDLIB_INCLUDES, prepareCppSource, findConstViolation } from './cpp-stdlib';
 
 const MAX_TIMEOUT_MS = 10_000;
 
@@ -51,16 +57,29 @@ export async function runCpp(
   timeoutMs: number = MAX_TIMEOUT_MS
 ): Promise<ExecutionResult> {
   const start = performance.now();
+
+  /* Const violations are reported before anything runs, the way a compiler
+     would: the program never produces output, because it never built. */
+  const violation = findConstViolation(code);
+  if (violation) {
+    return {
+      output: '',
+      error: violation.message,
+      durationMs: Math.round(performance.now() - start),
+    };
+  }
+
   const JSCPP = await loadJSCPP();
 
   let output = '';
   const config = {
     stdio: { write: (s: string) => { output += s; } },
+    includes: CPP_STDLIB_INCLUDES,
     maxTimeout: timeoutMs,
   };
 
   try {
-    JSCPP.run(code, stdin ?? '', config);
+    JSCPP.run(prepareCppSource(code), stdin ?? '', config);
     return { output, durationMs: Math.round(performance.now() - start) };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);

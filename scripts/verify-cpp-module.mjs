@@ -7,21 +7,42 @@
  *
  * Worth running on any new module: JSCPP is an interpreter of a SUBSET, so
  * plausible-looking C++ can fail to parse (notably `std::cout` — write
- * `using namespace std;` and bare `cout` instead).
+ * `using namespace std;` and bare `cout` instead, and note that classes and
+ * structs are rejected by the grammar outright).
  *
  * Usage: npm run verify:cpp -- ./data/programming/cpp/01-getting-started.ts
  */
 import JSCPP from 'JSCPP';
 import { resolve } from 'path';
 import { pathToFileURL } from 'url';
+import { installString, wireStringToStreams } from '../components/code-editor/cpp-stdlib/cppString.ts';
+import { installVector, eraseTemplateArgs } from '../components/code-editor/cpp-stdlib/cppVector.ts';
+import { findConstViolation } from '../components/code-editor/cpp-stdlib/constCheck.ts';
 
 const MAX_TIMEOUT_MS = 10_000;
 
+/* Mirrors CppExecutor: the same added headers, the same source preparation and
+   the same const check, so a lesson that passes here behaves the same in the
+   browser. Keep in step with cpp-stdlib/index.ts. */
+const INCLUDES = {
+  string: { load: (rt) => wireStringToStreams(rt, installString(rt)) },
+  vector: {
+    load: (rt) => {
+      installVector(rt);
+      wireStringToStreams(rt, installString(rt));
+    },
+  },
+};
+
 function run(code, stdin = '') {
+  const violation = findConstViolation(code);
+  if (violation) return { out: '', error: violation.message };
   let out = '';
   try {
-    JSCPP.run(code, stdin ?? '', {
+    const prepared = `${eraseTemplateArgs(code)}\n#include <string>\n#include <vector>\n`;
+    JSCPP.run(prepared, stdin ?? '', {
       stdio: { write: (s) => { out += s; } },
+      includes: INCLUDES,
       maxTimeout: MAX_TIMEOUT_MS,
     });
     return { out, error: null };
