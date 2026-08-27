@@ -34,7 +34,7 @@ print(type(x))
 `,
       markdownContent: `# Working With Data
 
-A program is mostly one thing: **data, and what you do to it**. A password, a port number, a list of hosts, whether a scan finished — all data.
+A program is mostly one thing: **data, and what you do to it**. A password, a port number, a list of hosts, whether a scan finished, all data.
 
 Python needs to know what *kind* of data each value is, because the kind decides what's possible. Adding two numbers means arithmetic. "Adding" two pieces of text means sticking them together. Same \`+\`, different meaning, decided by the type.
 
@@ -64,7 +64,7 @@ print(type(2026))
 <class 'int'>
 \`\`\`
 
-\`str\` is text (a *string*), \`int\` is a whole number (an *integer*). "class" appears because in Python every value is an **object**, and its type is the class it came from. Nothing to worry about yet — just notice the vocabulary.
+\`str\` is text (a *string*), \`int\` is a whole number (an *integer*). "class" appears because in Python every value is an **object**, and its type is the class it came from. Nothing to worry about yet, just notice the vocabulary.
 
 ---
 
@@ -79,7 +79,7 @@ x = 99
 print(type(x))   # <class 'int'>
 \`\`\`
 
-\`x\` didn't change type — \`x\` was pointed at a different value, and that value has its own type. This is called **dynamic typing**.
+\`x\` didn't change type, \`x\` was pointed at a different value, and that value has its own type. This is called **dynamic typing**.
 
 It's why Python feels quick to write. It's also why a whole class of mistakes only shows up when the line actually runs:
 
@@ -88,7 +88,7 @@ port = "8080"      # text that looks like a number
 print(port + 1)    # TypeError, at runtime
 \`\`\`
 
-Nothing warns you in advance. Knowing what type you're holding is your job — which is exactly why \`type()\` is worth knowing on day one.
+Nothing warns you in advance. Knowing what type you're holding is your job, which is exactly why \`type()\` is worth knowing on day one.
 
 ---
 
@@ -110,10 +110,10 @@ text    = "CyberKhana"        # str
 whole   = 2026                # int
 decimal = 3.5                 # float
 flag    = True                # bool
-items   = ["nmap", "burp"]    # list  — ordered, changeable
-point   = (10, 20)            # tuple — ordered, fixed
-unique  = {"a", "b", "a"}     # set   — no duplicates
-person  = {"name": "Sara"}    # dict  — key: value
+items   = ["nmap", "burp"]    # list , ordered, changeable
+point   = (10, 20)            # tuple, ordered, fixed
+unique  = {"a", "b", "a"}     # set  , no duplicates
+person  = {"name": "Sara"}    # dict , key: value
 nothing = None                # NoneType
 
 for value in [text, whole, decimal, flag, items, point, unique, person, nothing]:
@@ -121,25 +121,25 @@ for value in [text, whole, decimal, flag, items, point, unique, person, nothing]
 `,
       markdownContent: `# Data Types Overview
 
-A map of the types you'll meet. Each gets its own module later — the goal now is recognition, not mastery.
+A map of the types you'll meet. Each gets its own module later, the goal now is recognition, not mastery.
 
 ---
 
 ## The simple types
 
 \`\`\`python
-text    = "CyberKhana"   # str   — text
-whole   = 2026           # int   — whole number
-decimal = 3.5            # float — number with a decimal point
-flag    = True           # bool  — True or False
-nothing = None           # NoneType — "no value"
+text    = "CyberKhana"   # str  , text
+whole   = 2026           # int  , whole number
+decimal = 3.5            # float, number with a decimal point
+flag    = True           # bool , True or False
+nothing = None           # NoneType, "no value"
 \`\`\`
 
-**\`str\`** holds text, in quotes. **\`int\`** is a whole number, with no size limit in Python. **\`float\`** has a decimal point. Note \`3.0\` is a float and \`3\` is an int — the decimal point is the whole difference.
+**\`str\`** holds text, in quotes. **\`int\`** is a whole number, with no size limit in Python. **\`float\`** has a decimal point. Note \`3.0\` is a float and \`3\` is an int, the decimal point is the whole difference.
 
-**\`bool\`** is only ever \`True\` or \`False\` (capitalised — \`true\` is a \`NameError\`). It's what every comparison produces.
+**\`bool\`** is only ever \`True\` or \`False\` (capitalised, \`true\` is a \`NameError\`). It's what every comparison produces.
 
-**\`None\`** is Python's "nothing here." Not \`0\`, not \`""\` — those are values. \`None\` is the absence of one, which is a genuinely different thing.
+**\`None\`** is Python's "nothing here." Not \`0\`, not \`""\`, those are values. \`None\` is the absence of one, which is a genuinely different thing.
 
 ---
 
@@ -148,19 +148,19 @@ nothing = None           # NoneType — "no value"
 These hold several values at once:
 
 \`\`\`python
-items  = ["nmap", "burp"]      # list  — ordered, changeable
-point  = (10, 20)              # tuple — ordered, fixed
-unique = {"a", "b", "a"}       # set   — unordered, no duplicates
-person = {"name": "Sara"}      # dict  — key -> value
+items  = ["nmap", "burp"]      # list , ordered, changeable
+point  = (10, 20)              # tuple, ordered, fixed
+unique = {"a", "b", "a"}       # set  , unordered, no duplicates
+person = {"name": "Sara"}      # dict , key -> value
 \`\`\`
 
-**\`list\`** — square brackets. Ordered and changeable; your everyday collection.
+**\`list\`**, square brackets. Ordered and changeable; your everyday collection.
 
-**\`tuple\`** — parentheses. Like a list, but **cannot be changed** after creation. Use it for things that shouldn't shift, like a coordinate.
+**\`tuple\`**, parentheses. Like a list, but **cannot be changed** after creation. Use it for things that shouldn't shift, like a coordinate.
 
-**\`set\`** — curly braces. **Discards duplicates** automatically, and has no order. \`{"a", "b", "a"}\` holds two items.
+**\`set\`**, curly braces. **Discards duplicates** automatically, and has no order. \`{"a", "b", "a"}\` holds two items.
 
-**\`dict\`** — curly braces with \`key: value\` pairs. Look things up by name instead of position. Probably the most-used structure in Python.
+**\`dict\`**, curly braces with \`key: value\` pairs. Look things up by name instead of position. Probably the most-used structure in Python.
 
 Both \`set\` and \`dict\` use \`{}\`. The pairs are what make it a dict.
 
@@ -185,7 +185,7 @@ isinstance(2026, int)   # True
 
 ## Try It
 
-Run the starter code — it prints each value with its type name. Look at \`unique\`: you wrote three items and got two, because a set drops the duplicate.
+Run the starter code, it prints each value with its type name. Look at \`unique\`: you wrote three items and got two, because a set drops the duplicate.
 `,
     },
 
@@ -223,7 +223,7 @@ name = "CyberKhana"
 year = 2026
 \`\`\`
 
-No keyword, no type declaration — just \`name = value\`. The \`=\` is the **assignment operator**: it takes the value on the right and binds the name on the left to it.
+No keyword, no type declaration, just \`name = value\`. The \`=\` is the **assignment operator**: it takes the value on the right and binds the name on the left to it.
 
 It is not equality. \`=\` assigns; \`==\` compares. Mixing them up is a rite of passage.
 
@@ -257,7 +257,7 @@ print(b)       # first
 
 \`b = a\` didn't copy anything and didn't tie \`b\` to \`a\`. It pointed \`b\` at the value \`a\` had *at that moment*. Re-pointing \`a\` afterwards has nothing to do with \`b\`.
 
-Hold that picture. When we reach lists — which *can* be changed in place — this same rule produces results that look surprising until you remember: names label values.
+Hold that picture. When we reach lists, which *can* be changed in place, this same rule produces results that look surprising until you remember: names label values.
 
 ---
 
@@ -268,7 +268,7 @@ print("Report for CyberKhana")
 print("Welcome to CyberKhana")
 \`\`\`
 
-Rename the platform and you must find every copy. With a variable there's one place to change, and the name says what the value *means* — \`retries\` explains itself where a bare \`3\` doesn't.
+Rename the platform and you must find every copy. With a variable there's one place to change, and the name says what the value *means*, \`retries\` explains itself where a bare \`3\` doesn't.
 
 ---
 
@@ -289,7 +289,7 @@ Run the starter code. The last two lines are the point: \`a\` and \`b\` end up d
 scan_count = 0
 target_host = "10.0.0.5"
 
-# Reassigning — including based on the old value
+# Reassigning, including based on the old value
 scan_count = scan_count + 1
 scan_count += 1              # shorthand for the same thing
 print("scans:", scan_count)
@@ -311,7 +311,7 @@ print("a =", a, "| b =", b)
 
 A variable name **must**:
 
-- start with a letter or an underscore — not a digit
+- start with a letter or an underscore, not a digit
 - contain only letters, digits and underscores
 - avoid Python's reserved keywords
 
@@ -320,9 +320,9 @@ user_name = "Sara"    # fine
 _private  = 1         # fine
 name2     = "Ali"     # fine
 
-2name = "x"           # SyntaxError — starts with a digit
-user-name = "x"       # SyntaxError — '-' is a minus sign
-class = "x"           # SyntaxError — 'class' is a keyword
+2name = "x"           # SyntaxError, starts with a digit
+user-name = "x"       # SyntaxError, '-' is a minus sign
+class = "x"           # SyntaxError, 'class' is a keyword
 \`\`\`
 
 Names are **case-sensitive**: \`name\`, \`Name\` and \`NAME\` are three different variables.
@@ -340,9 +340,9 @@ print(keyword.kwlist)
 
 Not enforced, but universal in Python code:
 
-- **\`snake_case\`** for variables and functions — \`scan_count\`, not \`scanCount\`.
-- **\`UPPER_CASE\`** for constants — \`MAX_RETRIES = 3\`.
-- **Descriptive over short** — \`timeout_seconds\` beats \`t\`. You'll read code far more than you write it.
+- **\`snake_case\`** for variables and functions, \`scan_count\`, not \`scanCount\`.
+- **\`UPPER_CASE\`** for constants, \`MAX_RETRIES = 3\`.
+- **Descriptive over short**, \`timeout_seconds\` beats \`t\`. You'll read code far more than you write it.
 
 Also: don't shadow built-ins. \`list = [1, 2]\` works, and then \`list("abc")\` breaks, because you replaced the built-in \`list\`. Same for \`str\`, \`type\`, \`id\`, \`input\`.
 
@@ -354,7 +354,7 @@ A variable can be re-pointed at any time, to any type:
 
 \`\`\`python
 count = 0
-count = "zero"   # legal — dynamic typing
+count = "zero"   # legal, dynamic typing
 \`\`\`
 
 Legal, but usually a bad idea: a name that changes type mid-script is hard to follow.
@@ -396,7 +396,7 @@ x = y = 0   # both names point at 0
 
 ## Try It
 
-Run the starter code. Then try \`class = 1\` and read the \`SyntaxError\` — Python names the exact problem.
+Run the starter code. Then try \`class = 1\` and read the \`SyntaxError\`, Python names the exact problem.
 `,
     },
 
@@ -410,7 +410,7 @@ Run the starter code. Then try \`class = 1\` and read the \`SyntaxError\` — Py
       starterCode: `# \\n starts a new line
 print("Line one\\nLine two")
 
-# \\t inserts a tab — handy for columns
+# \\t inserts a tab, handy for columns
 print("Name\\tPort")
 print("ssh\\t22")
 
@@ -424,7 +424,7 @@ print(r"C:\\Users\\Sara")
 `,
       markdownContent: `# Escape Sequences
 
-Some characters can't simply be typed inside a string. A newline would end the line; a quote would end the string. An **escape sequence** — a backslash plus a letter — represents them instead.
+Some characters can't simply be typed inside a string. A newline would end the line; a quote would end the string. An **escape sequence**, a backslash plus a letter, represents them instead.
 
 ---
 
@@ -448,7 +448,7 @@ Line one
 Line two
 \`\`\`
 
-That's **one** string. The \`\\n\` isn't two characters in the output — it's one newline character. \`\\t\` works the same way and is useful for lining up columns.
+That's **one** string. The \`\\n\` isn't two characters in the output, it's one newline character. \`\\t\` works the same way and is useful for lining up columns.
 
 ---
 
@@ -474,7 +474,7 @@ A backslash starts an escape, so a literal one must be doubled:
 print("C:\\\\Users\\\\Sara")   # C:\\Users\\Sara
 \`\`\`
 
-This bites on Windows paths and regular expressions, which are full of backslashes. Hence **raw strings** — prefix \`r\` and backslashes lose their special meaning:
+This bites on Windows paths and regular expressions, which are full of backslashes. Hence **raw strings**, prefix \`r\` and backslashes lose their special meaning:
 
 \`\`\`python
 print(r"C:\\Users\\Sara")   # C:\\Users\\Sara
@@ -511,7 +511,7 @@ print("-" * 20)
 year = 2026
 print("Year: " + str(year))
 
-# print() with commas needs no conversion — it adds spaces itself
+# print() with commas needs no conversion, it adds spaces itself
 print("Year:", year)
 `,
       markdownContent: `# Concatenation
@@ -529,7 +529,7 @@ print(first + second)          # CyberKhana
 print(first + " " + second)    # Cyber Khana
 \`\`\`
 
-\`+\` joins exactly what you give it — no spaces added. If you want one, include it.
+\`+\` joins exactly what you give it, no spaces added. If you want one, include it.
 
 ## The * operator
 
@@ -557,7 +557,7 @@ print("Year: " + year)
 TypeError: can only concatenate str (not "int") to str
 \`\`\`
 
-\`+\` means "add" for numbers and "join" for strings. Given one of each, Python won't guess — it refuses. Convert explicitly with \`str()\`:
+\`+\` means "add" for numbers and "join" for strings. Given one of each, Python won't guess, it refuses. Convert explicitly with \`str()\`:
 
 \`\`\`python
 print("Year: " + str(year))   # Year: 2026
@@ -571,12 +571,12 @@ The same in reverse: \`"5" + 5\` fails, and \`"5" * 3\` gives \`"555"\`, not \`1
 
 \`\`\`python
 year = 2026
-print("Year: " + str(year))   # concatenation — needs str()
-print("Year:", year)          # commas — converts, adds a space
-print(f"Year: {year}")        # f-string — converts, full control
+print("Year: " + str(year))   # concatenation, needs str()
+print("Year:", year)          # commas, converts, adds a space
+print(f"Year: {year}")        # f-string, converts, full control
 \`\`\`
 
-All print \`Year: 2026\`. The comma form is easiest for quick output but always puts a space between values. The **f-string** is what you'll use in real code — the Strings module covers it properly.
+All print \`Year: 2026\`. The comma form is easiest for quick output but always puts a space between values. The **f-string** is what you'll use in real code, the Strings module covers it properly.
 
 Concatenation is still worth knowing: it's the clearest way to see that types don't mix silently in Python.
 
@@ -584,7 +584,7 @@ Concatenation is still worth knowing: it's the clearest way to see that types do
 
 ## Try It
 
-Run the starter code. Then delete the \`str()\` on the \`"Year: " + str(year)\` line and read the \`TypeError\` — it names both types it was given.
+Run the starter code. Then delete the \`str()\` on the \`"Year: " + str(year)\` line and read the \`TypeError\`, it names both types it was given.
 `,
     },
 
@@ -610,7 +610,7 @@ Run the starter code. Then delete the \`str()\` on the \`"Year: " + str(year)\` 
 #    Level: 3
 #    ==============
 #
-# The == line is 14 '=' characters — build it with * rather than typing it.
+# The == line is 14 '=' characters, build it with * rather than typing it.
 # Use a tab (\\t) nowhere here; the labels are padded with plain spaces.
 
 # Write your code below:
@@ -625,7 +625,7 @@ Run the starter code. Then delete the \`str()\` on the \`"Year: " + str(year)\` 
       ],
       hints: [
         'Store the three values first, then print. "=" * 14 gives you the border line.',
-        'Level is a number, so "Level: " + level fails — either use str(level) or print("Level:", level).',
+        'Level is a number, so "Level: " + level fails, either use str(level) or print("Level:", level).',
         'Note the padding: "Name:" and "Role:" are followed by two spaces so the values line up under "Level: ".',
       ],
       solution: `name = "Sara"
@@ -670,11 +670,11 @@ Level: 3
 - The border is **14** \`=\` characters. Build it with \`*\`, don't type them out.
 - The values must come from the variables, not be retyped as literals.
 - Watch the spacing: \`Name:\` and \`Role:\` are followed by **two** spaces, \`Level:\` by **one**, so the values align.
-- \`level\` is an \`int\` — joining it to a string with \`+\` needs \`str()\`.
+- \`level\` is an \`int\`, joining it to a string with \`+\` needs \`str()\`.
 
 ## What you need
 
-Assignment, \`+\`, \`*\`, and \`str()\` — everything from this module.
+Assignment, \`+\`, \`*\`, and \`str()\`, everything from this module.
 
 ---
 

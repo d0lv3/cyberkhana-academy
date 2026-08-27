@@ -214,7 +214,7 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
           >
             <Keyboard size={12} className="text-[#4d5a73]" />
             Input
-            <span className="text-[#4d5a73]">— one line per input() call</span>
+            <span className="text-[#4d5a73]">, one line per input() call</span>
           </label>
           <textarea
             id="stdin-box"

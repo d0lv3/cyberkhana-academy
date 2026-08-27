@@ -8,8 +8,8 @@ const filesBuiltins: ProgrammingModule = {
     ar: 'الملفات والدوال المدمجة',
   },
   description: {
-    en: 'Reading and writing files, and the built-in functions you get for free — including map, filter and reduce.',
-    ar: 'قراءة الملفات والكتابة فيها، والدوال المدمجة — بما فيها map و filter و reduce.',
+    en: 'Reading and writing files, and the built-in functions you get for free, including map, filter and reduce.',
+    ar: 'قراءة الملفات والكتابة فيها، والدوال المدمجة، بما فيها map و filter و reduce.',
   },
   order: 12,
   concepts: [
@@ -20,7 +20,7 @@ const filesBuiltins: ProgrammingModule = {
       title: { en: 'Working with Files', ar: 'التعامل مع الملفات' },
       order: 1,
       type: 'lesson',
-      starterCode: `# with open(...) — opens, and closes for you
+      starterCode: `# with open(...), opens, and closes for you
 with open("notes.txt", "w") as f:
     f.write("first line\\n")
     f.write("second line\\n")
@@ -28,7 +28,7 @@ with open("notes.txt", "w") as f:
 with open("notes.txt") as f:
     print(f.read())
 
-# The old way — you must remember to close()
+# The old way, you must remember to close()
 f = open("notes.txt")
 print(f.read().strip())
 f.close()
@@ -52,18 +52,18 @@ Your programs have been losing everything the moment they end. Files are how wor
 f = open("notes.txt")
 \`\`\`
 
-\`open()\` hands back a **file object** — a handle you read from or write to. It does not give you the contents.
+\`open()\` hands back a **file object**, a handle you read from or write to. It does not give you the contents.
 
 Every open file uses a real operating-system resource, so it must be **closed**. Forget, and you leak handles; worse, written data may sit in a buffer and never reach the disk.
 
-## with — always use this
+## with, always use this
 
 \`\`\`python
 with open("notes.txt", "w") as f:
     f.write("first line\\n")
 \`\`\`
 
-\`with\` closes the file automatically when the block ends — **including when an exception is thrown**. That's the part manual \`close()\` gets wrong:
+\`with\` closes the file automatically when the block ends, **including when an exception is thrown**. That's the part manual \`close()\` gets wrong:
 
 \`\`\`python
 f = open("notes.txt")
@@ -73,7 +73,7 @@ f.close()           # ...this never runs
 
 The \`with\` version cannot leak. Treat \`with open(...)\` as the only way you open a file, and the rest of this module gets simpler.
 
-(It's called a *context manager*, and it works for anything with setup/teardown — locks, connections, timers.)
+(It's called a *context manager*, and it works for anything with setup/teardown, locks, connections, timers.)
 
 ## The modes
 
@@ -81,14 +81,14 @@ The second argument says what you're doing:
 
 | Mode | Means |
 |---|---|
-| \`"r"\` | read (the default) — **file must exist** |
-| \`"w"\` | write — **wipes the file**, creates it if missing |
-| \`"a"\` | append — adds to the end, creates it if missing |
-| \`"x"\` | create — **fails** if it already exists |
+| \`"r"\` | read (the default), **file must exist** |
+| \`"w"\` | write, **wipes the file**, creates it if missing |
+| \`"a"\` | append, adds to the end, creates it if missing |
+| \`"x"\` | create, **fails** if it already exists |
 
 \`"w"\` is the dangerous one: it truncates immediately, before you write anything. Open the wrong path in \`"w"\` and it's gone.
 
-Add \`"b"\` for binary (\`"rb"\`, \`"wb"\`) when the file isn't text — images, archives, packet captures.
+Add \`"b"\` for binary (\`"rb"\`, \`"wb"\`) when the file isn't text, images, archives, packet captures.
 
 ## Missing files raise
 
@@ -96,19 +96,19 @@ Add \`"b"\` for binary (\`"rb"\`, \`"wb"\`) when the file isn't text — images,
 open("nope.txt")   # FileNotFoundError
 \`\`\`
 
-It raises rather than returning \`None\` — loud, which is right: reading a file that isn't there is a real problem. Handling it properly is the Errors module.
+It raises rather than returning \`None\`, loud, which is right: reading a file that isn't there is a real problem. Handling it properly is the Errors module.
 
 ---
 
 ## About this editor
 
-Your files live in an **in-memory filesystem** inside the browser tab. Everything works exactly as it would on disk, but nothing touches your real machine — that's the sandbox from day one — and it resets when you reload the page.
+Your files live in an **in-memory filesystem** inside the browser tab. Everything works exactly as it would on disk, but nothing touches your real machine, that's the sandbox from day one, and it resets when you reload the page.
 
 ---
 
 ## Try It
 
-Run the starter code. Then change \`"w"\` to \`"x"\` on the first open and run twice — the second time it refuses, because the file now exists.
+Run the starter code. Then change \`"w"\` to \`"x"\` on the first open and run twice, the second time it refuses, because the file now exists.
 `,
     },
 
@@ -122,19 +122,19 @@ Run the starter code. Then change \`"w"\` to \`"x"\` on the first open and run t
       starterCode: `with open("hosts.txt", "w") as f:
     f.write("10.0.0.5\\n10.0.0.6\\n10.0.0.7\\n")
 
-# read() — the whole file as ONE string
+# read(), the whole file as ONE string
 with open("hosts.txt") as f:
     print(repr(f.read()))
 
-# readlines() — a list of lines, newlines included
+# readlines(), a list of lines, newlines included
 with open("hosts.txt") as f:
     print(f.readlines())
 
-# readline() — one line at a time
+# readline(), one line at a time
 with open("hosts.txt") as f:
     print(repr(f.readline()))
 
-# Looping the file — the best way
+# Looping the file, the best way
 with open("hosts.txt") as f:
     for line in f:
         print("host:", line.strip())
@@ -164,7 +164,7 @@ Simple, and it loads **everything into memory**. Fine for a config file, ruinous
 
 ## readlines()
 
-A **list** of lines — with the \`\\n\` still on the end of each:
+A **list** of lines, with the \`\\n\` still on the end of each:
 
 \`\`\`python
 f.readlines()   # ['10.0.0.5\\n', '10.0.0.6\\n', '10.0.0.7\\n']
@@ -174,7 +174,7 @@ Those trailing newlines cause more bugs than anything else in this module. \`"10
 
 Also loads the whole file.
 
-## Looping the file — do this
+## Looping the file, do this
 
 \`\`\`python
 with open("hosts.txt") as f:
@@ -188,7 +188,7 @@ This is the idiomatic way to read a text file in Python. Reach for it by default
 
 ## readline()
 
-One line per call. You rarely need it — the loop is better.
+One line per call. You rarely need it, the loop is better.
 
 ---
 
@@ -221,7 +221,7 @@ Run the starter code. Look at \`readlines()\` keeping the \`\\n\`, and at the se
       title: { en: 'Writing and Appending', ar: 'الكتابة والإضافة' },
       order: 3,
       type: 'lesson',
-      starterCode: `# "w" creates — and WIPES an existing file
+      starterCode: `# "w" creates, and WIPES an existing file
 with open("log.txt", "w") as f:
     f.write("first\\n")
 
@@ -245,7 +245,7 @@ with open("run.txt", "w") as f:
 with open("run.txt") as f:
     print("no newlines:", repr(f.read()))
 
-# writelines() writes a list — also no newlines added
+# writelines() writes a list, also no newlines added
 with open("hosts.txt", "w") as f:
     f.writelines([h + "\\n" for h in ["10.0.0.5", "10.0.0.6"]])
 
@@ -272,7 +272,7 @@ with open("log.txt", "w") as f:   # truncates immediately
     f.write("second\\n")
 \`\`\`
 
-The file now holds only \`second\`. \`"w"\` empties the file the moment it opens, **before** you write a byte — so even opening in \`"w"\` and writing nothing destroys the contents.
+The file now holds only \`second\`. \`"w"\` empties the file the moment it opens, **before** you write a byte, so even opening in \`"w"\` and writing nothing destroys the contents.
 
 There's no undo and no confirmation. Check the path twice.
 
@@ -300,11 +300,11 @@ Unlike \`print\`, \`write()\` puts down **exactly** what you give it. If you wan
 f.write("10.0.0.5\\n")
 \`\`\`
 
-It also takes **only strings** — \`f.write(42)\` is a \`TypeError\`. Convert first.
+It also takes **only strings**, \`f.write(42)\` is a \`TypeError\`. Convert first.
 
 ## writelines()
 
-Writes a list of strings — and, despite the name, **adds no newlines either**:
+Writes a list of strings, and, despite the name, **adds no newlines either**:
 
 \`\`\`python
 f.writelines(["a", "b"])                    # 'ab'
@@ -313,7 +313,7 @@ f.writelines([h + "\\n" for h in hosts])     # one per line
 
 ## print(file=...)
 
-Often the nicest option: \`print\` does its usual job — converts non-strings, adds a newline — but into a file:
+Often the nicest option: \`print\` does its usual job, converts non-strings, adds a newline, but into a file:
 
 \`\`\`python
 print("10.0.0.7", file=f)
@@ -326,7 +326,7 @@ If you find yourself writing \`f.write(str(x) + "\\n")\`, this is what you wante
 
 ## Try It
 
-Run the starter code. The two \`"w"\` opens leave only \`second\` — proof that \`"w"\` really does throw the file away.
+Run the starter code. The two \`"w"\` opens leave only \`second\`, proof that \`"w"\` really does throw the file away.
 `,
     },
 
@@ -345,7 +345,7 @@ with open("scan.log", "w") as f:
     f.write("# comment\\n")
     f.write("POST /login 401\\n")
 
-# os.path — ask before you open
+# os.path, ask before you open
 print("exists:", os.path.exists("scan.log"))
 print("size:", os.path.getsize("scan.log"), "bytes")
 print("missing:", os.path.exists("nope.txt"))
@@ -382,9 +382,9 @@ os.path.getsize("scan.log")   # bytes
 os.remove("scan.log")         # delete
 \`\`\`
 
-\`os.path.exists()\` looks like the polite way to avoid \`FileNotFoundError\`. Be aware it isn't airtight: the file can vanish between your check and your open. That gap is a real class of bug (and, in security, a real class of vulnerability — a TOCTOU race).
+\`os.path.exists()\` looks like the polite way to avoid \`FileNotFoundError\`. Be aware it isn't airtight: the file can vanish between your check and your open. That gap is a real class of bug (and, in security, a real class of vulnerability, a TOCTOU race).
 
-The robust pattern is to just open it and handle the failure — "easier to ask forgiveness than permission," which is very much the Python way. That's the Errors module. Use \`exists()\` for reporting; use \`try\` for correctness.
+The robust pattern is to just open it and handle the failure, "easier to ask forgiveness than permission," which is very much the Python way. That's the Errors module. Use \`exists()\` for reporting; use \`try\` for correctness.
 
 ## Build paths properly
 
@@ -392,11 +392,11 @@ The robust pattern is to just open it and handle the failure — "easier to ask 
 os.path.join("logs", "2026", "scan.log")   # logs/2026/scan.log
 \`\`\`
 
-Not \`"logs" + "/" + name\`. \`join\` uses the right separator for the platform, so your script survives moving between Linux and Windows. (\`pathlib\` is the modern, nicer alternative — worth looking up once you're comfortable.)
+Not \`"logs" + "/" + name\`. \`join\` uses the right separator for the platform, so your script survives moving between Linux and Windows. (\`pathlib\` is the modern, nicer alternative, worth looking up once you're comfortable.)
 
 ## Encoding
 
-Text files are bytes, and an **encoding** maps bytes to characters. Python assumes your platform's default, which differs between machines — a script that works for you can raise \`UnicodeDecodeError\` on a colleague's laptop.
+Text files are bytes, and an **encoding** maps bytes to characters. Python assumes your platform's default, which differs between machines, a script that works for you can raise \`UnicodeDecodeError\` on a colleague's laptop.
 
 Be explicit:
 
@@ -419,10 +419,10 @@ with open("scan.log") as f:
 
 Every element earns its place:
 
-- **\`with\`** — it closes, even on an exception
-- **\`for line in f\`** — one line in memory, any file size
-- **\`.strip()\`** — kills the trailing \`\\n\` before it ruins a comparison
-- **\`continue\`** — skips noise, keeps the real work unindented
+- **\`with\`**, it closes, even on an exception
+- **\`for line in f\`**, one line in memory, any file size
+- **\`.strip()\`**, kills the trailing \`\\n\` before it ruins a comparison
+- **\`continue\`**, skips noise, keeps the real work unindented
 
 That's Module 10's log summary, now reading from disk. Memorise this shape; you'll write it constantly.
 
@@ -430,7 +430,7 @@ That's Module 10's log summary, now reading from disk. Memorise this shape; you'
 
 ## Try It
 
-Run the starter code — it writes a log, reads it back skipping noise, and cleans up after itself.
+Run the starter code, it writes a log, reads it back skipping noise, and cleans up after itself.
 `,
     },
 
@@ -448,7 +448,7 @@ print(abs(-7), round(3.567, 2), pow(2, 10))
 print(sorted(nums), sorted(nums, reverse=True))
 print(list(reversed(nums)))
 
-# any / all — the loop you don't have to write
+# any / all, the loop you don't have to write
 print(any(n < 0 for n in nums))
 print(all(n < 0 for n in nums))
 print(any([]), all([]))
@@ -466,23 +466,23 @@ print(list(enumerate("ab")), list(zip([1, 2], "ab")))
 `,
       markdownContent: `# Essential Built-ins
 
-**Built-ins** are always available — no import. You've used \`print\`, \`len\`, \`type\`, \`int\`, \`str\`, \`range\` and \`input\` since Module 1. Here's the rest of the everyday set.
+**Built-ins** are always available, no import. You've used \`print\`, \`len\`, \`type\`, \`int\`, \`str\`, \`range\` and \`input\` since Module 1. Here's the rest of the everyday set.
 
 ---
 
 ## Numbers
 
 \`\`\`python
-len(nums)        # 5   — works on any sized collection
+len(nums)        # 5  , works on any sized collection
 sum(nums)        # 10
 min(nums)        # -1
 max(nums)        # 5
 abs(-7)          # 7
 round(3.567, 2)  # 3.57
-pow(2, 10)       # 1024 — same as 2 ** 10
+pow(2, 10)       # 1024, same as 2 ** 10
 \`\`\`
 
-\`sum\`, \`min\` and \`max\` on an **empty** collection differ: \`sum([])\` is \`0\`, but \`min([])\` and \`max([])\` raise \`ValueError\` — there's no smallest of nothing. Guard them, as the Module 11 challenge did.
+\`sum\`, \`min\` and \`max\` on an **empty** collection differ: \`sum([])\` is \`0\`, but \`min([])\` and \`max([])\` raise \`ValueError\`, there's no smallest of nothing. Guard them, as the Module 11 challenge did.
 
 \`min\` and \`max\` take **\`key=\`**, exactly like \`sorted\`:
 
@@ -495,7 +495,7 @@ max(words, key=len)   # 'banana'
 \`\`\`python
 sorted(nums)                 # new sorted list
 sorted(nums, reverse=True)
-list(reversed(nums))         # reversed order — not sorted
+list(reversed(nums))         # reversed order, not sorted
 \`\`\`
 
 \`reversed()\` returns a lazy iterator, so wrap it in \`list()\` to see it. It flips the current order; it does not sort.
@@ -507,8 +507,8 @@ list(reversed(nums))         # reversed order — not sorted
 Two loops you no longer have to write:
 
 \`\`\`python
-any(n < 0 for n in nums)   # True  — is at least one negative?
-all(n < 0 for n in nums)   # False — are they all negative?
+any(n < 0 for n in nums)   # True , is at least one negative?
+all(n < 0 for n in nums)   # False, are they all negative?
 \`\`\`
 
 They **short-circuit**: \`any\` stops at the first true, \`all\` at the first false.
@@ -516,8 +516,8 @@ They **short-circuit**: \`any\` stops at the first true, \`all\` at the first fa
 The empty cases look odd until you say them out loud:
 
 \`\`\`python
-any([])   # False — none of them are true (there are none)
-all([])   # True  — none of them are false (there are none)
+any([])   # False, none of them are true (there are none)
+all([])   # True , none of them are false (there are none)
 \`\`\`
 
 \`all([])\` being \`True\` is correct and does surprise people. "All zero of these passed" is vacuously true.
@@ -525,17 +525,17 @@ all([])   # True  — none of them are false (there are none)
 ## Inspecting
 
 \`\`\`python
-isinstance(3, int)      # True — the right way to test a type
-isinstance(True, int)   # True! — bool subclasses int (Module 7)
+isinstance(3, int)      # True, the right way to test a type
+isinstance(True, int)   # True!, bool subclasses int (Module 7)
 \`\`\`
 
-Prefer \`isinstance(x, int)\` over \`type(x) == int\`: it respects subclasses, which is usually what you want — though \`isinstance(True, int)\` shows that cuts both ways.
+Prefer \`isinstance(x, int)\` over \`type(x) == int\`: it respects subclasses, which is usually what you want, though \`isinstance(True, int)\` shows that cuts both ways.
 
 Two more worth knowing at a REPL: \`dir(x)\` lists what a value can do, and \`help(x)\` prints its documentation. They're how you explore an unfamiliar object without leaving Python.
 
 ## Lazy by default
 
-\`enumerate\`, \`zip\`, \`reversed\`, \`map\`, \`filter\` and \`range\` all return **lazy** objects — they produce values on demand rather than building a list:
+\`enumerate\`, \`zip\`, \`reversed\`, \`map\`, \`filter\` and \`range\` all return **lazy** objects, they produce values on demand rather than building a list:
 
 \`\`\`python
 print(zip([1, 2], "ab"))        # <zip object at 0x...>
@@ -548,7 +548,7 @@ That's why they cost nothing on huge inputs. Wrap in \`list()\` to look at them.
 
 ## Try It
 
-Run the starter code. \`any([])\` is \`False\` and \`all([])\` is \`True\` — get comfortable with that now.
+Run the starter code. \`any([])\` is \`False\` and \`all([])\` is \`True\`, get comfortable with that now.
 `,
     },
 
@@ -561,11 +561,11 @@ Run the starter code. \`any([])\` is \`False\` and \`all([])\` is \`True\` — g
       type: 'lesson',
       starterCode: `nums = [1, 2, 3, 4, 5]
 
-# map — apply a function to EVERY item
+# map, apply a function to EVERY item
 print(list(map(str, nums)))
 print(list(map(lambda n: n * 2, nums)))
 
-# filter — keep the items where the function says True
+# filter, keep the items where the function says True
 print(list(filter(lambda n: n % 2 == 0, nums)))
 
 # filter(None, ...) drops every falsy value
@@ -589,7 +589,7 @@ Two built-ins that take **a function** and a sequence. They're the classic funct
 
 ---
 
-## map — transform everything
+## map, transform everything
 
 \`\`\`python
 map(str, nums)                # every item -> str
@@ -604,7 +604,7 @@ for n in nums:
     out.append(str(n))
 \`\`\`
 
-Note \`str\` with **no parentheses** — you're passing the function itself, not calling it. Same idea as \`key=len\`.
+Note \`str\` with **no parentheses**, you're passing the function itself, not calling it. Same idea as \`key=len\`.
 
 \`map\` can take several sequences, calling the function with one item from each and stopping at the shortest:
 
@@ -612,13 +612,13 @@ Note \`str\` with **no parentheses** — you're passing the function itself, not
 map(lambda a, b: a + b, [1, 2], [10, 20])   # [11, 22]
 \`\`\`
 
-## filter — keep some
+## filter, keep some
 
 \`\`\`python
 filter(lambda n: n % 2 == 0, nums)   # [2, 4]
 \`\`\`
 
-\`filter(function, sequence)\` keeps items where the function returns truthy. Same items, fewer of them — \`map\` changes values, \`filter\` removes them.
+\`filter(function, sequence)\` keeps items where the function returns truthy. Same items, fewer of them, \`map\` changes values, \`filter\` removes them.
 
 A special case worth knowing:
 
@@ -626,7 +626,7 @@ A special case worth knowing:
 filter(None, [1, 0, "a", "", None, [], 3])   # [1, 'a', 3]
 \`\`\`
 
-Pass \`None\` as the function and it keeps everything **truthy** — a one-liner for stripping empties out of messy data.
+Pass \`None\` as the function and it keeps everything **truthy**, a one-liner for stripping empties out of messy data.
 
 ---
 
@@ -670,7 +670,7 @@ The comprehension says the same thing with less machinery, and it does both jobs
 [n * 2 for n in nums if n % 2 == 0]   # filter AND map
 \`\`\`
 
-\`map\` still wins when you're passing an **existing named function** — \`map(str, nums)\` is cleaner than \`[str(n) for n in nums]\`. The rule of thumb: **named function → \`map\`; anything needing a \`lambda\` → comprehension.**
+\`map\` still wins when you're passing an **existing named function**, \`map(str, nums)\` is cleaner than \`[str(n) for n in nums]\`. The rule of thumb: **named function → \`map\`; anything needing a \`lambda\` → comprehension.**
 
 You must be able to read both. Every codebase has them.
 
@@ -678,7 +678,7 @@ You must be able to read both. Every codebase has them.
 
 ## Try It
 
-Run the starter code. The re-used \`m\` gives \`[]\` the second time — that's the iterator being spent.
+Run the starter code. The re-used \`m\` gives \`[]\` the second time, that's the iterator being spent.
 `,
     },
 
@@ -700,7 +700,7 @@ print(sum(nums))          # ...but sum() already does that
 # Where reduce earns its place: no built-in exists
 print(reduce(lambda a, b: a * b, nums))
 
-# An initial value — and the empty-list guard
+# An initial value, and the empty-list guard
 print(reduce(lambda a, b: a * b, [], 1))
 # print(reduce(lambda a, b: a * b, []))   # TypeError on empty with no initial
 
@@ -720,7 +720,7 @@ print("loop:", total)
 
 \`reduce\` **folds** a whole sequence down to a single value.
 
-It lives in \`functools\`, not the built-ins — it was deliberately moved out in Python 3:
+It lives in \`functools\`, not the built-ins, it was deliberately moved out in Python 3:
 
 \`\`\`python
 from functools import reduce
@@ -775,7 +775,7 @@ max(nums)                                      # do
 
 \`sum\`, \`max\`, \`min\`, \`any\`, \`all\` and \`"".join\` are all reductions that already have a name. Use the name.
 
-\`reduce\` is defensible when there's genuinely no built-in and the operation is a true fold — a running product, for example:
+\`reduce\` is defensible when there's genuinely no built-in and the operation is a true fold, a running product, for example:
 
 \`\`\`python
 reduce(lambda a, b: a * b, nums)   # 24
@@ -791,7 +791,7 @@ for n in nums:
 
 Three lines, and any reader gets it instantly. (\`math.prod()\` exists for this specific case anyway.)
 
-**So why learn it?** Because you'll read it in other people's code, and because the *idea* — fold a sequence into one value — is worth having a name for.
+**So why learn it?** Because you'll read it in other people's code, and because the *idea*, fold a sequence into one value, is worth having a name for.
 
 ---
 
@@ -847,7 +847,7 @@ with open("access.log", "w") as f:
       hints: [
         'Open with: with open("access.log") as f: then for line in f. Strip each line and continue past blanks and comments.',
         'Collect the methods and paths into lists as you go. Then Paths is sorted(set(paths)), and All GET is all(m == "GET" for m in methods).',
-        'For the last part: with open("report.txt", "w") as f: f.write(f"errors={errors}") — then import os and print os.path.exists("report.txt").',
+        'For the last part: with open("report.txt", "w") as f: f.write(f"errors={errors}"), then import os and print os.path.exists("report.txt").',
       ],
       solution: `# Set-up: this writes the log file for you. Do not change it.
 with open("access.log", "w") as f:
@@ -892,7 +892,7 @@ The Module 10 log summary, now reading from an actual file and writing a report 
 
 ## Instructions
 
-The set-up code writes \`access.log\` for you — leave it alone. Read it back and print **exactly**:
+The set-up code writes \`access.log\` for you, leave it alone. Read it back and print **exactly**:
 
 \`\`\`
 Lines: 4
@@ -917,7 +917,7 @@ The shape from *Files in Practice*, plus \`sorted(set(...))\` from Module 6 and 
 
 ## Watch out
 
-\`.strip()\` each line first — the \`\\n\` is still attached, and a bare \`"\\n"\` won't look blank until you strip it.
+\`.strip()\` each line first, the \`\\n\` is still attached, and a bare \`"\\n"\` won't look blank until you strip it.
 
 ---
 

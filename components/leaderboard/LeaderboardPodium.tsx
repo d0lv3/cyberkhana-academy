@@ -147,7 +147,7 @@ const PodiumCard: React.FC<{ entry: PodiumEntry; highlight?: boolean; isMe?: boo
               <span className="truncate">
                 {(() => {
                   const u = universityLabel(entry.university, lang);
-                  return u.isSet && !u.isNotEnrolled ? u.text : '—';
+                  return u.isSet && !u.isNotEnrolled ? u.text : '-';
                 })()}
               </span>
             </p>

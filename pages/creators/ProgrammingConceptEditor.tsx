@@ -359,7 +359,7 @@ const ProgrammingConceptEditor: React.FC = () => {
       if (type === 'challenge') {
         if (!solution.trim()) {
           hadWarning = true;
-          toast('warning', 'Publishing without a solution — students will have nothing to reveal when stuck.');
+          toast('warning', 'Publishing without a solution, students will have nothing to reveal when stuck.');
         } else if (!verifyResults) {
           hadWarning = true;
           toast('warning', 'Solution was not verified against the tests. Consider running "Verify against tests".');
@@ -449,7 +449,7 @@ const ProgrammingConceptEditor: React.FC = () => {
         <div className="flex items-start gap-3 rounded-lg border border-[#9fef00]/30 bg-[#9fef00]/10 px-4 py-3">
           <BookOpen size={16} className="text-[#9fef00] mt-0.5 flex-shrink-0" />
           <div className="text-xs text-[#d2d7e3]">
-            <span className="font-bold text-[#9fef00]">Editing a built-in lesson</span> — saving
+            <span className="font-bold text-[#9fef00]">Editing a built-in lesson</span>, saving
             creates an editable copy that replaces the original everywhere. Existing student
             progress is preserved.
           </div>
@@ -509,7 +509,7 @@ const ProgrammingConceptEditor: React.FC = () => {
               {mdFor(markdownContent, mdLang).trim() ? (
                 <MarkdownPreview content={mdFor(markdownContent, mdLang)} />
               ) : (
-                <p className="text-sm text-[#6e7a94] italic">No markdown content yet — switch to the Editor tab to add some.</p>
+                <p className="text-sm text-[#6e7a94] italic">No markdown content yet, switch to the Editor tab to add some.</p>
               )}
             </div>
           </EnhancedCard>

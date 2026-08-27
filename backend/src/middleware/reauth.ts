@@ -75,7 +75,7 @@ export async function verifyStepUp(
   const issuedAt = typeof payload.iat === 'number' ? payload.iat : 0;
   const ageSeconds = Math.floor(Date.now() / 1000) - issuedAt;
   if (!issuedAt || ageSeconds > MAX_TOKEN_AGE_SECONDS || ageSeconds < -60) {
-    return { ok: false, status: 401, error: 'That confirmation expired — please try again' };
+    return { ok: false, status: 401, error: 'That confirmation expired, please try again' };
   }
 
   return { ok: true };

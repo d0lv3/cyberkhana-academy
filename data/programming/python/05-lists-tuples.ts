@@ -8,8 +8,8 @@ const listsTuples: ProgrammingModule = {
     ar: 'القوائم والصفوف',
   },
   description: {
-    en: 'Ordered collections — building lists, changing them, the method toolkit, and why tuples exist.',
-    ar: 'المجموعات المرتبة — إنشاء القوائم وتعديلها، الدوال، ولماذا توجد الصفوف.',
+    en: 'Ordered collections, building lists, changing them, the method toolkit, and why tuples exist.',
+    ar: 'المجموعات المرتبة، إنشاء القوائم وتعديلها، الدوال، ولماذا توجد الصفوف.',
   },
   order: 5,
   concepts: [
@@ -63,18 +63,18 @@ A list can hold **any** types, mixed:
 mixed = ["sara", 21, True, 3.5]
 \`\`\`
 
-Allowed, and usually a smell — a list normally means "many of the same kind of thing." Mixed types are what dictionaries and classes are for.
+Allowed, and usually a smell, a list normally means "many of the same kind of thing." Mixed types are what dictionaries and classes are for.
 
 Lists can nest:
 
 \`\`\`python
 grid = [[1, 2], [3, 4]]
-grid[1][0]   # 3 — row 1, then item 0
+grid[1][0]   # 3, row 1, then item 0
 \`\`\`
 
 ---
 
-## It's a sequence — so you already know it
+## It's a sequence, so you already know it
 
 A list is a sequence, exactly like a string. Everything from the Strings module transfers:
 
@@ -91,8 +91,8 @@ Indexing from 0, negatives from the right, slices excluding the end, \`in\` for 
 Slicing a list returns a **list**; indexing returns **one item**:
 
 \`\`\`python
-tools[0]     # 'nmap'     — a string
-tools[0:1]   # ['nmap']   — a list holding one string
+tools[0]     # 'nmap'    , a string
+tools[0:1]   # ['nmap']  , a list holding one string
 \`\`\`
 
 ---
@@ -110,7 +110,7 @@ The same line on a string is a \`TypeError\`. This single difference drives ever
 - List methods usually **change the list and return \`None\`**, where string methods return a new string.
 - Two names can point at one list, and a change through one is visible through the other.
 
-That second point is where the surprises live — the next lesson is about exactly that.
+That second point is where the surprises live, the next lesson is about exactly that.
 
 ---
 
@@ -184,7 +184,7 @@ b.extend([3, 4])
 print(b)            # [1, 2, 3, 4]     <- TWO new items
 \`\`\`
 
-\`append\` adds its argument **as a single item**, whatever it is. \`extend\` **loops** over its argument and adds each element. So \`extend("ab")\` adds \`'a'\` and \`'b'\` — because a string is iterable, which is rarely what you meant.
+\`append\` adds its argument **as a single item**, whatever it is. \`extend\` **loops** over its argument and adds each element. So \`extend("ab")\` adds \`'a'\` and \`'b'\`, because a string is iterable, which is rarely what you meant.
 
 \`+\` also joins lists, but builds a **new** one:
 
@@ -197,8 +197,8 @@ c = [1, 2] + [3, 4]   # new list; the originals are untouched
 ## Removing
 
 \`\`\`python
-tools.remove("burp")   # by VALUE — first match only
-last = tools.pop()     # by POSITION — removes and RETURNS it
+tools.remove("burp")   # by VALUE, first match only
+last = tools.pop()     # by POSITION, removes and RETURNS it
 first = tools.pop(0)   # from an index
 del tools[0]           # by position, returns nothing
 tools.clear()          # empty it
@@ -206,7 +206,7 @@ tools.clear()          # empty it
 
 \`remove()\` raises \`ValueError\` if the value isn't there, so check with \`in\` first when it might not be.
 
-\`pop()\` is the only remover that **hands the item back** — that's what makes it useful:
+\`pop()\` is the only remover that **hands the item back**, that's what makes it useful:
 
 \`\`\`python
 task = queue.pop(0)   # take the next job off the front
@@ -294,7 +294,7 @@ print(nums)            # [1, 2, 3]
 sorted([3, 1, 2])      # returns a NEW list, original untouched
 \`\`\`
 
-\`sort()\` is a list method that mutates. \`sorted()\` is a **built-in function** that works on any iterable — including strings and tuples — and always hands back a new list.
+\`sort()\` is a list method that mutates. \`sorted()\` is a **built-in function** that works on any iterable, including strings and tuples, and always hands back a new list.
 
 Use \`sorted()\` when you need the original intact; \`sort()\` when you don't.
 
@@ -305,7 +305,7 @@ sorted([3, 1, 2], reverse=True)      # [3, 2, 1]
 sorted(["banana", "fig"], key=len)   # shortest first
 \`\`\`
 
-\`key\` takes a **function**, applied to each item to decide its rank. \`key=len\` sorts by length; \`key=str.lower\` sorts text case-insensitively. Note \`len\` with no parentheses — you're passing the function, not calling it.
+\`key\` takes a **function**, applied to each item to decide its rank. \`key=len\` sorts by length; \`key=str.lower\` sorts text case-insensitively. Note \`len\` with no parentheses, you're passing the function, not calling it.
 
 Mixed types won't sort: \`sorted([1, "a"])\` raises \`TypeError\`, because Python won't guess whether \`1\` comes before \`"a"\`.
 
@@ -314,7 +314,7 @@ Mixed types won't sort: \`sorted([1, "a"])\` raises \`TypeError\`, because Pytho
 \`\`\`python
 nums.reverse()    # flips in place, returns None
 nums.count(2)     # how many 2s
-nums.index(2)     # position of the first 2 — ValueError if absent
+nums.index(2)     # position of the first 2, ValueError if absent
 \`\`\`
 
 \`nums[::-1]\` also reverses, but returns a **new** list instead of mutating.
@@ -332,7 +332,7 @@ b.append(4)
 print(a)   # [1, 2, 3, 4]  <- a changed too!
 \`\`\`
 
-\`b = a\` did **not** copy the list. It gave the same list a second name — remember from Variables: names label values. There is one list here, and \`a\` and \`b\` both point at it.
+\`b = a\` did **not** copy the list. It gave the same list a second name, remember from Variables: names label values. There is one list here, and \`a\` and \`b\` both point at it.
 
 Strings hid this from you: they're immutable, so you can never observe it. Lists can be changed, so you can.
 
@@ -340,7 +340,7 @@ To get a genuine copy:
 
 \`\`\`python
 c = a.copy()     # clearest
-c = a[:]         # a full slice — same effect
+c = a[:]         # a full slice, same effect
 c = list(a)      # also works
 \`\`\`
 
@@ -352,10 +352,10 @@ Now \`c\` is a separate list and changing it leaves \`a\` alone.
 grid = [[1, 2], [3, 4]]
 copy = grid.copy()
 copy[0].append(99)
-print(grid)   # [[1, 2, 99], [3, 4]]  — the inner list is shared
+print(grid)   # [[1, 2, 99], [3, 4]] , the inner list is shared
 \`\`\`
 
-For that, use \`copy.deepcopy()\`. It rarely comes up — but when it does, this is why.
+For that, use \`copy.deepcopy()\`. It rarely comes up, but when it does, this is why.
 
 ---
 
@@ -377,7 +377,7 @@ Run the starter code. The two blocks at the end are the lesson: \`b = a\` leaks 
 print(point, len(point), point[0])
 print(point[0:1])
 
-# Immutable — this fails
+# Immutable, this fails
 # point[0] = 99   # TypeError
 
 # A one-item tuple NEEDS the comma
@@ -412,11 +412,11 @@ A **tuple** is an ordered collection that **cannot be changed** after creation. 
 point = (10, 20)
 \`\`\`
 
-Everything you know about sequences applies — \`len()\`, indexing, slicing, \`in\`, looping:
+Everything you know about sequences applies, \`len()\`, indexing, slicing, \`in\`, looping:
 
 \`\`\`python
 point[0]     # 10
-point[0:1]   # (10,)  — slicing a tuple gives a tuple
+point[0:1]   # (10,) , slicing a tuple gives a tuple
 \`\`\`
 
 What's missing is any way to change it:
@@ -425,7 +425,7 @@ What's missing is any way to change it:
 point[0] = 99   # TypeError: 'tuple' object does not support item assignment
 \`\`\`
 
-No \`append\`, no \`remove\`, no \`sort\`. Only two methods — \`count()\` and \`index()\` — because the rest would mutate.
+No \`append\`, no \`remove\`, no \`sort\`. Only two methods, \`count()\` and \`index()\`, because the rest would mutate.
 
 ---
 
@@ -437,7 +437,7 @@ Two gotchas worth memorising.
 
 \`\`\`python
 one = (5,)          # tuple
-not_a_tuple = (5)   # just the int 5 — the parens are grouping
+not_a_tuple = (5)   # just the int 5, the parens are grouping
 \`\`\`
 
 **The parentheses are optional:**
@@ -446,7 +446,7 @@ not_a_tuple = (5)   # just the int 5 — the parens are grouping
 t = 1, 2, 3   # a tuple
 \`\`\`
 
-It's the **comma** that builds a tuple, not the brackets. That explains a lot of Python that otherwise looks like magic — like a function returning \`return x, y\` (one tuple) and this:
+It's the **comma** that builds a tuple, not the brackets. That explains a lot of Python that otherwise looks like magic, like a function returning \`return x, y\` (one tuple) and this:
 
 \`\`\`python
 a, b = b, a
@@ -472,9 +472,9 @@ first, *rest = (1, 2, 3)   # first=1, rest=[2, 3]
 
 If a list does more, why use a tuple?
 
-1. **Intent.** A tuple says "these belong together and won't change" — a coordinate, an RGB colour, a host/port pair. The reader learns that for free.
+1. **Intent.** A tuple says "these belong together and won't change", a coordinate, an RGB colour, a host/port pair. The reader learns that for free.
 2. **Safety.** It can't be modified by accident, including by a function you passed it to.
-3. **They can be dict keys.** Lists can't — that's the practical reason. Dictionary keys must be immutable, so \`{("10.0.0.5", 80): "http"}\` works and a list key raises \`TypeError\`.
+3. **They can be dict keys.** Lists can't, that's the practical reason. Dictionary keys must be immutable, so \`{("10.0.0.5", 80): "http"}\` works and a list key raises \`TypeError\`.
 
 Rule of thumb: many of the same thing, changing → **list**. A few related things, fixed → **tuple**.
 
@@ -489,7 +489,7 @@ tuple([1, 2])  # (1, 2)
 
 ## Try It
 
-Run the starter code. Note \`(5,)\` is a tuple and \`(5)\` is an int — that comma is the entire difference.
+Run the starter code. Note \`(5,)\` is a tuple and \`(5)\` is an int, that comma is the entire difference.
 `,
     },
 
@@ -544,7 +544,7 @@ print(f"Highest: {highest}")
 `,
       markdownContent: `# Challenge: Port Report
 
-Summarising a scan result — the kind of thing you'll write constantly.
+Summarising a scan result, the kind of thing you'll write constantly.
 
 ---
 
@@ -567,10 +567,10 @@ Highest: 8080
 
 ## Rules
 
-- Don't hard-code any number — derive everything from \`scan\`.
+- Don't hard-code any number, derive everything from \`scan\`.
 - **Unique sorted** must have duplicates removed and be in ascending order.
 - **Most common** is the port that appears most often, with its count.
-- Leave \`scan\` itself **unchanged** — so prefer \`sorted()\` over \`.sort()\`.
+- Leave \`scan\` itself **unchanged**, so prefer \`sorted()\` over \`.sort()\`.
 
 ## What you need
 
@@ -578,7 +578,7 @@ Highest: 8080
 
 Two nudges:
 
-- \`set()\` removes duplicates in one step (Module 6 covers sets properly — here just use it).
+- \`set()\` removes duplicates in one step (Module 6 covers sets properly, here just use it).
 - \`max()\` takes a \`key\`, exactly like \`sorted()\`. \`max(unique, key=scan.count)\` returns the item with the highest count.
 
 ---

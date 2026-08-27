@@ -262,7 +262,7 @@ const ProgrammingLanguageEditor: React.FC = () => {
           />
 
           <p className="text-[11px] text-[#6e7a94]">
-            After saving, add modules and lessons to this language from the Programming studio —
+            After saving, add modules and lessons to this language from the Programming studio, 
             same as the built-in languages. The cover image is set there too.
           </p>
         </div>

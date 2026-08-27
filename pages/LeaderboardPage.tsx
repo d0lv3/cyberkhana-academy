@@ -204,7 +204,7 @@ const LeaderboardPage: React.FC = () => {
                           </p>
                           {/* University on mobile (hidden column) */}
                           <p className="sm:hidden text-[11px] text-[#6e7a94] truncate inline-flex items-center gap-1">
-                            <GraduationCap size={11} /> {(() => { const u = universityLabel(e.university, lang); return u.isSet && !u.isNotEnrolled ? u.text : '—'; })()}
+                            <GraduationCap size={11} /> {(() => { const u = universityLabel(e.university, lang); return u.isSet && !u.isNotEnrolled ? u.text : '-'; })()}
                           </p>
                         </div>
                       </div>
@@ -212,7 +212,7 @@ const LeaderboardPage: React.FC = () => {
                       {/* University (desktop) */}
                       <div className="hidden sm:flex items-center gap-1.5 text-xs text-[#9aa5bf] min-w-0">
                         <GraduationCap size={13} className="text-[#6e7a94] flex-shrink-0" />
-                        <span className="truncate">{(() => { const u = universityLabel(e.university, lang); return u.isSet && !u.isNotEnrolled ? u.text : '—'; })()}</span>
+                        <span className="truncate">{(() => { const u = universityLabel(e.university, lang); return u.isSet && !u.isNotEnrolled ? u.text : '-'; })()}</span>
                       </div>
 
                       {/* Points */}

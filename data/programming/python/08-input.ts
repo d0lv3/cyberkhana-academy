@@ -32,7 +32,7 @@ print("Type of raw_age:", type(raw_age).__name__)
 age = int(raw_age)
 print(f"Hello {name}, next year you turn {age + 1}")
 
-# input() keeps every character except the newline —
+# input() keeps every character except the newline, 
 # including spaces, so strip() before comparing.
 answer = input("Continue? ")
 print("clean:", repr(answer.strip().lower()))
@@ -46,9 +46,9 @@ name = input("Name: ")
 print(f"Hello {name}")
 \`\`\`
 
-The argument is the **prompt** — printed with no newline, so the cursor sits after it. It's optional, but a bare \`input()\` looks like your program has frozen.
+The argument is the **prompt**, printed with no newline, so the cursor sits after it. It's optional, but a bare \`input()\` looks like your program has frozen.
 
-In this editor there's no keyboard to wait on, so the **Input box** supplies the lines instead — one per \`input()\` call, in order. Everything else behaves exactly as it would in a terminal.
+In this editor there's no keyboard to wait on, so the **Input box** supplies the lines instead, one per \`input()\` call, in order. Everything else behaves exactly as it would in a terminal.
 
 ---
 
@@ -58,7 +58,7 @@ The single most important fact about it. Always. No exceptions:
 
 \`\`\`python
 raw_age = input("Age: ")   # you type 21
-type(raw_age)              # str  — "21", not 21
+type(raw_age)              # str , "21", not 21
 raw_age + 1                # TypeError
 \`\`\`
 
@@ -72,11 +72,11 @@ print(age + 1)   # 22
 And the silent version of the same bug, from Module 7:
 
 \`\`\`python
-if raw_age >= 18:    # TypeError — str vs int
+if raw_age >= 18:    # TypeError, str vs int
 if raw_age == 18:    # no error, just never True
 \`\`\`
 
-The second one is worse. \`"18" == 18\` is \`False\` — Python compares happily and the test simply never fires. No traceback, no clue.
+The second one is worse. \`"18" == 18\` is \`False\`, Python compares happily and the test simply never fires. No traceback, no clue.
 
 ## Bad input raises
 
@@ -102,17 +102,17 @@ The complete answer is \`try\`/\`except\`, in the Errors module.
 
 ## What input() keeps
 
-It strips the trailing newline — and nothing else. Leading and trailing **spaces survive**:
+It strips the trailing newline, and nothing else. Leading and trailing **spaces survive**:
 
 \`\`\`python
 answer = input("Continue? ")   # user types "  YES  "
-answer == "yes"                # False — spaces and capitals
+answer == "yes"                # False, spaces and capitals
 answer.strip().lower() == "yes"  # True
 \`\`\`
 
 \`.strip().lower()\` before comparing anything a human typed. Same rule as Module 3.
 
-\`repr()\` is worth knowing here — it shows the quotes and any hidden whitespace, which \`print()\` hides:
+\`repr()\` is worth knowing here, it shows the quotes and any hidden whitespace, which \`print()\` hides:
 
 \`\`\`python
 print(answer)         #   YES
@@ -125,7 +125,7 @@ When input "looks right" but won't match, \`repr()\` shows you why.
 
 ## Try It
 
-Run the starter code with the given input, then edit the Input box. Try entering \`abc\` for the age and read the \`ValueError\` — that's your program meeting the real world.
+Run the starter code with the given input, then edit the Input box. Try entering \`abc\` for the age and read the \`ValueError\`, that's your program meeting the real world.
 `,
     },
 
@@ -162,7 +162,7 @@ print("Valid-ish:", email.count("@") == 1 and "." in domain)
 `,
       markdownContent: `# Practical: Email Parts
 
-Pulling an email apart — indexing, slicing and string methods together.
+Pulling an email apart, indexing, slicing and string methods together.
 
 ---
 
@@ -180,7 +180,7 @@ domain = email[at + 1:]  # everything after
 
 The \`+ 1\` matters: \`email[at:]\` would keep the \`@\` itself, since slices include the start.
 
-\`index()\` raises \`ValueError\` if there's no \`@\` — which is right here. An email without one is broken, and you'd want to know.
+\`index()\` raises \`ValueError\` if there's no \`@\`, which is right here. An email without one is broken, and you'd want to know.
 
 ## By split()
 
@@ -202,7 +202,7 @@ name, sep, host = email.partition("@")
 
 No \`@\`? \`sep\` is \`""\` and you can check that, instead of handling an exception.
 
-Three tools, same job — pick by what should happen when the input is malformed.
+Three tools, same job, pick by what should happen when the input is malformed.
 
 ---
 
@@ -211,11 +211,11 @@ Three tools, same job — pick by what should happen when the input is malformed
 Chain the methods:
 
 \`\`\`python
-domain.split(".")[-1]              # 'tech'  — the TLD
-user.split(".")[0].capitalize()    # 'Sara'  — the first name
+domain.split(".")[-1]              # 'tech' , the TLD
+user.split(".")[0].capitalize()    # 'Sara' , the first name
 \`\`\`
 
-Read left to right: split on dots, take the last piece. \`[-1]\` is doing real work — it's the last item however many dots there are, so it handles \`mail.co.uk\` too.
+Read left to right: split on dots, take the last piece. \`[-1]\` is doing real work, it's the last item however many dots there are, so it handles \`mail.co.uk\` too.
 
 ## A word on validating
 
@@ -223,7 +223,7 @@ Read left to right: split on dots, take the last piece. \`[-1]\` is doing real w
 email.count("@") == 1 and "." in domain
 \`\`\`
 
-Good enough for a form hint, and **not** a real validation. The actual rules are notoriously baroque — quoted strings, comments, and addresses that look illegal but aren't. Don't write your own; the only real test is sending a mail and seeing if it arrives.
+Good enough for a form hint, and **not** a real validation. The actual rules are notoriously baroque, quoted strings, comments, and addresses that look illegal but aren't. Don't write your own; the only real test is sending a mail and seeing if it arrives.
 
 That instinct generalises: for anything with a specification (emails, URLs, dates), reach for the library before writing a clever one-liner.
 
@@ -231,7 +231,7 @@ That instinct generalises: for anything with a specification (emails, URLs, date
 
 ## Try It
 
-Run the starter code, then change the email — try one with no \`@\` and watch which lines break, and which don't.
+Run the starter code, then change the email, try one with no \`@\` and watch which lines break, and which don't.
 `,
     },
 
@@ -307,7 +307,7 @@ d = total // 86400          # whole days
 h = total % 86400 // 3600   # leftover seconds -> whole hours
 \`\`\`
 
-Read the second line as: take what's left after removing whole days, then see how many whole hours fit. That two-step — \`%\` to get the remainder, \`//\` to take the next unit — is the pattern for any unit breakdown.
+Read the second line as: take what's left after removing whole days, then see how many whole hours fit. That two-step, \`%\` to get the remainder, \`//\` to take the next unit, is the pattern for any unit breakdown.
 
 ---
 
@@ -326,7 +326,7 @@ That's Module 13. The point stands: know when your arithmetic is a model rather 
 
 ## Try It
 
-Run it, then change the age in the Input box. Try \`0\` — everything is zero, and nothing breaks.
+Run it, then change the age in the Input box. Try \`0\`, everything is zero, and nothing breaks.
 `,
     },
 
@@ -409,7 +409,7 @@ Days: 7,665
 
 ## Rules
 
-- Read both values with \`input()\` — hard-code nothing.
+- Read both values with \`input()\`, hard-code nothing.
 - **First** is the part of the user before the dot, capitalised.
 - **Adult** is whether the age is 18 or over.
 - **Days** is age × 365, printed **with a thousands separator**.
@@ -421,7 +421,7 @@ Days: 7,665
 
 Two reminders:
 
-- \`input()\` returns a **string** — the age needs \`int()\` before you compare or multiply.
+- \`input()\` returns a **string**, the age needs \`int()\` before you compare or multiply.
 - \`{age >= 18}\` inside an f-string prints \`True\` directly; no \`if\` needed.
 
 ---

@@ -5,8 +5,8 @@ const gettingStarted: ProgrammingModule = {
   slug: 'getting-started',
   title: { en: 'Getting Started', ar: 'البداية' },
   description: {
-    en: 'Your first shell scripts — printing text, variables, and arithmetic.',
-    ar: 'نصوصك البرمجية الأولى — طباعة النصوص، المتغيرات، والحساب.',
+    en: 'Your first shell scripts, printing text, variables, and arithmetic.',
+    ar: 'نصوصك البرمجية الأولى، طباعة النصوص، المتغيرات، والحساب.',
   },
   order: 1,
   concepts: [
@@ -20,7 +20,7 @@ const gettingStarted: ProgrammingModule = {
       starterCode: `# echo prints a line of text
 echo "Hello from Bash!"
 
-# Variables — note: NO spaces around the =
+# Variables, note: NO spaces around the =
 name="CyberKhana"
 echo "Welcome to $name"
 
@@ -29,7 +29,7 @@ echo $(( 6 * 7 ))
 `,
       markdownContent: `# Echo & Variables
 
-Bash is the language of the terminal — you write commands, and the shell runs
+Bash is the language of the terminal, you write commands, and the shell runs
 them top to bottom. Let's cover the two things you'll use constantly.
 
 ---
@@ -46,7 +46,7 @@ echo "Hello from Bash!"
 
 ## Variables
 
-Assign a value with \`=\`. **Do not put spaces around it** — \`name = "x"\` is an
+Assign a value with \`=\`. **Do not put spaces around it**, \`name = "x"\` is an
 error in Bash.
 
 \`\`\`bash
@@ -127,9 +127,9 @@ Your script should print their sum on its own line:
 
 ## What You'll Need
 
-- \`read a b\` — reads a line and splits it into \`$a\` and \`$b\` (already written).
-- \`$(( a + b ))\` — evaluates the arithmetic.
-- \`echo\` — prints the result.
+- \`read a b\`, reads a line and splits it into \`$a\` and \`$b\` (already written).
+- \`$(( a + b ))\`, evaluates the arithmetic.
+- \`echo\`, prints the result.
 
 ---
 

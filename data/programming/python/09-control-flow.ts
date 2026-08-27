@@ -8,8 +8,8 @@ const controlFlow: ProgrammingModule = {
     ar: 'التحكم في المسار',
   },
   description: {
-    en: 'Making decisions — if/elif/else, nesting, the ternary operator, and membership tests.',
-    ar: 'اتخاذ القرارات — if/elif/else، التداخل، المعامل الثلاثي، واختبارات العضوية.',
+    en: 'Making decisions, if/elif/else, nesting, the ternary operator, and membership tests.',
+    ar: 'اتخاذ القرارات، if/elif/else، التداخل، المعامل الثلاثي، واختبارات العضوية.',
   },
   order: 9,
   concepts: [
@@ -34,7 +34,7 @@ else:
 # Only the FIRST matching branch runs
 print("---")
 
-# Any value works as a condition — truthiness from Module 7
+# Any value works as a condition, truthiness from Module 7
 items = []
 if items:
     print("has items")
@@ -59,7 +59,7 @@ if score >= 50:
     print("pass")
 \`\`\`
 
-Three parts: the keyword, a condition, a colon — then an **indented block** that runs only when the condition is truthy.
+Three parts: the keyword, a condition, a colon, then an **indented block** that runs only when the condition is truthy.
 
 The colon and the indentation are both required. Miss the colon and you get a \`SyntaxError\`; miss the indent and an \`IndentationError\`.
 
@@ -98,7 +98,7 @@ else:
     print("F")
 \`\`\`
 
-\`elif\` is "else if" — checked only when every branch above it failed.
+\`elif\` is "else if", checked only when every branch above it failed.
 
 ---
 
@@ -112,10 +112,10 @@ Reverse it and it breaks:
 if score >= 70:
     print("C")
 elif score >= 90:
-    print("A")   # unreachable — 95 already matched >= 70
+    print("A")   # unreachable, 95 already matched >= 70
 \`\`\`
 
-A score of 95 prints \`C\`, because \`95 >= 70\` matched first. No error, no warning — just a wrong answer. When branches overlap, order them from most specific to most general.
+A score of 95 prints \`C\`, because \`95 >= 70\` matched first. No error, no warning, just a wrong answer. When branches overlap, order them from most specific to most general.
 
 Because only one branch runs, you don't repeat the bounds:
 
@@ -128,7 +128,7 @@ elif score >= 80 and score < 90:   # correct but redundant
 
 \`\`\`python
 if score >= 90: print("A")
-if score >= 80: print("B")   # separate — also runs!
+if score >= 80: print("B")   # separate, also runs!
 \`\`\`
 
 Separate \`if\` statements are **independent**, so a 95 prints both. Use \`elif\` when the cases are alternatives, separate \`if\`s when they're genuinely unrelated questions.
@@ -150,7 +150,7 @@ Run the starter code with \`score = 74\`, then try \`95\`. Then reorder the bran
       type: 'lesson',
       starterCode: `age, has_id, banned = 21, True, False
 
-# Nested — each level narrows further
+# Nested, each level narrows further
 if age >= 18:
     if has_id:
         if not banned:
@@ -170,7 +170,7 @@ if age >= 18 and has_id and not banned:
 
 print("---")
 
-# Guard clauses — reject early, keep the happy path unindented
+# Guard clauses, reject early, keep the happy path unindented
 def check(age, has_id, banned):
     if age < 18:
         return "too young"
@@ -197,7 +197,7 @@ else:
     print("too young")
 \`\`\`
 
-The inner \`if\` is only reached when the outer one passed — so by the time you read \`has_id\`, age is already known to be fine.
+The inner \`if\` is only reached when the outer one passed, so by the time you read \`has_id\`, age is already known to be fine.
 
 Getting the indentation wrong changes the meaning without any error. An \`else\` attaches to the \`if\` at **its own indent level**, so shifting it by four spaces silently rewires your logic. This is why Python insists on consistent indentation.
 
@@ -214,9 +214,9 @@ if age >= 18 and has_id and not banned:
     print("allowed")
 \`\`\`
 
-One line, one indent, reads like the sentence you'd say out loud. Short-circuiting means it's also efficient — \`has_id\` is never checked if the age already failed.
+One line, one indent, reads like the sentence you'd say out loud. Short-circuiting means it's also efficient, \`has_id\` is never checked if the age already failed.
 
-Use nesting only when the levels genuinely differ — when each failure needs its own distinct response.
+Use nesting only when the levels genuinely differ, when each failure needs its own distinct response.
 
 ## Guard clauses
 
@@ -237,17 +237,17 @@ Compare with the nested version. Same logic, but:
 
 - nothing is indented more than once
 - each rule is one line, readable in isolation
-- the **happy path** is last and unindented — the thing that normally happens is the easiest thing to find
+- the **happy path** is last and unindented, the thing that normally happens is the easiest thing to find
 
 This is one of the highest-value habits in programming. When you catch yourself three levels deep, ask what you could reject early instead.
 
-(\`def\` is the Functions module — here just read \`return\` as "answer, and stop".)
+(\`def\` is the Functions module, here just read \`return\` as "answer, and stop".)
 
 ---
 
 ## Try It
 
-Run the starter code — all three versions agree. Then flip \`has_id\` to \`False\` and confirm all three still agree.
+Run the starter code, all three versions agree. Then flip \`has_id\` to \`False\` and confirm all three still agree.
 `,
     },
 
@@ -279,7 +279,7 @@ print([n if n > 0 else 0 for n in [-1, 5, -3]])
 total, count = 10, 0
 print(total / count if count else 0)
 
-# Don't do this — chaining gets unreadable fast
+# Don't do this, chaining gets unreadable fast
 score = 74
 print("A" if score >= 90 else "B" if score >= 80 else "C" if score >= 70 else "F")
 `,
@@ -297,7 +297,7 @@ status = "adult" if age >= 18 else "minor"
 
 Read it as: *this value*, **if** *condition*, **else** *that value*.
 
-The order is unusual — the result comes first, then the test. Most languages put the condition first (\`age >= 18 ? "adult" : "minor"\`). Python chose to read like English.
+The order is unusual, the result comes first, then the test. Most languages put the condition first (\`age >= 18 ? "adult" : "minor"\`). Python chose to read like English.
 
 It replaces this:
 
@@ -314,7 +314,7 @@ Four lines, one variable, one decision. The ternary says the same thing without 
 
 ## It's an expression
 
-That's the real distinction. A statement *does* something; an **expression** *evaluates to a value*. \`if\` is a statement — you can't assign it:
+That's the real distinction. A statement *does* something; an **expression** *evaluates to a value*. \`if\` is a statement, you can't assign it:
 
 \`\`\`python
 status = if age >= 18: "adult"   # SyntaxError
@@ -344,7 +344,7 @@ Don't chain them:
 "A" if score >= 90 else "B" if score >= 80 else "C" if score >= 70 else "F"
 \`\`\`
 
-That's legal, and nobody wants to read it. The \`elif\` chain is longer and instantly clear — pick that.
+That's legal, and nobody wants to read it. The \`elif\` chain is longer and instantly clear, pick that.
 
 Don't use it for side effects either:
 
@@ -358,7 +358,7 @@ The rule: if you're picking a value, ternary. If you're deciding what to *do*, \
 
 ## Try It
 
-Run the starter code. The last line is the anti-pattern on purpose — compare it against the elif chain in lesson 1 and notice which one you'd rather debug.
+Run the starter code. The last line is the anti-pattern on purpose, compare it against the elif chain in lesson 1 and notice which one you'd rather debug.
 `,
     },
 
@@ -388,7 +388,7 @@ print("root" not in ["sara", "ali"])
 user = "sara"
 print(user in ("sara", "ali", "zaid"))
 
-# Substring vs element — a real difference
+# Substring vs element, a real difference
 print("22" in "8022")
 print(22 in [8022])
 `,
@@ -396,17 +396,17 @@ print(22 in [8022])
 
 Two: **\`in\`** and **\`not in\`**. Both return a \`bool\`.
 
-You've used \`in\` since Module 3 — this is the full picture.
+You've used \`in\` since Module 3, this is the full picture.
 
 ---
 
 ## It works on everything
 
 \`\`\`python
-"adm" in "admin"     # True — substring
-22 in [22, 80]       # True — list element
-22 in (22, 80)       # True — tuple element
-22 in {22, 80}       # True — set member
+"adm" in "admin"     # True, substring
+22 in [22, 80]       # True, list element
+22 in (22, 80)       # True, tuple element
+22 in {22, 80}       # True, set member
 \`\`\`
 
 One operator, every container. That consistency is very Python: learn the idea once, apply it everywhere.
@@ -415,12 +415,12 @@ One operator, every container. That consistency is very Python: learn the idea o
 
 \`\`\`python
 host = {"ip": "10.0.0.5", "port": 8080}
-"ip" in host            # True  — a key
-"10.0.0.5" in host      # False — that's a VALUE
+"ip" in host            # True , a key
+"10.0.0.5" in host      # False, that's a VALUE
 "10.0.0.5" in host.values()   # True
 \`\`\`
 
-The default is **keys**, always. If you want values, say \`.values()\`. Worth remembering, because \`"10.0.0.5" in host\` returns \`False\` rather than raising — a silent wrong answer.
+The default is **keys**, always. If you want values, say \`.values()\`. Worth remembering, because \`"10.0.0.5" in host\` returns \`False\` rather than raising, a silent wrong answer.
 
 ## not in
 
@@ -448,13 +448,13 @@ Shorter, and adding a name means editing one tuple.
 ## The trap: substring is not element
 
 \`\`\`python
-"22" in "8022"    # True!  — "22" appears inside "8022"
-22 in [8022]      # False  — 8022 is not 22
+"22" in "8022"    # True! , "22" appears inside "8022"
+22 in [8022]      # False , 8022 is not 22
 \`\`\`
 
 For strings, \`in\` asks "does this appear **anywhere inside**?" For lists, it asks "is this **one of the items**?"
 
-So checking a port against a string of ports gives nonsense — \`"22" in "8022,443"\` is \`True\` even though port 22 isn't in that list. Keep structured data in a list or set, not in a string.
+So checking a port against a string of ports gives nonsense, \`"22" in "8022,443"\` is \`True\` even though port 22 isn't in that list. Keep structured data in a list or set, not in a string.
 
 ## A note on speed
 
@@ -464,7 +464,7 @@ So checking a port against a string of ports gives nonsense — \`"22" in "8022,
 
 ## Try It
 
-Run the starter code. The last two lines are the trap — same question, different answer, because the containers are different.
+Run the starter code. The last two lines are the trap, same question, different answer, because the containers are different.
 `,
     },
 
@@ -482,7 +482,7 @@ USERS = {"zaid", "omar"}
 
 user = input("User: ").strip().lower()
 
-# Order matters — most restrictive first
+# Order matters, most restrictive first
 if user in BANNED:
     role, allowed = "banned", False
 elif user in ADMINS:
@@ -499,7 +499,7 @@ print(f"Can delete: {allowed and role == 'admin'}")
 `,
       markdownContent: `# Practical: Access Control
 
-A permission check — \`in\`, \`elif\` ordering and booleans doing real work.
+A permission check, \`in\`, \`elif\` ordering and booleans doing real work.
 
 ---
 
@@ -512,7 +512,7 @@ BANNED = {"mallory"}
 
 Sets, not lists, for three reasons: duplicates are meaningless here, \`in\` is fast, and the braces signal "a bag of names" rather than an ordered sequence.
 
-\`UPPER_CASE\` marks them as constants — fixed configuration, not data that changes as the program runs.
+\`UPPER_CASE\` marks them as constants, fixed configuration, not data that changes as the program runs.
 
 ## Clean the input first
 
@@ -522,7 +522,7 @@ user = input("User: ").strip().lower()
 
 Never test raw input. \`" Sara "\` should match \`"sara"\`; without this it doesn't, and the failure looks like a permissions bug rather than a whitespace bug.
 
-Note this only works because the sets are stored lowercase too. Normalising one side isn't enough — both sides need the same shape.
+Note this only works because the sets are stored lowercase too. Normalising one side isn't enough, both sides need the same shape.
 
 ## Order encodes the policy
 
@@ -535,7 +535,7 @@ else:                   ...
 
 **\`BANNED\` is checked first, and that's a security decision.** If someone is in both \`BANNED\` and \`ADMINS\`, the order decides what happens. Checking admin first would let a banned admin straight through.
 
-The rule: **deny before allow**. When branches overlap, the safest outcome goes first. Bugs in this ordering aren't cosmetic — they're the vulnerability.
+The rule: **deny before allow**. When branches overlap, the safest outcome goes first. Bugs in this ordering aren't cosmetic, they're the vulnerability.
 
 The \`else\` matters just as much: an unknown user is denied. Default to "no", and let the rules grant access explicitly.
 
@@ -553,13 +553,13 @@ Tuple unpacking from Module 5. Both facts about a branch stay on one line, so it
 allowed and role == "admin"
 \`\`\`
 
-Deleting needs *both*. Note \`==\` binds tighter than \`and\`, so no parentheses are needed — though they'd do no harm.
+Deleting needs *both*. Note \`==\` binds tighter than \`and\`, so no parentheses are needed, though they'd do no harm.
 
 ---
 
 ## Try It
 
-Run it with \`sara\`, then try \`mallory\`, \`omar\`, and something unknown. Then add \`mallory\` to \`ADMINS\` as well and confirm she's still refused — that's the ordering doing its job.
+Run it with \`sara\`, then try \`mallory\`, \`omar\`, and something unknown. Then add \`mallory\` to \`ADMINS\` as well and confirm she's still refused, that's the ordering doing its job.
 `,
     },
 
@@ -585,7 +585,7 @@ Run it with \`sara\`, then try \`mallory\`, \`omar\`, and something unknown. The
 # Rules:
 #   - Grade: 90+ A, 80+ B, 70+ C, 60+ D, otherwise F. Use if/elif/else.
 #   - Passed is whether the score is 60 or more.
-#   - Status is "pass" or "fail" — use a ternary operator.
+#   - Status is "pass" or "fail", use a ternary operator.
 #   - Name is capitalised; strip whitespace from it.
 #   - The score arrives as a string.
 
@@ -641,7 +641,7 @@ print(f"Status: {status}")
 `,
       markdownContent: `# Challenge: Grade Report
 
-The module in one program — and this one is checked against **three** different inputs, so it has to be genuinely right rather than right for one case.
+The module in one program, and this one is checked against **three** different inputs, so it has to be genuinely right rather than right for one case.
 
 ---
 
@@ -666,13 +666,13 @@ Status: pass
 
 - **Grade**: 90+ → \`A\`, 80+ → \`B\`, 70+ → \`C\`, 60+ → \`D\`, else \`F\`. Use \`if\`/\`elif\`/\`else\`.
 - **Passed**: the score is 60 or more.
-- **Status**: \`"pass"\` or \`"fail"\` — use a **ternary**.
+- **Status**: \`"pass"\` or \`"fail"\`, use a **ternary**.
 - **Name**: stripped and capitalised.
 - The score arrives as a **string**.
 
 ## Watch out
 
-Your elif chain must run **highest to lowest**. Put \`score >= 60\` first and every passing score becomes a \`D\` — and the \`74\` test would still fail loudly, which is the point of testing more than one input.
+Your elif chain must run **highest to lowest**. Put \`score >= 60\` first and every passing score becomes a \`D\`, and the \`74\` test would still fail loudly, which is the point of testing more than one input.
 
 ---
 

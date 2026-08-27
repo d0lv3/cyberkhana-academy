@@ -112,8 +112,8 @@ const DOMAINS: Domain[] = [
     color: '#a78bfa',
     title: { en: 'Security Program Management', ar: 'إدارة البرامج الأمنية' },
     desc: {
-      en: 'Governance, risk, and compliance — security as an organization-wide discipline.',
-      ar: 'الحوكمة والمخاطر والامتثال — الأمن كمنهج على مستوى المؤسسة.',
+      en: 'Governance, risk, and compliance, security as an organization-wide discipline.',
+      ar: 'الحوكمة والمخاطر والامتثال، الأمن كمنهج على مستوى المؤسسة.',
     },
     topics: [
       { en: 'Governance & Policies', ar: 'الحوكمة والسياسات' },
@@ -245,8 +245,8 @@ const CyberSecurity101Page: React.FC = () => {
           </h3>
           <p className="mt-1 text-xs text-[#9aa5bf]">
             {lang === 'ar'
-              ? 'وحدات الأمن السيبراني التي ينشرها صنّاع المحتوى تظهر في مركز الوحدات — صفِّ حسب الفئة (هجومي / دفاعي / عام) للعثور عليها.'
-              : 'Security modules published by creators surface in the Modules hub — filter by category (Offensive / Defensive / General) to find them.'}
+              ? 'وحدات الأمن السيبراني التي ينشرها صنّاع المحتوى تظهر في مركز الوحدات، صفِّ حسب الفئة (هجومي / دفاعي / عام) للعثور عليها.'
+              : 'Security modules published by creators surface in the Modules hub, filter by category (Offensive / Defensive / General) to find them.'}
           </p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">

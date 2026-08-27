@@ -30,7 +30,7 @@ function toDollarDelimiters(text: string): string {
 }
 
 function normalizeMath(markdown: string): string {
-  // ```math / ```latex fences first — they are code chunks, so they have to
+  // ```math / ```latex fences first, they are code chunks, so they have to
   // become display math before the code-preserving split below sees them.
   const withFences = markdown.replace(
     /```(?:math|latex|katex)[ \t]*\r?\n([\s\S]*?)```/g,
@@ -48,7 +48,7 @@ function normalizeMath(markdown: string): string {
  * Arabic security writing is dense with English terminology, and the two
  * scripts need different faces. Relying on font fallback alone would hand the
  * *space* glyph to the Latin face too, which visibly loosens Arabic word
- * spacing — so instead each Latin run is tagged and styled on its own.
+ * spacing, so instead each Latin run is tagged and styled on its own.
  *
  * Consecutive Latin words are captured as ONE run, spaces included. Splitting
  * a phrase into per-word spans would let the bidi algorithm reorder the words
@@ -61,8 +61,8 @@ const LATIN_WORD = '[A-Za-z0-9]+(?:[._+\\-/][A-Za-z0-9]+)*';
 const LATIN_RUN = new RegExp(`${LATIN_WORD}(?:[ \\t]+${LATIN_WORD})*`, 'g');
 
 /* ── Raw HTML in authored lessons ──
- * Course authors write collapsible solutions the GitHub way — a <details>
- * block wrapping a <summary> — and markdown alone renders those as literal
+ * Course authors write collapsible solutions the GitHub way, a <details>
+ * block wrapping a <summary>, and markdown alone renders those as literal
  * text. rehype-raw parses them, which means the pipeline is now handling
  * author-supplied HTML that students will load, so rehype-sanitize runs
  * straight after it.
@@ -94,7 +94,7 @@ const lessonSchema = {
  * First, the stray blank line. mdast-util-to-hast renders a code node as
  * `node.value` with a newline appended, and `whitespace-pre` faithfully draws
  * that newline as an empty final line inside every fenced block. Nothing upstream
- * lets us turn it off, so it is trimmed here — once, at the end, so a
+ * lets us turn it off, so it is trimmed here, once, at the end, so a
  * deliberate blank line in the middle of a snippet survives.
  *
  * Second, lessons are full of code students are meant to run, and the only way
@@ -137,7 +137,7 @@ const CodeBlock: React.FC<{ text: string; isRtl: boolean }> = ({ text, isRtl }) 
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1600);
     } catch {
-      /* Denied permission or no clipboard at all — leave the label alone
+      /* Denied permission or no clipboard at all, leave the label alone
          rather than claiming a copy that did not happen. */
     }
   }, [text]);
@@ -178,7 +178,7 @@ function isOpaque(node: any): boolean {
   return list.some((c: unknown) => /^(katex|math)/.test(String(c)));
 }
 
-/** rehype plugin — runs after rehype-katex, so rendered math is left alone. */
+/** rehype plugin, runs after rehype-katex, so rendered math is left alone. */
 function rehypeWrapLatinRuns() {
   return (tree: any) => {
     const walk = (node: any) => {

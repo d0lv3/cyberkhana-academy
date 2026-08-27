@@ -36,7 +36,7 @@ const FILES = [
 const PACKAGES = ['pillow'];
 
 if (!existsSync(src)) {
-  console.error('[copy-pyodide] pyodide package not found — run npm install');
+  console.error('[copy-pyodide] pyodide package not found, run npm install');
   process.exit(1);
 }
 

@@ -34,7 +34,7 @@ const AboutContent: React.FC = () => (
     <p>{dim('The home of cybersecurity for the Arab world.')}</p>
     <p className="h-2" />
     <p>{teal('## What is CyberKhana?')}</p>
-    <p>{white('A hands-on platform where students break, defend, and build —')}</p>
+    <p>{white('A hands-on platform where students break, defend, and build, ')}</p>
     <p>{white('through interactive labs, CTFs, and real-world tooling.')}</p>
     <p className="h-2" />
     <p>{teal('## CyberKhana Academy')}</p>
@@ -43,7 +43,7 @@ const AboutContent: React.FC = () => (
     <p>{white('job-ready offensive & defensive skills.')}</p>
     <p className="h-2" />
     <p>{green('  - ')}{white('Learn by doing, not by watching')}</p>
-    <p>{green('  - ')}{white('Fully bilingual — Arabic & English')}</p>
+    <p>{green('  - ')}{white('Fully bilingual, Arabic & English')}</p>
     <p>{green('  - ')}{white('Practice on live simulations and CTFs')}</p>
     <p>{green('  - ')}{white('Track mastery across 6 security pillars')}</p>
     <p className="h-2" />
@@ -69,7 +69,7 @@ const FILES: VFile[] = [
     size: '8.0K',
     hidden: false,
     render: () => (
-      <p>{dim('surprise: ELF 64-bit executable — run it with ')}{green('./surprise')}</p>
+      <p>{dim('surprise: ELF 64-bit executable, run it with ')}{green('./surprise')}</p>
     ),
   },
   {
@@ -100,7 +100,7 @@ const FILES: VFile[] = [
         <p>{amber('🎁 You found the hidden file!')}</p>
         <p>{white('Promo code: ')}{green('KHANA5')}</p>
         <p>{dim('Use it at checkout for 5% off your CyberKhana Academy subscription.')}</p>
-        <p>{dim("(Pssst — don't tell everyone.)")}</p>
+        <p>{dim("(Pssst, don't tell everyone.)")}</p>
       </div>
     ),
   },
@@ -128,13 +128,13 @@ const findFile = (name: string) => FILES.find((f) => f.name === name);
 const FORTUNES = [
   'Security is a process, not a product.',
   'There are two kinds of companies: those that have been hacked, and those that don’t know it yet.',
-  'The only truly secure system is one that is powered off. — Gene Spafford',
+  'The only truly secure system is one that is powered off., Gene Spafford',
   'Amateurs hack systems; professionals hack people.',
-  'A chain is only as strong as its weakest link — usually the human.',
+  'A chain is only as strong as its weakest link, usually the human.',
   'Patch early, patch often.',
   'Trust, but verify. Then verify again.',
   'العلم في الصِّغَر كالنقش على الحجر.',
-  'مَن جَدَّ وَجَد — whoever strives, finds.',
+  'مَن جَدَّ وَجَد، whoever strives, finds.',
 ];
 const randomFortune = () => FORTUNES[Math.floor(Math.random() * FORTUNES.length)];
 
@@ -256,7 +256,7 @@ function runCommand(raw: string, elevated: boolean, ctx: Ctx): React.ReactNode |
 
   // fork bomb — match regardless of spacing
   if (raw.replace(/\s/g, '') === ':(){:|:&};:')
-    return <p>{amber('Fork bomb detected. 🍴💣 Nice try — we teach that in a *safe* lab.')}</p>;
+    return <p>{amber('Fork bomb detected. 🍴💣 Nice try, we teach that in a *safe* lab.')}</p>;
 
   const cmd = parts[0];
   const args = parts.slice(1);
@@ -342,14 +342,14 @@ function runCommand(raw: string, elevated: boolean, ctx: Ctx): React.ReactNode |
       const inner = runCommand(args.join(' '), true, ctx);
       return (
         <div>
-          <p>{dim('[sudo] passwordless access — you earned it, Alumni.')}</p>
+          <p>{dim('[sudo] passwordless access, you earned it, Alumni.')}</p>
           {inner !== 'CLEAR' && inner !== 'CLOSE' ? inner : null}
         </div>
       );
     }
 
     case 'cd':
-      return <p>{amber('🏠 You can’t leave home — there’s too much to learn here.')}</p>;
+      return <p>{amber('🏠 You can’t leave home, there’s too much to learn here.')}</p>;
 
     case 'echo':
       return <p>{white(args.join(' '))}</p>;
@@ -381,7 +381,7 @@ function runCommand(raw: string, elevated: boolean, ctx: Ctx): React.ReactNode |
     case 'logout':
       if (ctx.rooted) {
         ctx.setRoot(false);
-        return <p>{dim('logout — back to ')}{green('alumni')}{dim('.')}</p>;
+        return <p>{dim('logout, back to ')}{green('alumni')}{dim('.')}</p>;
       }
       ctx.close();
       return 'CLOSE';
@@ -416,7 +416,7 @@ function runCommand(raw: string, elevated: boolean, ctx: Ctx): React.ReactNode |
             <p className="h-1.5" />
             <p>{c('#ef4444')(`⚠  Listen here, ${who}.`)}</p>
             <p>{white('You do that again and you’re the one who will be ')}{c('#ef4444')('rm -rf /*')}</p>
-            <p>{dim('(nothing was harmed — this is a sandbox 😉)')}</p>
+            <p>{dim('(nothing was harmed, this is a sandbox 😉)')}</p>
           </div>
         );
       }
@@ -490,23 +490,23 @@ function runCommand(raw: string, elevated: boolean, ctx: Ctx): React.ReactNode |
             <p>{white('2. Only ever touch systems you own or are authorized to test.')}</p>
             <p>{white('3. Build more than you break.')}</p>
             <p>{white('4. Share what you learn. Lift others up.')}</p>
-            <p>{dim('— the CyberKhana way')}</p>
+            <p>{dim(', the CyberKhana way')}</p>
           </div>
         );
       const h = HELP.find(([n]) => n.split(' ')[0] === args[0]);
-      if (h) return <p>{white(h[0])} {dim('— ' + h[1])}</p>;
+      if (h) return <p>{white(h[0])} {dim(', ' + h[1])}</p>;
       return <p>{white(`No manual entry for ${args[0]}`)}</p>;
     }
 
     case 'vim':
     case 'nano':
     case 'vi':
-      return <p>{dim(`${cmd}: this is a demo shell — no editor here. Try `)}{green('cat')}{dim(' instead.')}</p>;
+      return <p>{dim(`${cmd}: this is a demo shell, no editor here. Try `)}{green('cat')}{dim(' instead.')}</p>;
 
     default:
       return (
         <p>
-          {white(`${cmd}: command not found`)} {dim("— type 'help' for the list")}
+          {white(`${cmd}: command not found`)} {dim(", type 'help' for the list")}
         </p>
       );
   }
@@ -539,8 +539,8 @@ const Prompt: React.FC<{ rooted?: boolean }> = ({ rooted }) =>
 const WELCOME: Entry = {
   output: (
     <div className="py-0.5">
-      <p>{green('CyberKhana Academy')} {dim('— demo shell v1.0')}</p>
-      <p>{white("You're logged in as ")}{green("'alumni'")}{white(' — one of our own. 🎓')}</p>
+      <p>{green('CyberKhana Academy')} {dim(', demo shell v1.0')}</p>
+      <p>{white("You're logged in as ")}{green("'alumni'")}{white(', one of our own. 🎓')}</p>
       <p>{dim('Try ')}{green('ls -la')}{dim(', ')}{green('cat aboutus.md')}{dim(', or read ')}{green('root.txt')}{dim('.')}</p>
       <p>{dim("Type ")}{green("'help'")}{dim(' for commands, ')}{green("'exit'")}{dim(' to close.')}</p>
     </div>

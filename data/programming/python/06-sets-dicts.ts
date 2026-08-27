@@ -32,7 +32,7 @@ print(sorted(set(scan)))
 print(type({}).__name__)
 print(type(set()).__name__)
 
-# No indexing — a set has no order
+# No indexing, a set has no order
 # print(ports[0])   # TypeError
 
 # Membership is the superpower
@@ -56,12 +56,12 @@ Curly braces, or \`set()\` from any iterable:
 \`\`\`python
 ports = {80, 443, 80, 22}
 print(ports)        # {80, 443, 22}
-print(len(ports))   # 3  — the duplicate 80 is gone
+print(len(ports))   # 3 , the duplicate 80 is gone
 \`\`\`
 
 You didn't remove the duplicate; a set simply can't hold one.
 
-**An empty set needs \`set()\`.** \`{}\` is an empty **dictionary** — dicts claimed the braces first:
+**An empty set needs \`set()\`.** \`{}\` is an empty **dictionary**, dicts claimed the braces first:
 
 \`\`\`python
 type({})      # dict
@@ -78,12 +78,12 @@ type(set())   # set
 ports[0]   # TypeError: 'set' object is not subscriptable
 \`\`\`
 
-There's no "first" item in a set. If you need order, use a list — or \`sorted(my_set)\`, which returns a list.
+There's no "first" item in a set. If you need order, use a list, or \`sorted(my_set)\`, which returns a list.
 
 **Items must be immutable** (technically, *hashable*):
 
 \`\`\`python
-{(1, 2), "text", 3}   # fine — tuple, str, int
+{(1, 2), "text", 3}   # fine, tuple, str, int
 {[1, 2]}              # TypeError: unhashable type: 'list'
 \`\`\`
 
@@ -93,7 +93,7 @@ This is the practical reason tuples exist. A set finds items by their hash, and 
 
 ## What you gain
 
-**Deduplication in one step** — the most common use by far:
+**Deduplication in one step**, the most common use by far:
 
 \`\`\`python
 scan = [443, 22, 8080, 22, 443]
@@ -102,15 +102,15 @@ sorted(set(scan))   # [22, 443, 8080]
 
 \`set()\` drops duplicates, \`sorted()\` gives back an ordered list. You wrote this in the last challenge.
 
-**Fast membership.** \`x in my_set\` is dramatically faster than \`x in my_list\` for large collections — the set jumps straight to the answer, while the list checks items one by one. With a million items that's the difference between instant and a noticeable wait.
+**Fast membership.** \`x in my_set\` is dramatically faster than \`x in my_list\` for large collections, the set jumps straight to the answer, while the list checks items one by one. With a million items that's the difference between instant and a noticeable wait.
 
-If your code asks "have I seen this before?" a lot — visited URLs, scanned hosts, seen hashes — a set is the right structure.
+If your code asks "have I seen this before?" a lot, visited URLs, scanned hosts, seen hashes, a set is the right structure.
 
 ---
 
 ## Try It
 
-Run the starter code. Note \`type({})\` is \`dict\`, not \`set\` — the mistake everyone makes once.
+Run the starter code. Note \`type({})\` is \`dict\`, not \`set\`, the mistake everyone makes once.
 `,
     },
 
@@ -126,7 +126,7 @@ Run the starter code. Note \`type({})\` is \`dict\`, not \`set\` — the mistake
 ports.add(22)          # one item
 print(ports)
 
-ports.add(80)          # already there — no error, no change
+ports.add(80)          # already there, no error, no change
 print(ports)
 
 ports.update([8080, 3306])   # many
@@ -147,7 +147,7 @@ print(ports, len(ports))
 `,
       markdownContent: `# Set Methods: Changing
 
-Sets are mutable, so — like lists — these methods change the set and return \`None\`.
+Sets are mutable, so, like lists, these methods change the set and return \`None\`.
 
 ---
 
@@ -158,27 +158,27 @@ ports.add(22)                # one item
 ports.update([8080, 3306])   # many
 \`\`\`
 
-\`add()\` on something already present does **nothing** — no error, no duplicate. That's the point: adding is idempotent, so you never need to check first.
+\`add()\` on something already present does **nothing**, no error, no duplicate. That's the point: adding is idempotent, so you never need to check first.
 
 \`update()\` is the set's \`extend\`: it loops over its argument. So \`update("ab")\` adds \`'a'\` and \`'b'\`, not \`"ab"\`.
 
 ## Removing
 
 \`\`\`python
-ports.discard(3306)   # remove if present — silent if not
-ports.remove(8080)    # remove — KeyError if not present
+ports.discard(3306)   # remove if present, silent if not
+ports.remove(8080)    # remove, KeyError if not present
 ports.pop()           # remove an ARBITRARY item, and return it
 ports.clear()         # empty it
 \`\`\`
 
 \`discard\` vs \`remove\` is the only real decision:
 
-- **\`discard()\`** — "make sure it's gone." Missing is fine.
-- **\`remove()\`** — "take this out." Missing is a bug, so it raises.
+- **\`discard()\`**, "make sure it's gone." Missing is fine.
+- **\`remove()\`**, "take this out." Missing is a bug, so it raises.
 
 Choose the one that matches what a missing value would *mean*. Same reasoning as \`find()\` vs \`index()\` on strings.
 
-\`pop()\` removes an **arbitrary** item, not the first — a set has no first. It's for "give me any one," and raises \`KeyError\` on an empty set.
+\`pop()\` removes an **arbitrary** item, not the first, a set has no first. It's for "give me any one," and raises \`KeyError\` on an empty set.
 
 ---
 
@@ -198,11 +198,11 @@ Run the starter code. \`add(80)\` when 80 is already there changes nothing, and 
       starterCode: `expected = {22, 80, 443}
 found = {22, 443, 8080}
 
-print(found | expected)   # union — in either
-print(found & expected)   # intersection — in both
-print(found - expected)   # difference — in found, not expected
+print(found | expected)   # union, in either
+print(found & expected)   # intersection, in both
+print(found - expected)   # difference, in found, not expected
 print(expected - found)   # the other direction: missing
-print(found ^ expected)   # symmetric difference — in one, not both
+print(found ^ expected)   # symmetric difference, in one, not both
 
 # Method names do the same jobs
 print(found.union(expected))
@@ -225,10 +225,10 @@ This is where sets stop being "lists without duplicates" and start earning their
 expected = {22, 80, 443}
 found    = {22, 443, 8080}
 
-found | expected   # {22, 80, 443, 8080}  union — in either
-found & expected   # {22, 443}            intersection — in both
-found - expected   # {8080}               difference — in found only
-found ^ expected   # {80, 8080}           symmetric difference — in one, not both
+found | expected   # {22, 80, 443, 8080}  union, in either
+found & expected   # {22, 443}            intersection, in both
+found - expected   # {8080}               difference, in found only
+found ^ expected   # {80, 8080}           symmetric difference, in one, not both
 \`\`\`
 
 Each has a method form, which reads better in a long line:
@@ -249,12 +249,12 @@ The operators need both sides to be sets; the methods accept any iterable, so \`
 Read that example again as a security question. You have the ports you **expected** open and the ports you **found** open:
 
 \`\`\`python
-found - expected     # {8080}  — unexpected! investigate
-expected - found     # {80}    — expected but missing
-found & expected     # {22, 443}  — as designed
+found - expected     # {8080} , unexpected! investigate
+expected - found     # {80}   , expected but missing
+found & expected     # {22, 443} , as designed
 \`\`\`
 
-Three lines answer the whole question. The list version is a nested loop and a page of code. Any time you're comparing two collections — old vs new users, allowed vs actual, yesterday's hosts vs today's — reach for sets.
+Three lines answer the whole question. The list version is a nested loop and a page of code. Any time you're comparing two collections, old vs new users, allowed vs actual, yesterday's hosts vs today's, reach for sets.
 
 Note \`-\` is **not** symmetric: \`found - expected\` and \`expected - found\` answer different questions.
 
@@ -263,9 +263,9 @@ Note \`-\` is **not** symmetric: \`found - expected\` and \`expected - found\` a
 These return a \`bool\`:
 
 \`\`\`python
-{22, 80} <= expected           # True  — subset: all of mine are in yours
-expected >= {22, 80}           # True  — superset
-{1, 2}.isdisjoint({3, 4})      # True  — nothing in common
+{22, 80} <= expected           # True , subset: all of mine are in yours
+expected >= {22, 80}           # True , superset
+{1, 2}.isdisjoint({3, 4})      # True , nothing in common
 \`\`\`
 
 \`<=\` is \`issubset()\`, \`>=\` is \`issuperset()\`. Useful for "does this user have all required permissions?":
@@ -295,7 +295,7 @@ print(host)
 print(host["ip"])
 print(len(host))
 
-# Add / change — same syntax
+# Add / change, same syntax
 host["os"] = "linux"
 host["port"] = 443
 print(host)
@@ -332,8 +332,8 @@ Compare with the list version:
 
 \`\`\`python
 host = ["10.0.0.5", 8080, True]
-host[1]        # 8080 — but what IS 8080? you have to remember
-host["port"]   # 8080 — the code says what it means
+host[1]        # 8080, but what IS 8080? you have to remember
+host["port"]   # 8080, the code says what it means
 \`\`\`
 
 That's the whole argument for dicts.
@@ -350,19 +350,19 @@ A missing key **raises**:
 host["missing"]   # KeyError: 'missing'
 \`\`\`
 
-\`.get()\` is the safe version — it returns \`None\` instead, or a default you choose:
+\`.get()\` is the safe version, it returns \`None\` instead, or a default you choose:
 
 \`\`\`python
 host.get("missing")              # None
 host.get("missing", "unknown")   # 'unknown'
 \`\`\`
 
-Use \`[]\` when the key **must** exist — the \`KeyError\` is a real bug you want to hear about. Use \`.get()\` when it's genuinely optional. Same judgement as \`remove\` vs \`discard\`.
+Use \`[]\` when the key **must** exist, the \`KeyError\` is a real bug you want to hear about. Use \`.get()\` when it's genuinely optional. Same judgement as \`remove\` vs \`discard\`.
 
 To just check:
 
 \`\`\`python
-"ip" in host   # True — checks KEYS, not values
+"ip" in host   # True, checks KEYS, not values
 \`\`\`
 
 ## Writing
@@ -380,15 +380,15 @@ No error either way, so a typo silently creates a key rather than failing. Worth
 
 ## The rules on keys and values
 
-**Keys must be immutable** — \`str\`, \`int\`, \`tuple\`. Not lists. Same hashing reason as sets, and the practical payoff:
+**Keys must be immutable**, \`str\`, \`int\`, \`tuple\`. Not lists. Same hashing reason as sets, and the practical payoff:
 
 \`\`\`python
-{("10.0.0.5", 80): "http"}   # a tuple key — fine
+{("10.0.0.5", 80): "http"}   # a tuple key, fine
 \`\`\`
 
 **Keys are unique.** Assigning an existing key replaces it.
 
-**Values can be anything** — lists, other dicts, whatever. Nested dicts are how JSON maps into Python.
+**Values can be anything**, lists, other dicts, whatever. Nested dicts are how JSON maps into Python.
 
 Since Python 3.7, dicts **keep insertion order**, so looping gives your keys back in the order you added them.
 
@@ -396,7 +396,7 @@ Since Python 3.7, dicts **keep insertion order**, so looping gives your keys bac
 
 ## Try It
 
-Run the starter code. Then uncomment the \`host["missing"]\` line and read the \`KeyError\` — then compare with what \`.get()\` does.
+Run the starter code. Then uncomment the \`host["missing"]\` line and read the \`KeyError\`, then compare with what \`.get()\` does.
 `,
     },
 
@@ -422,7 +422,7 @@ keys = host.keys()
 host["os"] = "linux"
 print(list(keys))
 
-# setdefault — get it, or create it first
+# setdefault, get it, or create it first
 print(host.setdefault("port", 22))
 print(host.setdefault("proto", "tcp"))
 print(host["proto"])
@@ -439,34 +439,34 @@ host.values()   # dict_values(['10.0.0.5', 8080, True])
 host.items()    # dict_items([('ip', '10.0.0.5'), ...])
 \`\`\`
 
-\`items()\` gives **(key, value) tuples** — which is why this is the standard way to loop a dict:
+\`items()\` gives **(key, value) tuples**, which is why this is the standard way to loop a dict:
 
 \`\`\`python
 for key, value in host.items():
     print(f"{key} = {value}")
 \`\`\`
 
-Each item is a tuple, unpacked into \`key, value\` — exactly the tuple unpacking from Module 5. It's all the same idea reappearing.
+Each item is a tuple, unpacked into \`key, value\`, exactly the tuple unpacking from Module 5. It's all the same idea reappearing.
 
 ## They're views, not lists
 
-\`keys()\` doesn't return a list. It returns a **view** — a live window onto the dict:
+\`keys()\` doesn't return a list. It returns a **view**, a live window onto the dict:
 
 \`\`\`python
 keys = host.keys()
 host["os"] = "linux"
-print(list(keys))   # ['ip', 'port', 'up', 'os']  — it updated itself
+print(list(keys))   # ['ip', 'port', 'up', 'os'] , it updated itself
 \`\`\`
 
 That's efficient (nothing is copied) and occasionally surprising. Two consequences:
 
 - Wrap in \`list()\` if you want a snapshot, or need indexing: \`list(host.keys())[0]\`.
-- **Never add or remove keys while looping** over a view — Python raises \`RuntimeError: dictionary changed size during iteration\`. Loop over \`list(host.keys())\` if you must modify.
+- **Never add or remove keys while looping** over a view, Python raises \`RuntimeError: dictionary changed size during iteration\`. Loop over \`list(host.keys())\` if you must modify.
 
 Handily, views support set operations, because keys are unique:
 
 \`\`\`python
-host.keys() & {"ip", "mac"}   # {'ip'} — which of these exist?
+host.keys() & {"ip", "mac"}   # {'ip'}, which of these exist?
 \`\`\`
 
 ## setdefault
@@ -474,8 +474,8 @@ host.keys() & {"ip", "mac"}   # {'ip'} — which of these exist?
 "Give me this key; if it's missing, create it with this value first":
 
 \`\`\`python
-host.setdefault("port", 22)      # 8080 — exists, so unchanged
-host.setdefault("proto", "tcp")  # 'tcp' — missing, so added
+host.setdefault("port", 22)      # 8080, exists, so unchanged
+host.setdefault("proto", "tcp")  # 'tcp', missing, so added
 \`\`\`
 
 The difference from \`.get()\` matters: \`.get()\` never modifies the dict; \`setdefault()\` **writes the default in**.
@@ -484,7 +484,7 @@ The difference from \`.get()\` matters: \`.get()\` never modifies the dict; \`se
 
 ## Try It
 
-Run the starter code. Watch \`keys\` pick up \`"os"\` on its own — that's the view being live, not a stale copy.
+Run the starter code. Watch \`keys\` pick up \`"os"\` on its own, that's the view being live, not a stale copy.
 `,
     },
 
@@ -512,7 +512,7 @@ host["temp"] = 1
 last = host.popitem()           # removes the LAST inserted pair
 print(last, host)
 
-# Copies are shallow — same rule as lists
+# Copies are shallow, same rule as lists
 a = {"tags": ["web"]}
 b = a.copy()
 b["tags"].append("prod")
@@ -522,7 +522,7 @@ print(a)
 
 ---
 
-## update() — merge
+## update(), merge
 
 \`\`\`python
 host.update({"port": 443, "os": "linux"})
@@ -551,7 +551,7 @@ host.pop("gone", "n/a")        # a default avoids the KeyError
 host.popitem()                 # removes and returns the LAST pair
 \`\`\`
 
-\`pop()\` without a default raises \`KeyError\` on a missing key — the default makes it safe, mirroring \`.get()\`.
+\`pop()\` without a default raises \`KeyError\` on a missing key, the default makes it safe, mirroring \`.get()\`.
 
 \`popitem()\` returns a \`(key, value)\` tuple. Since 3.7 it takes the **last inserted** pair, which makes a dict usable as a stack. On an empty dict it raises \`KeyError\`.
 
@@ -564,13 +564,13 @@ host.clear()   # empty it
 copy = host.copy()
 \`\`\`
 
-And the same warning as lists — **\`copy()\` is shallow**:
+And the same warning as lists, **\`copy()\` is shallow**:
 
 \`\`\`python
 a = {"tags": ["web"]}
 b = a.copy()
 b["tags"].append("prod")
-print(a)   # {'tags': ['web', 'prod']}  — the inner list is shared
+print(a)   # {'tags': ['web', 'prod']} , the inner list is shared
 \`\`\`
 
 The dict is new; the values inside are the same objects. For nested data use \`copy.deepcopy()\`.
@@ -594,7 +594,7 @@ Python consistently offers a loud version and a quiet one. Pick by asking: *woul
 
 ## Try It
 
-Run the starter code. The last block is the shallow-copy trap again — same lesson as lists, now with dicts.
+Run the starter code. The last block is the shallow-copy trap again, same lesson as lists, now with dicts.
 `,
     },
 
@@ -633,7 +633,7 @@ current  = {"10.0.0.5": [22, 80, 8080], "10.0.0.7": [22]}
       hints: [
         'Dict keys behave like sets: current.keys() - baseline.keys() gives the new hosts. Wrap in sorted() to get a sorted list.',
         'For shared hosts, intersect the keys: baseline.keys() & current.keys(). Loop over sorted() of that.',
-        'For each shared host, newly opened ports are set(current[host]) - set(baseline[host]) — then sorted().',
+        'For each shared host, newly opened ports are set(current[host]) - set(baseline[host]), then sorted().',
       ],
       solution: `baseline = {"10.0.0.5": [22, 80], "10.0.0.6": [443]}
 current  = {"10.0.0.5": [22, 80, 8080], "10.0.0.7": [22]}
@@ -650,7 +650,7 @@ for host in sorted(baseline.keys() & current.keys()):
 `,
       markdownContent: `# Challenge: Scan Diff
 
-Comparing today's scan against a baseline — a real task, and the whole module in one problem.
+Comparing today's scan against a baseline, a real task, and the whole module in one problem.
 
 ---
 
@@ -673,7 +673,7 @@ Gone hosts: ['10.0.0.6']
 
 ## Rules
 
-- Hard-code nothing — derive it all from the two dicts.
+- Hard-code nothing, derive it all from the two dicts.
 - **New hosts**: in \`current\`, not in \`baseline\`. **Gone hosts**: the reverse.
 - The last line covers hosts in **both**: ports open now that weren't before.
 - Every list printed must be **sorted**.
@@ -687,9 +687,9 @@ current.keys() - baseline.keys()   # new hosts
 baseline.keys() & current.keys()   # hosts in both
 \`\`\`
 
-Then for a shared host, compare its port lists as sets — \`set(a) - set(b)\` gives what's new.
+Then for a shared host, compare its port lists as sets, \`set(a) - set(b)\` gives what's new.
 
-You'll need a small loop for the last line. If \`for host in ...\` is still unfamiliar, it's fine to peek ahead — the Loops module covers it properly.
+You'll need a small loop for the last line. If \`for host in ...\` is still unfamiliar, it's fine to peek ahead, the Loops module covers it properly.
 
 ---
 

@@ -466,14 +466,14 @@ const ProgrammingCreator: React.FC = () => {
             <div className="text-xs text-[#d2d7e3]">
               {uiLang === 'ar' ? (
                 <>
-                  <span className="font-bold text-[#f3a43a]">مشرف</span> — كل وحدة ودرس منشور أدناه
+                  <span className="font-bold text-[#f3a43a]">مشرف</span>، كل وحدة ودرس منشور أدناه
                   قابل للتعديل مهما كان مؤلفه
                   {otherAuthorCount > 0 ? ` (${otherAuthorCount} من مؤلفين آخرين)` : ''}. المحتوى المدمج
                   يُفتح بنسخ-عند-التعديل: أول حفظ ينشئ نسخة قابلة للتعديل تحل محل الأصل.
                 </>
               ) : (
                 <>
-                  <span className="font-bold text-[#f3a43a]">Admin</span> — every published module
+                  <span className="font-bold text-[#f3a43a]">Admin</span>, every published module
                   and lesson below is editable, whoever wrote it
                   {otherAuthorCount > 0 ? ` (${otherAuthorCount} by other authors)` : ''}. Built-in content
                   opens copy-on-write: the first save creates an editable copy that replaces the

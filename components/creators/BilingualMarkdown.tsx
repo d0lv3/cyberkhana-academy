@@ -33,7 +33,7 @@ const BilingualMarkdown: React.FC<BilingualMarkdownProps> = ({ value, onChange, 
           </button>
         ))}
         <span className="px-2 text-[10px] text-[#6e7a94]">
-          {lang === 'en' ? 'Required' : 'Optional — falls back to English'}
+          {lang === 'en' ? 'Required' : 'Optional, falls back to English'}
         </span>
       </div>
 

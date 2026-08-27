@@ -110,7 +110,7 @@ const FlagSubmission: React.FC = () => {
     }
     setMessage({
       type: 'pending',
-      text: 'Flag received — automatic validation will be enabled soon.',
+      text: 'Flag received, automatic validation will be enabled soon.',
     });
   };
 
@@ -635,7 +635,7 @@ const ModuleViewerPage: React.FC = () => {
                                 <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-red-950/20 border border-red-500/20 text-red-400">
                                   <X size={16} />
                                   <span className="text-sm font-medium">
-                                    Incorrect — the correct answer is {LETTERS[currentQuestion.correctIndex]}
+                                    Incorrect, the correct answer is {LETTERS[currentQuestion.correctIndex]}
                                   </span>
                                 </div>
                               )}

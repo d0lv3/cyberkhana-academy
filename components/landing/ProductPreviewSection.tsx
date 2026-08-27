@@ -172,8 +172,8 @@ const EXPLOIT_LINES: readonly (readonly (readonly [string, string])[])[] = [
 const RUN_LINES: readonly (readonly (readonly [string, string])[])[] = [
   [['$ ', '#00a859'], ['gcc -fno-stack-protector exploit.c -o lab', '#d2d7e3']],
   [['$ ', '#00a859'], ['./lab $(python3 -c "print(\'A\'*88)")', '#d2d7e3']],
-  [['[!] ', '#f3a43a'], ['SIGSEGV — saved return address overwritten', '#8b98ae']],
-  [['[✓] ', '#9fef00'], ['Objective 2 of 3 — control the return address', '#d2d7e3']],
+  [['[!] ', '#f3a43a'], ['SIGSEGV, saved return address overwritten', '#8b98ae']],
+  [['[✓] ', '#9fef00'], ['Objective 2 of 3, control the return address', '#d2d7e3']],
 ];
 
 const LINE_LENGTHS = EXPLOIT_LINES.map((line) => line.reduce((n, [txt]) => n + txt.length, 0));

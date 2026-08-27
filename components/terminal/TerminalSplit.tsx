@@ -22,7 +22,7 @@ const PaneLabel: React.FC<{ name: string; ip: string }> = ({ name, ip }) => (
     <span className="font-semibold text-[#9aa5bf]">{name}</span>
     <span className="text-[#4b5a72]">·</span>
     <span className="font-mono text-[#00c766]">{ip}</span>
-    <span className="text-[#4b5a72]">— use this IP to connect</span>
+    <span className="text-[#4b5a72]">, use this IP to connect</span>
   </div>
 );
 

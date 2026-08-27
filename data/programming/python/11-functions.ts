@@ -8,8 +8,8 @@ const functions: ProgrammingModule = {
     ar: 'الدوال',
   },
   description: {
-    en: 'Naming a piece of work — parameters, return, *args and **kwargs, scope, recursion and lambda.',
-    ar: 'تسمية جزء من العمل — المعاملات، return، *args و **kwargs، النطاق، التكرار الذاتي، و lambda.',
+    en: 'Naming a piece of work, parameters, return, *args and **kwargs, scope, recursion and lambda.',
+    ar: 'تسمية جزء من العمل، المعاملات، return، *args و **kwargs، النطاق، التكرار الذاتي، و lambda.',
   },
   order: 11,
   concepts: [
@@ -23,7 +23,7 @@ const functions: ProgrammingModule = {
       starterCode: `def greet():
     print("hello")
 
-greet()          # call it — the parentheses matter
+greet()          # call it, the parentheses matter
 print(greet)     # without them, you get the function itself
 
 # return hands a value BACK to the caller
@@ -62,7 +62,7 @@ def greet():
 greet()
 \`\`\`
 
-\`def\`, a name, parentheses, a colon, then an indented block — the same block rule as \`if\` and \`for\`.
+\`def\`, a name, parentheses, a colon, then an indented block, the same block rule as \`if\` and \`for\`.
 
 Defining a function doesn't run it. The body only executes when you **call** it, and the parentheses are what call it:
 
@@ -77,7 +77,7 @@ Forgetting the parentheses is a quiet bug: \`greet\` on its own is a perfectly v
 
 ## return
 
-\`print\` shows a value to a human. **\`return\` hands it back to the code that called it** — which is what makes functions composable:
+\`print\` shows a value to a human. **\`return\` hands it back to the code that called it**, which is what makes functions composable:
 
 \`\`\`python
 def double(n):
@@ -97,7 +97,7 @@ x = shout("hi")   # prints HI
 print(x)          # None
 \`\`\`
 
-\`shout\` printed something, but **returned nothing**, so \`x\` is \`None\`. A function with no \`return\` returns \`None\` — always. You can't do arithmetic on it, store it usefully, or pass it on.
+\`shout\` printed something, but **returned nothing**, so \`x\` is \`None\`. A function with no \`return\` returns \`None\`, always. You can't do arithmetic on it, store it usefully, or pass it on.
 
 Rule of thumb: functions that **compute** should \`return\`. Only functions whose entire job is output should \`print\`. Mixing the two makes a function hard to reuse and impossible to test.
 
@@ -107,7 +107,7 @@ Rule of thumb: functions that **compute** should \`return\`. Only functions whos
 def first_even(nums):
     for n in nums:
         if n % 2 == 0:
-            return n      # stops here — loop and function both end
+            return n      # stops here, loop and function both end
     return None
 \`\`\`
 
@@ -121,7 +121,7 @@ A function can have several \`return\`s. The first one reached wins.
 
 1. **Don't repeat yourself.** One definition, many calls. Fix a bug once.
 2. **Naming.** \`is_valid_port(p)\` says what a condition *means*.
-3. **Isolation.** A function is a box with a clear input and output — you can reason about it alone.
+3. **Isolation.** A function is a box with a clear input and output, you can reason about it alone.
 
 The moment you copy-paste a block and tweak one value, that block wanted to be a function with a parameter.
 
@@ -129,7 +129,7 @@ The moment you copy-paste a block and tweak one value, that block wanted to be a
 
 ## Try It
 
-Run the starter code. \`shout\` returns \`None\` despite printing — that's the lesson.
+Run the starter code. \`shout\` returns \`None\` despite printing, that's the lesson.
 `,
     },
 
@@ -143,10 +143,10 @@ Run the starter code. \`shout\` returns \`None\` despite printing — that's the
       starterCode: `def connect(host, port):
     return f"{host}:{port}"
 
-# Positional — order decides
+# Positional, order decides
 print(connect("10.0.0.5", 8080))
 
-# Keyword — name decides, so order stops mattering
+# Keyword, name decides, so order stops mattering
 print(connect(port=8080, host="10.0.0.5"))
 
 # Mixed: positional must come FIRST
@@ -166,8 +166,8 @@ print(scan("10.0.0.5", timeout=1))
 
 Two words for two sides of the same thing:
 
-- a **parameter** is the name in the definition — \`def connect(host, port)\`
-- an **argument** is the value you pass — \`connect("10.0.0.5", 8080)\`
+- a **parameter** is the name in the definition, \`def connect(host, port)\`
+- an **argument** is the value you pass, \`connect("10.0.0.5", 8080)\`
 
 ---
 
@@ -179,7 +179,7 @@ Matched by **order**:
 connect("10.0.0.5", 8080)   # host, then port
 \`\`\`
 
-Swap them and Python won't notice — it can't know \`8080\` isn't a hostname. You get a wrong answer, not an error.
+Swap them and Python won't notice, it can't know \`8080\` isn't a hostname. You get a wrong answer, not an error.
 
 Pass the wrong **number**, though, and it raises immediately:
 
@@ -223,7 +223,7 @@ scan("10.0.0.5", timeout=1)    # skip port, set timeout
 
 That last call is why keywords matter: you can set a later parameter without restating the ones before it.
 
-**Parameters with defaults must come after those without** — otherwise a positional call would be ambiguous:
+**Parameters with defaults must come after those without**, otherwise a positional call would be ambiguous:
 
 \`\`\`python
 def scan(port=80, host):   # SyntaxError
@@ -244,7 +244,7 @@ add("a")   # ['a']
 add("b")   # ['a', 'b']   <- the SAME list!
 \`\`\`
 
-The default is evaluated **once, when the function is defined** — not per call. So every call shares one list, and it grows forever.
+The default is evaluated **once, when the function is defined**, not per call. So every call shares one list, and it grows forever.
 
 The fix is always the same:
 
@@ -285,7 +285,7 @@ def describe(**info):
 
 print(describe(host="10.0.0.5", port=80))
 
-# All together — the order is fixed
+# All together, the order is fixed
 def demo(required, *args, **kwargs):
     return f"{required} | {args} | {kwargs}"
 
@@ -304,7 +304,7 @@ For when you don't know how many arguments there will be.
 
 ---
 
-## *args — extra positionals
+## *args, extra positionals
 
 \`\`\`python
 def total(*nums):
@@ -315,11 +315,11 @@ total(1, 2, 3, 4)    # 10
 total()              # 0
 \`\`\`
 
-\`*nums\` collects every extra positional argument into a **tuple**. A tuple, not a list — you're not meant to modify it.
+\`*nums\` collects every extra positional argument into a **tuple**. A tuple, not a list, you're not meant to modify it.
 
 The \`*\` is the syntax; \`args\` is just a conventional name. \`*nums\` is clearer when you know what they are.
 
-## **kwargs — extra keywords
+## **kwargs, extra keywords
 
 \`\`\`python
 def describe(**info):
@@ -328,7 +328,7 @@ def describe(**info):
 describe(host="10.0.0.5", port=80)   # 'host=10.0.0.5, port=80'
 \`\`\`
 
-\`**info\` collects extra **keyword** arguments into a **dict** — keys are the names, values the values.
+\`**info\` collects extra **keyword** arguments into a **dict**, keys are the names, values the values.
 
 ## Together
 
@@ -350,7 +350,7 @@ Normal parameters, then \`*args\`, then \`**kwargs\`. Anything else is a \`Synta
 
 ## The other direction: unpacking
 
-The same symbols **unpack** at the call site — which is the half people miss:
+The same symbols **unpack** at the call site, which is the half people miss:
 
 \`\`\`python
 nums = [1, 2, 3]
@@ -371,7 +371,7 @@ Two opposite jobs, one symbol. That symmetry is why \`total(*nums)\` and \`def t
 
 ## Where you'll actually use it
 
-Mostly when wrapping another function — accept anything, pass it straight through:
+Mostly when wrapping another function, accept anything, pass it straight through:
 
 \`\`\`python
 def logged(*args, **kwargs):
@@ -379,7 +379,7 @@ def logged(*args, **kwargs):
     return real_function(*args, **kwargs)
 \`\`\`
 
-That's exactly how decorators work (Module 13). Don't reach for \`*args\` when three named parameters would do — named parameters document themselves.
+That's exactly how decorators work (Module 13). Don't reach for \`*args\` when three named parameters would do, named parameters document themselves.
 
 ---
 
@@ -425,7 +425,7 @@ def bump():
 bump(); bump()
 print("counter:", counter)
 
-# Mutating is not assigning — no global needed
+# Mutating is not assigning, no global needed
 items = []
 def add():
     items.append("x")
@@ -436,7 +436,7 @@ print("items:", items)
 
 **Scope** is where a name is visible.
 
-Every function call gets its own private space. Names created inside it are **local** — they exist while it runs and vanish when it returns:
+Every function call gets its own private space. Names created inside it are **local**, they exist while it runs and vanish when it returns:
 
 \`\`\`python
 def f():
@@ -466,10 +466,10 @@ def shadow():
     x = "local"   # a different x
     print(x)      # local
 shadow()
-print(x)          # global — untouched
+print(x)          # global, untouched
 \`\`\`
 
-And here's the sharp edge. Python decides local-or-global by scanning the **whole function** at definition time. If a name is assigned *anywhere* in it, it's local *everywhere* in it — including before the assignment:
+And here's the sharp edge. Python decides local-or-global by scanning the **whole function** at definition time. If a name is assigned *anywhere* in it, it's local *everywhere* in it, including before the assignment:
 
 \`\`\`python
 def broken():
@@ -511,7 +511,7 @@ add()
 print(items)   # ['x']
 \`\`\`
 
-\`items.append(...)\` doesn't assign to \`items\` — it **calls a method on the value it already points at**. No new name is created, so no \`global\` is required.
+\`items.append(...)\` doesn't assign to \`items\`, it **calls a method on the value it already points at**. No new name is created, so no \`global\` is required.
 
 \`items = [...]\` would be an assignment, and would need \`global\`. Names label values (Module 2): \`global\` is about **rebinding the name**, not about touching the value.
 
@@ -521,10 +521,10 @@ print(items)   # ['x']
 
 Python resolves a name in this order:
 
-1. **L**ocal — this function
-2. **E**nclosing — any function wrapping it
-3. **G**lobal — the module
-4. **B**uilt-in — \`print\`, \`len\`, …
+1. **L**ocal, this function
+2. **E**nclosing, any function wrapping it
+3. **G**lobal, the module
+4. **B**uilt-in, \`print\`, \`len\`, …
 
 First match wins. It's also why \`list = [1, 2]\` breaks \`list("abc")\`: your global shadows the built-in.
 
@@ -544,11 +544,11 @@ Run the starter code, then uncomment the \`print(x)\` in \`broken()\` and read t
       order: 5,
       type: 'lesson',
       starterCode: `def countdown(n):
-    if n == 0:          # base case — stops the recursion
+    if n == 0:          # base case, stops the recursion
         print("liftoff")
         return
     print(n)
-    countdown(n - 1)    # recursive case — a SMALLER problem
+    countdown(n - 1)    # recursive case, a SMALLER problem
 
 countdown(3)
 
@@ -594,8 +594,8 @@ def countdown(n):
 
 Every recursive function needs both:
 
-1. **A base case** — when to stop.
-2. **A recursive case** — call itself on a **smaller** problem.
+1. **A base case**, when to stop.
+2. **A recursive case**, call itself on a **smaller** problem.
 
 Miss the base case and it never stops. Fail to shrink the problem and it never reaches the base case. Either way you get:
 
@@ -620,7 +620,7 @@ Note \`n <= 1\`, not \`n == 1\`. \`factorial(0)\` should be 1, and \`==\` would 
 
 ## When it's the right tool
 
-For counting down, recursion is a worse \`for\` loop — slower and more fragile.
+For counting down, recursion is a worse \`for\` loop, slower and more fragile.
 
 It earns its place on **nested data of unknown depth**:
 
@@ -637,7 +637,7 @@ def flatten(items):
 flatten([1, [2, [3, [4]], 5]])   # [1, 2, 3, 4, 5]
 \`\`\`
 
-Try that with loops. You'd need a loop per level, and you don't know how many levels there are. Recursion doesn't care — each call handles one level and delegates the rest to itself.
+Try that with loops. You'd need a loop per level, and you don't know how many levels there are. Recursion doesn't care, each call handles one level and delegates the rest to itself.
 
 That's the signal: **a problem shaped like itself at a smaller size.** Folders inside folders, JSON inside JSON, a tree of replies. Real work, not puzzles.
 
@@ -649,7 +649,7 @@ Each call keeps a frame on the stack until it returns, so recursion uses memory 
 
 ## Try It
 
-Run the starter code. Then remove the base case from \`countdown\` and read the \`RecursionError\` — the limit protecting you.
+Run the starter code. Then remove the base case from \`countdown\` and read the \`RecursionError\`, the limit protecting you.
 `,
     },
 
@@ -670,14 +670,14 @@ print(double_def(5))
 # Where lambda belongs: a throwaway function passed to another function
 words = ["banana", "fig", "apple"]
 print(sorted(words, key=lambda w: len(w)))
-print(sorted(words, key=len))          # even better — no lambda needed
+print(sorted(words, key=len))          # even better, no lambda needed
 
 people = [("sara", 21), ("ali", 19)]
 print(sorted(people, key=lambda p: p[1]))
 
 print(max([1, -5, 3], key=lambda n: abs(n)))
 
-# One expression only — no statements
+# One expression only, no statements
 # bad = lambda n: print(n); return n   # SyntaxError
 `,
       markdownContent: `# Lambda
@@ -696,7 +696,7 @@ def double(n):
     return n * 2
 \`\`\`
 
-The shape is \`lambda parameters: expression\`. The result of the expression is returned automatically — there's no \`return\` keyword, and no room for one.
+The shape is \`lambda parameters: expression\`. The result of the expression is returned automatically, there's no \`return\` keyword, and no room for one.
 
 ---
 
@@ -726,7 +726,7 @@ def double(n):             # do
     return n * 2
 \`\`\`
 
-If you're giving it a name, use \`def\`. It's clearer, it can grow, and its name shows up properly in tracebacks — a named lambda reports as \`<lambda>\` when it fails, which is useless when you're debugging.
+If you're giving it a name, use \`def\`. It's clearer, it can grow, and its name shows up properly in tracebacks, a named lambda reports as \`<lambda>\` when it fails, which is useless when you're debugging.
 
 ## Where lambda belongs
 
@@ -743,7 +743,7 @@ But check first whether a function already exists:
 
 \`\`\`python
 sorted(words, key=lambda w: len(w))   # works
-sorted(words, key=len)                # better — len IS the function
+sorted(words, key=len)                # better, len IS the function
 \`\`\`
 
 If your lambda just calls one function on its argument, pass that function directly.
@@ -752,7 +752,7 @@ If your lambda just calls one function on its argument, pass that function direc
 
 ## Try It
 
-Run the starter code. Compare the two \`sorted(words, ...)\` lines — same output, and the second says more with less.
+Run the starter code. Compare the two \`sorted(words, ...)\` lines, same output, and the second says more with less.
 `,
     },
 
@@ -801,9 +801,9 @@ print(summarise(0))
         },
       ],
       hints: [
-        'is_valid can return the comparison directly: return 1 <= port <= 65535 — chained comparison from Module 7.',
+        'is_valid can return the comparison directly: return 1 <= port <= 65535, chained comparison from Module 7.',
         'describe(port, proto="tcp") uses a default parameter, and returns an f-string: f"{port}/{proto}".',
-        'In summarise(*ports), ports is a tuple. Build valid = [p for p in ports if is_valid(p)] — or a loop. Then highest is max(valid) if valid else None, since max() on an empty list raises ValueError.',
+        'In summarise(*ports), ports is a tuple. Build valid = [p for p in ports if is_valid(p)], or a loop. Then highest is max(valid) if valid else None, since max() on an empty list raises ValueError.',
       ],
       solution: `def is_valid(port):
     return 1 <= port <= 65535
@@ -838,19 +838,19 @@ Three small functions that use most of this module.
 
 Write these, leaving the \`print\` calls at the bottom untouched:
 
-**1. \`is_valid(port)\`** — \`True\` when the port is between 1 and 65535 inclusive, else \`False\`.
+**1. \`is_valid(port)\`**, \`True\` when the port is between 1 and 65535 inclusive, else \`False\`.
 
-**2. \`describe(port, proto="tcp")\`** — returns \`"80/tcp"\`. \`proto\` must have a **default**.
+**2. \`describe(port, proto="tcp")\`**, returns \`"80/tcp"\`. \`proto\` must have a **default**.
 
-**3. \`summarise(*ports)\`** — takes **any number** of ports and returns:
+**3. \`summarise(*ports)\`**, takes **any number** of ports and returns:
 
 \`\`\`python
 {"count": 4, "valid": 3, "highest": 8080}
 \`\`\`
 
-- \`count\` — how many were passed
-- \`valid\` — how many pass \`is_valid\`
-- \`highest\` — the highest **valid** port, or \`None\` if there are none
+- \`count\`, how many were passed
+- \`valid\`, how many pass \`is_valid\`
+- \`highest\`, the highest **valid** port, or \`None\` if there are none
 
 ## Expected output
 
@@ -863,13 +863,13 @@ True False
 
 ## Rules
 
-- \`return\` from the functions — don't \`print\` inside them.
+- \`return\` from the functions, don't \`print\` inside them.
 - \`describe\` must use a **default parameter**.
 - \`summarise\` must use **\`*args\`**.
 
 ## Watch out
 
-\`max()\` on an **empty** list raises \`ValueError\`. The last case has no valid ports, so guard it — a ternary does it in one line.
+\`max()\` on an **empty** list raises \`ValueError\`. The last case has no valid ports, so guard it, a ternary does it in one line.
 
 Note the whole point of \`is_valid\` returning a bool: \`summarise\` can just *use* it.
 

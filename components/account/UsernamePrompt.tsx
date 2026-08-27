@@ -78,8 +78,8 @@ const UsernamePrompt: React.FC = () => {
           </div>
           <p className="text-sm text-[#9aa5bf]">
             {ar
-              ? 'هذا هو اسمك العام في المنصة — يظهر في لوحة المتصدرين وبجانب محتواك. يمكنك تغييره لاحقا من ملفك الشخصي.'
-              : "This is your public handle on the platform — it appears on the leaderboard and beside anything you publish. You can change it later from your profile."}
+              ? 'هذا هو اسمك العام في المنصة، يظهر في لوحة المتصدرين وبجانب محتواك. يمكنك تغييره لاحقا من ملفك الشخصي.'
+              : "This is your public handle on the platform, it appears on the leaderboard and beside anything you publish. You can change it later from your profile."}
           </p>
         </div>
 
@@ -136,8 +136,8 @@ const UsernamePrompt: React.FC = () => {
               className="mt-3 w-full text-center text-xs text-[#6e7a94] hover:text-[#d2d7e3] transition-colors underline underline-offset-2"
             >
               {ar
-                ? 'المتابعة الآن — سنطلب اسم المستخدم لاحقا'
-                : "Continue for now — we'll ask again later"}
+                ? 'المتابعة الآن، سنطلب اسم المستخدم لاحقا'
+                : "Continue for now, we'll ask again later"}
             </button>
           )}
         </form>

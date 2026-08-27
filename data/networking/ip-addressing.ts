@@ -17,7 +17,7 @@ const ipAddressing: NetworkingLesson = {
 
   markdownContent: `# IP Addressing & Communication
 
-Every device that connects to a network needs a unique identifier — an **IP address**. It works like a mailing address: without one, data has nowhere to go.
+Every device that connects to a network needs a unique identifier, an **IP address**. It works like a mailing address: without one, data has nowhere to go.
 
 ---
 
@@ -25,8 +25,8 @@ Every device that connects to a network needs a unique identifier — an **IP ad
 
 An IP (Internet Protocol) address is a numerical label assigned to every device on a network. It serves two purposes:
 
-1. **Host identification** — uniquely identifies a device
-2. **Location addressing** — tells the network where the device is
+1. **Host identification**, uniquely identifies a device
+2. **Location addressing**, tells the network where the device is
 
 There are two versions in use today:
 
@@ -51,8 +51,8 @@ An IPv4 address is 32 bits, written as four decimal numbers separated by dots. E
 
 Every IP address has two parts:
 
-- **Network portion** — identifies which network the device belongs to
-- **Host portion** — identifies the specific device on that network
+- **Network portion**, identifies which network the device belongs to
+- **Host portion**, identifies the specific device on that network
 
 The **subnet mask** determines where the split happens. For example:
 
@@ -86,11 +86,11 @@ These addresses are used inside local networks (your home, office, or lab):
 
 Public IPs are **globally unique**, assigned by your Internet Service Provider (ISP). Every website, server, and online service has one.
 
-> Your home router has one public IP. Every device behind it shares that single public address — this is possible through **NAT**.
+> Your home router has one public IP. Every device behind it shares that single public address, this is possible through **NAT**.
 
 ---
 
-## NAT — Network Address Translation
+## NAT, Network Address Translation
 
 NAT is what allows dozens of devices in your home to share a single public IP address.
 
@@ -211,7 +211,7 @@ This is exactly what the simulation on the right demonstrates step by step.
       {
         title: 'PC Initiates a Request',
         description:
-          'The desktop PC wants to load a webpage hosted on the web server (93.184.216.34). It creates a packet with source IP 192.168.1.10 and sends it toward the default gateway — the router.',
+          'The desktop PC wants to load a webpage hosted on the web server (93.184.216.34). It creates a packet with source IP 192.168.1.10 and sends it toward the default gateway, the router.',
         packets: [
           {
             from: 'pc',
@@ -226,7 +226,7 @@ This is exactly what the simulation on the right demonstrates step by step.
       {
         title: 'Switch Forwards the Frame',
         description:
-          'The switch operates at Layer 2 — it reads the MAC address and forwards the frame to the correct port (the router). It does not look at IP addresses.',
+          'The switch operates at Layer 2, it reads the MAC address and forwards the frame to the correct port (the router). It does not look at IP addresses.',
         packets: [
           {
             from: 'switch',
@@ -242,7 +242,7 @@ This is exactly what the simulation on the right demonstrates step by step.
         },
       },
       {
-        title: 'NAT — Private to Public',
+        title: 'NAT, Private to Public',
         description:
           'The router performs NAT: it replaces the private source IP (192.168.1.10) with its own public IP (203.0.113.5). It stores a mapping so it knows where to send the response later.',
         packets: [
@@ -262,7 +262,7 @@ This is exactly what the simulation on the right demonstrates step by step.
       {
         title: 'Packet Crosses the Internet',
         description:
-          'The packet, now carrying the public source IP, traverses the internet — hopping through ISP routers until it reaches the destination network.',
+          'The packet, now carrying the public source IP, traverses the internet, hopping through ISP routers until it reaches the destination network.',
         packets: [
           {
             from: 'cloud',
@@ -277,7 +277,7 @@ This is exactly what the simulation on the right demonstrates step by step.
       {
         title: 'Server Receives the Request',
         description:
-          'The web server receives the packet. From its perspective, the request came from 203.0.113.5 (the router\'s public IP) — it has no knowledge of the private IP behind the router.',
+          'The web server receives the packet. From its perspective, the request came from 203.0.113.5 (the router\'s public IP), it has no knowledge of the private IP behind the router.',
         packets: [],
         highlights: ['server'],
         annotations: {
@@ -287,7 +287,7 @@ This is exactly what the simulation on the right demonstrates step by step.
       {
         title: 'Server Sends Response',
         description:
-          'The web server sends the HTTP response back to 203.0.113.5 — the only address it knows.',
+          'The web server sends the HTTP response back to 203.0.113.5, the only address it knows.',
         packets: [
           {
             from: 'server',
@@ -302,7 +302,7 @@ This is exactly what the simulation on the right demonstrates step by step.
       {
         title: 'Response Reaches the Router',
         description:
-          'The response arrives at the router\'s public IP. The router checks its NAT table and finds that this connection belongs to 192.168.1.10 — the desktop PC.',
+          'The response arrives at the router\'s public IP. The router checks its NAT table and finds that this connection belongs to 192.168.1.10, the desktop PC.',
         packets: [
           {
             from: 'cloud',
@@ -318,7 +318,7 @@ This is exactly what the simulation on the right demonstrates step by step.
         },
       },
       {
-        title: 'Reverse NAT — Public to Private',
+        title: 'Reverse NAT, Public to Private',
         description:
           'The router translates the destination IP back to the private address (192.168.1.10) and forwards the packet through the switch to the PC. The round trip is complete.',
         packets: [
@@ -335,7 +335,7 @@ This is exactly what the simulation on the right demonstrates step by step.
       {
         title: 'PC Receives the Response',
         description:
-          'The desktop PC receives the web page data. It never knew about NAT — from its perspective, it simply sent a request to 93.184.216.34 and got a response back.',
+          'The desktop PC receives the web page data. It never knew about NAT, from its perspective, it simply sent a request to 93.184.216.34 and got a response back.',
         packets: [
           {
             from: 'switch',

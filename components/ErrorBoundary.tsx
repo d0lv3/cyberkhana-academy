@@ -50,8 +50,8 @@ class ErrorBoundary extends React.Component<Props, State> {
           </h1>
           <p className="text-sm text-[#9aa5bf] mb-7 leading-relaxed">
             {ar
-              ? 'واجهت الصفحة خطأ غير متوقع. تقدمك محفوظ — إعادة التحميل ستعيدك إلى بر الأمان.'
-              : 'The page hit an unexpected error. Your progress is saved — reloading will take you back to safety.'}
+              ? 'واجهت الصفحة خطأ غير متوقع. تقدمك محفوظ، إعادة التحميل ستعيدك إلى بر الأمان.'
+              : 'The page hit an unexpected error. Your progress is saved, reloading will take you back to safety.'}
           </p>
           <button
             onClick={this.handleReload}

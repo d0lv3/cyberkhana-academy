@@ -5,8 +5,8 @@ const gettingStarted: ProgrammingModule = {
   slug: 'getting-started',
   title: { en: 'Getting Started', ar: 'البداية' },
   description: {
-    en: 'Your first C++ programs — printing output with cout and reading input with cin.',
-    ar: 'برامجك الأولى بلغة C++‎ — طباعة المخرجات بـ cout وقراءة المدخلات بـ cin.',
+    en: 'Your first C++ programs, printing output with cout and reading input with cin.',
+    ar: 'برامجك الأولى بلغة C++‎، طباعة المخرجات بـ cout وقراءة المدخلات بـ cin.',
   },
   order: 1,
   concepts: [
@@ -47,18 +47,18 @@ int main() {
 - \`#include <iostream>\` pulls in the **input/output stream** library, which
   gives you \`cout\` and \`cin\`.
 - \`using namespace std;\` lets you write \`cout\` instead of the longer
-  \`std::cout\`. **Keep this line** — the in-browser runner used by this course
+  \`std::cout\`. **Keep this line**, the in-browser runner used by this course
   needs the short form.
 - \`int main() { ... }\` is where execution begins.
 - \`cout << ...\` sends text to the screen. The \`<<\` is the **stream insertion
-  operator** — think of it as an arrow pointing into the output.
+  operator**, think of it as an arrow pointing into the output.
 - \`return 0;\` tells the system the program finished successfully.
 
 ---
 
 ## Printing Text
 
-\`cout\` prints exactly what you give it — it does **not** add a new line on its
+\`cout\` prints exactly what you give it, it does **not** add a new line on its
 own. You end a line with \`endl\`:
 
 \`\`\`cpp
@@ -83,7 +83,7 @@ cout << "Line 1\n";
 
 ## Chaining
 
-One \`cout\` can print several things in a row — just keep adding \`<<\`:
+One \`cout\` can print several things in a row, just keep adding \`<<\`:
 
 \`\`\`cpp
 int n = 7;
@@ -129,7 +129,7 @@ int main() {
         { id: 'tc-3', description: 'handles negatives', input: '-5 2', expectedOutput: '-3' },
       ],
       hints: [
-        'Read the two numbers with cin — that part is already written for you.',
+        'Read the two numbers with cin, that part is already written for you.',
         'The sum is simply a + b.',
         'cout << a + b << endl; prints the result on its own line.',
       ],
@@ -166,10 +166,10 @@ Your program should print their sum on its own line:
 ## What You'll Need
 
 - \`cin >> a >> b;\` reads the two numbers (already in the starter code). The
-  \`>>\` is the **stream extraction operator** — an arrow pointing out of the
+  \`>>\` is the **stream extraction operator**, an arrow pointing out of the
   input and into your variables.
 - \`cout << ... << endl;\` prints a value and ends the line.
-- Unlike C, you do not need a \`%d\` placeholder — \`cout\` works out the type
+- Unlike C, you do not need a \`%d\` placeholder, \`cout\` works out the type
   for you.
 
 ---

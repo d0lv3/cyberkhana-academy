@@ -8,8 +8,8 @@ const loops: ProgrammingModule = {
     ar: 'الحلقات',
   },
   description: {
-    en: 'Repeating work — while and for, break and continue, nesting, and looping over dictionaries.',
-    ar: 'تكرار العمل — while و for، break و continue، التداخل، والمرور على القواميس.',
+    en: 'Repeating work, while and for, break and continue, nesting, and looping over dictionaries.',
+    ar: 'تكرار العمل، while و for، break و continue، التداخل، والمرور على القواميس.',
   },
   order: 10,
   concepts: [
@@ -28,7 +28,7 @@ print("liftoff")
 
 print("---")
 
-# while/else — else runs if the loop was NEVER broken out of
+# while/else, else runs if the loop was NEVER broken out of
 n = 0
 while n < 3:
     print("n =", n)
@@ -59,7 +59,7 @@ while count > 0:
     count -= 1
 \`\`\`
 
-Same shape as \`if\` — keyword, condition, colon, indented block. The difference is that \`if\` runs the block **once**; \`while\` runs it **again and again**, re-checking the condition each time.
+Same shape as \`if\`, keyword, condition, colon, indented block. The difference is that \`if\` runs the block **once**; \`while\` runs it **again and again**, re-checking the condition each time.
 
 If the condition is false at the start, the body never runs at all.
 
@@ -67,7 +67,7 @@ If the condition is false at the start, the body never runs at all.
 
 ## Something must change
 
-\`count -= 1\` isn't decoration — it's the whole loop. Delete it and \`count > 0\` is true forever:
+\`count -= 1\` isn't decoration, it's the whole loop. Delete it and \`count > 0\` is true forever:
 
 \`\`\`python
 count = 3
@@ -96,11 +96,11 @@ else:
     print("finished normally")
 \`\`\`
 
-The \`else\` runs when the loop ends **because its condition went false** — and is **skipped if you \`break\` out**.
+The \`else\` runs when the loop ends **because its condition went false**, and is **skipped if you \`break\` out**.
 
 The name is genuinely misleading. Read it as **"no break"**, not "otherwise". It means: *the loop ran to completion without being interrupted.*
 
-That makes it useful for searching — "I looked at everything and never found it":
+That makes it useful for searching, "I looked at everything and never found it":
 
 \`\`\`python
 while attempts < 3:
@@ -111,7 +111,7 @@ else:
     print("locked out")   # only if we never broke out
 \`\`\`
 
-Without \`else\` you'd need a \`found = False\` flag. It's a nice tool, used rarely — many Python developers never write one, and that's fine.
+Without \`else\` you'd need a \`found = False\` flag. It's a nice tool, used rarely, many Python developers never write one, and that's fine.
 
 ---
 
@@ -125,7 +125,7 @@ Use **\`for\`** when you're walking a known collection. That's the next lesson, 
 
 ## Try It
 
-Run the starter code. The third block \`break\`s, so its \`else\` never prints — that's the "no break" rule.
+Run the starter code. The third block \`break\`s, so its \`else\` never prints, that's the "no break" rule.
 `,
     },
 
@@ -189,9 +189,9 @@ while age is None:
         print("  not a whole number, try again")
 \`\`\`
 
-\`age\` starts as \`None\` — the "no answer yet" value from Module 7. The loop's exit condition and its result are the same variable, so there's no separate flag.
+\`age\` starts as \`None\`, the "no answer yet" value from Module 7. The loop's exit condition and its result are the same variable, so there's no separate flag.
 
-Note \`is None\`, not \`== None\` — and it matters here beyond style. If the user enters \`0\`, then \`while not age\` would keep looping forever, because \`0\` is falsy. \`is None\` asks the exact question: *do we have an answer yet?*
+Note \`is None\`, not \`== None\`, and it matters here beyond style. If the user enters \`0\`, then \`while not age\` would keep looping forever, because \`0\` is falsy. \`is None\` asks the exact question: *do we have an answer yet?*
 
 This is the shape of every input-validation loop: assume nothing, keep asking, only accept what you've checked.
 
@@ -220,7 +220,7 @@ while total < 20:
     total += n
 \`\`\`
 
-You don't know how many rounds it takes — the loop finds out. This is exactly what \`for\` can't do: with \`for\` you must know the range up front.
+You don't know how many rounds it takes, the loop finds out. This is exactly what \`for\` can't do: with \`for\` you must know the range up front.
 
 ---
 
@@ -230,13 +230,13 @@ You don't know how many rounds it takes — the loop finds out. This is exactly 
 
 **Checking a stale value.** The condition is tested at the **top**, so a change halfway through the body isn't noticed until the next round. The rest of the body still runs.
 
-**Off-by-one.** \`while attempts < 3\` gives attempts 1, 2, 3 — three of them. \`<= 3\` would give four. Count them out when it matters.
+**Off-by-one.** \`while attempts < 3\` gives attempts 1, 2, 3, three of them. \`<= 3\` would give four. Count them out when it matters.
 
 ---
 
 ## Try It
 
-Run it: the Input box has \`abc\`, then \`-5\`, then \`21\`. The first two are rejected — \`-5\` because \`isdigit()\` is \`False\` for a minus sign, exactly as Module 3 warned — and \`21\` is accepted.
+Run it: the Input box has \`abc\`, then \`-5\`, then \`21\`. The first two are rejected, \`-5\` because \`isdigit()\` is \`False\` for a minus sign, exactly as Module 3 warned, and \`21\` is accepted.
 `,
     },
 
@@ -269,7 +269,7 @@ for i, tool in enumerate(["nmap", "burp"], start=1):
 for name, port in zip(["ssh", "http"], [22, 80]):
     print(f"{name} -> {port}")
 
-# for/else — the same "no break" rule
+# for/else, the same "no break" rule
 for n in [1, 2, 3]:
     if n == 99:
         break
@@ -298,7 +298,7 @@ while i < len(tools):
 
 Three places to get wrong, versus none. **If you're walking a collection, use \`for\`.**
 
-It works on anything iterable — lists, tuples, sets, strings, dicts, files:
+It works on anything iterable, lists, tuples, sets, strings, dicts, files:
 
 \`\`\`python
 for ch in "abc":
@@ -317,9 +317,9 @@ range(2, 5)      # 2, 3, 4
 range(2, 8, 2)   # 2, 4, 6
 \`\`\`
 
-The **stop is excluded**, exactly like slicing. \`range(3)\` gives three numbers starting at 0 — which lines up with indexes being 0-based.
+The **stop is excluded**, exactly like slicing. \`range(3)\` gives three numbers starting at 0, which lines up with indexes being 0-based.
 
-\`range\` doesn't build a list; it generates numbers as needed. So \`range(1000000)\` costs nothing until you loop it. \`print(range(3))\` shows \`range(0, 3)\` rather than the numbers — wrap it in \`list()\` to see them.
+\`range\` doesn't build a list; it generates numbers as needed. So \`range(1000000)\` costs nothing until you loop it. \`print(range(3))\` shows \`range(0, 3)\` rather than the numbers, wrap it in \`list()\` to see them.
 
 ## enumerate()
 
@@ -332,7 +332,7 @@ for i, tool in enumerate(tools, start=1):
 
 Better than \`range(len(tools))\` and indexing back in. \`start=1\` is for humans who count from one.
 
-Each round hands back an \`(index, item)\` tuple, unpacked into \`i, tool\` — tuple unpacking again.
+Each round hands back an \`(index, item)\` tuple, unpacked into \`i, tool\`, tuple unpacking again.
 
 ## zip()
 
@@ -343,7 +343,7 @@ for name, port in zip(["ssh", "http"], [22, 80]):
     print(f"{name} -> {port}")
 \`\`\`
 
-It stops at the **shorter** one, silently. That's usually what you want, and occasionally hides a bug — pass \`strict=True\` (3.10+) to raise on a length mismatch.
+It stops at the **shorter** one, silently. That's usually what you want, and occasionally hides a bug, pass \`strict=True\` (3.10+) to raise on a length mismatch.
 
 ## for/else
 
@@ -363,7 +363,7 @@ The classic search-and-report-failure, with no flag variable.
 
 ## Try It
 
-Run the starter code. \`print(x, end=" ")\` replaces the newline with a space — handy for printing a loop's results on one line.
+Run the starter code. \`print(x, end=" ")\` replaces the newline with a space, handy for printing a loop's results on one line.
 `,
     },
 
@@ -374,19 +374,19 @@ Run the starter code. \`print(x, end=" ")\` replaces the newline with a space �
       title: { en: 'break, continue, pass', ar: 'break و continue و pass' },
       order: 4,
       type: 'lesson',
-      starterCode: `# break — leave the loop entirely
+      starterCode: `# break, leave the loop entirely
 for n in [1, 2, 3, 4, 5]:
     if n == 3:
         break
     print("break demo:", n)
 
-# continue — skip the rest of THIS round only
+# continue, skip the rest of THIS round only
 for n in [1, 2, 3, 4, 5]:
     if n % 2 == 0:
         continue
     print("continue demo:", n)
 
-# pass — do nothing; a placeholder to keep the syntax valid
+# pass, do nothing; a placeholder to keep the syntax valid
 for n in [1, 2]:
     pass
 
@@ -406,7 +406,7 @@ Three keywords, often confused.
 
 ---
 
-## break — get out
+## break, get out
 
 Leaves the loop **immediately**. Nothing else in the body runs, and no further rounds happen:
 
@@ -419,7 +419,7 @@ for n in [1, 2, 3, 4, 5]:
 
 Its job is "I found what I came for" or "something's wrong, stop." Remember it also **skips the loop's \`else\`**.
 
-## continue — skip this one
+## continue, skip this one
 
 Jumps straight to the **next round**. The rest of the body is skipped; the loop itself keeps going:
 
@@ -443,7 +443,7 @@ for line in lines:
 
 That's the guard-clause idea from Module 9, applied to loops: reject early, keep the real work flat.
 
-## pass — do nothing
+## pass, do nothing
 
 Not a loop keyword at all. It's a **placeholder** where Python's grammar demands a block but you have nothing to put there:
 
@@ -452,18 +452,18 @@ if True:
     pass    # TODO
 \`\`\`
 
-Without it that's an \`IndentationError\` — Python has no \`{}\` to leave empty. \`pass\` lets you sketch structure now and fill it in later.
+Without it that's an \`IndentationError\`, Python has no \`{}\` to leave empty. \`pass\` lets you sketch structure now and fill it in later.
 
 **\`pass\` is not \`continue\`.** \`pass\` does nothing and execution carries on to the next line in the body. \`continue\` jumps to the next round. In a loop they look similar and behave differently:
 
 \`\`\`python
 for n in [1, 2]:
     pass
-    print(n)      # prints 1, 2 — pass did nothing
+    print(n)      # prints 1, 2, pass did nothing
 
 for n in [1, 2]:
     continue
-    print(n)      # prints NOTHING — continue skipped it
+    print(n)      # prints NOTHING, continue skipped it
 \`\`\`
 
 ---
@@ -485,7 +485,7 @@ There's no "break out of both" in Python. To do that, put the loops in a functio
 
 ## Try It
 
-Run the starter code and compare the first two blocks: \`break\` stops at 1, 2 — \`continue\` prints 1, 3, 5.
+Run the starter code and compare the first two blocks: \`break\` stops at 1, 2, \`continue\` prints 1, 3, 5.
 `,
     },
 
@@ -530,7 +530,7 @@ for host in ["10.0.0.5", "10.0.0.6"]:
 
 Four lines of output: two hosts × two ports. The inner loop restarts from the beginning each time the outer one advances.
 
-That multiplication is the thing to keep in mind. Two lists of 1,000 items each is **a million** rounds. Nested loops are where slow programs come from — and where a bad idea becomes an expensive one.
+That multiplication is the thing to keep in mind. Two lists of 1,000 items each is **a million** rounds. Nested loops are where slow programs come from, and where a bad idea becomes an expensive one.
 
 ---
 
@@ -545,7 +545,7 @@ for row in range(1, 4):
 
 Note where the bare \`print()\` sits: indented to the **outer** loop, so it runs once per row and ends the line. Move it in one level and every number gets its own line. Indentation is the logic.
 
-\`{row * col:3}\` pads each number to width 3, so the columns line up — the format spec from Module 3.
+\`{row * col:3}\` pads each number to width 3, so the columns line up, the format spec from Module 3.
 
 ## Walking nested data
 
@@ -559,7 +559,7 @@ for host, ports in scan.items():
         print("  -", port)
 \`\`\`
 
-\`.items()\` gives \`(key, value)\` pairs, unpacked into \`host, ports\`. \`ports\` is a list, so the inner loop walks it. The structure of the loops mirrors the structure of the data — that's how you should read them.
+\`.items()\` gives \`(key, value)\` pairs, unpacked into \`host, ports\`. \`ports\` is a list, so the inner loop walks it. The structure of the loops mirrors the structure of the data, that's how you should read them.
 
 ## Before you nest
 
@@ -579,7 +579,7 @@ Module 6 already gave you the better answer. Ask what you're really doing before
 
 ## Try It
 
-Run the starter code. Then move the bare \`print()\` in the grid block one level deeper and watch the layout collapse — that's indentation carrying the meaning.
+Run the starter code. Then move the bare \`print()\` in the grid block one level deeper and watch the layout collapse, that's indentation carrying the meaning.
 `,
     },
 
@@ -611,7 +611,7 @@ for port in scan:
     counts[port] = counts.get(port, 0) + 1
 print(counts)
 
-# Never resize a dict while looping it — loop a copy of the keys
+# Never resize a dict while looping it, loop a copy of the keys
 for key in list(counts.keys()):
     if counts[key] < 2:
         del counts[key]
@@ -629,7 +629,7 @@ Looping a dict **directly gives its keys**:
 for key in host:        # ip, port, up
 \`\`\`
 
-Same as \`for key in host.keys()\` — the shorter form is idiomatic. Consistent with \`in\`, which also checks keys.
+Same as \`for key in host.keys()\`, the shorter form is idiomatic. Consistent with \`in\`, which also checks keys.
 
 For both parts, use \`.items()\`:
 
@@ -660,7 +660,7 @@ for port in scan:
     counts[port] = counts.get(port, 0) + 1
 \`\`\`
 
-\`.get(port, 0)\` is what makes it work. The first time a port appears it isn't a key yet, so \`counts[port]\` would raise \`KeyError\` — \`.get\` returns \`0\` instead, and \`0 + 1\` starts the count.
+\`.get(port, 0)\` is what makes it work. The first time a port appears it isn't a key yet, so \`counts[port]\` would raise \`KeyError\`, \`.get\` returns \`0\` instead, and \`0 + 1\` starts the count.
 
 The clumsy version:
 
@@ -671,7 +671,7 @@ else:
     counts[port] = 1
 \`\`\`
 
-Same result, four lines. \`.get(key, default)\` collapses it to one. (The standard library has \`collections.Counter\` for exactly this — Module 13.)
+Same result, four lines. \`.get(key, default)\` collapses it to one. (The standard library has \`collections.Counter\` for exactly this, Module 13.)
 
 ---
 
@@ -697,13 +697,13 @@ for key in list(counts.keys()):
 
 \`list()\` copies the keys, so the loop reads the copy while you edit the original.
 
-The same applies to lists — removing from a list you're looping makes items get skipped, and there it happens **silently**, which is worse. Loop a copy, or build a new list of what you want to keep.
+The same applies to lists, removing from a list you're looping makes items get skipped, and there it happens **silently**, which is worse. Loop a copy, or build a new list of what you want to keep.
 
 ---
 
 ## Try It
 
-Run the starter code. Then remove the \`list()\` from the last loop and read the \`RuntimeError\` — Python protecting you from yourself.
+Run the starter code. Then remove the \`list()\` from the last loop and read the \`RuntimeError\`, Python protecting you from yourself.
 `,
     },
 
@@ -752,7 +752,7 @@ Run the starter code. Then remove the \`list()\` from the last loop and read the
       hints: [
         'Loop the lines. First strip each one, then use continue to skip it when it is empty or starts with "#".',
         'line.split() gives [method, path, status]. Count methods and paths in two dicts using the counts[k] = counts.get(k, 0) + 1 pattern. int(status) >= 400 is an error.',
-        'For the top path: max(paths, key=paths.get) returns the key with the highest count — the same key= idea as sorted() and max() in Module 5.',
+        'For the top path: max(paths, key=paths.get) returns the key with the highest count, the same key= idea as sorted() and max() in Module 5.',
       ],
       solution: `lines = [
     "GET /home 200",
@@ -793,7 +793,7 @@ print(f"Top path: {top} ({paths[top]})")
 `,
       markdownContent: `# Challenge: Log Summary
 
-Reading a log and reporting on it — loops, \`continue\`, dict counting and \`max\` together. This is a real script.
+Reading a log and reporting on it, loops, \`continue\`, dict counting and \`max\` together. This is a real script.
 
 ---
 
@@ -830,7 +830,7 @@ That last line deserves a look: \`max\` over a dict walks its **keys**, and \`ke
 
 ## Watch out
 
-\`.strip()\` each line **before** testing it, or a line of spaces won't look blank. And the status is text — \`int()\` it before comparing to 400.
+\`.strip()\` each line **before** testing it, or a line of spaces won't look blank. And the status is text, \`int()\` it before comparing to 400.
 
 ---
 

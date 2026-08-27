@@ -88,7 +88,7 @@ const NotFoundPage: React.FC = () => {
             <p className="text-[#9aa5bf] truncate">
               <span className="text-[#00a859]">$</span> GET {location.pathname}
             </p>
-            <p className="text-[#f87171]">✗ 404 — route not found</p>
+            <p className="text-[#f87171]">✗ 404, route not found</p>
             <p className="text-[#9aa5bf]">
               <span className="text-[#00a859]">$</span> suggest --routes
             </p>

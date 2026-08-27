@@ -119,8 +119,8 @@ export const fundamentalModules: FundamentalModule[] = [
       ar: 'لينكس للأمن السيبراني',
     },
     description: {
-      en: 'A comprehensive course covering Linux administration, terminal proficiency, networking, scripting, and cybersecurity applications — designed for aspiring security professionals.',
-      ar: 'دورة شاملة تغطي إدارة لينكس، إتقان الطرفية، الشبكات، البرمجة النصية، وتطبيقات الأمن السيبراني — مصممة لمحترفي الأمن الطموحين.',
+      en: 'A comprehensive course covering Linux administration, terminal proficiency, networking, scripting, and cybersecurity applications, designed for aspiring security professionals.',
+      ar: 'دورة شاملة تغطي إدارة لينكس، إتقان الطرفية، الشبكات، البرمجة النصية، وتطبيقات الأمن السيبراني، مصممة لمحترفي الأمن الطموحين.',
     },
     category: 'operating-systems',
     domain: 'general',

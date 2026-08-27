@@ -344,7 +344,7 @@ const SimulationBuilder: React.FC<SimulationBuilderProps> = ({ value, onChange }
       {/* ── Zones ── */}
       <Section icon={Frame} title="Network Zones" count={zones.length} color="#f3a43a" defaultOpen={zones.length > 0}>
         <p className="text-[11px] text-[#6e7a94] -mt-1">
-          Labeled boundary regions (LAN, DMZ, Internet) drawn behind the devices — they make the topology
+          Labeled boundary regions (LAN, DMZ, Internet) drawn behind the devices, they make the topology
           read like a real network diagram.
         </p>
         {zones.map((zone) => (

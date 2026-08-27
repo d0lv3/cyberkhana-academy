@@ -17,8 +17,8 @@ const PathsPage: React.FC = () => {
       color: '#00a859',
       title: { en: 'SOC Analyst', ar: 'محلل مركز العمليات الأمنية' },
       desc: {
-        en: 'Monitoring, log analysis, and incident response — the blue-team starting point.',
-        ar: 'المراقبة وتحليل السجلات والاستجابة للحوادث — نقطة انطلاق الفريق الأزرق.',
+        en: 'Monitoring, log analysis, and incident response, the blue-team starting point.',
+        ar: 'المراقبة وتحليل السجلات والاستجابة للحوادث، نقطة انطلاق الفريق الأزرق.',
       },
       modules: 8,
     },

@@ -20,12 +20,12 @@ const numbers: ProgrammingModule = {
       title: { en: 'Numbers', ar: 'الأرقام' },
       order: 1,
       type: 'lesson',
-      starterCode: `# int — whole numbers, any size
+      starterCode: `# int, whole numbers, any size
 big = 2 ** 100
 print(big)
 print(type(big).__name__)
 
-# float — has a decimal point
+# float, has a decimal point
 print(type(3.0).__name__)
 print(type(3).__name__)
 
@@ -54,7 +54,7 @@ big = 2 ** 100
 print(big)   # 1267650600228229401496703205376
 \`\`\`
 
-Most languages would overflow. Python grows the integer as needed — the only ceiling is memory. That's genuinely useful in security work, where cryptography routinely handles numbers this large.
+Most languages would overflow. Python grows the integer as needed, the only ceiling is memory. That's genuinely useful in security work, where cryptography routinely handles numbers this large.
 
 Long literals get unreadable, so Python allows underscores as separators:
 
@@ -62,7 +62,7 @@ Long literals get unreadable, so Python allows underscores as separators:
 print(1_000_000)   # 1000000
 \`\`\`
 
-They're ignored entirely — purely for your eyes.
+They're ignored entirely, purely for your eyes.
 
 ## float
 
@@ -86,7 +86,7 @@ print(0.1 + 0.2)          # 0.30000000000000004
 print(0.1 + 0.2 == 0.3)   # False
 \`\`\`
 
-It isn't a bug, and it isn't Python — you'd see the same in C, Java or JavaScript.
+It isn't a bug, and it isn't Python, you'd see the same in C, Java or JavaScript.
 
 A \`float\` is stored in **binary**. Just as \`1/3\` can't be written exactly in decimal (0.3333…), \`0.1\` can't be written exactly in binary. The stored value is a hair off, and the error surfaces when you add.
 
@@ -103,7 +103,7 @@ import math
 math.isclose(0.1 + 0.2, 0.3)   # True
 \`\`\`
 
-For money, don't use floats at all — use \`decimal.Decimal\`, which stores digits exactly.
+For money, don't use floats at all, use \`decimal.Decimal\`, which stores digits exactly.
 
 \`round()\` fixes the *display*, not the value:
 
@@ -115,7 +115,7 @@ round(0.1 + 0.2, 2)   # 0.3
 
 ## Try It
 
-Run the starter code. \`2 ** 100\` prints in full — no overflow. And \`0.1 + 0.2\` shows its tail. Now you know why, you'll recognise it instead of chasing it.
+Run the starter code. \`2 ** 100\` prints in full, no overflow. And \`0.1 + 0.2\` shows its tail. Now you know why, you'll recognise it instead of chasing it.
 `,
     },
 
@@ -174,7 +174,7 @@ The first three hold no surprises. The other four are worth care.
 ## / always gives a float
 
 \`\`\`python
-print(10 / 2)   # 5.0  — not 5
+print(10 / 2)   # 5.0 , not 5
 \`\`\`
 
 Even when it divides evenly, \`/\` returns a \`float\`. That's a deliberate Python 3 change: division shouldn't silently discard a fraction.
@@ -182,14 +182,14 @@ Even when it divides evenly, \`/\` returns a \`float\`. That's a deliberate Pyth
 ## // drops the remainder
 
 \`\`\`python
-17 // 5   # 3   — 3.4 with the .4 discarded
+17 // 5   # 3  , 3.4 with the .4 discarded
 \`\`\`
 
-It's called **floor** division because it rounds **down** — toward negative infinity — not toward zero. With negatives that's not what most people expect:
+It's called **floor** division because it rounds **down**, toward negative infinity, not toward zero. With negatives that's not what most people expect:
 
 \`\`\`python
 7 // 2    #  3
--7 // 2   # -4   — not -3
+-7 // 2   # -4  , not -3
 \`\`\`
 
 \`-3.5\` rounded *down* is \`-4\`. Worth knowing before it bites you.
@@ -214,7 +214,7 @@ The even/odd test is the one you'll write most.
 
 \`\`\`python
 2 ** 10   # 1024
-2 ** 0.5  # 1.4142... — a fractional power is a root
+2 ** 0.5  # 1.4142..., a fractional power is a root
 \`\`\`
 
 ---
@@ -228,11 +228,11 @@ Python follows normal maths order:
 3. \`+\`, \`-\`
 
 \`\`\`python
-2 + 3 * 4     # 14 — not 20
+2 + 3 * 4     # 14, not 20
 (2 + 3) * 4   # 20
 \`\`\`
 
-Same level evaluates **left to right**. \`**\` is the exception — it goes **right to left**, so \`2 ** 3 ** 2\` is \`2 ** 9\` = \`512\`, not \`64\`.
+Same level evaluates **left to right**. \`**\` is the exception, it goes **right to left**, so \`2 ** 3 ** 2\` is \`2 ** 9\` = \`512\`, not \`64\`.
 
 Don't memorise the edges. Use parentheses: they cost nothing and remove all doubt for the next reader.
 
@@ -240,7 +240,7 @@ Don't memorise the edges. Use parentheses: they cost nothing and remove all doub
 
 ## Mixing types
 
-An \`int\` and a \`float\` together produce a \`float\` — Python widens to the type that can hold the answer:
+An \`int\` and a \`float\` together produce a \`float\`, Python widens to the type that can hold the answer:
 
 \`\`\`python
 3 + 0.5   # 3.5, a float
@@ -254,7 +254,7 @@ A number and a string do **not** mix. \`"5" + 5\` is a \`TypeError\`; convert wi
 10 / 0   # ZeroDivisionError
 \`\`\`
 
-Not \`None\`, not infinity — your program stops. When the divisor comes from outside (input, a file, a count), check it first. The Errors module handles this properly.
+Not \`None\`, not infinity, your program stops. When the divisor comes from outside (input, a file, a count), check it first. The Errors module handles this properly.
 
 ---
 
@@ -281,7 +281,7 @@ Run the starter code. Look hard at \`-7 // 2\` giving \`-4\`, and at \`10 / 2\` 
 #   Seconds: 40
 #
 # Rules:
-#   - Use // and % — do not hard-code the answers.
+#   - Use // and %, do not hard-code the answers.
 #   - Every number printed must be a whole number (no .0).
 #   - Use f-strings.
 
@@ -297,7 +297,7 @@ Run the starter code. Look hard at \`-7 // 2\` giving \`-4\`, and at \`10 / 2\` 
       hints: [
         'A day is 86400 seconds (60 * 60 * 24). total // 86400 gives whole days.',
         'Use % to get what is left over after taking the days out: rest = total % 86400. Then repeat with 3600 for hours and 60 for minutes.',
-        'If you see 1.0 instead of 1, you used / somewhere — it returns a float. Use // for whole numbers.',
+        'If you see 1.0 instead of 1, you used / somewhere, it returns a float. Use // for whole numbers.',
       ],
       solution: `total = 100000
 
@@ -340,7 +340,7 @@ Seconds: 40
 
 ## Rules
 
-- Compute the values with \`//\` and \`%\`. Don't hard-code them — the code should work if \`total\` changes.
+- Compute the values with \`//\` and \`%\`. Don't hard-code them, the code should work if \`total\` changes.
 - Each number must print as a **whole number**. \`Days: 1.0\` is wrong.
 - Use **f-strings**.
 

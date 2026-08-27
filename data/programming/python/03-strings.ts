@@ -8,8 +8,8 @@ const strings: ProgrammingModule = {
     ar: 'النصوص',
   },
   description: {
-    en: 'Text in depth — creating strings, indexing and slicing, the method toolkit, and formatting.',
-    ar: 'النصوص بالتفصيل — إنشاؤها، الفهرسة والتقطيع، الدوال، والتنسيق.',
+    en: 'Text in depth, creating strings, indexing and slicing, the method toolkit, and formatting.',
+    ar: 'النصوص بالتفصيل، إنشاؤها، الفهرسة والتقطيع، الدوال، والتنسيق.',
   },
   order: 3,
   concepts: [
@@ -34,14 +34,14 @@ print(banner)
 # len() counts characters
 print(len("CyberKhana"))
 
-# Strings are immutable — this builds a NEW string
+# Strings are immutable, this builds a NEW string
 name = "Sara"
 print(name.upper())
 print(name)
 `,
       markdownContent: `# Strings
 
-A **string** is text: a sequence of characters in quotes. It's the type you'll handle most — usernames, file paths, HTTP responses, log lines.
+A **string** is text: a sequence of characters in quotes. It's the type you'll handle most, usernames, file paths, HTTP responses, log lines.
 
 ---
 
@@ -62,7 +62,7 @@ print('She said "hello"')
 print("It's fine")
 \`\`\`
 
-For text spanning lines, use **triple quotes** — the line breaks are kept:
+For text spanning lines, use **triple quotes**, the line breaks are kept:
 
 \`\`\`python
 banner = """Scan report
@@ -77,7 +77,7 @@ Host: 10.0.0.5"""
 print(len("CyberKhana"))   # 10
 \`\`\`
 
-An empty string \`""\` has length \`0\`. It's still a real value — not \`None\`.
+An empty string \`""\` has length \`0\`. It's still a real value, not \`None\`.
 
 ---
 
@@ -101,7 +101,7 @@ print(name)           # Sara  <- unchanged
 It **returns a new string** and leaves the original alone. Every string method works this way. The consequence is a mistake beginners make constantly:
 
 \`\`\`python
-name.upper()          # result thrown away — pointless
+name.upper()          # result thrown away, pointless
 name = name.upper()   # keep it
 \`\`\`
 
@@ -111,7 +111,7 @@ If a string method's result isn't assigned or used, the line does nothing at all
 
 ## Sequences
 
-A string is a **sequence** — an ordered run of characters. That earns it a set of powers shared with lists and tuples: indexing, slicing, \`len()\`, \`in\`, and looping.
+A string is a **sequence**, an ordered run of characters. That earns it a set of powers shared with lists and tuples: indexing, slicing, \`len()\`, \`in\`, and looping.
 
 \`\`\`python
 print("Cyber" in "CyberKhana")   # True
@@ -136,12 +136,12 @@ Run the starter code. The last two lines are the point: \`.upper()\` produced \`
       type: 'lesson',
       starterCode: `text = "CyberKhana"
 
-# Indexing — counting starts at 0
+# Indexing, counting starts at 0
 print(text[0])
 print(text[4])
 print(text[-1])    # last character
 
-# Slicing — [start:end], end is NOT included
+# Slicing, [start:end], end is NOT included
 print(text[0:5])
 print(text[5:])    # from 5 to the end
 print(text[:5])    # from the start to 5
@@ -178,8 +178,8 @@ The last character of a 10-character string is at index **9**. Asking for \`text
 Negative indexes count from the right, which saves the arithmetic:
 
 \`\`\`python
-print(text[-1])   # a   — last
-print(text[-2])   # n   — second to last
+print(text[-1])   # a  , last
+print(text[-2])   # n  , second to last
 \`\`\`
 
 \`text[-1]\` beats \`text[len(text) - 1]\` for the same result.
@@ -194,7 +194,7 @@ print(text[-2])   # n   — second to last
 print(text[0:5])   # Cyber
 \`\`\`
 
-Indexes 0,1,2,3,4 — five characters, stopping *before* 5. That exclusive end looks odd for a day, then becomes useful:
+Indexes 0,1,2,3,4, five characters, stopping *before* 5. That exclusive end looks odd for a day, then becomes useful:
 
 - the length of \`text[a:b]\` is simply \`b - a\`
 - \`text[:5]\` and \`text[5:]\` split cleanly with no overlap and nothing lost
@@ -202,16 +202,16 @@ Indexes 0,1,2,3,4 — five characters, stopping *before* 5. That exclusive end l
 Both ends are optional:
 
 \`\`\`python
-print(text[5:])    # Khana  — 5 to the end
-print(text[:5])    # Cyber  — start to 5
-print(text[:])     # CyberKhana — a full copy
+print(text[5:])    # Khana , 5 to the end
+print(text[:5])    # Cyber , start to 5
+print(text[:])     # CyberKhana, a full copy
 \`\`\`
 
 Unlike indexing, slicing **never raises** for out-of-range values:
 
 \`\`\`python
-print(text[0:999])   # CyberKhana — clamped, no error
-print(text[99:])     # ''         — empty string
+print(text[0:999])   # CyberKhana, clamped, no error
+print(text[99:])     # ''        , empty string
 \`\`\`
 
 ## Step
@@ -219,8 +219,8 @@ print(text[99:])     # ''         — empty string
 The third part is the step:
 
 \`\`\`python
-print(text[::2])    # Cbrhn  — every second character
-print(text[::-1])   # anahKrebyC — reversed
+print(text[::2])    # Cbrhn , every second character
+print(text[::-1])   # anahKrebyC, reversed
 \`\`\`
 
 \`[::-1]\` walks backwards and is the idiomatic way to reverse a string.
@@ -229,13 +229,13 @@ print(text[::-1])   # anahKrebyC — reversed
 
 ## It returns a new string
 
-Slicing never modifies the original — strings are immutable. \`text[0:5]\` hands back a new string; \`text\` is untouched.
+Slicing never modifies the original, strings are immutable. \`text[0:5]\` hands back a new string; \`text\` is untouched.
 
 ---
 
 ## Try It
 
-Run the starter code and match each line to the diagram above. Then try \`text[10]\` for the \`IndexError\`, and \`text[10:]\` — which quietly gives you \`''\`.
+Run the starter code and match each line to the diagram above. Then try \`text[10]\` for the \`IndexError\`, and \`text[10:]\`, which quietly gives you \`''\`.
 `,
     },
 
@@ -278,8 +278,8 @@ A **method** is a function attached to a value, called with a dot: \`value.metho
 name = "cyber khana"
 name.upper()        # CYBER KHANA
 name.lower()        # cyber khana
-name.capitalize()   # Cyber khana — first letter of the string
-name.title()        # Cyber Khana — first letter of every word
+name.capitalize()   # Cyber khana, first letter of the string
+name.title()        # Cyber Khana, first letter of every word
 "CyBeR".swapcase()  # cYbEr
 \`\`\`
 
@@ -287,13 +287,13 @@ The distinction worth remembering: \`capitalize()\` touches only the **first cha
 
 ## Whitespace
 
-\`strip()\` removes whitespace from **both** ends — spaces, tabs, newlines:
+\`strip()\` removes whitespace from **both** ends, spaces, tabs, newlines:
 
 \`\`\`python
 messy = "   admin   "
 messy.strip()    # 'admin'
-messy.lstrip()   # 'admin   '  — left only
-messy.rstrip()   # '   admin'  — right only
+messy.lstrip()   # 'admin   ' , left only
+messy.rstrip()   # '   admin' , right only
 \`\`\`
 
 It only touches the ends. \`"a b".strip()\` keeps the middle space.
@@ -304,7 +304,7 @@ Given an argument, it strips **those characters** instead of whitespace:
 "...hello...".strip(".")   # 'hello'
 \`\`\`
 
-That argument is a *set of characters*, not a prefix — \`"xyxhixy".strip("xy")\` gives \`'hi'\`, removing any \`x\` or \`y\` from either end.
+That argument is a *set of characters*, not a prefix, \`"xyxhixy".strip("xy")\` gives \`'hi'\`, removing any \`x\` or \`y\` from either end.
 
 ---
 
@@ -326,7 +326,7 @@ Note the **chaining**: \`.strip()\` returns a string, so you can immediately cal
 
 ## Try It
 
-Run the starter code. The brackets around the stripped values make the whitespace visible — that's a useful debugging trick in itself.
+Run the starter code. The brackets around the stripped values make the whitespace visible, that's a useful debugging trick in itself.
 `,
     },
 
@@ -339,15 +339,15 @@ Run the starter code. The brackets around the stripped values make the whitespac
       type: 'lesson',
       starterCode: `log = "GET /admin HTTP/1.1 200"
 
-# in — the simplest question
+# in, the simplest question
 print("admin" in log)
 print("POST" in log)
 
-# find() — position, or -1 when absent
+# find(), position, or -1 when absent
 print(log.find("admin"))
 print(log.find("POST"))
 
-# index() — like find(), but raises when absent
+# index(), like find(), but raises when absent
 print(log.index("admin"))
 
 # count()
@@ -357,7 +357,7 @@ print("a,b,a,c".count("a"))
 print(log.startswith("GET"))
 print(log.endswith("200"))
 
-# endswith accepts a tuple — any of these
+# endswith accepts a tuple, any of these
 print("report.pdf".endswith((".pdf", ".txt")))
 `,
       markdownContent: `# Methods: Searching
@@ -366,7 +366,7 @@ Finding text inside text.
 
 ---
 
-## in — just asking
+## in, just asking
 
 For "is it there?", the \`in\` operator is the clearest thing available:
 
@@ -378,7 +378,7 @@ print("POST" in log)    # False
 
 It gives a \`bool\`, so it drops straight into an \`if\`. Reach for this first.
 
-## find() — where is it?
+## find(), where is it?
 
 \`find()\` returns the **index** of the first match, or **-1** if there's none:
 
@@ -387,11 +387,11 @@ log.find("admin")   # 5
 log.find("POST")    # -1
 \`\`\`
 
-It returns \`-1\` rather than raising, so always check before using the result — \`-1\` is a valid index (the last character), which makes a missed match fail silently and confusingly.
+It returns \`-1\` rather than raising, so always check before using the result, \`-1\` is a valid index (the last character), which makes a missed match fail silently and confusingly.
 
 \`rfind()\` is identical but searches from the right, giving the **last** match.
 
-## index() — where is it, or else
+## index(), where is it, or else
 
 \`index()\` does the same job but **raises \`ValueError\`** when the text isn't found:
 
@@ -399,7 +399,7 @@ It returns \`-1\` rather than raising, so always check before using the result �
 log.index("POST")   # ValueError: substring not found
 \`\`\`
 
-Which to use is about intent. If absence is normal, \`find()\` and check for \`-1\`. If absence means something is broken, \`index()\` — an exception is louder than a \`-1\` you forgot to handle.
+Which to use is about intent. If absence is normal, \`find()\` and check for \`-1\`. If absence means something is broken, \`index()\`, an exception is louder than a \`-1\` you forgot to handle.
 
 ## count()
 
@@ -424,13 +424,13 @@ Both return a \`bool\`. Both accept a **tuple** to test several options at once:
 "report.pdf".endswith((".pdf", ".txt"))   # True
 \`\`\`
 
-Cleaner than chaining \`or\`. Note the extra parentheses — that's one tuple argument, not two arguments.
+Cleaner than chaining \`or\`. Note the extra parentheses, that's one tuple argument, not two arguments.
 
 ---
 
 ## Try It
 
-Run the starter code. Compare \`find("POST")\` returning \`-1\` with what \`index("POST")\` would do — swap it in and read the traceback.
+Run the starter code. Compare \`find("POST")\` returning \`-1\` with what \`index("POST")\` would do, swap it in and read the traceback.
 `,
     },
 
@@ -443,7 +443,7 @@ Run the starter code. Compare \`find("POST")\` returning \`-1\` with what \`inde
       type: 'lesson',
       starterCode: `csv = "sara,ali,zaid"
 
-# split() — string -> list
+# split(), string -> list
 print(csv.split(","))
 
 # With no argument: split on any run of whitespace
@@ -452,15 +452,15 @@ print("GET /admin HTTP/1.1".split())
 # maxsplit limits how many splits happen
 print(csv.split(",", 1))
 
-# splitlines() — split on line breaks
+# splitlines(), split on line breaks
 print("a\\nb\\nc".splitlines())
 
-# join() — list -> string
+# join(), list -> string
 names = ["sara", "ali", "zaid"]
 print(", ".join(names))
 print("-".join("abc"))
 
-# partition() — split once, keep the separator
+# partition(), split once, keep the separator
 print("user@mail.com".partition("@"))
 `,
       markdownContent: `# Methods: Splitting & Joining
@@ -469,14 +469,14 @@ Two opposite operations, and the pair you'll use most when handling real data.
 
 ---
 
-## split() — text to list
+## split(), text to list
 
 \`\`\`python
 csv = "sara,ali,zaid"
 csv.split(",")   # ['sara', 'ali', 'zaid']
 \`\`\`
 
-It returns a **list**, not a string — the first method here that changes type.
+It returns a **list**, not a string, the first method here that changes type.
 
 With **no argument** it does something subtly different: splits on any run of whitespace *and* discards empties:
 
@@ -490,7 +490,7 @@ Compare with an explicit separator, which does not collapse runs:
 "a,,b".split(",")   # ['a', '', 'b']   <- empty string in the middle
 \`\`\`
 
-That's the correct behaviour — two commas really do delimit an empty field — but it surprises people. Bare \`.split()\` is what you want for whitespace; \`.split(sep)\` for structured data.
+That's the correct behaviour, two commas really do delimit an empty field, but it surprises people. Bare \`.split()\` is what you want for whitespace; \`.split(sep)\` for structured data.
 
 \`maxsplit\` caps the number of splits:
 
@@ -508,7 +508,7 @@ Handy for \`key=value\` lines where the value may itself contain \`=\`.
 
 ---
 
-## join() — list to text
+## join(), list to text
 
 \`join()\` is \`split()\` backwards. The **separator is the string you call it on**, and the list is the argument:
 
@@ -517,7 +517,7 @@ names = ["sara", "ali", "zaid"]
 ", ".join(names)   # 'sara, ali, zaid'
 \`\`\`
 
-That reads backwards to most people. It's \`separator.join(items)\`, not \`items.join(separator)\` — a consequence of \`join\` being a *string* method that accepts any sequence.
+That reads backwards to most people. It's \`separator.join(items)\`, not \`items.join(separator)\`, a consequence of \`join\` being a *string* method that accepts any sequence.
 
 Because a string is itself a sequence of characters:
 
@@ -539,13 +539,13 @@ Splits **once** and keeps the separator, always returning three parts:
 "user@mail.com".partition("@")   # ('user', '@', 'mail.com')
 \`\`\`
 
-If the separator is absent you still get three parts, the last two empty — so unpacking never breaks.
+If the separator is absent you still get three parts, the last two empty, so unpacking never breaks.
 
 ---
 
 ## Try It
 
-Run the starter code. Then try \`"a,,b".split(",")\` and see the empty string appear — then \`" a  b ".split()\` and watch the empties vanish.
+Run the starter code. Then try \`"a,,b".split(",")\` and see the empty string appear, then \`" a  b ".split()\` and watch the empties vanish.
 `,
     },
 
@@ -587,7 +587,7 @@ Swaps every occurrence and hands back a new string:
 
 \`\`\`python
 "a-b-c".replace("-", "+")      # 'a+b+c'
-"a-b-c".replace("-", "+", 1)   # 'a+b-c'  — count limits it
+"a-b-c".replace("-", "+", 1)   # 'a+b-c' , count limits it
 \`\`\`
 
 Replacing with \`""\` deletes:
@@ -596,7 +596,7 @@ Replacing with \`""\` deletes:
 "1,234,567".replace(",", "")   # '1234567'
 \`\`\`
 
-And again — it returns a new string. \`text.replace(...)\` on its own line changes nothing.
+And again, it returns a new string. \`text.replace(...)\` on its own line changes nothing.
 
 ---
 
@@ -607,7 +607,7 @@ These ask a question and return \`True\` or \`False\`:
 \`\`\`python
 "12345".isdigit()   # True
 "abc".isalpha()     # True
-"abc123".isalnum()  # True — letters or digits
+"abc123".isalnum()  # True, letters or digits
 "   ".isspace()     # True
 "Hello".istitle()   # True
 \`\`\`
@@ -618,7 +618,7 @@ Two sharp edges:
 
 **Empty strings are always \`False\`.** \`"".isdigit()\` is \`False\`. There's no character to satisfy the test, so nothing does.
 
-**\`isdigit()\` is not "is a number".** It's \`False\` for \`"-5"\` and \`"3.14"\` — the minus and the dot aren't digits. So this rejects valid input:
+**\`isdigit()\` is not "is a number".** It's \`False\` for \`"-5"\` and \`"3.14"\`, the minus and the dot aren't digits. So this rejects valid input:
 
 \`\`\`python
 "3.14".isdigit()   # False
@@ -639,19 +639,19 @@ That guard matters, because \`int("abc")\` raises \`ValueError\` and stops your 
 ## Padding
 
 \`\`\`python
-"7".zfill(3)          # '007'   — pad with zeros
+"7".zfill(3)          # '007'  , pad with zeros
 "hi".center(10, "*")  # '****hi****'
 "hi".ljust(6, ".")    # 'hi....'
 "hi".rjust(6, ".")    # '....hi'
 \`\`\`
 
-\`zfill()\` is for numbers as text (invoice ids, timestamps). The others build aligned columns. If the string is already long enough, all three return it unchanged — they never truncate.
+\`zfill()\` is for numbers as text (invoice ids, timestamps). The others build aligned columns. If the string is already long enough, all three return it unchanged, they never truncate.
 
 ---
 
 ## Try It
 
-Run the starter code. Then try \`"3.14".isdigit()\` and \`"".isdigit()\` — both \`False\`, for different reasons worth being clear about.
+Run the starter code. Then try \`"3.14".isdigit()\` and \`"".isdigit()\`, both \`False\`, for different reasons worth being clear about.
 `,
     },
 
@@ -666,14 +666,14 @@ Run the starter code. Then try \`"3.14".isdigit()\` and \`"".isdigit()\` — bot
 level = 3
 score = 91.5
 
-# 1. Concatenation — needs str(), gets noisy fast
+# 1. Concatenation, needs str(), gets noisy fast
 print("Name: " + name + " | Level: " + str(level))
 
-# 2. % formatting — the oldest style
+# 2. % formatting, the oldest style
 print("Name: %s | Level: %d" % (name, level))
 print("Score: %.1f%%" % score)
 
-# 3. .format() — placeholders by position...
+# 3. .format(), placeholders by position...
 print("Name: {} | Level: {}".format(name, level))
 # ...or by index, so you can reuse and reorder
 print("{0} is level {1}. Yes, {0}.".format(name, level))
@@ -682,7 +682,7 @@ print("{n} scored {s:.1f}".format(n=name, s=score))
 `,
       markdownContent: `# Formatting: The Older Ways
 
-Building a string out of values. You'll write **f-strings** in your own code — the next lesson — but these two older styles are everywhere in existing code, so you need to read them.
+Building a string out of values. You'll write **f-strings** in your own code, the next lesson, but these two older styles are everywhere in existing code, so you need to read them.
 
 ---
 
@@ -710,7 +710,7 @@ The common codes:
 |---|---|
 | \`%s\` | string (calls \`str()\` on anything) |
 | \`%d\` | whole number |
-| \`%f\` | float — 6 decimals by default |
+| \`%f\` | float, 6 decimals by default |
 | \`%.2f\` | float, 2 decimals |
 | \`%%\` | a literal \`%\` |
 
@@ -718,7 +718,7 @@ The common codes:
 print("Score: %.1f%%" % score)   # Score: 91.5%
 \`\`\`
 
-Note \`%%\` — since \`%\` starts a placeholder, a literal percent must be doubled.
+Note \`%%\`, since \`%\` starts a placeholder, a literal percent must be doubled.
 
 The trap: with several values you must pass a **tuple**, and the count and order must match, or you get a \`TypeError\` at runtime.
 
@@ -730,7 +730,7 @@ Python 3's replacement. Placeholders are \`{}\`, filled in order:
 print("Name: {} | Level: {}".format(name, level))
 \`\`\`
 
-Better, because you can index them — which lets you reuse a value:
+Better, because you can index them, which lets you reuse a value:
 
 \`\`\`python
 print("{0} is level {1}. Yes, {0}.".format(name, level))
@@ -742,19 +742,19 @@ Or name them, which survives reordering:
 print("{n} scored {s:.1f}".format(n=name, s=score))
 \`\`\`
 
-That \`:.1f\` after the colon is a **format spec** — the same mini-language f-strings use. Learn it once here and it transfers directly.
+That \`:.1f\` after the colon is a **format spec**, the same mini-language f-strings use. Learn it once here and it transfers directly.
 
 ---
 
 ## So which?
 
-Read all three; write f-strings. You'll meet \`%\` in older code and in \`logging\`, where it's still the recommended style. \`.format()\` still wins when the template lives apart from the values — in a config file, say — because an f-string is evaluated where it's written.
+Read all three; write f-strings. You'll meet \`%\` in older code and in \`logging\`, where it's still the recommended style. \`.format()\` still wins when the template lives apart from the values, in a config file, say, because an f-string is evaluated where it's written.
 
 ---
 
 ## Try It
 
-Run the starter code — all five lines build the same kind of output by different routes. Then try removing a value from a \`%\` tuple and read the error.
+Run the starter code, all five lines build the same kind of output by different routes. Then try removing a value from a \`%\` tuple and read the error.
 `,
     },
 
@@ -782,7 +782,7 @@ print(f"Padded: {level:03d}")
 print(f"[{name:>10}]")
 print(f"[{name:^10}]")
 
-# = shows the expression AND its value — a debugging gift
+# = shows the expression AND its value, a debugging gift
 print(f"{score = }")
 
 # Literal braces are doubled
@@ -804,7 +804,7 @@ print(f"Name: {name} | Level: {level}")   # Name: Sara | Level: 3
 
 The value appears where you read it. No \`str()\`, no counting arguments, no tuple.
 
-Forget the \`f\` and you get the braces printed literally — a quiet bug, since nothing raises:
+Forget the \`f\` and you get the braces printed literally, a quiet bug, since nothing raises:
 
 \`\`\`python
 print("Level: {level}")    # Level: {level}
@@ -820,7 +820,7 @@ print(f"Shouting: {name.upper()}")
 print(f"Initial: {name[0]}")
 \`\`\`
 
-Keep them short. If the expression needs thought, give it a name on its own line first — the point is readability.
+Keep them short. If the expression needs thought, give it a name on its own line first, the point is readability.
 
 ---
 
@@ -829,12 +829,12 @@ Keep them short. If the expression needs thought, give it a name on its own line
 After a colon comes the same mini-language \`.format()\` uses:
 
 \`\`\`python
-f"{score:.2f}"    # 91.46   — 2 decimals (rounded)
-f"{level:03d}"    # 003     — zero-padded to 3
-f"{name:>10}"     # '      Sara'  — right-aligned in 10
-f"{name:<10}"     # 'Sara      '  — left
-f"{name:^10}"     # '   Sara   '  — centred
-f"{1234567:,}"    # 1,234,567     — thousands separator
+f"{score:.2f}"    # 91.46  , 2 decimals (rounded)
+f"{level:03d}"    # 003    , zero-padded to 3
+f"{name:>10}"     # '      Sara' , right-aligned in 10
+f"{name:<10}"     # 'Sara      ' , left
+f"{name:^10}"     # '   Sara   ' , centred
+f"{1234567:,}"    # 1,234,567    , thousands separator
 \`\`\`
 
 \`.2f\` **rounds** for display; it doesn't change the value. That's a display concern only.
@@ -847,7 +847,7 @@ Since 3.8, adding \`=\` prints the expression *and* its value:
 print(f"{score = }")   # score = 91.4567
 \`\`\`
 
-Purpose-built for debugging — you stop typing \`print("score:", score)\` forever.
+Purpose-built for debugging, you stop typing \`print("score:", score)\` forever.
 
 ## Literal braces
 
@@ -861,13 +861,13 @@ print(f"{{not a placeholder}}")   # {not a placeholder}
 
 ## One caution
 
-An f-string is evaluated **where it's written**, so it can't be a reusable template — and never build SQL or shell commands with one. That's how injection happens. Pass values as parameters to the library instead.
+An f-string is evaluated **where it's written**, so it can't be a reusable template, and never build SQL or shell commands with one. That's how injection happens. Pass values as parameters to the library instead.
 
 ---
 
 ## Try It
 
-Run the starter code and match each spec to its output. Then try \`f"{score = }"\` on your own values — it's the fastest debugging tool in the language.
+Run the starter code and match each spec to its output. Then try \`f"{score = }"\` on your own values, it's the fastest debugging tool in the language.
 `,
     },
 
@@ -904,8 +904,8 @@ Run the starter code and match each spec to its output. Then try \`f"{score = }"
       ],
       hints: [
         'Start with line.strip(), then .split() with no argument to break on whitespace.',
-        'split() returns a list — parts[0] is the method, parts[1] the path, parts[3] the status.',
-        'For the last line: "/admin" in path gives you True or False directly, so f"Admin: {\'/admin\' in path}" works — or store it in a variable first.',
+        'split() returns a list, parts[0] is the method, parts[1] the path, parts[3] the status.',
+        'For the last line: "/admin" in path gives you True or False directly, so f"Admin: {\'/admin\' in path}" works, or store it in a variable first.',
       ],
       solution: `line = "  GET /admin HTTP/1.1 200  "
 
@@ -946,13 +946,13 @@ Admin: True
 ## Rules
 
 - **Strip** the surrounding whitespace first.
-- **Split** the line into parts. Don't hard-code \`GET\`, \`/admin\` or \`200\` — pull them out of the string, so the code would work on a different line.
-- \`Admin\` is whether \`/admin\` appears in the path — a \`bool\`, printed as \`True\`.
+- **Split** the line into parts. Don't hard-code \`GET\`, \`/admin\` or \`200\`, pull them out of the string, so the code would work on a different line.
+- \`Admin\` is whether \`/admin\` appears in the path, a \`bool\`, printed as \`True\`.
 - Use **f-strings**.
 
 ## What you need
 
-\`.strip()\`, \`.split()\`, indexing a list, the \`in\` operator, and f-strings — the whole module in four lines.
+\`.strip()\`, \`.split()\`, indexing a list, the \`in\` operator, and f-strings, the whole module in four lines.
 
 ## A hint on the shape
 

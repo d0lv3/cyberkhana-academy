@@ -135,7 +135,7 @@ const MarkdownUploader: React.FC<MarkdownUploaderProps> = ({
           disabled={imageUploading}
           onClick={() => imageInputRef.current?.click()}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-[#6e7a94] hover:text-[#9fef00] transition-colors disabled:opacity-50"
-          title="Upload an image (PNG, JPEG, WebP, GIF — max 2 MB)"
+          title="Upload an image (PNG, JPEG, WebP, GIF, max 2 MB)"
         >
           {imageUploading ? (
             <Loader2 size={12} className="animate-spin" />

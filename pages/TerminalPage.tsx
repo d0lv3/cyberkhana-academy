@@ -45,7 +45,7 @@ const TerminalPage: React.FC = () => {
           <span className="h-5 w-px bg-[#263248]" aria-hidden />
           <div className="flex items-center gap-2 text-sm font-semibold text-[#c9d3e0]">
             <TerminalSquare size={15} className="text-[#00c766]" />
-            <span dir="ltr">{firstName}@cyberkhana — practice shell</span>
+            <span dir="ltr">{firstName}@cyberkhana, practice shell</span>
           </div>
         </div>
         <div className="flex items-center gap-4">

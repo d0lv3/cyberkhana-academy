@@ -27,7 +27,7 @@ img = Image.new("RGB", (200, 100), (20, 40, 80))
 print("size:", img.size, "| mode:", img.mode)
 print("one pixel:", img.getpixel((0, 0)))
 
-# Transform — each returns a NEW image
+# Transform, each returns a NEW image
 print("rotated:", img.rotate(90, expand=True).size)
 print("resized:", img.resize((100, 50)).size)
 print("cropped:", img.crop((0, 0, 50, 50)).size)
@@ -47,7 +47,7 @@ print("reopened:", reopened.size, reopened.format)
 `,
       markdownContent: `# Images with Pillow
 
-**Pillow** is the standard image library — resizing, converting, cropping, reading metadata. It's third-party, so on your machine: \`pip install Pillow\`, imported as \`PIL\`.
+**Pillow** is the standard image library, resizing, converting, cropping, reading metadata. It's third-party, so on your machine: \`pip install Pillow\`, imported as \`PIL\`.
 
 ---
 
@@ -57,7 +57,7 @@ print("reopened:", reopened.size, reopened.format)
 from PIL import Image
 
 img = Image.new("RGB", (200, 100), (20, 40, 80))
-img.size       # (200, 100)  — (width, height)
+img.size       # (200, 100) , (width, height)
 img.mode       # 'RGB'
 img.getpixel((0, 0))   # (20, 40, 80)
 \`\`\`
@@ -68,7 +68,7 @@ Usually you'd open a real file instead:
 img = Image.open("photo.jpg")
 \`\`\`
 
-\`Image.open()\` is **lazy** — it reads the header for \`size\` and \`format\` without decoding the pixels. That's why it's fast on a huge file, and why an actually-corrupt image may not complain until you touch the data.
+\`Image.open()\` is **lazy**, it reads the header for \`size\` and \`format\` without decoding the pixels. That's why it's fast on a huge file, and why an actually-corrupt image may not complain until you touch the data.
 
 The **mode** is the pixel format: \`"RGB"\` (colour), \`"RGBA"\` (with transparency), \`"L"\` (greyscale, one channel). Converting between them is a common first step.
 
@@ -82,7 +82,7 @@ ImageOps.grayscale(img)
 img.filter(ImageFilter.BLUR)
 \`\`\`
 
-Every one **returns a new image** and leaves the original alone — the same rule as string methods. So \`img.rotate(90)\` on its own line does nothing; you must keep the result.
+Every one **returns a new image** and leaves the original alone, the same rule as string methods. So \`img.rotate(90)\` on its own line does nothing; you must keep the result.
 
 The exception is \`thumbnail()\`, which modifies **in place** and returns \`None\`. An inconsistency worth knowing before it bites.
 
@@ -95,25 +95,25 @@ img.save("banner.png")
 img.save("banner.jpg", quality=85)
 \`\`\`
 
-The format comes from the **extension**. Saving RGBA to JPEG raises, because JPEG has no transparency — convert first with \`img.convert("RGB")\`.
+The format comes from the **extension**. Saving RGBA to JPEG raises, because JPEG has no transparency, convert first with \`img.convert("RGB")\`.
 
 ---
 
 ## Why this is in a security course
 
-Images carry more than pixels. **EXIF** metadata can hold GPS coordinates, timestamps, device serials — a genuine leak in any uploaded photo:
+Images carry more than pixels. **EXIF** metadata can hold GPS coordinates, timestamps, device serials, a genuine leak in any uploaded photo:
 
 \`\`\`python
 img._getexif()   # None, or a dict of metadata
 \`\`\`
 
-Stripping it before publishing is a real task, and Pillow is how you do it. Image parsers are also a classic attack surface: a malformed file aimed at the decoder, not the viewer. Pillow has had its share of CVEs — keep it updated, and treat uploaded images as untrusted input.
+Stripping it before publishing is a real task, and Pillow is how you do it. Image parsers are also a classic attack surface: a malformed file aimed at the decoder, not the viewer. Pillow has had its share of CVEs, keep it updated, and treat uploaded images as untrusted input.
 
 ---
 
 ## Try It
 
-Run the starter code — it builds an image, transforms it, saves it into the browser's virtual filesystem and reads it back. Pillow loads on first import, so the first run is slower.
+Run the starter code, it builds an image, transforms it, saves it into the browser's virtual filesystem and reads it back. Pillow loads on first import, so the first run is slower.
 `,
     },
 
@@ -198,7 +198,7 @@ def scan(host, ports, timeout=5):
     """
 \`\`\`
 
-The shape (PEP 257): a **one-line summary** first, in the imperative — "Return the...", not "Returns the..." or "This function returns..." — then a blank line, then detail.
+The shape (PEP 257): a **one-line summary** first, in the imperative, "Return the...", not "Returns the..." or "This function returns...", then a blank line, then detail.
 
 The one-liner matters most: it's what shows in tooltips and index listings. If you can't summarise the function in one line, the function is probably doing too much.
 
@@ -214,13 +214,13 @@ Two different jobs, and confusing them produces noise:
 x = 10  # max retries before we treat the host as down
 \`\`\`
 
-**Docstrings** explain *what and how to use it*, to whoever **calls** it — someone who will never read the body:
+**Docstrings** explain *what and how to use it*, to whoever **calls** it, someone who will never read the body:
 
 \`\`\`python
 """Return the ports found open on host."""
 \`\`\`
 
-A caller needs to know what goes in, what comes out, and what can go wrong. They don't need your implementation notes — those are comments.
+A caller needs to know what goes in, what comes out, and what can go wrong. They don't need your implementation notes, those are comments.
 
 ## Don't document the obvious
 
@@ -266,14 +266,14 @@ def broken():
     total = 0
     for i in range(3):
         total += i
-    return totl        # E0602: undefined variable 'totl' — a typo
+    return totl        # E0602: undefined variable 'totl', a typo
 
 # Nothing above RUNS wrong until you call broken().
 # A linter would tell you before you ever ran it.
 `,
       markdownContent: `# Linting and Style
 
-A **linter** reads your code without running it and reports problems — typos, unused imports, unreachable lines, style violations.
+A **linter** reads your code without running it and reports problems, typos, unused imports, unreachable lines, style violations.
 
 ---
 
@@ -311,7 +311,7 @@ myfile.py:8:0: E0602: Undefined variable 'totl'
 
 The letters are the severity: **E**rror (likely broken), **W**arning (suspicious), **C**onvention (style), **R**efactor (could be simpler).
 
-Pylint scores you out of 10. Chasing 10/10 is a waste of time — plenty of its complaints are matters of taste. Fix the **E**s always, read the **W**s, and configure away the **C**s you disagree with (in \`pyproject.toml\` or \`.pylintrc\`).
+Pylint scores you out of 10. Chasing 10/10 is a waste of time, plenty of its complaints are matters of taste. Fix the **E**s always, read the **W**s, and configure away the **C**s you disagree with (in \`pyproject.toml\` or \`.pylintrc\`).
 
 ## Formatters are different
 
@@ -326,7 +326,7 @@ black myfile.py
 
 ## PEP 8
 
-The style guide the tools encode — 4-space indents, \`snake_case\` functions, \`UPPER_CASE\` constants, spaces around operators, ~79-character lines. You've been following it since Module 2.
+The style guide the tools encode, 4-space indents, \`snake_case\` functions, \`UPPER_CASE\` constants, spaces around operators, ~79-character lines. You've been following it since Module 2.
 
 The reason isn't aesthetics. Consistent code is **scannable**: when everything looks the same, the thing that's different stands out. That's how you spot bugs by eye.
 
@@ -334,7 +334,7 @@ The reason isn't aesthetics. Consistent code is **scannable**: when everything l
 
 ## In this editor
 
-There's no linter here — it's a Python runtime, not an IDE. On your machine, your editor runs one as you type and underlines problems live.
+There's no linter here, it's a Python runtime, not an IDE. On your machine, your editor runs one as you type and underlines problems live.
 
 Read the starter code and find the problems yourself. That's the same skill; the tool just never gets bored.
 
@@ -342,7 +342,7 @@ Read the starter code and find the problems yourself. That's the same skill; the
 
 ## Try It
 
-Run the starter code — it works, despite everything wrong with it. Then read the comments and count how many issues a linter would have flagged before you ever hit Run.
+Run the starter code, it works, despite everything wrong with it. Then read the comments and count how many issues a linter would have flagged before you ever hit Run.
 `,
     },
 
@@ -378,7 +378,7 @@ print(set_port(80))
 `,
       markdownContent: `# Errors and Raising
 
-An **exception** is Python's way of saying "I can't do this." It stops the program rather than continuing with a wrong answer — which is the right instinct.
+An **exception** is Python's way of saying "I can't do this." It stops the program rather than continuing with a wrong answer, which is the right instinct.
 
 ---
 
@@ -388,8 +388,8 @@ You've met most of these already:
 
 | Exception | Cause |
 |---|---|
-| \`ValueError\` | right type, impossible value — \`int("abc")\` |
-| \`TypeError\` | wrong type — \`"a" + 1\` |
+| \`ValueError\` | right type, impossible value, \`int("abc")\` |
+| \`TypeError\` | wrong type, \`"a" + 1\` |
 | \`IndexError\` | list index out of range |
 | \`KeyError\` | missing dict key |
 | \`ZeroDivisionError\` | \`1 / 0\` |
@@ -397,7 +397,7 @@ You've met most of these already:
 | \`FileNotFoundError\` | missing file |
 | \`AttributeError\` | no such method |
 
-\`ValueError\` vs \`TypeError\` is the distinction to keep straight: \`int("abc")\` is a **ValueError** — a string is the right type, that particular string just isn't a number. \`int([])\` is a **TypeError**.
+\`ValueError\` vs \`TypeError\` is the distinction to keep straight: \`int("abc")\` is a **ValueError**, a string is the right type, that particular string just isn't a number. \`int([])\` is a **TypeError**.
 
 ---
 
@@ -416,7 +416,7 @@ def set_port(port):
 
 \`raise\` stops the function immediately, like \`return\` but shouting.
 
-**Raise early.** Check at the boundary, so a bad value is rejected where it enters — not five functions later where the message makes no sense.
+**Raise early.** Check at the boundary, so a bad value is rejected where it enters, not five functions later where the message makes no sense.
 
 **Pick the right type.** \`TypeError\` for the wrong kind of thing, \`ValueError\` for the wrong value. Callers catch specific exceptions, so the type is part of the interface.
 
@@ -485,7 +485,7 @@ except ValueError:
 except Exception:
     print("never reached")
 
-# Bare except catches EVERYTHING — including your typos
+# Bare except catches EVERYTHING, including your typos
 try:
     undefined_thing
 except Exception as e:
@@ -510,13 +510,13 @@ finally:
     print("always runs")    # runs no matter what
 \`\`\`
 
-**\`try\`** — the risky code. Keep it **short**: only the line that can fail. A big \`try\` catches errors you didn't mean to catch.
+**\`try\`**, the risky code. Keep it **short**: only the line that can fail. A big \`try\` catches errors you didn't mean to catch.
 
-**\`except\`** — what to do about it.
+**\`except\`**, what to do about it.
 
-**\`else\`** — runs when no exception fired. Why bother? It keeps the \`try\` minimal: put the risky call in \`try\` and the follow-up work in \`else\`, so a failure *there* isn't swallowed by your handler.
+**\`else\`**, runs when no exception fired. Why bother? It keeps the \`try\` minimal: put the risky call in \`try\` and the follow-up work in \`else\`, so a failure *there* isn't swallowed by your handler.
 
-**\`finally\`** — always runs: success, failure, even a \`return\` inside the \`try\`. It's for cleanup — closing things, releasing locks. \`with\` is built on this idea, which is why \`with open(...)\` can't leak.
+**\`finally\`**, always runs: success, failure, even a \`return\` inside the \`try\`. It's for cleanup, closing things, releasing locks. \`with\` is built on this idea, which is why \`with open(...)\` can't leak.
 
 ---
 
@@ -527,12 +527,12 @@ The most important rule:
 \`\`\`python
 try:
     value = int(raw)
-except ValueError:      # yes — the one thing you expect
+except ValueError:      # yes, the one thing you expect
 except Exception:       # rarely
 except:                 # never
 \`\`\`
 
-A **bare \`except:\`** catches everything — including \`NameError\` from your own typo, and \`KeyboardInterrupt\` when a user tries to quit. Your program keeps running, quietly broken, and the real problem is hidden.
+A **bare \`except:\`** catches everything, including \`NameError\` from your own typo, and \`KeyboardInterrupt\` when a user tries to quit. Your program keeps running, quietly broken, and the real problem is hidden.
 
 \`\`\`python
 try:
@@ -550,7 +550,7 @@ except (KeyError, IndexError) as e:
     print(type(e).__name__, e)
 \`\`\`
 
-**Order specific before general.** The first matching \`except\` wins, so a general one first makes the rest unreachable — the same rule as \`elif\` in Module 9.
+**Order specific before general.** The first matching \`except\` wins, so a general one first makes the rest unreachable, the same rule as \`elif\` in Module 9.
 
 ## Don't silence it
 
@@ -575,12 +575,12 @@ except Exception as e:
 Python's style is **"easier to ask forgiveness than permission"**:
 
 \`\`\`python
-try:                       # EAFP — Pythonic
+try:                       # EAFP, Pythonic
     value = data["key"]
 except KeyError:
     value = None
 
-if "key" in data:          # LBYL — fine, but racy for files
+if "key" in data:          # LBYL, fine, but racy for files
     value = data["key"]
 \`\`\`
 
@@ -648,7 +648,7 @@ class InvalidPort(Exception):
     """Raised when a port is outside 1-65535."""
 \`\`\`
 
-That's a complete class — inherit from \`Exception\`, give it a docstring, done. (Classes are beyond this course; this pattern is all you need.)
+That's a complete class, inherit from \`Exception\`, give it a docstring, done. (Classes are beyond this course; this pattern is all you need.)
 
 Why bother, when \`ValueError\` exists? Because it lets callers catch **your** failure specifically:
 
@@ -657,7 +657,7 @@ except InvalidPort:      # exactly this problem
 except ValueError:       # this, and every other value error
 \`\`\`
 
-Name it for the problem, and end it in \`Error\` if it's an error. Always inherit from \`Exception\`, never \`BaseException\` — that's the one \`KeyboardInterrupt\` uses, and catching it stops users quitting.
+Name it for the problem, and end it in \`Error\` if it's an error. Always inherit from \`Exception\`, never \`BaseException\`, that's the one \`KeyboardInterrupt\` uses, and catching it stops users quitting.
 
 ## The validation loop
 
@@ -676,7 +676,7 @@ while True:
         break
 \`\`\`
 
-Two failure modes, two messages, and \`else\` + \`break\` to leave on success. This is the honest version of the Module 10 loop — \`isdigit()\` couldn't handle \`"-5"\` or \`"3.14"\`; \`try/except\` handles anything \`int()\` rejects, because it asks \`int()\` itself.
+Two failure modes, two messages, and \`else\` + \`break\` to leave on success. This is the honest version of the Module 10 loop, \`isdigit()\` couldn't handle \`"-5"\` or \`"3.14"\`; \`try/except\` handles anything \`int()\` rejects, because it asks \`int()\` itself.
 
 ## Chaining with \`from\`
 
@@ -689,15 +689,15 @@ except ValueError as e:
     raise InvalidPort(f"bad port {raw!r}") from e
 \`\`\`
 
-The caller gets \`InvalidPort\` — the error that means something to them — and the traceback still shows the \`ValueError\` underneath, via \`__cause__\`. You get a clean interface *and* the diagnostics.
+The caller gets \`InvalidPort\`, the error that means something to them, and the traceback still shows the \`ValueError\` underneath, via \`__cause__\`. You get a clean interface *and* the diagnostics.
 
-Without \`from e\`, Python still shows "During handling of the above exception, another occurred" — \`from\` makes the relationship explicit and deliberate.
+Without \`from e\`, Python still shows "During handling of the above exception, another occurred", \`from\` makes the relationship explicit and deliberate.
 
 ## Where to handle
 
 The rule: **catch it where you can do something about it.**
 
-A deep utility that catches and returns \`None\` has destroyed information the caller needed. Let it raise; handle it at the level that knows what to do — retry, use a default, tell the user, give up.
+A deep utility that catches and returns \`None\` has destroyed information the caller needed. Let it raise; handle it at the level that knows what to do, retry, use a default, tell the user, give up.
 
 That's why \`parse_port\` raises rather than printing. It doesn't know whether it's serving a CLI, a web request, or a test.
 
@@ -705,7 +705,7 @@ That's why \`parse_port\` raises rather than printing. It doesn't know whether i
 
 ## Try It
 
-Run it — the Input box has \`abc\`, then \`99999\`, then \`8080\`. Each is rejected by a different handler for a different reason.
+Run it, the Input box has \`abc\`, then \`99999\`, then \`8080\`. Each is rejected by a different handler for a different reason.
 `,
     },
 
@@ -733,7 +733,7 @@ try:
 except KeyError:
     traceback.print_exc()
 
-# The f-string = trick — the fastest debugging tool you have
+# The f-string = trick, the fastest debugging tool you have
 port, host = 8080, "10.0.0.5"
 print(f"{port = }, {host = }")
 print(f"{port > 1024 = }")
@@ -756,7 +756,7 @@ Code fails. The skill is finding out **why**, quickly.
 
 ## Read the traceback
 
-Beginners see a wall of text and panic. It's a precise report — read it **bottom up**:
+Beginners see a wall of text and panic. It's a precise report, read it **bottom up**:
 
 \`\`\`
 Traceback (most recent call last):
@@ -771,13 +771,13 @@ KeyError: 'missing'
 
 - **The last line** is what went wrong: \`KeyError: 'missing'\`.
 - **The line above it** is where: \`level_three\`, line 6.
-- **The rest** is how you got there — the call chain, outermost first.
+- **The rest** is how you got there, the call chain, outermost first.
 
 "Most recent call last" means the deepest frame is at the bottom. Start there; that's your bug 90% of the time. The chain above matters when the real problem is *which* caller passed bad data.
 
 ## print debugging is fine
 
-There's snobbery about \`print()\` debugging. Ignore it — it's fast, it always works, and it needs no setup.
+There's snobbery about \`print()\` debugging. Ignore it, it's fast, it always works, and it needs no setup.
 
 The f-string \`=\` trick from Module 3 makes it painless:
 
@@ -796,7 +796,7 @@ print(value)        # 42        <- looks fine!
 print(repr(value))  # ' 42\\n'   <- there's the bug
 \`\`\`
 
-When a value "looks right" but won't compare equal, **\`repr()\` it**. Whitespace, \`"42"\` vs \`42\`, \`None\` vs \`"None"\` — all invisible to \`print\` and obvious to \`repr\`.
+When a value "looks right" but won't compare equal, **\`repr()\` it**. Whitespace, \`"42"\` vs \`42\`, \`None\` vs \`"None"\`, all invisible to \`print\` and obvious to \`repr\`.
 
 ## When you don't know what you're holding
 
@@ -812,7 +812,7 @@ vars(x)            # what's inside it?
 breakpoint()   # drops into pdb, right there
 \`\`\`
 
-Then \`n\` (next), \`s\` (step in), \`c\` (continue), \`p x\` (print x), \`q\` (quit). It's interactive, so it needs a terminal — it won't work in this editor, and your IDE's graphical debugger is nicer anyway.
+Then \`n\` (next), \`s\` (step in), \`c\` (continue), \`p x\` (print x), \`q\` (quit). It's interactive, so it needs a terminal, it won't work in this editor, and your IDE's graphical debugger is nicer anyway.
 
 ## The method
 
@@ -820,7 +820,7 @@ When you're stuck, the failure is that you're **guessing**. Instead:
 
 1. **Read the error.** Actually read it. It usually names the problem.
 2. **Find the smallest failing case.** Cut away everything that still fails without it.
-3. **Check your assumptions** — that's what \`print(f"{x = }")\` is for. The bug is almost always where you were *certain* you were right.
+3. **Check your assumptions**, that's what \`print(f"{x = }")\` is for. The bug is almost always where you were *certain* you were right.
 4. **Change one thing at a time.**
 
 Most bugs are a value not being what you assumed. Print it and the mystery usually evaporates.
@@ -829,7 +829,7 @@ Most bugs are a value not being what you assumed. Print it and the mystery usual
 
 ## Try It
 
-Run the starter code. The traceback shows three frames — read it bottom-up and find \`level_three\` in one step.
+Run the starter code. The traceback shows three frames, read it bottom-up and find \`level_three\` in one step.
 `,
     },
 
@@ -848,7 +848,7 @@ def describe(port: int, proto: str = "tcp") -> str:
 
 print(is_valid(80), describe(53, "udp"))
 
-# Hints are NOT enforced — this runs fine
+# Hints are NOT enforced, this runs fine
 print(is_valid("not an int") if False else "hints don't stop you")
 print(describe("80", "tcp"))
 
@@ -876,7 +876,7 @@ def is_valid(port: int) -> bool:
     return 1 <= port <= 65535
 \`\`\`
 
-\`port: int\` — the parameter should be an \`int\`. \`-> bool\` — it returns a \`bool\`.
+\`port: int\`, the parameter should be an \`int\`. \`-> bool\`, it returns a \`bool\`.
 
 ---
 
@@ -885,7 +885,7 @@ def is_valid(port: int) -> bool:
 The thing to understand first:
 
 \`\`\`python
-describe("80", "tcp")   # runs fine — no error
+describe("80", "tcp")   # runs fine, no error
 \`\`\`
 
 Python **ignores** hints at runtime. They're annotations, not checks. Nothing stops you passing the wrong type; Python stays dynamically typed.
@@ -894,7 +894,7 @@ So what's the point?
 
 **1. Documentation that can't drift.** A comment saying "port is an int" can go stale. A hint is in the signature, where a reader looks first.
 
-**2. Your editor.** With hints, VS Code autocompletes \`.upper()\` on a \`str\` parameter and flags \`port.upper()\` on an \`int\` — as you type, before you run.
+**2. Your editor.** With hints, VS Code autocompletes \`.upper()\` on a \`str\` parameter and flags \`port.upper()\` on an \`int\`, as you type, before you run.
 
 **3. Static checkers.** This is the real payoff:
 
@@ -907,7 +907,7 @@ mypy myfile.py
 myfile.py:5: error: Argument 1 to "describe" has incompatible type "str"; expected "int"
 \`\`\`
 
-Like a linter, but for types. It catches a whole class of bug — the \`"18" == 18\` kind from Module 7 — without running anything.
+Like a linter, but for types. It catches a whole class of bug, the \`"18" == 18\` kind from Module 7, without running anything.
 
 ## The syntax
 
@@ -920,13 +920,13 @@ def i(name: str) -> int | None:        # int OR None
 def j() -> None:                       # returns nothing
 \`\`\`
 
-\`int | None\` is the modern union (3.10+); older code writes \`Optional[int]\` from \`typing\`. It's the honest signature for anything that might not find an answer — \`.get()\`, a lookup, a parse.
+\`int | None\` is the modern union (3.10+); older code writes \`Optional[int]\` from \`typing\`. It's the honest signature for anything that might not find an answer, \`.get()\`, a lookup, a parse.
 
 Lowercase \`list[int]\` and \`dict[str, int]\` are current (3.9+). \`List\`/\`Dict\` from \`typing\` are the old way, still common in older codebases.
 
 ## Where to use them
 
-Hint your **function signatures** — the boundaries. That's where the information helps a caller and a checker.
+Hint your **function signatures**, the boundaries. That's where the information helps a caller and a checker.
 
 Don't hint every local variable; it's noise, and the value's obvious from the line above:
 
@@ -934,7 +934,7 @@ Don't hint every local variable; it's noise, and the value's obvious from the li
 count: int = 0   # adds nothing
 \`\`\`
 
-Hints are optional and incremental. Add them to new code and to the tricky parts of old code. A partly-hinted codebase is fine — mypy checks what it can.
+Hints are optional and incremental. Add them to new code and to the tricky parts of old code. A partly-hinted codebase is fine, mypy checks what it can.
 
 They're readable at runtime if you want them:
 
@@ -946,7 +946,7 @@ is_valid.__annotations__   # {'port': <class 'int'>, 'return': <class 'bool'>}
 
 ## Try It
 
-Run the starter code. \`describe("80", "tcp")\` works despite the hint saying \`int\` — Python doesn't care, but mypy would have told you.
+Run the starter code. \`describe("80", "tcp")\` works despite the hint saying \`int\`, Python doesn't care, but mypy would have told you.
 `,
     },
 
@@ -957,7 +957,7 @@ Run the starter code. \`describe("80", "tcp")\` works despite the hint saying \`
       title: { en: 'HTTP with requests', ar: 'HTTP مع requests' },
       order: 9,
       type: 'lesson',
-      starterCode: `# NOTE: real network calls cannot run in the browser sandbox — there are no
+      starterCode: `# NOTE: real network calls cannot run in the browser sandbox, there are no
 # raw sockets here. The code below is exactly what you would write on your
 # machine; here we model a Response so you can see the SHAPE of the API.
 import json
@@ -1025,11 +1025,11 @@ print(r.json())        # parsed, if it's JSON
 | \`r.status_code\` | 200, 404, 500… |
 | \`r.ok\` | \`True\` when < 400 |
 | \`r.text\` | body as \`str\` |
-| \`r.content\` | body as \`bytes\` — for images, files |
+| \`r.content\` | body as \`bytes\`, for images, files |
 | \`r.json()\` | parsed JSON → dict/list |
 | \`r.headers\` | response headers (a case-insensitive dict) |
 
-\`r.json()\` raises if the body isn't JSON — check the content type, or wrap it in \`try\`.
+\`r.json()\` raises if the body isn't JSON, check the content type, or wrap it in \`try\`.
 
 ## Query parameters
 
@@ -1040,7 +1040,7 @@ requests.get("https://api.example.com/search?q=" + term)          # no
 requests.get("https://api.example.com/search", params={"q": term}) # yes
 \`\`\`
 
-\`params\` **encodes** for you. A term with a space, \`&\` or \`/\` breaks the first version — and if that term came from a user, string-building a URL is an injection bug. The library escapes it correctly; you won't.
+\`params\` **encodes** for you. A term with a space, \`&\` or \`/\` breaks the first version, and if that term came from a user, string-building a URL is an injection bug. The library escapes it correctly; you won't.
 
 Same principle as never building SQL with an f-string.
 
@@ -1061,10 +1061,10 @@ The trap that catches everyone:
 
 \`\`\`python
 r = requests.get("https://example.com/nope")
-print(r.status_code)   # 404 — and NO exception was raised
+print(r.status_code)   # 404, and NO exception was raised
 \`\`\`
 
-The request **succeeded** — the server answered, and its answer was "not found." As far as \`requests\` is concerned that's a normal response, so nothing raises.
+The request **succeeded**, the server answered, and its answer was "not found." As far as \`requests\` is concerned that's a normal response, so nothing raises.
 
 If you want a bad status to be an exception:
 
@@ -1078,7 +1078,7 @@ Otherwise every response looks fine and you'll happily parse an error page as da
 
 ## Try It
 
-Run the starter code — the fake Response mirrors the real API, including \`raise_for_status()\` staying silent on 200 and raising on 404.
+Run the starter code, the fake Response mirrors the real API, including \`raise_for_status()\` staying silent on 200 and raising on 404.
 `,
     },
 
@@ -1100,7 +1100,7 @@ headers = {
 }
 print("headers:", json.dumps(headers, indent=None))
 
-# Never hard-code a secret — read it from the environment
+# Never hard-code a secret, read it from the environment
 import os
 token = os.environ.get("API_TOKEN", "<not set>")
 print("token from env:", token)
@@ -1138,7 +1138,7 @@ headers = {
 r = requests.get(url, headers=headers)
 \`\`\`
 
-\`User-Agent\` is worth setting honestly — many servers reject the default, and identifying your tool is basic manners when you're allowed to be scanning at all.
+\`User-Agent\` is worth setting honestly, many servers reject the default, and identifying your tool is basic manners when you're allowed to be scanning at all.
 
 **Never hard-code a token.** It ends up in git, and git remembers forever:
 
@@ -1146,7 +1146,7 @@ r = requests.get(url, headers=headers)
 token = os.environ["API_TOKEN"]   # from the environment
 \`\`\`
 
-That's the single most common way secrets leak. Environment variables or a \`.env\` file that's in \`.gitignore\` — never a literal in the source.
+That's the single most common way secrets leak. Environment variables or a \`.env\` file that's in \`.gitignore\`, never a literal in the source.
 
 ## 2. Timeouts
 
@@ -1156,7 +1156,7 @@ That's the single most common way secrets leak. Environment variables or a \`.en
 requests.get(url, timeout=10)
 \`\`\`
 
-By default \`requests\` waits **forever**. A server that accepts your connection and never answers will hang your script indefinitely — no error, no exit. A hung scan at 3am is usually a missing timeout.
+By default \`requests\` waits **forever**. A server that accepts your connection and never answers will hang your script indefinitely, no error, no exit. A hung scan at 3am is usually a missing timeout.
 
 There's no default because the library can't guess what's reasonable. So say.
 
@@ -1171,7 +1171,7 @@ with requests.Session() as s:
     s.get(url2)
 \`\`\`
 
-It **reuses the TCP connection** (much faster over many requests) and **persists cookies** — which is how you stay logged in after authenticating. Set the headers once instead of on every call.
+It **reuses the TCP connection** (much faster over many requests) and **persists cookies**, which is how you stay logged in after authenticating. Set the headers once instead of on every call.
 
 Note \`with\`: a Session holds connections, so it wants closing. Same context-manager idea as files.
 
@@ -1185,7 +1185,7 @@ requests.get(url, proxies=proxies)
 
 Point your script at Burp or mitmproxy on :8080 and you can **see exactly what it sends**. Invaluable when an API rejects you and you can't work out why.
 
-Intercepting HTTPS needs the proxy's CA cert trusted. \`verify=False\` disables certificate checking — fine against your own proxy while debugging, **never** in real code. It turns off the protection TLS exists for, and \`requests\` will warn you loudly.
+Intercepting HTTPS needs the proxy's CA cert trusted. \`verify=False\` disables certificate checking, fine against your own proxy while debugging, **never** in real code. It turns off the protection TLS exists for, and \`requests\` will warn you loudly.
 
 ---
 
@@ -1200,20 +1200,20 @@ try:
 except requests.exceptions.Timeout:
     print("too slow")
 except requests.exceptions.ConnectionError:
-    print("unreachable — DNS, refused, no route")
+    print("unreachable, DNS, refused, no route")
 except requests.exceptions.HTTPError as e:
     print("bad status:", e)
 except requests.exceptions.RequestException as e:
     print("something else:", e)
 \`\`\`
 
-\`RequestException\` is the base class of all of them — catch it last, as the general case. Specific before general, exactly as Module 9 and lesson 5 said.
+\`RequestException\` is the base class of all of them, catch it last, as the general case. Specific before general, exactly as Module 9 and lesson 5 said.
 
 ---
 
 ## Try It
 
-Run the starter code — it prints the shapes without touching the network. Then write the real version on your machine, and point it at a proxy to watch it work.
+Run the starter code, it prints the shapes without touching the network. Then write the real version on your machine, and point it at a proxy to watch it work.
 `,
     },
 
@@ -1245,7 +1245,7 @@ responses = [
 #   - "<host>:<port>"             when everything is fine
 #
 # Rules:
-#   - Use try/except — do not check the JSON by hand.
+#   - Use try/except, do not check the JSON by hand.
 #   - Catch json.JSONDecodeError for the parse, raise/handle ValueError
 #     for the port.
 #
@@ -1280,7 +1280,7 @@ print("OK:", ok)
         },
       ],
       hints: [
-        'Check the status first and return early — a guard clause, like Module 9. Then try to parse.',
+        'Check the status first and return early, a guard clause, like Module 9. Then try to parse.',
         'Wrap json.loads(body) in try/except json.JSONDecodeError and return "bad json" from the except block.',
         'After parsing, pull out host and port, then check 1 <= port <= 65535. Return f"bad port: {port}" if not, else f"{host}:{port}".',
       ],
@@ -1333,10 +1333,10 @@ Real API responses lie. Some are errors, some aren't JSON, some are JSON with no
 
 Write \`parse_one(status, body)\`, returning a string. Check **in this order**:
 
-1. \`"bad status: 404"\` — status is 400 or above
-2. \`"bad json"\` — the body won't parse
-3. \`"bad port: 99999"\` — port isn't 1–65535
-4. \`"10.0.0.5:22"\` — all good
+1. \`"bad status: 404"\`, status is 400 or above
+2. \`"bad json"\`, the body won't parse
+3. \`"bad port: 99999"\`, port isn't 1–65535
+4. \`"10.0.0.5:22"\`, all good
 
 ## Expected output
 
@@ -1352,7 +1352,7 @@ OK: 2
 
 ## Rules
 
-- Use **try/except** for the JSON — don't inspect the string by hand.
+- Use **try/except** for the JSON, don't inspect the string by hand.
 - Catch \`json.JSONDecodeError\` specifically, not bare \`except\`.
 - Leave the loop at the bottom untouched.
 
@@ -1360,7 +1360,7 @@ OK: 2
 
 **Guard clauses** (Module 9) make this clean: check status, return early. Try the parse, return early on failure. Check the port, return early. The happy path ends up last and unindented.
 
-Note the order isn't arbitrary — checking the port before confirming it parsed would crash on the non-JSON row. **Validate outward in.**
+Note the order isn't arbitrary, checking the port before confirming it parsed would crash on the non-JSON row. **Validate outward in.**
 
 ## Watch out
 

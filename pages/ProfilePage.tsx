@@ -147,7 +147,7 @@ const ProfilePage: React.FC = () => {
         month: 'long',
       });
     } catch {
-      return '—';
+      return '-';
     }
   })();
 
@@ -173,8 +173,8 @@ const ProfilePage: React.FC = () => {
         : {
             tone: 'muted',
             message: ar
-              ? 'اسمك العام — يظهر في لوحة المتصدرين.'
-              : 'Your public handle — shown on the leaderboard.',
+              ? 'اسمك العام، يظهر في لوحة المتصدرين.'
+              : 'Your public handle, shown on the leaderboard.',
           };
 
   const handleToneClass = {

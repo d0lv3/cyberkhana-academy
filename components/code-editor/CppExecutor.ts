@@ -90,7 +90,7 @@ export async function runCpp(
 /** Make JSCPP's messages a little friendlier for students. */
 function cleanCppError(raw: string): string {
   if (/time limit exceeded/i.test(raw)) {
-    return 'Execution timed out — your code took too long. Check for infinite loops.';
+    return 'Execution timed out, your code took too long. Check for infinite loops.';
   }
   return raw.trim();
 }

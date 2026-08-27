@@ -101,7 +101,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted, onLogin }) => {
             <BrandLogo
               variant="full"
               loading="eager"
-              alt="CyberKhana Academy — Learn Cybersecurity from the ground up"
+              alt="CyberKhana Academy, Learn Cybersecurity from the ground up"
               className="h-20 sm:h-24 xl:h-28 w-auto object-contain mx-auto lg:mx-0"
             />
           </motion.h1>

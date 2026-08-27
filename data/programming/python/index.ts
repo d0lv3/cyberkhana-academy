@@ -21,8 +21,8 @@ const python: ProgrammingLanguage = {
   color: '#3572A5',
   available: true,
   description: {
-    en: 'The most popular language in cybersecurity — used for scripting, automation, exploit development, and tool building.',
-    ar: 'اللغة الأكثر شيوعا في الأمن السيبراني — تستخدم في البرمجة النصية، الأتمتة، تطوير الاستغلالات، وبناء الأدوات.',
+    en: 'The most popular language in cybersecurity, used for scripting, automation, exploit development, and tool building.',
+    ar: 'اللغة الأكثر شيوعا في الأمن السيبراني، تستخدم في البرمجة النصية، الأتمتة، تطوير الاستغلالات، وبناء الأدوات.',
   },
   modules: [
     gettingStarted,

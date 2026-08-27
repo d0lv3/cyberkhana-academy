@@ -144,7 +144,7 @@ const LessonQuiz: React.FC<LessonQuizProps> = ({ questions, onPass, passed = fal
           {didPass
             ? ar
               ? 'أحسنت! تم إكمال الدرس.'
-              : 'Well done — lesson completed.'
+              : 'Well done, lesson completed.'
             : ar
             ? 'لم تصل إلى حد النجاح بعد.'
             : "You didn't reach the pass mark yet."}

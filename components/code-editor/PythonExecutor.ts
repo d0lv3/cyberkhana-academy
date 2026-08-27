@@ -137,7 +137,7 @@ sys.stderr = sys.__stderr__
       pyodide.runPythonAsync(code),
       new Promise<never>((_, reject) =>
         setTimeout(
-          () => reject(new Error('Execution timed out — your code took longer than 10 seconds. Check for infinite loops.')),
+          () => reject(new Error('Execution timed out, your code took longer than 10 seconds. Check for infinite loops.')),
           timeoutMs
         )
       ),

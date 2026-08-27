@@ -216,8 +216,8 @@ const LoginPage: React.FC = () => {
               className="text-sm text-[#9aa5bf] mt-2.5"
             >
               {ar
-                ? 'بنقرة واحدة عبر Google — وتقدمك يتبعك على أي جهاز.'
-                : 'One click with Google — your progress follows you on any device.'}
+                ? 'بنقرة واحدة عبر Google، وتقدمك يتبعك على أي جهاز.'
+                : 'One click with Google, your progress follows you on any device.'}
             </motion.p>
           </div>
 

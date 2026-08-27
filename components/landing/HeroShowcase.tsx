@@ -184,7 +184,7 @@ const HeroShowcase: React.FC = () => {
           </TermLine>
           <TermLine start={0.6}>
             <span className="text-[#9fef00]">[+]</span>{' '}
-            <span className="text-[#d2d7e3]">Scan complete — 2 open ports</span>
+            <span className="text-[#d2d7e3]">Scan complete, 2 open ports</span>
           </TermLine>
           <p className="leading-relaxed">
             <span className="text-[#00a859]">$</span>{' '}

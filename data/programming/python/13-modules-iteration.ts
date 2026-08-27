@@ -31,7 +31,7 @@ print(randint(1, 6), choice(["a", "b"]))
 import datetime as dt
 print(dt.date(2026, 7, 16))
 
-# A module is just an object — look inside it
+# A module is just an object, look inside it
 print(type(math).__name__)
 print([n for n in dir(math) if n.startswith("f")][:4])
 
@@ -43,7 +43,7 @@ print(sys.version_info.major, sys.version_info.minor)
 `,
       markdownContent: `# Modules and Imports
 
-A **module** is a file of Python you can use from another file. The **standard library** is hundreds of them, shipped with Python — this is what "batteries included" means.
+A **module** is a file of Python you can use from another file. The **standard library** is hundreds of them, shipped with Python, this is what "batteries included" means.
 
 ---
 
@@ -54,7 +54,7 @@ import math
 math.sqrt(16)   # 4.0
 \`\`\`
 
-\`import math\` binds the name \`math\` to the module object; you reach inside with a dot. The prefix is a feature — \`math.sqrt\` says where \`sqrt\` came from.
+\`import math\` binds the name \`math\` to the module object; you reach inside with a dot. The prefix is a feature, \`math.sqrt\` says where \`sqrt\` came from.
 
 ## from ... import
 
@@ -65,7 +65,7 @@ from random import randint, choice
 randint(1, 6)   # no prefix
 \`\`\`
 
-Shorter, and you lose the origin. Fine for the obvious (\`from datetime import date\`), risky when it collides — \`from math import pow\` quietly shadows the built-in \`pow\`.
+Shorter, and you lose the origin. Fine for the obvious (\`from datetime import date\`), risky when it collides, \`from math import pow\` quietly shadows the built-in \`pow\`.
 
 **Never do this:**
 
@@ -102,22 +102,22 @@ import hashlib   # md5, sha256, ...
 
 \`\`\`python
 json.dumps({"host": "10.0.0.5"})        # dict -> JSON string
-hashlib.sha256(b"khana").hexdigest()    # note the b"" — bytes, not str
+hashlib.sha256(b"khana").hexdigest()    # note the b"", bytes, not str
 \`\`\`
 
-That \`b\` prefix matters: hashing works on **bytes**, not text. \`sha256("khana")\` is a \`TypeError\` — use \`"khana".encode()\` for real input.
+That \`b\` prefix matters: hashing works on **bytes**, not text. \`sha256("khana")\` is a \`TypeError\`, use \`"khana".encode()\` for real input.
 
 Before you write a utility, check whether the standard library already has it. It usually does, and it's better tested than yours.
 
 ## Imports go at the top
 
-Convention (and PEP 8): all imports at the top of the file, standard library first, then third-party, then your own. Modules are cached after the first import, so re-importing costs nothing — but a mid-file import hides a dependency.
+Convention (and PEP 8): all imports at the top of the file, standard library first, then third-party, then your own. Modules are cached after the first import, so re-importing costs nothing, but a mid-file import hides a dependency.
 
 ---
 
 ## Try It
 
-Run the starter code. \`dir(math)\` lists what a module contains — the fastest way to explore one without leaving Python.
+Run the starter code. \`dir(math)\` lists what a module contains, the fastest way to explore one without leaving Python.
 `,
     },
 
@@ -128,7 +128,7 @@ Run the starter code. \`dir(math)\` lists what a module contains — the fastest
       title: { en: 'Your Own Module', ar: 'وحدتك الخاصة' },
       order: 2,
       type: 'lesson',
-      starterCode: `# Write a real file — this IS a module
+      starterCode: `# Write a real file, this IS a module
 with open("tools.py", "w") as f:
     print("VERSION = '1.0'", file=f)
     print("", file=f)
@@ -151,7 +151,7 @@ print("this file:", __name__)
 `,
       markdownContent: `# Your Own Module
 
-There's nothing special about a module. **Any \`.py\` file is one.** Save functions in \`tools.py\` and \`import tools\` works — that's the whole mechanism.
+There's nothing special about a module. **Any \`.py\` file is one.** Save functions in \`tools.py\` and \`import tools\` works, that's the whole mechanism.
 
 ---
 
@@ -199,7 +199,7 @@ Python sets \`__name__\` in every module:
 
 So that block runs **only when the file is executed directly**, and is skipped when it's imported.
 
-Why it matters: **importing a module runs all of its top-level code.** If \`tools.py\` had a bare \`print("starting scan")\` at the top, that would fire the moment someone imported it — which is never what an importer wants.
+Why it matters: **importing a module runs all of its top-level code.** If \`tools.py\` had a bare \`print("starting scan")\` at the top, that would fire the moment someone imported it, which is never what an importer wants.
 
 So: definitions at the top level, anything that *does* something inside the guard. It lets one file serve as both a reusable library and a runnable script, which is exactly why you see it everywhere.
 
@@ -219,7 +219,7 @@ Same idea, one level up.
 
 ## Try It
 
-Run the starter code — it writes \`tools.py\`, then imports it. \`tools.__name__\` is \`"tools"\` while your file is \`"__main__"\`, so \`tools.py\`'s guarded print never fires.
+Run the starter code, it writes \`tools.py\`, then imports it. \`tools.__name__\` is \`"tools"\` while your file is \`"__main__"\`, so \`tools.py\`'s guarded print never fires.
 `,
     },
 
@@ -230,7 +230,7 @@ Run the starter code — it writes \`tools.py\`, then imports it. \`tools.__name
       title: { en: 'External Packages', ar: 'الحزم الخارجية' },
       order: 3,
       type: 'lesson',
-      starterCode: `# Pillow is a THIRD-PARTY package — not part of the standard library.
+      starterCode: `# Pillow is a THIRD-PARTY package, not part of the standard library.
 # On your machine you would install it first:  pip install Pillow
 from PIL import Image
 
@@ -245,7 +245,7 @@ print("Pillow version:", PIL.__version__)
 `,
       markdownContent: `# External Packages
 
-The standard library is large. **PyPI** — the Python Package Index — is enormous: hundreds of thousands of packages other people wrote.
+The standard library is large. **PyPI**, the Python Package Index, is enormous: hundreds of thousands of packages other people wrote.
 
 ---
 
@@ -285,7 +285,7 @@ Historical accidents, and a reliable source of confusion. When an import fails, 
 
 The important part, and the one beginners skip.
 
-Installing globally means every project shares one set of versions. Project A needs \`requests\` 2.25, project B needs 2.31 — you can't have both, and upgrading for B silently breaks A.
+Installing globally means every project shares one set of versions. Project A needs \`requests\` 2.25, project B needs 2.31, you can't have both, and upgrading for B silently breaks A.
 
 A **virtual environment** is a private Python for one project:
 
@@ -305,17 +305,17 @@ pip freeze > requirements.txt
 pip install -r requirements.txt
 \`\`\`
 
-\`requirements.txt\` is how someone else — or a server, or you in six months — reproduces your setup. Make a venv per project, every time. It's two commands and it prevents a whole category of misery.
+\`requirements.txt\` is how someone else, or a server, or you in six months, reproduces your setup. Make a venv per project, every time. It's two commands and it prevents a whole category of misery.
 
 ## Installing is running someone's code
 
-Worth saying in a security course: \`pip install\` downloads code and can execute it during setup. Typosquatting on PyPI is real — a package one letter off from a popular one, doing something unpleasant. Check the name, check the download counts, prefer well-known packages, and pin versions in \`requirements.txt\`.
+Worth saying in a security course: \`pip install\` downloads code and can execute it during setup. Typosquatting on PyPI is real, a package one letter off from a popular one, doing something unpleasant. Check the name, check the download counts, prefer well-known packages, and pin versions in \`requirements.txt\`.
 
 ---
 
 ## In this editor
 
-Packages are **pre-installed and served from the academy's own servers** — there's no \`pip\` here, and nothing is fetched from PyPI while you work. Pillow is available because this lesson needs it; the sandbox stays sealed.
+Packages are **pre-installed and served from the academy's own servers**, there's no \`pip\` here, and nothing is fetched from PyPI while you work. Pillow is available because this lesson needs it; the sandbox stays sealed.
 
 On your own machine, the same code needs \`pip install Pillow\` in an activated venv first.
 
@@ -323,7 +323,7 @@ On your own machine, the same code needs \`pip install Pillow\` in an activated 
 
 ## Try It
 
-Run the starter code. Pillow loads on demand the first time you import it, so give it a moment — after that it's cached.
+Run the starter code. Pillow loads on demand the first time you import it, so give it a moment, after that it's cached.
 `,
     },
 
@@ -362,7 +362,7 @@ print("parsed:", parsed, parsed == d)
 `,
       markdownContent: `# Dates and Times
 
-Dates look simple and are not. Leap years, months of different lengths, time zones, daylight saving. **Never do date arithmetic by hand** — the \`datetime\` module exists precisely so you don't.
+Dates look simple and are not. Leap years, months of different lengths, time zones, daylight saving. **Never do date arithmetic by hand**, the \`datetime\` module exists precisely so you don't.
 
 ---
 
@@ -378,7 +378,7 @@ timedelta(days=30)                 # a DURATION, not a moment
 
 \`date.today()\` and \`datetime.now()\` give the current one.
 
-Attributes are what you'd expect — \`.year\`, \`.month\`, \`.day\`, \`.hour\`. One to watch:
+Attributes are what you'd expect, \`.year\`, \`.month\`, \`.day\`, \`.hour\`. One to watch:
 
 \`\`\`python
 d.weekday()   # Monday is 0, Sunday is 6
@@ -405,7 +405,7 @@ Add a duration to get a new date:
 d + timedelta(days=30)   # handles month ends for you
 \`\`\`
 
-Note what you *cannot* do: \`timedelta(months=1)\` doesn't exist. A month isn't a fixed length — is a month after 31 January the 28th, 29th, or 3 March? There's no correct answer, so the library refuses to guess. Use \`dateutil.relativedelta\` if you need it.
+Note what you *cannot* do: \`timedelta(months=1)\` doesn't exist. A month isn't a fixed length, is a month after 31 January the 28th, 29th, or 3 March? There's no correct answer, so the library refuses to guess. Use \`dateutil.relativedelta\` if you need it.
 
 Dates compare with \`<\`, \`>\`, \`==\` as you'd hope.
 
@@ -417,7 +417,7 @@ Turn a string into a real date:
 datetime.strptime("2026-07-16", "%Y-%m-%d")
 \`\`\`
 
-**str-p-time** = "parse time". Get the format wrong and it raises \`ValueError\` — which is right; a date you can't parse is a problem.
+**str-p-time** = "parse time". Get the format wrong and it raises \`ValueError\`, which is right; a date you can't parse is a problem.
 
 ---
 
@@ -432,13 +432,13 @@ from datetime import timezone
 datetime.now(timezone.utc)
 \`\`\`
 
-Log timestamps without time zones are a genuine problem in security work — correlating events across servers is impossible if you don't know what "14:30" meant where.
+Log timestamps without time zones are a genuine problem in security work, correlating events across servers is impossible if you don't know what "14:30" meant where.
 
 ---
 
 ## Try It
 
-Run the starter code. \`d - born\` counts real days, leap years and all — no 365 approximation.
+Run the starter code. \`d - born\` counts real days, leap years and all, no 365 approximation.
 `,
     },
 
@@ -453,17 +453,17 @@ Run the starter code. \`d - born\` counts real days, leap years and all — no 3
 
 dt = datetime(2026, 7, 16, 14, 30, 5)
 
-# strftime — datetime -> string
+# strftime, datetime -> string
 print(dt.strftime("%Y-%m-%d"))
 print(dt.strftime("%d/%m/%Y %H:%M"))
 print(dt.strftime("%A %d %B %Y"))
 print(dt.strftime("%I:%M %p"))
 
-# ISO format — the one to use for machines
+# ISO format, the one to use for machines
 print(dt.isoformat())
 print(dt.date().isoformat())
 
-# strptime — string -> datetime
+# strptime, string -> datetime
 back = datetime.strptime("16/07/2026 14:30", "%d/%m/%Y %H:%M")
 print(back, back == dt.replace(second=0))
 
@@ -480,8 +480,8 @@ except ValueError as e:
 
 Two directions, two functions with confusingly similar names:
 
-- **\`strftime\`** — *format* time: datetime → string
-- **\`strptime\`** — *parse* time: string → datetime
+- **\`strftime\`**, *format* time: datetime → string
+- **\`strptime\`**, *parse* time: string → datetime
 
 The \`f\` is format, the \`p\` is parse. That's the only way to keep them apart.
 
@@ -536,7 +536,7 @@ Rule: **ISO for machines, \`strftime\` for humans.**
 datetime.strptime("16/07/2026 14:30", "%d/%m/%Y %H:%M")
 \`\`\`
 
-The format string must match the input **exactly** — every separator, every digit. Mismatch raises \`ValueError\`:
+The format string must match the input **exactly**, every separator, every digit. Mismatch raises \`ValueError\`:
 
 \`\`\`python
 datetime.strptime("16-07-2026", "%d/%m/%Y")   # ValueError
@@ -561,7 +561,7 @@ Run the starter code. Then swap \`%M\` for \`%m\` somewhere and watch the minute
       type: 'lesson',
       starterCode: `nums = [1, 2, 3]
 
-# A list is an ITERABLE — you can ask it for an iterator
+# A list is an ITERABLE, you can ask it for an iterator
 it = iter(nums)
 print(type(it).__name__)
 
@@ -570,7 +570,7 @@ print(next(it), next(it), next(it))
 try:
     next(it)
 except StopIteration:
-    print("StopIteration — exhausted")
+    print("StopIteration, exhausted")
 
 # That IS what a for loop does, under the hood
 it = iter(nums)
@@ -626,7 +626,7 @@ while True:
     print(n)
 \`\`\`
 
-\`for\` calls \`iter()\`, then \`next()\` until \`StopIteration\`, and catches it for you. That's the entire mechanism — and it's why \`for\` works identically on lists, files, dicts and generators. They all answer \`iter()\`.
+\`for\` calls \`iter()\`, then \`next()\` until \`StopIteration\`, and catches it for you. That's the entire mechanism, and it's why \`for\` works identically on lists, files, dicts and generators. They all answer \`iter()\`.
 
 ---
 
@@ -635,7 +635,7 @@ while True:
 **An iterable can be walked repeatedly. An iterator is single-use.**
 
 \`\`\`python
-list(nums), list(nums)     # both full — nums is an iterable
+list(nums), list(nums)     # both full, nums is an iterable
 
 it = iter(nums)
 list(it)   # [1, 2, 3]
@@ -644,8 +644,8 @@ list(it)   # []  <- spent
 
 That explains three things from earlier modules:
 
-- \`map\`/\`filter\` gave \`[]\` the second time — they're iterators.
-- Reading a file twice gave \`''\` — a file object is its own iterator.
+- \`map\`/\`filter\` gave \`[]\` the second time, they're iterators.
+- Reading a file twice gave \`''\`, a file object is its own iterator.
 - \`zip\`, \`enumerate\`, \`reversed\` behave the same way.
 
 One rule, several symptoms. If you need the values twice, materialise them: \`data = list(it)\`.
@@ -688,11 +688,11 @@ def chatty():
     print("  finishing")
 
 g = chatty()
-print("made it — nothing ran yet")
+print("made it, nothing ran yet")
 print("first:", next(g))
 print("second:", next(g))
 
-# An infinite generator is fine — it is lazy
+# An infinite generator is fine, it is lazy
 def naturals():
     n = 1
     while True:
@@ -702,7 +702,7 @@ def naturals():
 nat = naturals()
 print([next(nat) for _ in range(5)])
 
-# Generator expressions — like a comprehension with ()
+# Generator expressions, like a comprehension with ()
 squares = (n * n for n in range(5))
 print(type(squares).__name__, list(squares))
 print(sum(n * n for n in range(1000)))
@@ -721,11 +721,11 @@ def count_to(n):
         yield i
 \`\`\`
 
-Put \`yield\` in a function and it stops being a normal function. Calling it **runs nothing** — it hands back a **generator object**:
+Put \`yield\` in a function and it stops being a normal function. Calling it **runs nothing**, it hands back a **generator object**:
 
 \`\`\`python
 gen = count_to(3)   # no output; the body has not run
-list(gen)           # [1, 2, 3]  — now it runs
+list(gen)           # [1, 2, 3] , now it runs
 \`\`\`
 
 ## yield pauses; return ends
@@ -751,8 +751,8 @@ A function that can pause in the middle and pick up later is genuinely different
 **Memory.** A generator holds one value at a time:
 
 \`\`\`python
-[n * n for n in range(10_000_000)]   # a list — hundreds of MB
-(n * n for n in range(10_000_000))   # a generator — a few bytes
+[n * n for n in range(10_000_000)]   # a list, hundreds of MB
+(n * n for n in range(10_000_000))   # a generator, a few bytes
 \`\`\`
 
 **Infinite sequences become possible:**
@@ -765,15 +765,15 @@ def naturals():
         n += 1
 \`\`\`
 
-That \`while True\` never ends — and it's fine, because it only ever runs as far as you ask. \`list(naturals())\` would hang forever; \`next()\` five times costs nothing.
+That \`while True\` never ends, and it's fine, because it only ever runs as far as you ask. \`list(naturals())\` would hang forever; \`next()\` five times costs nothing.
 
 ## Generator expressions
 
 A comprehension with parentheses:
 
 \`\`\`python
-[n * n for n in range(5)]   # list — built now
-(n * n for n in range(5))   # generator — built on demand
+[n * n for n in range(5)]   # list, built now
+(n * n for n in range(5))   # generator, built on demand
 \`\`\`
 
 And you can drop the parentheses when it's the only argument:
@@ -782,7 +782,7 @@ And you can drop the parentheses when it's the only argument:
 sum(n * n for n in range(1000))
 \`\`\`
 
-That's the everyday use: feed \`sum\`, \`any\`, \`all\`, \`max\` from a generator and nothing is built in memory. You've already written this — \`all(m == "GET" for m in methods)\` in Module 12 was a generator expression.
+That's the everyday use: feed \`sum\`, \`any\`, \`all\`, \`max\` from a generator and nothing is built in memory. You've already written this, \`all(m == "GET" for m in methods)\` in Module 12 was a generator expression.
 
 ## The catch
 
@@ -792,7 +792,7 @@ Generators are iterators, so **single-use**, and you can't index or \`len()\` th
 
 ## Try It
 
-Run the starter code. \`chatty()\` prints nothing until the first \`next()\` — the function is frozen until you ask.
+Run the starter code. \`chatty()\` prints nothing until the first \`next()\`, the function is frozen until you ask.
 `,
     },
 
@@ -805,7 +805,7 @@ Run the starter code. \`chatty()\` prints nothing until the first \`next()\` —
       type: 'lesson',
       starterCode: `import functools
 
-# Functions are values — you can pass and return them
+# Functions are values, you can pass and return them
 def shout(fn):
     @functools.wraps(fn)
     def wrapper(*args, **kwargs):
@@ -882,7 +882,7 @@ def wrapper(*args, **kwargs):
     return fn(*args, **kwargs)
 \`\`\`
 
-Collect on the way in, spread on the way out — both halves from Module 11, and this is what they were for.
+Collect on the way in, spread on the way out, both halves from Module 11, and this is what they were for.
 
 ## functools.wraps
 
@@ -920,13 +920,13 @@ Three layers for three jobs: the argument, the function, the call. Nobody finds 
 
 ## Where you'll meet them
 
-You'll *use* decorators long before you write one — \`@app.route("/")\` in Flask, \`@pytest.fixture\`, \`@property\`, \`@staticmethod\`, \`@functools.cache\`. Knowing they're just \`f = decorator(f)\` demystifies all of them.
+You'll *use* decorators long before you write one, \`@app.route("/")\` in Flask, \`@pytest.fixture\`, \`@property\`, \`@staticmethod\`, \`@functools.cache\`. Knowing they're just \`f = decorator(f)\` demystifies all of them.
 
 ---
 
 ## Try It
 
-Run the starter code. The \`plain = shout(plain)\` line proves \`@\` is only sugar — same result, no \`@\`.
+Run the starter code. The \`plain = shout(plain)\` line proves \`@\` is only sugar, same result, no \`@\`.
 `,
     },
 
@@ -999,9 +999,9 @@ def timed(fn):
 
 Three details worth the attention:
 
-**\`time.perf_counter()\`**, not \`time.time()\`. \`time.time()\` is a wall clock — it can jump when the system clock adjusts, and it's coarse. \`perf_counter\` is a monotonic high-resolution timer meant exactly for measuring durations.
+**\`time.perf_counter()\`**, not \`time.time()\`. \`time.time()\` is a wall clock, it can jump when the system clock adjusts, and it's coarse. \`perf_counter\` is a monotonic high-resolution timer meant exactly for measuring durations.
 
-**\`result = fn(...)\` then \`return result\`.** The wrapper must hand back what the original returned. Forget the \`return\` and every decorated function silently returns \`None\` — a nasty bug, because the timing still prints and looks fine.
+**\`result = fn(...)\` then \`return result\`.** The wrapper must hand back what the original returned. Forget the \`return\` and every decorated function silently returns \`None\`, a nasty bug, because the timing still prints and looks fine.
 
 **\`fn.__name__\`** works because of \`@functools.wraps\`. Without it, every line would say \`wrapper\`.
 
@@ -1011,31 +1011,31 @@ Three details worth the attention:
 
 **loop + append** vs **list comprehension**: the comprehension usually edges it, because the looping happens in C rather than in your Python bytecode.
 
-**\`"".join(...)\`** vs **\`s += str(i)\`**: here it gets interesting — and this is the most useful thing in the lesson.
+**\`"".join(...)\`** vs **\`s += str(i)\`**: here it gets interesting, and this is the most useful thing in the lesson.
 
 The folklore says \`+=\` on strings is disastrous. The reasoning sounds airtight: strings are immutable (Module 3), so every \`+=\` must build a whole new string and copy the old one, making the total cost grow with the *square* of the length.
 
-**Measure it and the story falls apart.** The two land in the same ballpark — within a few tens of percent either way, depending on what you're joining. Nothing like the catastrophe you were promised.
+**Measure it and the story falls apart.** The two land in the same ballpark, within a few tens of percent either way, depending on what you're joining. Nothing like the catastrophe you were promised.
 
 The decisive test is how it **scales**. Quadratic means doubling the work *quadruples* the time. Try \`N\` at 25,000 then 50,000 then 100,000: the time roughly **doubles** each step. That's linear, so the copy-every-time story is simply not what's happening.
 
-Why: CPython cheats. When the string being grown has exactly **one reference**, it resizes the buffer in place instead of copying — so the loop stays linear. The immutability is preserved from your point of view; the optimisation happens underneath.
+Why: CPython cheats. When the string being grown has exactly **one reference**, it resizes the buffer in place instead of copying, so the loop stays linear. The immutability is preserved from your point of view; the optimisation happens underneath.
 
 ## So is the folklore wrong?
 
-Not quite — it's **conditional**, which is worse than wrong, because it's right often enough to sound authoritative.
+Not quite, it's **conditional**, which is worse than wrong, because it's right often enough to sound authoritative.
 
 That optimisation evaporates the moment anything else holds a reference to the string. Keep each intermediate result and the copying comes back, quadratic and brutal. It's also a CPython implementation detail: no other Python promises it.
 
-So \`join\` is still the better habit — it's predictable, portable, and says "build one string from many pieces" more directly than a loop does. Just not for the reason you were told.
+So \`join\` is still the better habit, it's predictable, portable, and says "build one string from many pieces" more directly than a loop does. Just not for the reason you were told.
 
 ## The actual lesson
 
-**Measure. Don't trust folklore — including mine.**
+**Measure. Don't trust folklore, including mine.**
 
 Performance intuition is unreliable, and confident explanations are the most unreliable of all, because a good story is convincing whether or not it's true. When you think something is slow, time it. A decorator makes that a one-line change you can remove just as easily.
 
-For serious work use the \`timeit\` module, which runs a snippet many times and handles the statistics. This decorator is the quick version — perfect for "is this obviously terrible?"
+For serious work use the \`timeit\` module, which runs a snippet many times and handles the statistics. This decorator is the quick version, perfect for "is this obviously terrible?"
 
 Note the numbers will shift between runs, and this is a browser. Compare the **ratios**, not the absolute milliseconds.
 
@@ -1043,7 +1043,7 @@ Note the numbers will shift between runs, and this is a browser. Compare the **r
 
 ## Try It
 
-Run it a couple of times. Look at \`concat_strings\` against \`join_strings\` — same output, different algorithmic cost.
+Run it a couple of times. Look at \`concat_strings\` against \`join_strings\`, same output, different algorithmic cost.
 `,
     },
 
@@ -1064,7 +1064,7 @@ for name, port, state in zip(names, ports, states):
 # Build a dict from two lists
 print(dict(zip(names, ports)))
 
-# zip stops at the SHORTEST — silently
+# zip stops at the SHORTEST, silently
 print(list(zip([1, 2, 3], ["a"])))
 
 # strict=True catches a mismatch instead
@@ -1073,7 +1073,7 @@ try:
 except ValueError as e:
     print("strict:", e)
 
-# zip(*rows) transposes — rows become columns
+# zip(*rows) transposes, rows become columns
 rows = [(1, 2, 3), (4, 5, 6)]
 print(list(zip(*rows)))
 
@@ -1111,11 +1111,11 @@ That works, and it's worse: it assumes equal lengths, it's noisy, and \`[i]\` th
 dict(zip(names, ports))   # {'ssh': 22, 'http': 80, 'https': 443}
 \`\`\`
 
-The neatest way to pair keys with values from two sources — CSV headers with a row, for instance.
+The neatest way to pair keys with values from two sources, CSV headers with a row, for instance.
 
 ---
 
-## It stops at the shortest — silently
+## It stops at the shortest, silently
 
 \`\`\`python
 list(zip([1, 2, 3], ["a"]))   # [(1, 'a')]
@@ -1140,7 +1140,7 @@ rows = [(1, 2, 3), (4, 5, 6)]
 list(zip(*rows))   # [(1, 4), (2, 5), (3, 6)]
 \`\`\`
 
-\`*rows\` spreads the rows in as separate arguments (Module 11), so \`zip\` pairs them element-wise — turning rows into columns. Applying it twice gets you back where you started.
+\`*rows\` spreads the rows in as separate arguments (Module 11), so \`zip\` pairs them element-wise, turning rows into columns. Applying it twice gets you back where you started.
 
 ## With enumerate
 
@@ -1148,13 +1148,13 @@ list(zip(*rows))   # [(1, 4), (2, 5), (3, 6)]
 for i, (name, port) in enumerate(zip(names, ports), start=1):
 \`\`\`
 
-Note the parentheses around \`(name, port)\`: \`enumerate\` yields \`(index, item)\` where the item is itself \`zip\`'s tuple, so you unpack the nested shape. Getting this wrong is a \`ValueError\` about unpacking — and now you know why.
+Note the parentheses around \`(name, port)\`: \`enumerate\` yields \`(index, item)\` where the item is itself \`zip\`'s tuple, so you unpack the nested shape. Getting this wrong is a \`ValueError\` about unpacking, and now you know why.
 
 ---
 
 ## Try It
 
-Run the starter code. The \`strict=True\` line raises where the line above it silently dropped data — same inputs, very different behaviour.
+Run the starter code. The \`strict=True\` line raises where the line above it silently dropped data, same inputs, very different behaviour.
 `,
     },
 
@@ -1185,7 +1185,7 @@ scanned = date(2026, 7, 16)
 #   Next scan: 2026-07-23
 #
 # Rules:
-#   - Use zip to walk the three lists together — no indexing with range(len()).
+#   - Use zip to walk the three lists together, no indexing with range(len()).
 #   - "Weekday" uses strftime.
 #   - "Open ports" is a list of the ports whose state is "open".
 #   - "Open count" must come from a generator expression with sum().
@@ -1204,7 +1204,7 @@ scanned = date(2026, 7, 16)
       hints: [
         'scanned.isoformat() gives 2026-07-16, and scanned.strftime("%A") gives the weekday name.',
         'Loop with: for name, port, state in zip(names, ports, states). Print each line with an f-string.',
-        'Open ports: [p for p, s in zip(ports, states) if s == "open"]. Open count: sum(1 for s in states if s == "open"). Next scan: scanned + timedelta(days=7) — import it from datetime.',
+        'Open ports: [p for p, s in zip(ports, states) if s == "open"]. Open count: sum(1 for s in states if s == "open"). Next scan: scanned + timedelta(days=7), import it from datetime.',
       ],
       solution: `from datetime import date, timedelta
 
@@ -1248,11 +1248,11 @@ Next scan: 2026-07-23
 
 ## Rules
 
-- Walk the three lists with **\`zip\`** — no \`range(len(...))\`.
+- Walk the three lists with **\`zip\`**, no \`range(len(...))\`.
 - **Weekday** comes from \`strftime\`.
 - **Open ports** is the ports whose state is \`"open"\`.
 - **Open count** must use \`sum()\` over a **generator expression**.
-- **Next scan** is 7 days later — use \`timedelta\`.
+- **Next scan** is 7 days later, use \`timedelta\`.
 
 ## What you need
 
@@ -1266,7 +1266,7 @@ scanned + timedelta(days=7)
 
 ## Watch out
 
-\`timedelta\` needs importing alongside \`date\`. And \`sum(1 for ...)\` counts by adding 1 per match — the generator-expression way to count without building a list.
+\`timedelta\` needs importing alongside \`date\`. And \`sum(1 for ...)\` counts by adding 1 per match, the generator-expression way to count without building a list.
 
 ---
 

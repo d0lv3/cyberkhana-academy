@@ -34,7 +34,7 @@ Python is a **high-level, interpreted** programming language. Two words worth un
 
 ## High-level
 
-You write instructions that read close to English, and Python handles the machine details — memory, pointers, types. Compare the same idea in two languages:
+You write instructions that read close to English, and Python handles the machine details, memory, pointers, types. Compare the same idea in two languages:
 
 \`\`\`python
 names = ["Sara", "Ali"]
@@ -55,11 +55,11 @@ The trade-off is **speed**: Python is slower than C for raw number-crunching. It
 
 Python is the default language of the security world, and that's not an accident:
 
-1. **Speed of writing** — you can go from idea to working script in minutes. When you're testing a hypothesis, that matters more than runtime speed.
-2. **Batteries included** — the standard library ships with networking, hashing, JSON, regex, and file handling built in.
-3. **The ecosystem** — most offensive and defensive tooling exposes a Python interface, and the ones that don't usually have a Python wrapper.
+1. **Speed of writing**, you can go from idea to working script in minutes. When you're testing a hypothesis, that matters more than runtime speed.
+2. **Batteries included**, the standard library ships with networking, hashing, JSON, regex, and file handling built in.
+3. **The ecosystem**, most offensive and defensive tooling exposes a Python interface, and the ones that don't usually have a Python wrapper.
 
-Automating a boring task, parsing a log, talking to an API, prototyping an exploit — all Python jobs.
+Automating a boring task, parsing a log, talking to an API, prototyping an exploit, all Python jobs.
 
 ---
 
@@ -68,7 +68,7 @@ Automating a boring task, parsing a log, talking to an API, prototyping an explo
 It's worth being honest about the limits:
 
 - Not the tool for writing an operating system kernel or a device driver.
-- Not typically used for browser front-ends — that's JavaScript's territory.
+- Not typically used for browser front-ends, that's JavaScript's territory.
 - Not the fastest option when microseconds genuinely matter.
 
 Picking the right tool is part of the skill. Python is a very wide default, not a universal one.
@@ -79,7 +79,7 @@ Picking the right tool is part of the skill. Python is a very wide default, not 
 
 The editor has a short program that asks Python which version of itself is running. Click **Run**.
 
-You should see \`3 12\` — this academy runs **CPython 3.12** compiled to WebAssembly, so the Python executing your code is the same Python you'd install on your machine.
+You should see \`3 12\`, this academy runs **CPython 3.12** compiled to WebAssembly, so the Python executing your code is the same Python you'd install on your machine.
 `,
     },
 
@@ -90,11 +90,11 @@ You should see \`3 12\` — this academy runs **CPython 3.12** compiled to WebAs
       title: { en: 'What You Need', ar: 'ما الذي تحتاجه' },
       order: 2,
       type: 'lesson',
-      starterCode: `# Nothing to install here — this editor is a real Python interpreter.
+      starterCode: `# Nothing to install here, this editor is a real Python interpreter.
 # On your own machine, this same file would be saved as e.g. hello.py
 # and run from a terminal with:  python hello.py
 
-print("Same language, same result — here or on your laptop.")
+print("Same language, same result, here or on your laptop.")
 `,
       markdownContent: `# What You Need
 
@@ -108,7 +108,7 @@ But you will eventually want Python on your own machine, so here's what that inv
 
 Download it from [python.org/downloads](https://www.python.org/downloads/). Take the latest stable 3.x release.
 
-On Windows, tick **"Add python.exe to PATH"** during installation. Skipping it is the single most common setup mistake — it's why \`python\` "isn't recognised" in a fresh terminal.
+On Windows, tick **"Add python.exe to PATH"** during installation. Skipping it is the single most common setup mistake, it's why \`python\` "isn't recognised" in a fresh terminal.
 
 Check it worked:
 
@@ -120,7 +120,7 @@ Depending on your system you may need \`python3\` instead. macOS and most Linux 
 
 ## 2. An editor
 
-Any text editor technically works, but a real code editor pays for itself immediately — syntax highlighting, error underlining, autocomplete.
+Any text editor technically works, but a real code editor pays for itself immediately, syntax highlighting, error underlining, autocomplete.
 
 **VS Code** is the common choice: free, cross-platform, and its Python extension is excellent. PyCharm is the heavier, more opinionated alternative.
 
@@ -132,13 +132,13 @@ You run Python from a command line: PowerShell or Windows Terminal on Windows, T
 
 ## Two ways to run code
 
-**A script** — put your code in a file ending in \`.py\` and run it:
+**A script**, put your code in a file ending in \`.py\` and run it:
 
 \`\`\`
 python hello.py
 \`\`\`
 
-**The REPL** — type \`python\` with no filename and you get an interactive prompt:
+**The REPL**, type \`python\` with no filename and you get an interactive prompt:
 
 \`\`\`
 >>> 2 + 2
@@ -155,7 +155,7 @@ Scripts are for programs you keep. The REPL is for questions you have right now.
 
 ## Try It
 
-Run the starter code. Then picture the same two lines saved as \`hello.py\` on your laptop — identical language, identical output. The only thing that changes is what launches it.
+Run the starter code. Then picture the same two lines saved as \`hello.py\` on your laptop, identical language, identical output. The only thing that changes is what launches it.
 `,
     },
 
@@ -179,7 +179,7 @@ print("This line is not indented, so it always runs")
 `,
       markdownContent: `# Syntax and Your First Program
 
-**Syntax** is the set of rules for how code must be written. Break them and Python refuses to run the file at all — it reports a \`SyntaxError\` before executing a single line.
+**Syntax** is the set of rules for how code must be written. Break them and Python refuses to run the file at all, it reports a \`SyntaxError\` before executing a single line.
 
 ---
 
@@ -196,12 +196,12 @@ print("Hello, World!")
 Hello, World!
 \`\`\`
 
-Text goes in quotes — double or single, Python doesn't care, as long as they match:
+Text goes in quotes, double or single, Python doesn't care, as long as they match:
 
 \`\`\`python
 print("Hello")   # fine
 print('Hello')   # also fine
-print("Hello')   # SyntaxError — mismatched quotes
+print("Hello')   # SyntaxError, mismatched quotes
 \`\`\`
 
 ## Printing several values
@@ -217,7 +217,7 @@ print("Name:", "CyberKhana", "| Year:", 2026)
 Name: CyberKhana | Year: 2026
 \`\`\`
 
-Notice \`2026\` has no quotes. It's a number, not text — a distinction the next module builds on.
+Notice \`2026\` has no quotes. It's a number, not text, a distinction the next module builds on.
 
 Each \`print()\` ends with a newline, so three calls produce three lines.
 
@@ -229,8 +229,8 @@ This is the rule that surprises newcomers. Most languages use braces to group st
 
 \`\`\`python
 if True:
-    print("indented — inside the if")
-print("not indented — outside the if")
+    print("indented, inside the if")
+print("not indented, outside the if")
 \`\`\`
 
 The indented line belongs to the \`if\`. The unindented one doesn't. Get it wrong and you get an error, not a warning:
@@ -240,7 +240,7 @@ if True:
 print("boom")   # IndentationError
 \`\`\`
 
-The convention is **4 spaces** per level. Be consistent — mixing tabs and spaces in one block is an error.
+The convention is **4 spaces** per level. Be consistent, mixing tabs and spaces in one block is an error.
 
 ## Case sensitivity
 
@@ -263,7 +263,7 @@ print("second")
 
 Run the starter code and match each output line to the code that produced it.
 
-Then break it on purpose — it's the fastest way to learn to read errors:
+Then break it on purpose, it's the fastest way to learn to read errors:
 
 - Change \`print\` to \`Print\` → \`NameError\`
 - Add a space before \`print("Hello, World!")\` → \`IndentationError\`
@@ -280,7 +280,7 @@ Errors are Python telling you exactly what it couldn't understand. Read them; th
       title: { en: 'Comments', ar: 'التعليقات' },
       order: 4,
       type: 'lesson',
-      starterCode: `# A single-line comment — Python ignores it entirely
+      starterCode: `# A single-line comment, Python ignores it entirely
 
 print("This runs")  # an inline comment, after the code
 
@@ -325,7 +325,7 @@ for practical purposes.
 
 Be precise about what's happening here: that's a **string**, not a comment. Python evaluates it, then throws the value away because nothing uses it. The effect is a comment; the mechanism isn't.
 
-The exception matters — a triple-quoted string as the *first* statement of a function, class, or file is a **docstring**, and Python stores it rather than discarding it. That's the subject of a later lesson.
+The exception matters: a triple-quoted string as the *first* statement of a function, class, or file is a **docstring**, and Python stores it rather than discarding it. That's the subject of a later lesson.
 
 For a genuine multi-line comment, many developers just use several \`#\` lines. Your editor will do it for a selected block with a single shortcut.
 
@@ -349,10 +349,10 @@ Useful while narrowing down a bug.
 The code already states what it does. A comment repeating that is noise that rots the moment the code changes:
 
 \`\`\`python
-# Poor — restates the obvious
+# Poor, restates the obvious
 x = 10  # set x to 10
 
-# Better — explains a decision the code cannot express
+# Better, explains a decision the code cannot express
 x = 10  # max retries before we treat the host as down
 \`\`\`
 
@@ -362,7 +362,7 @@ The second comment carries information the reader cannot get from the code. That
 
 ## Try It
 
-Run the starter code. The comments produce no output — only the \`print()\` calls do. The triple-quoted block prints nothing either: it's evaluated and discarded.
+Run the starter code. The comments produce no output, only the \`print()\` calls do. The triple-quoted block prints nothing either: it's evaluated and discarded.
 `,
     },
 
@@ -391,7 +391,7 @@ Run the starter code. The comments produce no output — only the \`print()\` ca
       hints: [
         'Each print() call puts its output on its own line, so three lines means three calls.',
         'Text must be wrapped in quotes: print("Python is powerful")',
-        'The last line is the number 2026 — it works with or without quotes.',
+        'The last line is the number 2026, it works with or without quotes.',
       ],
       solution: `print("Python is powerful")
 print("CyberKhana Academy")
@@ -417,7 +417,7 @@ CyberKhana Academy
 
 - Each line must appear on its own line, spelled and capitalised exactly as above.
 - Use \`print()\`.
-- \`2026\` may be printed as a number or as text — both produce the same output.
+- \`2026\` may be printed as a number or as text, both produce the same output.
 
 ## What you need
 

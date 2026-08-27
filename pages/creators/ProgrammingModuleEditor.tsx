@@ -197,7 +197,7 @@ const ProgrammingModuleEditor: React.FC = () => {
         <div className="flex items-start gap-3 rounded-lg border border-[#9fef00]/30 bg-[#9fef00]/10 px-4 py-3 mb-4 max-w-2xl">
           <BookOpen size={16} className="text-[#9fef00] mt-0.5 flex-shrink-0" />
           <div className="text-xs text-[#d2d7e3]">
-            <span className="font-bold text-[#9fef00]">Editing a built-in module</span> — saving
+            <span className="font-bold text-[#9fef00]">Editing a built-in module</span>, saving
             creates an editable copy that replaces the original everywhere. Its lessons stay where
             they are; edit those individually from the list.
           </div>
@@ -253,7 +253,7 @@ const ProgrammingModuleEditor: React.FC = () => {
 
           <div>
             <label className="block text-xs font-semibold text-[#9aa5bf] mb-1.5">
-              YouTube video <span className="text-[#4d5a73] font-normal">(optional — URL or ID, shown at the top of each lesson)</span>
+              YouTube video <span className="text-[#4d5a73] font-normal">(optional, URL or ID, shown at the top of each lesson)</span>
             </label>
             <input
               type="text"
@@ -264,7 +264,7 @@ const ProgrammingModuleEditor: React.FC = () => {
               dir="ltr"
             />
             {videoInput.trim() && !parseYouTubeId(videoInput) && (
-              <p className="text-[10px] text-[#f3a43a] mt-1">Couldn't find a YouTube video id in that — paste the video URL or its 11-character id.</p>
+              <p className="text-[10px] text-[#f3a43a] mt-1">Couldn't find a YouTube video id in that, paste the video URL or its 11-character id.</p>
             )}
             {parseYouTubeId(videoInput) && (
               <div className="mt-2 aspect-video overflow-hidden rounded-lg border border-[#263248]">
@@ -287,13 +287,13 @@ const ProgrammingModuleEditor: React.FC = () => {
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
                 disabled={isEditing}
-                title={isEditing ? 'Slugs are locked after creation — concepts are linked to them.' : undefined}
+                title={isEditing ? 'Slugs are locked after creation, concepts are linked to them.' : undefined}
                 className="w-full bg-[#0a0f18] border border-[#263248] rounded-lg px-3 py-2 text-sm text-[#d2d7e3] font-mono focus:outline-none focus:border-[#00a859]/50 disabled:opacity-50 disabled:cursor-not-allowed"
                 dir="ltr"
               />
               {isEditing && (
                 <p className="text-[10px] text-[#4d5a73] mt-1">
-                  Locked — concepts in this module are linked to this slug.
+                  Locked, concepts in this module are linked to this slug.
                 </p>
               )}
             </div>

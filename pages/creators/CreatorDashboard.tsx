@@ -33,7 +33,7 @@ type Lang = 'en' | 'ar';
 
 /* ── Relative time ── */
 function timeAgo(iso: string, lang: Lang): string {
-  if (!iso) return '—';
+  if (!iso) return '-';
   const ar = lang === 'ar';
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60000);
@@ -143,8 +143,8 @@ const CreatorDashboard: React.FC = () => {
       title: lang === 'ar' ? 'وحدة' : 'Module',
       description:
         lang === 'ar'
-          ? 'وحدة مستقلة مقسّمة إلى أقسام لمركز الوحدات — ماركداون مقسّم إلى فصول.'
-          : 'A standalone, section-divided module for the Modules hub — markdown split into chapters.',
+          ? 'وحدة مستقلة مقسّمة إلى أقسام لمركز الوحدات، ماركداون مقسّم إلى فصول.'
+          : 'A standalone, section-divided module for the Modules hub, markdown split into chapters.',
       color: '#34d399',
       manageRoute: '/creators/modules',
       newRoute: '/creators/modules/new',
@@ -224,7 +224,7 @@ const CreatorDashboard: React.FC = () => {
                   {t('studio.contentStudio')}
                 </h1>
                 <p className="text-sm text-[#9aa5bf] mt-0.5">
-                  {t('studio.welcomeBack')}, {creatorName} — {t('studio.welcomeLine')}
+                  {t('studio.welcomeBack')}, {creatorName}, {t('studio.welcomeLine')}
                 </p>
               </div>
             </div>

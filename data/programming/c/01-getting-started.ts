@@ -5,8 +5,8 @@ const gettingStarted: ProgrammingModule = {
   slug: 'getting-started',
   title: { en: 'Getting Started', ar: 'البداية' },
   description: {
-    en: 'Your first C programs — printing output and reading input.',
-    ar: 'برامجك الأولى بلغة C — طباعة المخرجات وقراءة المدخلات.',
+    en: 'Your first C programs, printing output and reading input.',
+    ar: 'برامجك الأولى بلغة C، طباعة المخرجات وقراءة المدخلات.',
   },
   order: 1,
   concepts: [
@@ -52,7 +52,7 @@ int main() {
 
 ## Printing Text
 
-\`printf\` prints exactly what you give it — it does **not** add a new line on
+\`printf\` prints exactly what you give it, it does **not** add a new line on
 its own. You add one with \`\\n\`:
 
 \`\`\`c
@@ -101,7 +101,7 @@ int main() {
         { id: 'tc-3', description: 'handles negatives', input: '-5 2', expectedOutput: '-3' },
       ],
       hints: [
-        'Read the two numbers with scanf — that part is already written for you.',
+        'Read the two numbers with scanf, that part is already written for you.',
         'The sum is simply a + b.',
         'printf("%d\\n", a + b); prints the result on its own line.',
       ],

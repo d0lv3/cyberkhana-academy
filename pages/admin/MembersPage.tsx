@@ -193,7 +193,7 @@ const MembersPage: React.FC = () => {
   };
 
   const fmtDate = (iso?: string) => {
-    if (!iso) return '—';
+    if (!iso) return '-';
     try {
       return new Date(iso).toLocaleDateString(ar ? 'ar' : 'en-US', {
         year: 'numeric',
@@ -201,7 +201,7 @@ const MembersPage: React.FC = () => {
         day: 'numeric',
       });
     } catch {
-      return '—';
+      return '-';
     }
   };
 
@@ -214,8 +214,8 @@ const MembersPage: React.FC = () => {
         title={ar ? 'الأعضاء' : 'Members'}
         subtitle={
           ar
-            ? 'إدارة أدوار المستخدمين — رقِّ الطلاب إلى منشئي محتوى أو مديرين.'
-            : 'Manage user roles — promote students to creators or admins.'
+            ? 'إدارة أدوار المستخدمين، رقِّ الطلاب إلى منشئي محتوى أو مديرين.'
+            : 'Manage user roles, promote students to creators or admins.'
         }
       />
 

@@ -29,10 +29,10 @@ const PRIVACY: Record<'en' | 'ar', LegalDoc> = {
       {
         h: 'Information We Collect',
         body: [
-          'Account information — when you sign in with Google, we receive your name, email address, and profile picture from your Google account.',
-          'Profile information — details you choose to add, such as your university, country, and bio.',
-          'Learning activity — your progress, completed lessons, points, ranks, and submissions, so we can track your journey and power the leaderboard.',
-          'Technical data — a secure, httpOnly authentication cookie to keep you signed in, plus basic logs (such as IP address and browser type) for security.',
+          'Account information, when you sign in with Google, we receive your name, email address, and profile picture from your Google account.',
+          'Profile information, details you choose to add, such as your university, country, and bio.',
+          'Learning activity, your progress, completed lessons, points, ranks, and submissions, so we can track your journey and power the leaderboard.',
+          'Technical data, a secure, httpOnly authentication cookie to keep you signed in, plus basic logs (such as IP address and browser type) for security.',
         ],
       },
       {
@@ -107,10 +107,10 @@ const PRIVACY: Record<'en' | 'ar', LegalDoc> = {
       {
         h: 'المعلومات التي نجمعها',
         body: [
-          'معلومات الحساب — عند تسجيل الدخول عبر Google، نستلم اسمك وبريدك الإلكتروني وصورتك من حساب Google الخاص بك.',
-          'معلومات الملف الشخصي — التفاصيل التي تختار إضافتها، مثل جامعتك وبلدك ونبذتك التعريفية.',
-          'نشاط التعلّم — تقدّمك ودروسك المكتملة ونقاطك ورتبك وإجاباتك، لتتبع رحلتك وتشغيل لوحة المتصدرين.',
-          'بيانات تقنية — ملف تعريف ارتباط آمن (httpOnly) لإبقائك مسجّلاً، إضافةً إلى سجلات أساسية (مثل عنوان IP ونوع المتصفح) لأغراض الأمان.',
+          'معلومات الحساب، عند تسجيل الدخول عبر Google، نستلم اسمك وبريدك الإلكتروني وصورتك من حساب Google الخاص بك.',
+          'معلومات الملف الشخصي، التفاصيل التي تختار إضافتها، مثل جامعتك وبلدك ونبذتك التعريفية.',
+          'نشاط التعلّم، تقدّمك ودروسك المكتملة ونقاطك ورتبك وإجاباتك، لتتبع رحلتك وتشغيل لوحة المتصدرين.',
+          'بيانات تقنية، ملف تعريف ارتباط آمن (httpOnly) لإبقائك مسجّلاً، إضافةً إلى سجلات أساسية (مثل عنوان IP ونوع المتصفح) لأغراض الأمان.',
         ],
       },
       {

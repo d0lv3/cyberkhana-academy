@@ -231,7 +231,7 @@ const NetworkingEditor: React.FC = () => {
         <div className="flex items-start gap-3 rounded-lg border border-[#9fef00]/30 bg-[#9fef00]/10 px-4 py-3 mb-4">
           <BookOpen size={16} className="text-[#9fef00] mt-0.5 flex-shrink-0" />
           <div className="text-xs text-[#d2d7e3]">
-            <span className="font-bold text-[#9fef00]">Editing a built-in lesson</span> — saving
+            <span className="font-bold text-[#9fef00]">Editing a built-in lesson</span>, saving
             creates an editable copy that replaces the original everywhere. Existing student
             progress is preserved.
           </div>

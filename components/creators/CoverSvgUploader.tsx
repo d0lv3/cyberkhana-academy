@@ -78,7 +78,7 @@ const CoverSvgUploader: React.FC<CoverSvgUploaderProps> = ({
   return (
     <div>
       <label className="block text-xs font-semibold text-[#9aa5bf] mb-1.5">
-        Cover Art <span className="text-[#6e7a94] font-normal">(SVG — optional)</span>
+        Cover Art <span className="text-[#6e7a94] font-normal">(SVG, optional)</span>
       </label>
       <div className="flex items-stretch gap-3">
         {/* Square preview — matches the card tile */}

@@ -348,7 +348,7 @@ const Island: React.FC<{
           fontFamily="'JetBrains Mono', 'Consolas', monospace"
         >
           {island.isGoal
-            ? lang === 'ar' ? '— الهدف —' : '— THE GOAL —'
+            ? lang === 'ar' ? '، الهدف، ' : ', THE GOAL, '
             : lang === 'ar' ? `المرحلة 0${island.step}` : `STEP 0${island.step}`}
         </text>
         <text

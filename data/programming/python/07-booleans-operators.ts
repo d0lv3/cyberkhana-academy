@@ -20,7 +20,7 @@ const booleansOperators: ProgrammingModule = {
       title: { en: 'Booleans', ar: 'القيم المنطقية' },
       order: 1,
       type: 'lesson',
-      starterCode: `# Only two values — capitalised
+      starterCode: `# Only two values, capitalised
 print(True, False, type(True).__name__)
 
 # Comparisons produce booleans
@@ -38,7 +38,7 @@ print(sum([True, False, True]))
 `,
       markdownContent: `# Booleans
 
-A **bool** has exactly two values: \`True\` and \`False\`. Capitalised — \`true\` is a \`NameError\`.
+A **bool** has exactly two values: \`True\` and \`False\`. Capitalised, \`true\` is a \`NameError\`.
 
 They're what every comparison produces, and what every \`if\` consumes.
 
@@ -80,31 +80,31 @@ if not name:       # instead of: if name == ""
 Two traps worth burning in:
 
 \`\`\`python
-bool("False")   # True!  — a non-empty string
-bool("0")       # True!  — also non-empty
-bool([0])       # True   — a list holding one item
+bool("False")   # True! , a non-empty string
+bool("0")       # True! , also non-empty
+bool([0])       # True  , a list holding one item
 \`\`\`
 
-A string is truthy because it has characters, regardless of what they spell. \`"0"\` read from input or a file is **truthy** — convert before testing.
+A string is truthy because it has characters, regardless of what they spell. \`"0"\` read from input or a file is **truthy**, convert before testing.
 
 ## None is not False
 
 \`None\` is falsy, but it is not equal to \`False\`:
 
 \`\`\`python
-bool(None)      # False — None is falsy
-None == False   # False — but None is not the value False
+bool(None)      # False, None is falsy
+None == False   # False, but None is not the value False
 \`\`\`
 
 Both lines print \`False\`, for completely different reasons. The first says "None counts as false in an \`if\`." The second says "None is not the same thing as False."
 
-The distinction matters when \`None\` means "no answer yet" and \`False\` means "the answer is no" — a setting left unset versus a setting turned off. Test with \`is None\`, not \`== False\`.
+The distinction matters when \`None\` means "no answer yet" and \`False\` means "the answer is no", a setting left unset versus a setting turned off. Test with \`is None\`, not \`== False\`.
 
 ---
 
 ## Booleans are integers
 
-A quirk with real uses — \`bool\` is a subclass of \`int\`, where \`True\` is \`1\` and \`False\` is \`0\`:
+A quirk with real uses, \`bool\` is a subclass of \`int\`, where \`True\` is \`1\` and \`False\` is \`0\`:
 
 \`\`\`python
 True + True            # 2
@@ -117,7 +117,7 @@ So counting how many things are true is just \`sum()\` over the tests. Occasiona
 
 ## Try It
 
-Run the starter code. Stare at \`bool("False")\` being \`True\` — that one bites people in real code.
+Run the starter code. Stare at \`bool("False")\` being \`True\`, that one bites people in real code.
 `,
     },
 
@@ -166,7 +166,7 @@ Six of them, all returning a \`bool\`:
 5 <= 5   # True   less or equal
 \`\`\`
 
-\`==\` is comparison. \`=\` is assignment. Writing \`if x = 5\` is a \`SyntaxError\` — Python catches this one for you.
+\`==\` is comparison. \`=\` is assignment. Writing \`if x = 5\` is a \`SyntaxError\`, Python catches this one for you.
 
 ---
 
@@ -181,7 +181,7 @@ Strings compare **alphabetically**, character by character:
 But it's really by **character code**, and every uppercase letter sorts before every lowercase one:
 
 \`\`\`python
-"Z" < "a"   # True  — 'Z' is 90, 'a' is 97
+"Z" < "a"   # True , 'Z' is 90, 'a' is 97
 \`\`\`
 
 So \`"Apple" < "apple"\`, and sorting mixed-case text gives an order that looks wrong to a human. Normalise with \`.lower()\` when you mean a human alphabetical order.
@@ -189,11 +189,11 @@ So \`"Apple" < "apple"\`, and sorting mixed-case text gives an order that looks 
 ## Types matter
 
 \`\`\`python
-1 == 1.0     # True   — same value, int and float compare fine
-"1" == 1     # False  — a string is never equal to a number
+1 == 1.0     # True  , same value, int and float compare fine
+"1" == 1     # False , a string is never equal to a number
 \`\`\`
 
-That second line is silent. Comparing a value from \`input()\` (always a string) to a number is a classic bug — nothing raises, the test just never passes.
+That second line is silent. Comparing a value from \`input()\` (always a string) to a number is a classic bug, nothing raises, the test just never passes.
 
 Ordering across unrelated types **does** raise:
 
@@ -217,17 +217,17 @@ Equivalent to \`18 <= age and age < 65\`, but \`age\` is evaluated once. Most la
 
 The distinction that trips everyone:
 
-- **\`==\`** — do they have the same **value**?
-- **\`is\`** — are they the **same object** in memory?
+- **\`==\`**, do they have the same **value**?
+- **\`is\`**, are they the **same object** in memory?
 
 \`\`\`python
 a = [1, 2]
 b = [1, 2]
-a == b   # True  — same contents
-a is b   # False — two separate lists
+a == b   # True , same contents
+a is b   # False, two separate lists
 
 c = a
-a is c   # True  — one list, two names
+a is c   # True , one list, two names
 \`\`\`
 
 Names label values, from Module 2. \`is\` asks whether two names label the *same* value.
@@ -239,7 +239,7 @@ if x is None:      # correct
 if x == None:      # works, but not idiomatic
 \`\`\`
 
-\`None\` is a singleton — there's exactly one — so identity is the right question.
+\`None\` is a singleton, there's exactly one, so identity is the right question.
 
 Never use \`is\` on numbers or strings. \`a is b\` for small ints may print \`True\` because Python caches them, and \`False\` for large ones. Relying on that is a bug waiting to happen.
 
@@ -247,7 +247,7 @@ Never use \`is\` on numbers or strings. \`a is b\` for small ints may print \`Tr
 
 ## Try It
 
-Run the starter code. \`a == b\` is \`True\` while \`a is b\` is \`False\` — same contents, different objects.
+Run the starter code. \`a == b\` is \`True\` while \`a is b\` is \`False\`, same contents, different objects.
 `,
     },
 
@@ -278,12 +278,12 @@ print(items and items[0])
 `,
       markdownContent: `# Boolean Operators
 
-Three: **\`and\`**, **\`or\`**, **\`not\`**. Words, not symbols — no \`&&\` or \`||\`.
+Three: **\`and\`**, **\`or\`**, **\`not\`**. Words, not symbols, no \`&&\` or \`||\`.
 
 \`\`\`python
-True and False   # False — both must be true
-True or False    # True  — either will do
-not True         # False — flips it
+True and False   # False, both must be true
+True or False    # True , either will do
+not True         # False, flips it
 \`\`\`
 
 \`\`\`python
@@ -298,7 +298,7 @@ if age >= 18 and has_id:
 \`not\` binds tightest, then \`and\`, then \`or\`:
 
 \`\`\`python
-True or False and False    # True  — the 'and' runs first
+True or False and False    # True , the 'and' runs first
 (True or False) and False  # False
 \`\`\`
 
@@ -310,8 +310,8 @@ True or False and False    # True  — the 'and' runs first
 
 Python stops as soon as the answer is settled:
 
-- \`A and B\` — if \`A\` is falsy, \`B\` is **never evaluated**.
-- \`A or B\` — if \`A\` is truthy, \`B\` is **never evaluated**.
+- \`A and B\`, if \`A\` is falsy, \`B\` is **never evaluated**.
+- \`A or B\`, if \`A\` is truthy, \`B\` is **never evaluated**.
 
 That's not trivia; it's a tool. This is safe:
 
@@ -362,7 +362,7 @@ Fine in an \`if\` (\`[]\` is falsy), but don't print it expecting \`False\`.
 
 ## Try It
 
-Run the starter code. The last four lines return values rather than booleans — that's the lesson.
+Run the starter code. The last four lines return values rather than booleans, that's the lesson.
 `,
     },
 
@@ -391,7 +391,7 @@ s = "a"
 s += "b"
 print(s)
 
-# On a LIST it mutates in place — visible through other names
+# On a LIST it mutates in place, visible through other names
 a = [1, 2]
 b = a
 a += [3]
@@ -421,7 +421,7 @@ The right side is evaluated **first**, then the name is re-bound to the result. 
 
 Note \`/=\` follows \`/\`: it always produces a **float**, even on whole numbers.
 
-The variable must already exist — \`x += 1\` on an undefined \`x\` is a \`NameError\`, since it needs the old value.
+The variable must already exist, \`x += 1\` on an undefined \`x\` is a \`NameError\`, since it needs the old value.
 
 ---
 
@@ -432,9 +432,9 @@ s = "a"
 s += "b"   # 'ab'
 \`\`\`
 
-Strings are immutable, so this doesn't modify anything — it builds a **new** string and re-points \`s\`.
+Strings are immutable, so this doesn't modify anything, it builds a **new** string and re-points \`s\`.
 
-For building a string in a big loop, the usual advice is to collect the pieces in a list and \`"".join()\` them at the end. It's the better habit — clearer, and predictable across Python implementations. You'll often find it isn't actually faster in CPython, for a reason worth measuring rather than being told; Module 13 does exactly that.
+For building a string in a big loop, the usual advice is to collect the pieces in a list and \`"".join()\` them at the end. It's the better habit, clearer, and predictable across Python implementations. You'll often find it isn't actually faster in CPython, for a reason worth measuring rather than being told; Module 13 does exactly that.
 
 ---
 
@@ -446,7 +446,7 @@ For mutable types, \`+=\` is genuinely different from \`x = x + y\`:
 a = [1, 2]
 b = a
 a += [3]
-print(b)   # [1, 2, 3]  — b changed too!
+print(b)   # [1, 2, 3] , b changed too!
 \`\`\`
 
 versus:
@@ -455,7 +455,7 @@ versus:
 c = [1, 2]
 d = c
 c = c + [3]
-print(d)   # [1, 2]  — d untouched
+print(d)   # [1, 2] , d untouched
 \`\`\`
 
 **\`a += [3]\`** modifies the existing list in place (like \`extend\`), and \`b\` labels that same list, so \`b\` sees it.
@@ -483,7 +483,7 @@ Run the starter code. The last two blocks are the point: \`b\` changed, \`d\` di
 print(str(42) + "!")
 print(float("3.14"))
 
-# int() TRUNCATES a float — it does not round
+# int() TRUNCATES a float, it does not round
 print(int(3.9), int(-3.9))
 print(round(3.9))
 
@@ -516,10 +516,10 @@ str(42)       # '42'
 float("3.14") # 3.14
 \`\`\`
 
-You've been using \`str()\` since Module 2 — \`"Year: " + str(year)\`. The reverse matters just as much, because **\`input()\` always gives a string**:
+You've been using \`str()\` since Module 2, \`"Year: " + str(year)\`. The reverse matters just as much, because **\`input()\` always gives a string**:
 
 \`\`\`python
-age = input()      # "21" — a string
+age = input()      # "21", a string
 age + 1            # TypeError
 int(age) + 1       # 22
 \`\`\`
@@ -532,7 +532,7 @@ It does **not** round:
 
 \`\`\`python
 int(3.9)    # 3
-int(-3.9)   # -3    — toward zero
+int(-3.9)   # -3   , toward zero
 round(3.9)  # 4
 \`\`\`
 
@@ -542,9 +542,9 @@ Note \`int()\` cuts toward **zero**, while \`//\` floors toward **negative infin
 
 \`\`\`python
 int("42")     # 42
-int("3.14")   # ValueError — not a whole number
+int("3.14")   # ValueError, not a whole number
 int("abc")    # ValueError
-int(" 42 ")   # 42 — surrounding whitespace is fine
+int(" 42 ")   # 42, surrounding whitespace is fine
 \`\`\`
 
 For a decimal string, go through \`float\` first:
@@ -559,7 +559,7 @@ int(float("3.14"))   # 3
 int("abc")   # ValueError: invalid literal for int() with base 10: 'abc'
 \`\`\`
 
-Which stops your program. Since conversions usually run on data from outside — input, a file, a response — guard them:
+Which stops your program. Since conversions usually run on data from outside, input, a file, a response, guard them:
 
 \`\`\`python
 if raw.isdigit():
@@ -574,10 +574,10 @@ Remember \`isdigit()\` is \`False\` for \`"-5"\` and \`"3.14"\`, so it only cove
 
 \`\`\`python
 list("abc")        # ['a', 'b', 'c']
-set([1, 1, 2])     # {1, 2}       — dedupe
+set([1, 1, 2])     # {1, 2}      , dedupe
 tuple([1, 2])      # (1, 2)
-list({"a": 1})     # ['a']        — a dict gives its KEYS
-dict([("a", 1)])   # {'a': 1}     — from (key, value) pairs
+list({"a": 1})     # ['a']       , a dict gives its KEYS
+dict([("a", 1)])   # {'a': 1}    , from (key, value) pairs
 \`\`\`
 
 \`set(my_list)\` for deduping is the one you'll reach for constantly.
@@ -586,7 +586,7 @@ dict([("a", 1)])   # {'a': 1}     — from (key, value) pairs
 
 ## Try It
 
-Run the starter code. Compare \`int(3.9)\` (3) with \`round(3.9)\` (4) — truncation is not rounding.
+Run the starter code. Compare \`int(3.9)\` (3) with \`round(3.9)\` (4), truncation is not rounding.
 `,
     },
 
@@ -626,7 +626,7 @@ name = ""
       ],
       hints: [
         'An empty string is falsy, so name or "anonymous" gives you the fallback in one step.',
-        'raw_age is a string — int(raw_age) converts it. Comparing "21" >= 18 would be a TypeError.',
+        'raw_age is a string, int(raw_age) converts it. Comparing "21" >= 18 would be a TypeError.',
         'Adult is int(raw_age) >= 18, and Allowed is that result and has_id. Store them in variables, then print with f-strings.',
       ],
       solution: `raw_age = "21"
@@ -670,15 +670,15 @@ Next year: 22
 
 ## Rules
 
-- **Name** falls back to \`"anonymous"\` when \`name\` is empty — use \`or\`.
+- **Name** falls back to \`"anonymous"\` when \`name\` is empty, use \`or\`.
 - **Adult** is whether the age is 18 or over. Note \`raw_age\` is a **string**.
 - **Allowed** is adult **and** \`has_id\`.
 - **Next year** is the age plus 1, printed as a number.
-- Hard-code nothing — derive everything from the three variables.
+- Hard-code nothing, derive everything from the three variables.
 
 ## Watch out
 
-\`raw_age\` is text. \`"21" >= 18\` is a \`TypeError\`, not a comparison — convert first.
+\`raw_age\` is text. \`"21" >= 18\` is a \`TypeError\`, not a comparison, convert first.
 
 And \`name\` is \`""\`, which is falsy. That's exactly what \`or\` needs.
 

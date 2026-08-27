@@ -312,8 +312,8 @@ const DashboardPage: React.FC = () => {
                       : "You've hit this week's goal."
                     : streak.todayDone
                     ? lang === 'ar'
-                      ? 'تم التسجيل اليوم — أحسنت.'
-                      : 'Today is logged — nice work.'
+                      ? 'تم التسجيل اليوم، أحسنت.'
+                      : 'Today is logged, nice work.'
                     : lang === 'ar'
                     ? 'أكمل درسا واحدا اليوم للحفاظ على التتابع.'
                     : 'Finish one lesson today to keep the streak alive.'}

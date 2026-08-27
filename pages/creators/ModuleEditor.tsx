@@ -440,7 +440,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
         <div className="flex items-start gap-3 rounded-lg border border-[#9fef00]/30 bg-[#9fef00]/10 px-4 py-3">
           <BookOpen size={16} className="text-[#9fef00] mt-0.5 flex-shrink-0" />
           <div className="text-xs text-[#d2d7e3]">
-            <span className="font-bold text-[#9fef00]">Editing a built-in course</span> — saving
+            <span className="font-bold text-[#9fef00]">Editing a built-in course</span>, saving
             creates an editable copy that replaces the original everywhere. Existing student
             progress is preserved.
           </div>
@@ -560,7 +560,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
                   <option key={d} value={d}>{MODULE_DOMAIN_META[d].label.en}</option>
                 ))}
               </select>
-              <p className="mt-1 text-[11px] text-[#6e7a94]">Offensive, Defensive, or General — shown as the module's tag.</p>
+              <p className="mt-1 text-[11px] text-[#6e7a94]">Offensive, Defensive, or General, shown as the module's tag.</p>
             </div>
           </div>
 

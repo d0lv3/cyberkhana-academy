@@ -56,7 +56,7 @@ const CourseTerminal = forwardRef<CourseTerminalHandle, CourseTerminalProps>(({ 
   const net = useRef(netProp ?? getNet()).current;
 
   const [lines, setLines] = useState<Line[]>([
-    { kind: 'sys', text: `CyberKhana practice shell — runs safely in your browser. Type "help" to begin.` },
+    { kind: 'sys', text: `CyberKhana practice shell, runs safely in your browser. Type "help" to begin.` },
   ]);
   const [input, setInput] = useState('');
   const [cwdLabel, setCwdLabel] = useState(session.cwdLabel());
@@ -157,12 +157,12 @@ const CourseTerminal = forwardRef<CourseTerminalHandle, CourseTerminalProps>(({ 
           served.runInto(cmd, (s) => socket.send(s));
         }
       });
-      append({ kind: 'sys', text: `[+] Shell handed to ${peer}. They can now run commands on this box — press Ctrl+C to cut it off.` });
+      append({ kind: 'sys', text: `[+] Shell handed to ${peer}. They can now run commands on this box, press Ctrl+C to cut it off.` });
       setNetMode({ kind: 'connected', role: 'server', peer });
     } else {
       // This side drives the peer's shell: our input goes out, their output prints.
       socket.onData((chunk) => append({ kind: 'out', text: chunk.replace(/\n$/, '') }));
-      append({ kind: 'sys', text: `[+] Connected to ${peer}. Type commands to run them on the remote box — Ctrl+C to disconnect.` });
+      append({ kind: 'sys', text: `[+] Connected to ${peer}. Type commands to run them on the remote box, Ctrl+C to disconnect.` });
       setNetMode({ kind: 'connected', role: 'client', peer });
     }
   }, [append, net, session, teardownNet]);
@@ -175,7 +175,7 @@ const CourseTerminal = forwardRef<CourseTerminalHandle, CourseTerminalProps>(({ 
     }
     if (req.mode === 'listen') {
       append(
-        { kind: 'sys', text: `Listening on 0.0.0.0:${req.port} — this box is ${net.localIp}.` },
+        { kind: 'sys', text: `Listening on 0.0.0.0:${req.port}, this box is ${net.localIp}.` },
         { kind: 'sys', text: `From the other terminal, run:  nc ${net.localIp} ${req.port}${req.exec ? '' : ' -e /bin/bash'}` },
         { kind: 'sys', text: 'Ctrl+C to stop listening.' },
       );
