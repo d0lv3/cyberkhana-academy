@@ -1,9 +1,52 @@
+import fs from 'fs';
 import path from 'path';
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 
 // The Pyodide runtime is self-hosted: scripts/copy-pyodide.mjs (predev/prebuild)
 // copies it into public/pyodide, which Vite serves in dev and ships in dist.
+
+/**
+ * Serve the vendored C/C++ toolchain as opaque bytes.
+ *
+ * Its startup archive is named `<hash>.br`, and static servers — Vite's own
+ * among them — read that extension as "this is brotli transfer encoding" and
+ * answer with `Content-Encoding: br`. The browser then decompresses it on the
+ * way in, which is precisely wrong: those bytes are the payload, and Emception
+ * decompresses them itself with its own brotli.wasm. It cannot be renamed
+ * either, because the same extension is what tells Emception to decompress.
+ * The result of getting this wrong is a bare "FS error" at startup.
+ *
+ * Any server hosting public/emception needs the same treatment: serve .br
+ * under this path as application/octet-stream, with no Content-Encoding.
+ */
+function emceptionRawAssets(): Plugin {
+  /** dev reads from public/, preview from dist/; the rule is the same. */
+  const serveRaw = (root: string) => (req: any, res: any, next: () => void) => {
+    const url = (req.url ?? '').split('?')[0];
+    if (!url.startsWith('/emception/') || !url.endsWith('.br')) return next();
+
+    const dir = path.resolve(__dirname, root, 'emception');
+    const file = path.resolve(__dirname, root, url.slice(1));
+    // Refuse anything that climbs out of the toolchain directory.
+    if (file !== dir && !file.startsWith(dir + path.sep)) return next();
+
+    fs.stat(file, (err, stat) => {
+      if (err) return next();
+      res.setHeader('Content-Type', 'application/octet-stream');
+      res.setHeader('Content-Length', stat.size);
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      fs.createReadStream(file).pipe(res);
+    });
+  };
+
+  return {
+    name: 'emception-raw-assets',
+    configureServer: (server) => void server.middlewares.use(serveRaw('public')),
+    configurePreviewServer: (server) => void server.middlewares.use(serveRaw('dist')),
+  };
+}
+
 export default defineConfig({
   server: {
     port: 3001,
@@ -15,7 +58,7 @@ export default defineConfig({
       },
     },
   },
-  plugins: [react()],
+  plugins: [react(), emceptionRawAssets()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, '.'),

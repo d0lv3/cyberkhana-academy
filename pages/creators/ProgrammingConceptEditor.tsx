@@ -22,6 +22,7 @@ import DynamicList from '../../components/creators/DynamicList';
 import EnhancedCard from '../../components/ui/EnhancedCard';
 import CodeEditor from '../../components/code-editor/CodeEditor';
 import { CodingEnvironment } from '../../components/code-editor';
+import { runnerFor } from '../../components/code-editor/runners';
 import { confirmDialog } from '../../components/ui/ConfirmHost';
 import { runPython } from '../../components/code-editor/PythonExecutor';
 import { useToast } from '../../hooks/useToast';
@@ -57,8 +58,8 @@ function generateSlug(title: string): string {
     .slice(0, 60);
 }
 
-const langToEditor = (slug?: string): 'python' | 'cpp' | 'bash' =>
-  slug === 'c' || slug === 'cpp' ? 'cpp' : slug === 'bash' ? 'bash' : 'python';
+/* Shared with the lesson viewer so a preview runs exactly what a student will. */
+const langToEditor = runnerFor;
 
 type VerifyResult = { id: string; passed: boolean; expected: string; actual: string; description: string };
 

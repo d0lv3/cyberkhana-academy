@@ -14,12 +14,12 @@ import CodeEditor from './CodeEditor';
 import OutputPanel from './OutputPanel';
 import ResizeHandle from './ResizeHandle';
 import type { ExecutionResult } from './PythonExecutor';
-import { runCode, isRunnerReady } from './runners';
+import { runCode, isRunnerReady, type RunnerLanguage } from './runners';
 import type { TestCase } from '../../data/programming/types';
 
 interface CodingEnvironmentProps {
   starterCode: string;
-  language?: 'python' | 'cpp' | 'bash';
+  language?: RunnerLanguage;
   /** Prefills the stdin box for lessons that read input(). */
   sampleInput?: string;
   testCases?: TestCase[];
@@ -31,14 +31,24 @@ interface CodingEnvironmentProps {
 /** Does this snippet read from stdin? Decides whether to offer the input box. */
 function readsInput(code: string, language: string): boolean {
   if (language === 'python') return /(^|[^\w.])input\s*\(/m.test(code);
-  if (language === 'cpp') return /\b(cin|getline|scanf)\b/.test(code);
+  if (language === 'c' || language === 'cpp') return /\b(cin|getline|scanf|gets|fgets)\b/.test(code);
   return /\bread\b|\$\(cat\)/.test(code);
 }
 
 const FILE_NAMES: Record<string, string> = {
   python: 'main.py',
+  c: 'main.c',
   cpp: 'main.cpp',
   bash: 'main.sh',
+};
+
+/* Said only on the first Run of a session, while the runtime is fetched.
+   C and C++ fetch a compiler, which is the longest of these by far. */
+const LOADING_LABEL: Record<string, string> = {
+  python: 'Loading Python...',
+  c: 'Loading compiler...',
+  cpp: 'Loading compiler...',
+  bash: 'Loading...',
 };
 
 /* ── Resizable panels ──
@@ -259,7 +269,7 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
               className="flex items-center gap-1.5 px-3 py-1.5 rounded text-[11px] font-bold text-[#0d1117] bg-[#00a859] hover:bg-[#00934e] transition-colors disabled:opacity-40"
             >
               {isRunning ? <Loader2 size={12} className="animate-spin" /> : <Play size={12} />}
-              {isRunning ? (isLoading ? 'Loading Python...' : 'Running...') : 'Run'}
+              {isRunning ? (isLoading ? LOADING_LABEL[language] ?? 'Loading...' : 'Running...') : 'Run'}
             </button>
           )}
         </div>

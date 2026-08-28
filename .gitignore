@@ -8,3 +8,6 @@ backend/dist
 backend/.env
 backend/uploads/
 public/pyodide/
+
+# Vendored in by scripts/copy-emception.mjs (see scripts/emception-manifest.json)
+public/emception/

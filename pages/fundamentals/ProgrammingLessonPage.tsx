@@ -14,6 +14,7 @@ import {
 import { getLanguage, getModule, getConcept } from '../../data/programming';
 import type { ProgrammingConcept } from '../../data/programming';
 import { CodingEnvironment } from '../../components/code-editor';
+import { runnerFor } from '../../components/code-editor/runners';
 import Button from '../../components/ui/EnhancedButton';
 import LessonMarkdown from '../../components/ui/LessonMarkdown';
 import { youtubeEmbedUrl } from '../../services/youtube';
@@ -316,7 +317,7 @@ const ProgrammingLessonPage: React.FC = () => {
               key={concept.id}
               starterCode={concept.starterCode}
               sampleInput={concept.sampleInput}
-              language={langSlug === 'bash' ? 'bash' : langSlug === 'c' || langSlug === 'cpp' || langSlug === 'c++' ? 'cpp' : 'python'}
+              language={runnerFor(langSlug)}
               testCases={concept.testCases}
               hints={concept.hints}
               solution={concept.solution}

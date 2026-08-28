@@ -9,7 +9,7 @@ import { tags } from '@lezer/highlight';
 interface CodeEditorProps {
   value: string;
   onChange: (value: string) => void;
-  language?: 'python' | 'cpp' | 'bash';
+  language?: 'python' | 'c' | 'cpp' | 'bash';
   readOnly?: boolean;
   minHeight?: string;
   /** A definite height gives CodeMirror its own scroller; without one the
@@ -189,6 +189,8 @@ const editorTheme = EditorView.theme({
 
 const langExtensions = {
   python: [python()],
+  // The CodeMirror C++ grammar covers C too; there is no separate one.
+  c: [cpp()],
   cpp: [cpp()],
   bash: [],
 };
