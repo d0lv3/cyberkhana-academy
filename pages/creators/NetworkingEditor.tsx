@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { FileText, Network, Eye, HelpCircle, BookOpen, ShieldCheck, Users } from 'lucide-react';
+import {
+  FileText,
+  Network,
+  Eye,
+  HelpCircle,
+  BookOpen,
+  ShieldCheck,
+  Users,
+  Plus,
+  Trash2,
+} from 'lucide-react';
 import CreatorLayout from '../../components/creators/CreatorLayout';
 import BilingualInput from '../../components/creators/BilingualInput';
 import TagInput from '../../components/creators/TagInput';
@@ -10,6 +20,7 @@ import MarkdownPreview from '../../components/creators/MarkdownPreview';
 import QuizEditor, { cleanQuiz } from '../../components/creators/QuizEditor';
 import SimulationBuilder from '../../components/creators/SimulationBuilder';
 import NetworkSimulator from '../../components/network-sim/NetworkSimulator';
+import Button from '../../components/ui/EnhancedButton';
 import EnhancedCard from '../../components/ui/EnhancedCard';
 import { useToast } from '../../hooks/useToast';
 import { useAuth } from '../../contexts/AuthContext';
@@ -28,7 +39,7 @@ import {
 import { networkingLessons } from '../../data/networking';
 import { builtinToEditableLesson } from '../../data/builtinCourse';
 import { ADMIN_NETWORKING_STASH, type AdminNetworkingStash } from './networkingEditStash';
-import type { NetworkSimulation } from '../../components/network-sim/types';
+import { hasSimulation, type NetworkSimulation } from '../../components/network-sim/types';
 
 function generateSlug(title: string): string {
   return title
@@ -81,6 +92,10 @@ const NetworkingEditor: React.FC = () => {
   const [markdownContent, setMarkdownContent] = useState('');
   const [quiz, setQuiz] = useState<QuizQuestion[]>([]);
   const [simulation, setSimulation] = useState<NetworkSimulation>(emptySimulation(''));
+  /* Whether this lesson ships a simulation at all. Held apart from the
+   * simulation itself so switching it off and back on inside one editing
+   * session does not throw away a topology the author already built. */
+  const [withSimulation, setWithSimulation] = useState(false);
   const [status, setStatus] = useState<ContentStatus>('draft');
   const [isSaving, setIsSaving] = useState(false);
   const [existingLesson, setExistingLesson] = useState<CreatorNetworkingLesson | null>(null);
@@ -135,6 +150,7 @@ const NetworkingEditor: React.FC = () => {
     setMarkdownContent(lesson.markdownContent);
     setQuiz(lesson.quiz ?? []);
     setSimulation(lesson.simulation ?? emptySimulation(lesson.slug));
+    setWithSimulation(hasSimulation(lesson.simulation));
     setStatus(statusOf(lesson));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, isBuiltinEdit, isAdminEdit]);
@@ -150,8 +166,10 @@ const NetworkingEditor: React.FC = () => {
       setTab('lesson');
       return;
     }
-    if (status === 'published' && simulation.steps.length === 0) {
-      toast('error', 'Add at least one simulation step before publishing.');
+    // Only a lesson that claims a simulation owes one: markdown-only lessons
+    // publish on their own.
+    if (status === 'published' && withSimulation && simulation.steps.length === 0) {
+      toast('error', 'Add at least one simulation step before publishing, or turn the simulation off.');
       setTab('simulation');
       return;
     }
@@ -171,7 +189,10 @@ const NetworkingEditor: React.FC = () => {
       coverSvg: coverSvg.trim() || undefined,
       markdownContent,
       quiz: cleanQuiz(quiz),
-      simulation: { ...simulation, id: simulation.id || `sim-${finalSlug}` },
+      simulation:
+        withSimulation && simulation.nodes.length > 0
+          ? { ...simulation, id: simulation.id || `sim-${finalSlug}` }
+          : undefined,
       ...(existingLesson
         ? {
             isCreatorContent: true as const,
@@ -276,7 +297,7 @@ const NetworkingEditor: React.FC = () => {
             }`}
           >
             <t.icon size={15} /> {t.label}
-            {t.key === 'simulation' && simulation.steps.length > 0 && (
+            {t.key === 'simulation' && withSimulation && simulation.steps.length > 0 && (
               <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#00a859]/15 text-[#00a859]">
                 {simulation.steps.length}
               </span>
@@ -398,42 +419,86 @@ const NetworkingEditor: React.FC = () => {
             </EnhancedCard>
           </div>
         </div>
+      ) : !withSimulation ? (
+        /* ── The lesson has opted out of a simulation ── */
+        <EnhancedCard padding="xl" className="text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-[#263248] bg-[#0f1726]">
+            <Network size={20} className="text-[#60a5fa]" />
+          </div>
+          <h3 className="text-sm font-bold text-[#f3f6ff] mb-2">No simulation on this lesson</h3>
+          <p className="mx-auto mb-5 max-w-md text-xs leading-relaxed text-[#6e7a94]">
+            Students will read this lesson full width, with no side panel. Add a simulation if the
+            topic is better shown than described, packets moving through a topology, a handshake
+            step by step.
+          </p>
+          <Button size="sm" leftIcon={<Plus size={14} />} onClick={() => setWithSimulation(true)}>
+            Add a simulation
+          </Button>
+          {simulation.nodes.length > 0 && (
+            <p className="mt-4 text-[11px] text-[#4d5a73]">
+              The {simulation.nodes.length} device{simulation.nodes.length === 1 ? '' : 's'} you
+              already built are kept until you save.
+            </p>
+          )}
+        </EnhancedCard>
       ) : (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          {/* LEFT: Builder */}
-          <div>
-            <SimulationBuilder value={simulation} onChange={setSimulation} />
+        <div className="space-y-4">
+          {/* ── Opt out again, without losing the work mid-session ── */}
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#263248] bg-[#0b1019] px-4 py-3">
+            <div className="flex items-start gap-3">
+              <Network size={15} className="mt-0.5 flex-shrink-0 text-[#60a5fa]" />
+              <div>
+                <p className="text-xs font-bold text-[#f3f6ff]">This lesson has a simulation</p>
+                <p className="text-[11px] text-[#6e7a94]">
+                  It sits beside the reading pane, and students can resize or minimise it.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setWithSimulation(false)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#263248] px-3 py-1.5 text-[11px] font-semibold text-[#9aa5bf] transition-colors hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-400"
+            >
+              <Trash2 size={12} /> Remove the simulation
+            </button>
           </div>
 
-          {/* RIGHT: Live simulation preview */}
-          <div>
-            <EnhancedCard padding="none" className="overflow-hidden sticky top-4">
-              <div className="px-4 py-3 border-b border-[#263248] bg-[#0b1019] flex items-center gap-2">
-                <Eye size={13} className="text-[#6e7a94]" />
-                <span className="text-xs font-bold uppercase tracking-wider text-[#6e7a94]">
-                  Simulation Preview
-                </span>
-              </div>
-              <div className="p-4">
-                {simulation.nodes.length === 0 ? (
-                  <div className="h-[420px] flex items-center justify-center text-center text-sm text-[#4d5a73]">
-                    Add devices and steps to preview the simulation.
-                  </div>
-                ) : (
-                  <div className="h-[520px]">
-                    <NetworkSimulator
-                      simulation={simulation}
-                      onNodeMove={(id, x, y) =>
-                        setSimulation((s) => ({
-                          ...s,
-                          nodes: s.nodes.map((n) => (n.id === id ? { ...n, x, y } : n)),
-                        }))
-                      }
-                    />
-                  </div>
-                )}
-              </div>
-            </EnhancedCard>
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            {/* LEFT: Builder */}
+            <div>
+              <SimulationBuilder value={simulation} onChange={setSimulation} />
+            </div>
+
+            {/* RIGHT: Live simulation preview */}
+            <div>
+              <EnhancedCard padding="none" className="overflow-hidden sticky top-4">
+                <div className="px-4 py-3 border-b border-[#263248] bg-[#0b1019] flex items-center gap-2">
+                  <Eye size={13} className="text-[#6e7a94]" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#6e7a94]">
+                    Simulation Preview
+                  </span>
+                </div>
+                <div className="p-4">
+                  {simulation.nodes.length === 0 ? (
+                    <div className="h-[420px] flex items-center justify-center text-center text-sm text-[#4d5a73]">
+                      Add devices and steps to preview the simulation.
+                    </div>
+                  ) : (
+                    <div className="h-[520px]">
+                      <NetworkSimulator
+                        simulation={simulation}
+                        onNodeMove={(id, x, y) =>
+                          setSimulation((s) => ({
+                            ...s,
+                            nodes: s.nodes.map((n) => (n.id === id ? { ...n, x, y } : n)),
+                          }))
+                        }
+                      />
+                    </div>
+                  )}
+                </div>
+              </EnhancedCard>
+            </div>
           </div>
         </div>
       )}

@@ -32,7 +32,7 @@ The Studio dashboard (`/creators`) shows:
 
 | Content type | Editor route | What it is |
 |---|---|---|
-| Networking Lesson | `/creators/networking/new` | Markdown explainer + interactive packet-flow simulation (+ optional quiz) |
+| Networking Lesson | `/creators/networking/new` | Markdown explainer, with an optional interactive packet-flow simulation (+ optional quiz) |
 | Programming Content | `/creators/programming` | Modules and lesson/challenge concepts inside a language (Python) |
 | Module | `/creators/modules/new` | Standalone chapter/section module for the Modules hub |
 | OS Module | `/creators/os-modules/new` | Same structure, surfaced in OS Fundamentals |
@@ -93,6 +93,11 @@ questions/options are silently dropped on save.
 
 *Editor:* **Lesson** tab (content) + **Simulation** tab (builder + live preview).
 
+The simulation is **opt-in**. A new lesson starts without one, and the Simulation
+tab offers a single **Add a simulation** button; the banner above the builder
+removes it again. A lesson with no simulation is a normal lesson: students read it
+full width, with no side panel and no Content/Simulation tabs on mobile.
+
 ### Lesson tab fields
 
 | Field | Required | Notes |
@@ -101,10 +106,10 @@ questions/options are silently dropped on save.
 | Title (AR) | recommended | Shown to Arabic users |
 | Description (EN/AR) | recommended | Card text on the Networking page |
 | Slug | auto | URL: `/fundamentals/networking/lesson/<slug>` |
-| Order | ✅ (default 100) | Position in the lesson list — the built-in IP lesson is `1` |
+| Order | ✅ (default 100) | Position in the lesson list, and the order the in-lesson **Continue** button follows |
 | Est. Minutes | ✅ (default 10) | Shown on the lesson card |
 | Tags | optional | Up to ~5 shown on the card |
-| Markdown Content | ✅ | The left-hand reading pane of the lesson |
+| Markdown Content | ✅ | The reading pane. Takes the whole screen when the lesson has no simulation, and students can drag the divider or minimise the simulation when it has one |
 | Lesson Quiz | optional | **With** a quiz: students must score ≥ 70 % to complete the lesson. **Without**: they get a manual "Mark as complete" button |
 
 ### Simulation tab (the builder)
@@ -123,7 +128,9 @@ Gold `#f3a43a` = highlight · Red = blocked/dropped.
 
 - [ ] English title
 - [ ] Markdown content written
-- [ ] **At least one simulation step** (publishing is blocked without it)
+- [ ] **At least one simulation step**, if the lesson has a simulation at all
+      (publishing is blocked on a simulation with no steps; turn it off to publish
+      a prose-only lesson)
 - [ ] Devices positioned sensibly inside their zones
 - [ ] Quiz added if you want completion to be earned, not self-claimed
 

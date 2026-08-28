@@ -1,10 +1,9 @@
 import { NetworkingLesson } from '../../components/network-sim/types';
-import ipAddressing from './ip-addressing';
 import { mergeNetworkingLessons } from '../../services/creatorDataService';
 
-const staticLessons: NetworkingLesson[] = [
-  ipAddressing,
-].sort((a, b) => a.order - b.order);
+/* No built-in lessons: networking content is authored through the creator
+   tools and merged in by getNetworkingLessons() once it is published. */
+const staticLessons: NetworkingLesson[] = [];
 
 /** All networking lessons: static + creator-authored (published) */
 export const getNetworkingLessons = (): NetworkingLesson[] =>

@@ -97,7 +97,7 @@ const translations: Record<string, Record<Lang, string>> = {
   'dashboard.exploreTracks': { en: 'Explore Tracks', ar: 'استكشف المسارات' },
   'dashboard.yourProgress': { en: 'Your Progress', ar: 'تقدّمك' },
   'dashboard.featuredSim': { en: 'Featured Simulation', ar: 'محاكاة مميزة' },
-  'dashboard.simDesc': { en: 'Watch how IP addressing and NAT route traffic across a network, step by step.', ar: 'شاهد كيف توجّه عنونة IP وتقنية NAT حركة البيانات عبر الشبكة، خطوة بخطوة.' },
+  'dashboard.simDesc': { en: 'Step through a live topology and watch the packets move.', ar: 'تنقّل بين الخطوات على طوبولوجيا حية وشاهد الحزم تتحرك.' },
   'dashboard.jumpBackIn': { en: 'Jump Back In', ar: 'تابع التعلم' },
   'dashboard.start': { en: 'Start', ar: 'ابدأ' },
   'dashboard.continueBtn': { en: 'Continue', ar: 'متابعة' },

@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import CodeEditor from './CodeEditor';
 import OutputPanel from './OutputPanel';
-import ResizeHandle from './ResizeHandle';
+import ResizeHandle from '../ui/ResizeHandle';
 import type { ExecutionResult } from './PythonExecutor';
 import { runCode, isRunnerReady, type RunnerLanguage } from './runners';
 import type { TestCase } from '../../data/programming/types';

@@ -10,6 +10,7 @@ import { useLang } from '../../contexts/LangContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { hasPerm } from '../../services/permissions';
 import { networkingLessons } from '../../data/networking';
+import { simulationStepCount } from '../../components/network-sim/types';
 import {
   getCreatorNetworkingLessons,
   deleteNetworkingLesson,
@@ -229,7 +230,8 @@ const NetworkingCreator: React.FC = () => {
                     <Clock size={10} /> {lesson.estimatedMinutes}m
                   </span>
                   <span className="text-[10px] font-medium text-[#4d5a73] flex items-center gap-1">
-                    <Activity size={10} /> {lesson.simulation.steps.length} {t('studio.stepsLabel')}
+                    <Activity size={10} /> {simulationStepCount(lesson.simulation)}{' '}
+                    {t('studio.stepsLabel')}
                   </span>
                   <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#1a2332] border border-[#263248] text-[#6e7a94]">
                     {t('studio.builtIn')}

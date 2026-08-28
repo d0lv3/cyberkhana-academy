@@ -16,6 +16,7 @@ import { useLang } from '../contexts/LangContext';
 import { getFundamentalsByCategory, moduleViewerPath } from '../data/fundamentalsData';
 import { getAllModules } from '../data/modulesData';
 import { getNetworkingLessons } from '../data/networking';
+import { hasSimulation } from '../components/network-sim/types';
 import { getProgrammingLanguages } from '../data/programming';
 import {
   getProgrammingDone,
@@ -90,6 +91,9 @@ const DashboardPage: React.FC = () => {
     );
     const netLessons = getNetworkingLessons();
     const netTotal = netLessons.length;
+    // The featured card follows whatever is actually published: the first
+    // networking lesson that ships a simulation, or nothing at all.
+    const featuredSim = netLessons.find((l) => hasSimulation(l.simulation)) ?? null;
     const netDoneSet = getNetworkingDone();
     const netDone = netLessons.filter((l) => netDoneSet.has(l.id)).length;
 
@@ -112,6 +116,7 @@ const DashboardPage: React.FC = () => {
       osDone,
       netTotal,
       netDone,
+      featuredSim,
       completedUnits,
       totalUnits,
       overallPct,
@@ -325,33 +330,39 @@ const DashboardPage: React.FC = () => {
 
         {/* RIGHT column */}
         <div className="space-y-6">
-          {/* Featured simulation */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35, duration: 0.4 }}
-            className="relative overflow-hidden rounded-2xl border border-[#263248] bg-[#0a0f18]"
-          >
-            <div className="absolute -top-16 -right-16 w-48 h-48 bg-[#60a5fa]/10 rounded-full blur-3xl" />
-            <div className="relative z-10 p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Network size={15} className="text-[#60a5fa]" />
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#60a5fa]">
-                  {t('dashboard.featuredSim')}
-                </span>
+          {/* Featured simulation — skipped entirely when nothing published has one */}
+          {data.featuredSim && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35, duration: 0.4 }}
+              className="relative overflow-hidden rounded-2xl border border-[#263248] bg-[#0a0f18]"
+            >
+              <div className="absolute -top-16 -right-16 w-48 h-48 bg-[#60a5fa]/10 rounded-full blur-3xl" />
+              <div className="relative z-10 p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Network size={15} className="text-[#60a5fa]" />
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#60a5fa]">
+                    {t('dashboard.featuredSim')}
+                  </span>
+                </div>
+                <h3 className="text-lg font-bold text-[#f3f6ff] mb-2">
+                  {data.featuredSim.title[lang]}
+                </h3>
+                <p className="text-xs text-[#9aa5bf] leading-relaxed mb-5 line-clamp-3">
+                  {data.featuredSim.description[lang] || t('dashboard.simDesc')}
+                </p>
+                <button
+                  onClick={() =>
+                    navigate(`/fundamentals/networking/lesson/${data.featuredSim!.slug}`)
+                  }
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#60a5fa]/10 border border-[#60a5fa]/25 text-[#60a5fa] text-sm font-semibold hover:bg-[#60a5fa]/20 transition-all"
+                >
+                  <Play size={14} /> {t('dashboard.tryNow')}
+                </button>
               </div>
-              <h3 className="text-lg font-bold text-[#f3f6ff] mb-2">
-                {lang === 'ar' ? 'عنونة IP والاتصالات' : 'IP Addressing & NAT'}
-              </h3>
-              <p className="text-xs text-[#9aa5bf] leading-relaxed mb-5">{t('dashboard.simDesc')}</p>
-              <button
-                onClick={() => navigate('/fundamentals/networking/lesson/ip-addressing')}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#60a5fa]/10 border border-[#60a5fa]/25 text-[#60a5fa] text-sm font-semibold hover:bg-[#60a5fa]/20 transition-all"
-              >
-                <Play size={14} /> {t('dashboard.tryNow')}
-              </button>
-            </div>
-          </motion.div>
+            </motion.div>
+          )}
 
           {/* Modules — resume the ones already started, else a few to begin */}
           {moduleShortlist.items.length > 0 && (

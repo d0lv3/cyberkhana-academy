@@ -85,7 +85,28 @@ export type NetworkingLesson = {
   markdownContent: string;
   /** Optional creator-supplied cover art (raw SVG markup). Falls back to built-in art. */
   coverSvg?: string;
-  simulation: NetworkSimulation;
+  /**
+   * Optional packet-flow simulation. A lesson without one is a normal lesson,
+   * not a broken one: the author decides in the studio, and the reading pane
+   * takes the whole screen when there is nothing to sit beside it.
+   */
+  simulation?: NetworkSimulation;
   /** Optional end-of-lesson comprehension check — passing it completes the lesson. */
   quiz?: QuizQuestion[];
 };
+
+/**
+ * Is there a simulation worth rendering?
+ *
+ * A simulation object with no devices draws an empty canvas, so an empty one
+ * counts as absent. Lessons saved before simulations became optional carry
+ * exactly that shape, which is why the check is on the contents rather than on
+ * the field being present.
+ */
+export const hasSimulation = (
+  sim: NetworkSimulation | undefined | null
+): sim is NetworkSimulation => !!sim && sim.nodes.length > 0;
+
+/** Step count for the badges, safe on a lesson with no simulation. */
+export const simulationStepCount = (sim: NetworkSimulation | undefined | null): number =>
+  hasSimulation(sim) ? sim.steps.length : 0;

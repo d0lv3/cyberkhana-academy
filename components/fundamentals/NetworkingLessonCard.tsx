@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Clock, Activity } from 'lucide-react';
 import CardArt from './CardArt';
 import { useLang } from '../../contexts/LangContext';
-import type { NetworkingLesson } from '../network-sim/types';
+import { simulationStepCount, type NetworkingLesson } from '../network-sim/types';
 
 const ACCENT = '#60a5fa';
 
@@ -18,6 +18,8 @@ const NetworkingLessonCard: React.FC<{ lesson: NetworkingLesson; index?: number 
 }) => {
   const { lang } = useLang();
   const navigate = useNavigate();
+  // Zero on a lesson that is prose only, which hides the step badges below.
+  const steps = simulationStepCount(lesson.simulation);
   const open = () => navigate(`/fundamentals/networking/lesson/${lesson.slug}`);
 
   return (
@@ -50,11 +52,13 @@ const NetworkingLessonCard: React.FC<{ lesson: NetworkingLesson; index?: number 
       {/* Top badges */}
       <div className="absolute inset-x-0 top-0 flex flex-wrap items-start justify-between gap-1.5 p-2.5 sm:p-3 min-w-0">
         <span className="inline-flex items-center rounded-md border border-[#60a5fa]/30 bg-[#60a5fa]/15 px-2 py-0.5 text-xs font-semibold text-[#bcd6ff] backdrop-blur-sm">
-          {lang === 'ar' ? 'تفاعلي' : 'Interactive'}
+          {steps > 0 ? (lang === 'ar' ? 'تفاعلي' : 'Interactive') : lang === 'ar' ? 'درس' : 'Lesson'}
         </span>
-        <span className="inline-flex max-w-full items-center gap-1 truncate rounded-md border border-white/10 bg-black/45 px-2 py-0.5 text-[11px] sm:text-xs font-semibold text-[#e5e9f0] backdrop-blur-sm" dir="ltr">
-          <Activity size={12} /> {lesson.simulation.steps.length}
-        </span>
+        {steps > 0 && (
+          <span className="inline-flex max-w-full items-center gap-1 truncate rounded-md border border-white/10 bg-black/45 px-2 py-0.5 text-[11px] sm:text-xs font-semibold text-[#e5e9f0] backdrop-blur-sm" dir="ltr">
+            <Activity size={12} /> {steps}
+          </span>
+        )}
       </div>
 
       {/* Bottom: title + stats */}
@@ -66,9 +70,11 @@ const NetworkingLessonCard: React.FC<{ lesson: NetworkingLesson; index?: number 
           <span className="inline-flex items-center gap-1">
             <Clock size={11} /> {lesson.estimatedMinutes} min
           </span>
-          <span className="inline-flex items-center gap-1">
-            <Activity size={11} /> {lesson.simulation.steps.length} steps
-          </span>
+          {steps > 0 && (
+            <span className="inline-flex items-center gap-1">
+              <Activity size={11} /> {steps} steps
+            </span>
+          )}
         </div>
       </div>
     </motion.div>
