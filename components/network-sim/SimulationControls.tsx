@@ -14,6 +14,8 @@ interface SimulationControlsProps {
   isPlaying: boolean;
   stepTitle: string;
   stepDescription: string;
+  /** Language of the step text, so an Arabic step reads right to left. */
+  lang?: 'en' | 'ar';
   onPrevious: () => void;
   onNext: () => void;
   onTogglePlay: () => void;
@@ -27,6 +29,7 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
   isPlaying,
   stepTitle,
   stepDescription,
+  lang = 'en',
   onPrevious,
   onNext,
   onTogglePlay,
@@ -37,11 +40,15 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Step info */}
-      <div className="px-1">
+      {/* Step info. Its direction follows the content, not the diagram: a
+          topology is read left to right in any language, an Arabic sentence
+          under it is not. */}
+      <div className="px-1" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
         <div className="flex items-center gap-2 mb-1.5">
           <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#6e7a94]">
-            Step {currentStep + 1} of {totalSteps}
+            {lang === 'ar'
+              ? `الخطوة ${currentStep + 1} من ${totalSteps}`
+              : `Step ${currentStep + 1} of ${totalSteps}`}
           </span>
         </div>
         <h4 className="text-sm font-semibold text-[#f3f6ff] leading-snug">

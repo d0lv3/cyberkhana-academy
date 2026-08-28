@@ -12,7 +12,9 @@ import {
   ArrowUp,
   ArrowDown,
   Frame,
+  Languages,
 } from 'lucide-react';
+import { toLocalizedText, tFor, type LocalizedText } from '../network-sim/types';
 import type {
   NetworkSimulation,
   NetworkNode,
@@ -26,6 +28,10 @@ import type {
 interface SimulationBuilderProps {
   value: NetworkSimulation;
   onChange: (sim: NetworkSimulation) => void;
+  /** Which language the text fields are editing (controlled, so the live
+   *  preview beside the builder can show the copy being typed). */
+  lang: 'en' | 'ar';
+  onLangChange: (lang: 'en' | 'ar') => void;
 }
 
 const DEVICE_TYPES: DeviceType[] = [
@@ -143,8 +149,39 @@ const Section: React.FC<{
   );
 };
 
-const SimulationBuilder: React.FC<SimulationBuilderProps> = ({ value, onChange }) => {
+const SimulationBuilder: React.FC<SimulationBuilderProps> = ({
+  value,
+  onChange,
+  lang,
+  onLangChange,
+}) => {
   const { nodes, edges, steps } = value;
+
+  /* -- Bilingual fields --
+   * One switch retargets every text box in the builder rather than each field
+   * carrying its own pair of inputs: the topology is laid out once, and the
+   * second language is a pass over the same form. */
+  const ar = lang === 'ar';
+  /** The active language's half of a localized field. */
+  const half = (v: LocalizedText | undefined) => toLocalizedText(v)[lang];
+  /** Write the active language back, leaving the other one alone. */
+  const merge = (v: LocalizedText | undefined, next: string): LocalizedText => ({
+    ...toLocalizedText(v),
+    [lang]: next,
+  });
+  /** Same, for a field that is dropped entirely when both languages are empty. */
+  const mergeOpt = (v: LocalizedText | undefined, next: string): LocalizedText | undefined => {
+    const both = { ...toLocalizedText(v), [lang]: next };
+    return both.en || both.ar ? both : undefined;
+  };
+  /** While writing Arabic, the English shows through as the placeholder, so an
+   *  untranslated field is visible without switching back to check. */
+  const hint = (v: LocalizedText | undefined, fallback: string) =>
+    (ar && toLocalizedText(v).en) || fallback;
+  /** Node names in the device pickers follow the tab being edited. */
+  const nodeName = (v: LocalizedText | undefined) => tFor(v, lang);
+  /** Text boxes type in the direction of the language they hold. */
+  const fieldDir = ar ? 'rtl' : 'ltr';
 
   const update = (patch: Partial<NetworkSimulation>) => onChange({ ...value, ...patch });
 
@@ -253,6 +290,33 @@ const SimulationBuilder: React.FC<SimulationBuilderProps> = ({ value, onChange }
 
   return (
     <div className="space-y-4" dir="ltr">
+      {/* -- Which language the text fields below are editing -- */}
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#263248] bg-[#0b1019] px-3 py-2.5">
+        <Languages size={14} className="flex-shrink-0 text-[#60a5fa]" />
+        <span className="text-[11px] font-semibold text-[#9aa5bf]">Labels in</span>
+        <div className="flex items-center gap-1 rounded-lg bg-[#0d1117] p-1">
+          {(['en', 'ar'] as const).map((l) => (
+            <button
+              key={l}
+              type="button"
+              onClick={() => onLangChange(l)}
+              className={`px-3 py-1 rounded-md text-xs font-bold transition-colors ${
+                lang === l
+                  ? 'bg-[#1a2332] text-[#f3f6ff] border border-[#263248]'
+                  : 'text-[#6e7a94] hover:text-[#d2d7e3]'
+              }`}
+            >
+              {l === 'en' ? 'English' : 'العربية'}
+            </button>
+          ))}
+        </div>
+        <span className="text-[10px] text-[#6e7a94]">
+          {ar
+            ? 'Optional. An empty field falls back to English, shown greyed in the box.'
+            : 'Required. Switch to العربية to translate the same topology.'}
+        </span>
+      </div>
+
       {/* Empty-state helper */}
       {nodes.length === 0 && (
         <button
@@ -270,9 +334,10 @@ const SimulationBuilder: React.FC<SimulationBuilderProps> = ({ value, onChange }
           <div key={node.id} className="rounded-lg border border-[#263248] bg-[#0a0f18] p-3">
             <div className="flex items-center gap-2 mb-2.5">
               <input
-                value={node.label}
-                onChange={(e) => updateNode(node.id, { label: e.target.value })}
-                placeholder="Label"
+                value={half(node.label)}
+                onChange={(e) => updateNode(node.id, { label: merge(node.label, e.target.value) })}
+                placeholder={hint(node.label, 'Label')}
+                dir={fieldDir}
                 className={`${inputCls} font-semibold`}
               />
               <button
@@ -353,18 +418,22 @@ const SimulationBuilder: React.FC<SimulationBuilderProps> = ({ value, onChange }
               <div className="flex-1 min-w-0">
                 <label className={labelCls}>Label</label>
                 <input
-                  value={zone.label}
-                  onChange={(e) => updateZone(zone.id, { label: e.target.value })}
-                  placeholder="Home Network"
+                  value={half(zone.label)}
+                  onChange={(e) => updateZone(zone.id, { label: merge(zone.label, e.target.value) })}
+                  placeholder={hint(zone.label, 'Home Network')}
+                  dir={fieldDir}
                   className={inputCls}
                 />
               </div>
               <div className="flex-1 min-w-0">
                 <label className={labelCls}>Sublabel (CIDR)</label>
                 <input
-                  value={zone.sublabel ?? ''}
-                  onChange={(e) => updateZone(zone.id, { sublabel: e.target.value || undefined })}
-                  placeholder="192.168.1.0/24"
+                  value={half(zone.sublabel)}
+                  onChange={(e) =>
+                    updateZone(zone.id, { sublabel: mergeOpt(zone.sublabel, e.target.value) })
+                  }
+                  placeholder={hint(zone.sublabel, '192.168.1.0/24')}
+                  dir={fieldDir}
                   className={`${inputCls} font-mono`}
                 />
               </div>
@@ -441,7 +510,7 @@ const SimulationBuilder: React.FC<SimulationBuilderProps> = ({ value, onChange }
                     >
                       {nodes.map((n) => (
                         <option key={n.id} value={n.id}>
-                          {n.label}
+                          {nodeName(n.label)}
                         </option>
                       ))}
                     </select>
@@ -458,7 +527,7 @@ const SimulationBuilder: React.FC<SimulationBuilderProps> = ({ value, onChange }
                     >
                       {nodes.map((n) => (
                         <option key={n.id} value={n.id}>
-                          {n.label}
+                          {nodeName(n.label)}
                         </option>
                       ))}
                     </select>
@@ -507,9 +576,10 @@ const SimulationBuilder: React.FC<SimulationBuilderProps> = ({ value, onChange }
                 {idx + 1}
               </span>
               <input
-                value={step.title}
-                onChange={(e) => updateStep(idx, { title: e.target.value })}
-                placeholder="Step title"
+                value={half(step.title)}
+                onChange={(e) => updateStep(idx, { title: merge(step.title, e.target.value) })}
+                placeholder={hint(step.title, 'Step title')}
+                dir={fieldDir}
                 className={`${inputCls} font-semibold`}
               />
               <div className="flex items-center flex-shrink-0">
@@ -540,9 +610,12 @@ const SimulationBuilder: React.FC<SimulationBuilderProps> = ({ value, onChange }
             </div>
 
             <textarea
-              value={step.description}
-              onChange={(e) => updateStep(idx, { description: e.target.value })}
-              placeholder="What happens in this step?"
+              value={half(step.description)}
+              onChange={(e) =>
+                updateStep(idx, { description: merge(step.description, e.target.value) })
+              }
+              placeholder={hint(step.description, 'What happens in this step?')}
+              dir={fieldDir}
               className={`${inputCls} min-h-[48px] resize-y mb-2.5`}
             />
 
@@ -564,7 +637,7 @@ const SimulationBuilder: React.FC<SimulationBuilderProps> = ({ value, onChange }
                             : 'bg-[#0d1117] border border-[#263248] text-[#6e7a94] hover:text-[#d2d7e3]'
                         }`}
                       >
-                        {n.label}
+                        {nodeName(n.label)}
                       </button>
                     );
                   })}
@@ -592,7 +665,7 @@ const SimulationBuilder: React.FC<SimulationBuilderProps> = ({ value, onChange }
                         >
                           {nodes.map((n) => (
                             <option key={n.id} value={n.id}>
-                              {n.label}
+                              {nodeName(n.label)}
                             </option>
                           ))}
                         </select>
@@ -606,7 +679,7 @@ const SimulationBuilder: React.FC<SimulationBuilderProps> = ({ value, onChange }
                         >
                           {nodes.map((n) => (
                             <option key={n.id} value={n.id}>
-                              {n.label}
+                              {nodeName(n.label)}
                             </option>
                           ))}
                         </select>
@@ -623,9 +696,12 @@ const SimulationBuilder: React.FC<SimulationBuilderProps> = ({ value, onChange }
                     <div className="flex items-center gap-2">
                       <div className="flex-1 min-w-0">
                         <input
-                          value={pkt.label}
-                          onChange={(e) => updatePacket(idx, pIdx, { label: e.target.value })}
-                          placeholder="Label (e.g. GET /)"
+                          value={half(pkt.label)}
+                          onChange={(e) =>
+                            updatePacket(idx, pIdx, { label: merge(pkt.label, e.target.value) })
+                          }
+                          placeholder={hint(pkt.label, 'Label (e.g. GET /)')}
+                          dir={fieldDir}
                           className={inputCls}
                         />
                       </div>

@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { getNetworkingLesson, getNetworkingLessons } from '../../data/networking';
 import { NetworkSimulator } from '../../components/network-sim';
-import { hasSimulation, type NetworkingLesson } from '../../components/network-sim/types';
+import { hasSimulation, tFor, type NetworkingLesson } from '../../components/network-sim/types';
 import Button from '../../components/ui/EnhancedButton';
 import ResizeHandle from '../../components/ui/ResizeHandle';
 import LessonMarkdown from '../../components/ui/LessonMarkdown';
@@ -260,7 +260,7 @@ const NetworkingLessonPage: React.FC = () => {
               splitView ? 'max-w-2xl' : 'max-w-4xl'
             }`}
           >
-            <LessonMarkdown content={lesson.markdownContent} />
+            <LessonMarkdown content={tFor(lesson.markdownContent, lang)} />
 
             {/* ── Completion — quiz-gated when the lesson has one ── */}
             <div className="mt-10 pt-6 border-t border-[#263248] space-y-4">

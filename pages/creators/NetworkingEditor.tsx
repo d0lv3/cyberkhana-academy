@@ -15,7 +15,7 @@ import CreatorLayout from '../../components/creators/CreatorLayout';
 import BilingualInput from '../../components/creators/BilingualInput';
 import TagInput from '../../components/creators/TagInput';
 import CoverImageUploader from '../../components/creators/CoverImageUploader';
-import MarkdownUploader from '../../components/creators/MarkdownUploader';
+import BilingualMarkdown from '../../components/creators/BilingualMarkdown';
 import MarkdownPreview from '../../components/creators/MarkdownPreview';
 import QuizEditor, { cleanQuiz } from '../../components/creators/QuizEditor';
 import SimulationBuilder from '../../components/creators/SimulationBuilder';
@@ -39,7 +39,11 @@ import {
 import { networkingLessons } from '../../data/networking';
 import { builtinToEditableLesson } from '../../data/builtinCourse';
 import { ADMIN_NETWORKING_STASH, type AdminNetworkingStash } from './networkingEditStash';
-import { hasSimulation, type NetworkSimulation } from '../../components/network-sim/types';
+import {
+  hasSimulation,
+  toLocalizedText,
+  type NetworkSimulation,
+} from '../../components/network-sim/types';
 
 function generateSlug(title: string): string {
   return title
@@ -89,7 +93,13 @@ const NetworkingEditor: React.FC = () => {
   const [estimatedMinutes, setEstimatedMinutes] = useState(10);
   const [tags, setTags] = useState<string[]>([]);
   const [coverSvg, setCoverSvg] = useState('');
-  const [markdownContent, setMarkdownContent] = useState('');
+  const [markdownContent, setMarkdownContent] = useState({ en: '', ar: '' });
+  /* The language tab shared by the markdown editor and its preview, and by
+   * the simulation builder and its preview. One per pane, because an author
+   * translating the body is not necessarily translating the topology in the
+   * same sitting. */
+  const [mdLang, setMdLang] = useState<'en' | 'ar'>('en');
+  const [simLang, setSimLang] = useState<'en' | 'ar'>('en');
   const [quiz, setQuiz] = useState<QuizQuestion[]>([]);
   const [simulation, setSimulation] = useState<NetworkSimulation>(emptySimulation(''));
   /* Whether this lesson ships a simulation at all. Held apart from the
@@ -147,7 +157,7 @@ const NetworkingEditor: React.FC = () => {
     setEstimatedMinutes(lesson.estimatedMinutes);
     setTags(lesson.tags);
     setCoverSvg(lesson.coverSvg ?? '');
-    setMarkdownContent(lesson.markdownContent);
+    setMarkdownContent(toLocalizedText(lesson.markdownContent));
     setQuiz(lesson.quiz ?? []);
     setSimulation(lesson.simulation ?? emptySimulation(lesson.slug));
     setWithSimulation(hasSimulation(lesson.simulation));
@@ -161,6 +171,14 @@ const NetworkingEditor: React.FC = () => {
   }, [titleEn, isEditing]);
 
   const handleSave = async () => {
+    if (!markdownContent.en.trim() && markdownContent.ar.trim()) {
+      // Arabic alone would leave English readers with a blank lesson, since
+      // every fallback in the app runs towards English.
+      toast('error', 'Write the English lesson body too; Arabic alone has nothing to fall back to.');
+      setTab('lesson');
+      setMdLang('en');
+      return;
+    }
     if (!titleEn.trim()) {
       toast('error', 'An English title is required before saving.');
       setTab('lesson');
@@ -382,10 +400,11 @@ const NetworkingEditor: React.FC = () => {
 
             <EnhancedCard padding="lg">
               <h3 className="text-sm font-bold text-[#f3f6ff] mb-4">Markdown Content</h3>
-              <MarkdownUploader
+              <BilingualMarkdown
                 value={markdownContent}
                 onChange={setMarkdownContent}
-                placeholder={'# Lesson Title\n\nYour lesson content in markdown...'}
+                lang={mdLang}
+                onLangChange={setMdLang}
               />
             </EnhancedCard>
 
@@ -412,9 +431,15 @@ const NetworkingEditor: React.FC = () => {
                 <span className="text-xs font-bold uppercase tracking-wider text-[#6e7a94]">
                   Live Preview
                 </span>
+                <span className="ms-auto text-[10px] font-bold text-[#6e7a94]">
+                  {mdLang === 'ar' ? 'العربية' : 'English'}
+                </span>
               </div>
-              <div className="max-h-[calc(100vh-220px)] overflow-y-auto custom-scrollbar p-6">
-                <MarkdownPreview content={markdownContent} />
+              <div
+                className="max-h-[calc(100vh-220px)] overflow-y-auto custom-scrollbar p-6"
+                dir={mdLang === 'ar' ? 'rtl' : 'ltr'}
+              >
+                <MarkdownPreview content={markdownContent[mdLang]} />
               </div>
             </EnhancedCard>
           </div>
@@ -466,7 +491,12 @@ const NetworkingEditor: React.FC = () => {
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {/* LEFT: Builder */}
             <div>
-              <SimulationBuilder value={simulation} onChange={setSimulation} />
+              <SimulationBuilder
+                value={simulation}
+                onChange={setSimulation}
+                lang={simLang}
+                onLangChange={setSimLang}
+              />
             </div>
 
             {/* RIGHT: Live simulation preview */}
@@ -476,6 +506,9 @@ const NetworkingEditor: React.FC = () => {
                   <Eye size={13} className="text-[#6e7a94]" />
                   <span className="text-xs font-bold uppercase tracking-wider text-[#6e7a94]">
                     Simulation Preview
+                  </span>
+                  <span className="ms-auto text-[10px] font-bold text-[#6e7a94]">
+                    {simLang === 'ar' ? 'العربية' : 'English'}
                   </span>
                 </div>
                 <div className="p-4">
@@ -487,6 +520,7 @@ const NetworkingEditor: React.FC = () => {
                     <div className="h-[520px]">
                       <NetworkSimulator
                         simulation={simulation}
+                        lang={simLang}
                         onNodeMove={(id, x, y) =>
                           setSimulation((s) => ({
                             ...s,

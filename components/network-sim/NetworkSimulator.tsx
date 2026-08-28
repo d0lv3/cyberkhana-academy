@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { RotateCcw, Move, Maximize2, Minimize2 } from 'lucide-react';
-import { NetworkSimulation } from './types';
+import { tFor, type NetworkSimulation } from './types';
+import { useLang } from '../../contexts/LangContext';
 import DeviceIcon from './DeviceIcon';
 import PacketAnimation from './PacketAnimation';
 import SimulationControls from './SimulationControls';
@@ -14,6 +15,13 @@ interface NetworkSimulatorProps {
    * devices are still draggable, but only rearrange the view locally (student mode).
    */
   onNodeMove?: (id: string, x: number, y: number) => void;
+  /**
+   * Which language to resolve the labels in. Defaults to the interface
+   * language, which is what a student gets. The builder passes the tab the
+   * author is editing, so the preview shows the copy being typed rather than
+   * whatever the studio happens to be set to.
+   */
+  lang?: 'en' | 'ar';
 }
 
 const VB_W = 900;
@@ -138,8 +146,12 @@ function routeMid(points: Pt[]): Pt {
  *  │     Step info + controls   │
  *  └────────────────────────────┘
  */
-const NetworkSimulator: React.FC<NetworkSimulatorProps> = ({ simulation, onNodeMove }) => {
+const NetworkSimulator: React.FC<NetworkSimulatorProps> = ({ simulation, onNodeMove, lang }) => {
   const { nodes, edges, steps } = simulation;
+  const { lang: uiLang } = useLang();
+  const L = lang ?? uiLang;
+  /** Every student-visible string on the canvas goes through here. */
+  const text = (v: Parameters<typeof tFor>[0]) => tFor(v, L);
   const [currentStep, setCurrentStep] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -364,11 +376,11 @@ const NetworkSimulator: React.FC<NetworkSimulatorProps> = ({ simulation, onNodeM
                   fontFamily={MONO}
                   letterSpacing="2"
                 >
-                  {zone.label.toUpperCase()}
+                  {text(zone.label).toUpperCase()}
                 </text>
-                {zone.sublabel && (
+                {text(zone.sublabel) && (
                   <text x={zx + 16} y={zy + 40} fill={zc} opacity={0.5} fontSize={10.5} fontFamily={MONO}>
-                    {zone.sublabel}
+                    {text(zone.sublabel)}
                   </text>
                 )}
               </g>
@@ -392,7 +404,8 @@ const NetworkSimulator: React.FC<NetworkSimulatorProps> = ({ simulation, onNodeM
             const mid = routeMid(pts);
             const start = pts[0];
             const end = pts[pts.length - 1];
-            const chipW = edge.label ? edge.label.length * 6.6 + 16 : 0;
+            const edgeLabel = text(edge.label);
+            const chipW = edgeLabel ? edgeLabel.length * 6.6 + 16 : 0;
 
             return (
               <g key={edge.id}>
@@ -445,7 +458,7 @@ const NetworkSimulator: React.FC<NetworkSimulatorProps> = ({ simulation, onNodeM
                   className="transition-colors duration-500"
                 />
                 {/* Edge label chip */}
-                {edge.label && (
+                {edgeLabel && (
                   <g>
                     <rect
                       x={mid.x - chipW / 2}
@@ -470,7 +483,7 @@ const NetworkSimulator: React.FC<NetworkSimulatorProps> = ({ simulation, onNodeM
                       fontFamily={MONO}
                       className="transition-colors duration-500"
                     >
-                      {edge.label}
+                      {edgeLabel}
                     </text>
                   </g>
                 )}
@@ -482,7 +495,7 @@ const NetworkSimulator: React.FC<NetworkSimulatorProps> = ({ simulation, onNodeM
           {nodes.map((node) => {
             const pos = nodePos(node.id);
             const isHighlighted = highlightSet.has(node.id);
-            const annotation = step?.annotations?.[node.id];
+            const annotation = text(step?.annotations?.[node.id]);
 
             // Icon stands on its own — no card / container behind it.
             const iconSize = 110;
@@ -519,7 +532,7 @@ const NetworkSimulator: React.FC<NetworkSimulatorProps> = ({ simulation, onNodeM
                   fontFamily="'Poppins', sans-serif"
                   className="transition-colors duration-300"
                 >
-                  {node.label}
+                  {text(node.label)}
                 </text>
 
                 {/* IP address */}
@@ -539,7 +552,7 @@ const NetworkSimulator: React.FC<NetworkSimulatorProps> = ({ simulation, onNodeM
                 )}
 
                 {/* Sublabel */}
-                {node.sublabel && (
+                {text(node.sublabel) && (
                   <text
                     x={pos.cx}
                     y={node.ip ? labelY + 43 : labelY + 19}
@@ -548,7 +561,7 @@ const NetworkSimulator: React.FC<NetworkSimulatorProps> = ({ simulation, onNodeM
                     fontSize={11}
                     fontFamily="'Poppins', sans-serif"
                   >
-                    {node.sublabel}
+                    {text(node.sublabel)}
                   </text>
                 )}
 
@@ -605,9 +618,9 @@ const NetworkSimulator: React.FC<NetworkSimulatorProps> = ({ simulation, onNodeM
                   <PacketAnimation
                     key={`${currentStep}-${i}`}
                     points={pts}
-                    label={pkt.label}
+                    label={text(pkt.label)}
                     color={pkt.color || '#9fef00'}
-                    sublabel={pkt.sublabel}
+                    sublabel={text(pkt.sublabel)}
                     duration={1.5}
                     delay={i * 0.2}
                     onComplete={onPacketComplete}
@@ -620,7 +633,8 @@ const NetworkSimulator: React.FC<NetworkSimulatorProps> = ({ simulation, onNodeM
         {/* Drag hint */}
         {nodes.length > 0 && (
           <div className="absolute bottom-2.5 left-3 flex items-center gap-1.5 text-[10px] font-medium text-[#4d5a73] pointer-events-none select-none">
-            <Move size={11} /> Drag devices to rearrange
+            <Move size={11} />{' '}
+            {L === 'ar' ? 'اسحب الأجهزة لإعادة ترتيبها' : 'Drag devices to rearrange'}
           </div>
         )}
 
@@ -633,7 +647,7 @@ const NetworkSimulator: React.FC<NetworkSimulatorProps> = ({ simulation, onNodeM
               onClick={resetLayout}
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold text-[#9aa5bf] bg-[#0d1420]/90 border border-[#263248] hover:text-[#d2d7e3] hover:border-[#354562] transition-all backdrop-blur-sm"
             >
-              <RotateCcw size={11} /> Reset layout
+              <RotateCcw size={11} /> {L === 'ar' ? 'إعادة التخطيط' : 'Reset layout'}
             </button>
           )}
 
@@ -641,8 +655,24 @@ const NetworkSimulator: React.FC<NetworkSimulatorProps> = ({ simulation, onNodeM
           <button
             type="button"
             onClick={() => setIsMaximized((m) => !m)}
-            aria-label={isMaximized ? 'Exit full screen' : 'Maximise simulation'}
-            title={isMaximized ? 'Exit full screen (Esc)' : 'Maximise'}
+            aria-label={
+              isMaximized
+                ? L === 'ar'
+                  ? 'الخروج من ملء الشاشة'
+                  : 'Exit full screen'
+                : L === 'ar'
+                  ? 'تكبير المحاكاة'
+                  : 'Maximise simulation'
+            }
+            title={
+              isMaximized
+                ? L === 'ar'
+                  ? 'الخروج من ملء الشاشة (Esc)'
+                  : 'Exit full screen (Esc)'
+                : L === 'ar'
+                  ? 'تكبير'
+                  : 'Maximise'
+            }
             className="flex items-center justify-center w-7 h-7 rounded-lg text-[#9aa5bf] bg-[#0d1420]/90 border border-[#263248] hover:text-[#00a859] hover:border-[#00a859]/40 transition-all backdrop-blur-sm"
           >
             {isMaximized ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
@@ -657,8 +687,9 @@ const NetworkSimulator: React.FC<NetworkSimulatorProps> = ({ simulation, onNodeM
           totalSteps={steps.length}
           isAnimating={isAnimating}
           isPlaying={isPlaying}
-          stepTitle={step?.title ?? ''}
-          stepDescription={step?.description ?? ''}
+          stepTitle={text(step?.title)}
+          stepDescription={text(step?.description)}
+          lang={L}
           onPrevious={goPrev}
           onNext={goNext}
           onTogglePlay={togglePlay}

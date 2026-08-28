@@ -109,10 +109,20 @@ full width, with no side panel and no Content/Simulation tabs on mobile.
 | Order | ✅ (default 100) | Position in the lesson list, and the order the in-lesson **Continue** button follows |
 | Est. Minutes | ✅ (default 10) | Shown on the lesson card |
 | Tags | optional | Up to ~5 shown on the card |
-| Markdown Content | ✅ | The reading pane. Takes the whole screen when the lesson has no simulation, and students can drag the divider or minimise the simulation when it has one |
+| Markdown Content | ✅ (English) | Bilingual: EN/العربية tabs, and the preview beside it follows the tab you are on. Arabic is optional and falls back to English, so English is the one you cannot skip. The reading pane takes the whole screen when the lesson has no simulation, and students can drag the divider or minimise the simulation when it has one |
 | Lesson Quiz | optional | **With** a quiz: students must score ≥ 70 % to complete the lesson. **Without**: they get a manual "Mark as complete" button |
 
 ### Simulation tab (the builder)
+
+**Labels in EN / العربية** sits at the top of the builder and retargets *every*
+text box below it at once, rather than each field carrying its own pair of
+inputs. Lay the topology out in English, switch to العربية, and make a second
+pass over the same form; the live preview follows the tab you are on. On the
+Arabic tab an untranslated box shows its English greyed out as the
+placeholder, so the gaps are visible without switching back to check.
+Everything a student reads is covered: device labels and sublabels, zone
+labels, connection labels, step titles and descriptions, and packet labels.
+IP addresses are not, since an address is the same in every language.
 
 | Section | What you define |
 |---|---|
@@ -127,7 +137,8 @@ Gold `#f3a43a` = highlight · Red = blocked/dropped.
 ### Publish checklist
 
 - [ ] English title
-- [ ] Markdown content written
+- [ ] English markdown body (Arabic optional; Arabic alone is refused, because
+      every fallback in the app runs towards English)
 - [ ] **At least one simulation step**, if the lesson has a simulation at all
       (publishing is blocked on a simulation with no steps; turn it off to publish
       a prose-only lesson)
