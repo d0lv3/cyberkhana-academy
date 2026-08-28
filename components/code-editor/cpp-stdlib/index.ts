@@ -13,8 +13,9 @@
 
 import { installString, wireStringToStreams } from './cppString.ts';
 import { installVector, eraseTemplateArgs } from './cppVector.ts';
+import { repairLiteralSpaces } from './literalSpaces.ts';
 
-export { eraseTemplateArgs };
+export { eraseTemplateArgs, repairLiteralSpaces };
 export { findConstViolation, type ConstViolation } from './constCheck.ts';
 
 /**
@@ -54,7 +55,11 @@ export function withStdlibIncludes(source: string): string {
   return `${source}\n#include <string>\n#include <vector>\n`;
 }
 
-/** Everything the source needs before JSCPP sees it. */
+/**
+ * Everything the source needs before JSCPP sees it: template arguments erased
+ * so the grammar can parse the containers, string literals repaired so the
+ * preprocessor cannot eat their spaces, then the extra headers appended.
+ */
 export function prepareCppSource(source: string): string {
-  return withStdlibIncludes(eraseTemplateArgs(source));
+  return withStdlibIncludes(repairLiteralSpaces(eraseTemplateArgs(source)));
 }

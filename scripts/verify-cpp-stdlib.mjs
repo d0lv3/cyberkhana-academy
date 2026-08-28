@@ -12,6 +12,7 @@ import JSCPP from 'JSCPP';
 import { installString, wireStringToStreams } from '../components/code-editor/cpp-stdlib/cppString.ts';
 import { installVector, eraseTemplateArgs } from '../components/code-editor/cpp-stdlib/cppVector.ts';
 import { findConstViolation } from '../components/code-editor/cpp-stdlib/constCheck.ts';
+import { repairLiteralSpaces } from '../components/code-editor/cpp-stdlib/literalSpaces.ts';
 
 /* The leaf modules are imported directly rather than through the barrel: node
  * needs a file extension and the app source deliberately does not carry one.
@@ -25,7 +26,8 @@ const CPP_STDLIB_INCLUDES = {
     },
   },
 };
-const prepareCppSource = (src) => `${eraseTemplateArgs(src)}\n#include <string>\n#include <vector>\n`;
+const prepareCppSource = (src) =>
+  `${repairLiteralSpaces(eraseTemplateArgs(src))}\n#include <string>\n#include <vector>\n`;
 
 let pass = 0;
 let fail = 0;
@@ -133,6 +135,41 @@ expectOutput('const name inside a string', main('  const int x = 5;\n  cout << "
 expectOutput('const name inside a comment', main('  const int x = 5;\n  // x = 99;\n  cout << x << endl;'), '5\n');
 expectOutput('multiple declarators', main('  const int a = 1, b = 2;\n  cout << a + b << endl;'), '3\n');
 expectError('second declarator is const too', main('  const int a = 1, b = 2;\n  b = 5;\n  cout << b << endl;'), "read-only variable 'b'");
+expectError('declaration and assignment on one line',
+  '#include <stdio.h>\nint main(){ const int x = 1; x = 2; return 0; }\n', "read-only variable 'x'");
+expectOutput('a declarator list split over lines is not an assignment',
+  main('  const int a = 1,\n            b = 2;\n  cout << a + b << endl;'), '3\n');
+
+console.log('\nstring literals survive the preprocessor\n');
+/* JSCPP's preprocessor rebuilds every call's argument list and eats the space
+   after a comma inside a literal — see cpp-stdlib/literalSpaces.ts. */
+expectOutput('comma-space inside printf',
+  '#include <stdio.h>\nint main(){ printf("Hello, World!\\n"); return 0; }\n', 'Hello, World!\n');
+expectOutput('comma-space in a format string',
+  '#include <stdio.h>\nint main(){ printf("%d, %d\\n", 1, 2); return 0; }\n', '1, 2\n');
+expectOutput('several spaces after a comma',
+  '#include <stdio.h>\nint main(){ printf("a,   b\\n"); return 0; }\n', 'a,   b\n');
+expectOutput('comma-space inside puts',
+  '#include <stdio.h>\nint main(){ puts("Hello, World!"); return 0; }\n', 'Hello, World!');
+expectOutput('a literal passed to a nested call keeps its length',
+  '#include <iostream>\n#include <cstring>\nusing namespace std;\nint main(){ cout << strlen("a, b") << endl; return 0; }\n', '4\n');
+expectOutput('cout is unaffected',
+  main('  cout << "Hello, World!" << endl;'), 'Hello, World!\n');
+expectOutput('a space before the comma is left alone',
+  '#include <stdio.h>\nint main(){ printf("a , b\\n"); return 0; }\n', 'a , b\n');
+expectOutput('a hex digit after the repaired space is not swallowed',
+  '#include <stdio.h>\nint main(){ printf("a, Abc\\n"); return 0; }\n', 'a, Abc\n');
+expectOutput('a comma in a comment is not touched',
+  main('  // hello, world\n  cout << "ok" << endl;'), 'ok\n');
+expectOutput('a std::string literal keeps its spacing',
+  main('  string s = "Hello, World!";\n  cout << s << endl;'), 'Hello, World!\n');
+
+console.log('\nC stdio in the browser bundle\n');
+/* Node has a real `stream` module, so a printf that works here can still fail
+   in the browser — see shims/node-stream.ts. This asserts the C side of the
+   runtime under node; the browser path is covered by the shim itself. */
+expectOutput('printf', '#include <stdio.h>\nint main(){ printf("hi %d\\n", 42); return 0; }\n', 'hi 42\n');
+expectOutput('scanf', '#include <stdio.h>\nint main(){ int a, b; scanf("%d %d", &a, &b); printf("%d\\n", a + b); return 0; }\n', '7\n', '3 4');
 
 console.log(`\n${pass} passed, ${fail} failed.\n`);
 process.exit(fail === 0 ? 0 : 1);

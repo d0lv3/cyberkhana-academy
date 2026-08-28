@@ -19,6 +19,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, '.'),
+      /* JSCPP's printf reaches for Node's `stream`; see shims/node-stream.ts.
+         Without this, every printf/puts/sprintf in a C lesson throws. */
+      stream: path.resolve(__dirname, 'shims/node-stream.ts'),
     },
   },
   build: {

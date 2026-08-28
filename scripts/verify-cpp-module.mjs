@@ -10,7 +10,7 @@
  * `using namespace std;` and bare `cout` instead, and note that classes and
  * structs are rejected by the grammar outright).
  *
- * Usage: npm run verify:cpp -- ./data/programming/cpp/01-getting-started.ts
+ * Usage: npm run verify:cpp -- ./data/programming/c/01-getting-started.ts
  */
 import JSCPP from 'JSCPP';
 import { resolve } from 'path';
@@ -18,6 +18,7 @@ import { pathToFileURL } from 'url';
 import { installString, wireStringToStreams } from '../components/code-editor/cpp-stdlib/cppString.ts';
 import { installVector, eraseTemplateArgs } from '../components/code-editor/cpp-stdlib/cppVector.ts';
 import { findConstViolation } from '../components/code-editor/cpp-stdlib/constCheck.ts';
+import { repairLiteralSpaces } from '../components/code-editor/cpp-stdlib/literalSpaces.ts';
 
 const MAX_TIMEOUT_MS = 10_000;
 
@@ -39,7 +40,7 @@ function run(code, stdin = '') {
   if (violation) return { out: '', error: violation.message };
   let out = '';
   try {
-    const prepared = `${eraseTemplateArgs(code)}\n#include <string>\n#include <vector>\n`;
+    const prepared = `${repairLiteralSpaces(eraseTemplateArgs(code))}\n#include <string>\n#include <vector>\n`;
     JSCPP.run(prepared, stdin ?? '', {
       stdio: { write: (s) => { out += s; } },
       includes: INCLUDES,

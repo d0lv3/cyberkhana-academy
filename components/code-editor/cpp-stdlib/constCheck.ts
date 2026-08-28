@@ -85,11 +85,17 @@ export function findConstViolation(source: string): ConstViolation | null {
 
   while ((m = assignRe.exec(code)) !== null) {
     const name = m[1] ?? m[2];
-    // The declaration's own initialiser is not an assignment.
+    /* The declaration's own initialiser is not an assignment. The statement it
+       belongs to is what matters, not the line: `const int a = 1; a = 2;`
+       written on one line is still a violation, and a declarator list split
+       over several lines still is not. */
     const upToHere = code.slice(0, m.index);
-    const lineStart = upToHere.lastIndexOf('\n') + 1;
-    const lineSoFar = code.slice(lineStart, m.index);
-    if (/\bconst\b/.test(lineSoFar)) continue;
+    const statementStart = Math.max(
+      upToHere.lastIndexOf(';'),
+      upToHere.lastIndexOf('{'),
+      upToHere.lastIndexOf('}')
+    );
+    if (/\bconst\b/.test(code.slice(statementStart + 1, m.index))) continue;
 
     const { line, column } = positionOf(source, m.index);
     return {
