@@ -32,7 +32,8 @@ print(type(x))
 x = 99
 print(type(x))
 `,
-      markdownContent: `# Working With Data
+      markdownContent: {
+        en: `# Working With Data
 
 A program is mostly one thing: **data, and what you do to it**. A password, a port number, a list of hosts, whether a scan finished, all data.
 
@@ -96,6 +97,71 @@ Nothing warns you in advance. Knowing what type you're holding is your job, whic
 
 Run the starter code. Watch the last two lines: the same name reports two different types, because it's pointing at two different values.
 `,
+        ar: `# التعامل مع البيانات
+
+البرنامج في معظمه شيء واحد: **بيانات، وما تفعله بها**. كلمة مرور، أو رقم منفذ، أو قائمة مضيفين، أو ما إذا كان الفحص قد انتهى، كلها بيانات.
+
+وتحتاج بايثون إلى معرفة *نوع* كل قيمة، لأن النوع هو ما يحدد الممكن. فجمع عددين عملية حسابية. أما "جمع" نصين فهو إلصاقهما ببعضهما. العلامة \`+\` نفسها، والمعنى مختلف، والنوع هو الذي يحسم الأمر.
+
+---
+
+## القيم والأنواع
+
+القيمة التي تكتبها مباشرة في شيفرتك تسمى **قيمة حرفية (literal)**:
+
+\`\`\`python
+"CyberKhana"   # text
+2026           # a whole number
+3.5            # a number with a decimal point
+True           # a yes/no value
+\`\`\`
+
+وتربط بايثون بكل واحدة منها نوعا تلقائيا. اسألها عنه بالدالة المدمجة \`type()\`:
+
+\`\`\`python
+print(type("CyberKhana"))
+print(type(2026))
+\`\`\`
+
+**المخرجات:**
+\`\`\`
+<class 'str'>
+<class 'int'>
+\`\`\`
+
+النوع \`str\` نص (string)، و\`int\` عدد صحيح (integer). وتظهر كلمة "class" لأن كل قيمة في بايثون **كائن (object)**، ونوعها هو الصنف (class) الذي جاءت منه. لا داعي للقلق من هذا بعد، فقط لاحظ المصطلحات.
+
+---
+
+## النوع ملك للقيمة
+
+هذه هي الفكرة التي يجب أن تتمسك بها. في بعض اللغات تصرح بأن "هذا الصندوق يحمل أعدادا صحيحة إلى الأبد". بايثون لا تفعل ذلك. فالنوع يسكن في **القيمة**، والاسم يستطيع أن يشير إلى أي قيمة:
+
+\`\`\`python
+x = "text"
+print(type(x))   # <class 'str'>
+x = 99
+print(type(x))   # <class 'int'>
+\`\`\`
+
+لم يغير \`x\` نوعه، بل وجه \`x\` إلى قيمة أخرى، ولتلك القيمة نوعها الخاص. وهذا ما يسمى **التنميط الديناميكي (dynamic typing)**.
+
+وهو سبب شعورك بأن بايثون سريعة الكتابة. وهو أيضا سبب ظهور صنف كامل من الأخطاء عند تنفيذ السطر لا قبله:
+
+\`\`\`python
+port = "8080"      # text that looks like a number
+print(port + 1)    # TypeError, at runtime
+\`\`\`
+
+لا شيء يحذرك مسبقا. فمعرفة النوع الذي تحمله مسؤوليتك أنت، ولهذا بالضبط تستحق \`type()\` أن تعرفها من اليوم الأول.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. راقب السطرين الأخيرين: الاسم نفسه يبلغ عن نوعين مختلفين، لأنه يشير إلى قيمتين مختلفتين.
+`,
+      },
     },
 
     /* ── 2. Data Types Overview (lesson) ── */
@@ -119,7 +185,8 @@ nothing = None                # NoneType
 for value in [text, whole, decimal, flag, items, point, unique, person, nothing]:
     print(type(value).__name__, "->", value)
 `,
-      markdownContent: `# Data Types Overview
+      markdownContent: {
+        en: `# Data Types Overview
 
 A map of the types you'll meet. Each gets its own module later, the goal now is recognition, not mastery.
 
@@ -187,6 +254,75 @@ isinstance(2026, int)   # True
 
 Run the starter code, it prints each value with its type name. Look at \`unique\`: you wrote three items and got two, because a set drops the duplicate.
 `,
+        ar: `# نظرة عامة على أنواع البيانات
+
+خريطة للأنواع التي ستقابلها. لكل واحد منها وحدة خاصة لاحقا، والهدف الآن هو التعرف عليها لا إتقانها.
+
+---
+
+## الأنواع البسيطة
+
+\`\`\`python
+text    = "CyberKhana"   # str  , text
+whole   = 2026           # int  , whole number
+decimal = 3.5            # float, number with a decimal point
+flag    = True           # bool , True or False
+nothing = None           # NoneType, "no value"
+\`\`\`
+
+النوع **\`str\`** يحمل نصا بين علامتي اقتباس. و**\`int\`** عدد صحيح بلا حد أقصى للحجم في بايثون. و**\`float\`** يحمل فاصلة عشرية. ولاحظ أن \`3.0\` من نوع float و\`3\` من نوع int، والفاصلة العشرية هي كل الفرق.
+
+والنوع **\`bool\`** لا يكون إلا \`True\` أو \`False\` (بحرف أول كبير، فـ \`true\` تعطي \`NameError\`). وهو ما تنتجه كل عملية مقارنة.
+
+أما **\`None\`** فهو "لا شيء هنا" في بايثون. ليس \`0\` ولا \`""\`، فهاتان قيمتان. بينما \`None\` هو غياب القيمة، وهذا أمر مختلف فعلا.
+
+---
+
+## أنواع المجموعات
+
+هذه تحمل عدة قيم في آن واحد:
+
+\`\`\`python
+items  = ["nmap", "burp"]      # list , ordered, changeable
+point  = (10, 20)              # tuple, ordered, fixed
+unique = {"a", "b", "a"}       # set  , unordered, no duplicates
+person = {"name": "Sara"}      # dict , key -> value
+\`\`\`
+
+**\`list\`**، بأقواس مربعة. مرتبة وقابلة للتغيير، وهي مجموعتك اليومية.
+
+**\`tuple\`**، بأقواس هلالية. مثل القائمة، لكن **لا يمكن تغييرها** بعد إنشائها. استخدمها لأشياء لا ينبغي أن تتبدل، كإحداثية مثلا.
+
+**\`set\`**، بأقواس معقوفة. **تهمل التكرار** تلقائيا، ولا ترتيب لها. فـ \`{"a", "b", "a"}\` تحمل عنصرين.
+
+**\`dict\`**، بأقواس معقوفة مع أزواج \`key: value\`. تبحث فيها بالاسم بدل الموضع. وهي على الأرجح أكثر البنى استعمالا في بايثون.
+
+كل من \`set\` و\`dict\` يستعمل \`{}\`. والأزواج هي ما يجعلها dict.
+
+---
+
+## فحص النوع
+
+الدالة \`type()\` تعيد الصنف، و\`.__name__\` تعطيك الاسم المقروء وحده:
+
+\`\`\`python
+print(type("hi"))            # <class 'str'>
+print(type("hi").__name__)   # str
+\`\`\`
+
+ولـ *اختبار* نوع ما، فضل \`isinstance()\`:
+
+\`\`\`python
+isinstance(2026, int)   # True
+\`\`\`
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية، فهي تطبع كل قيمة مع اسم نوعها. وانظر إلى \`unique\`: كتبت ثلاثة عناصر فحصلت على اثنين، لأن المجموعة (set) تسقط المكرر.
+`,
+      },
     },
 
     /* ── 3. Variables (lesson) ── */
@@ -210,7 +346,8 @@ a = "second"   # a is re-pointed; b is untouched
 print("a =", a)
 print("b =", b)
 `,
-      markdownContent: `# Variables
+      markdownContent: {
+        en: `# Variables
 
 A **variable** is a name for a value, so you can use it later without repeating it.
 
@@ -276,6 +413,73 @@ Rename the platform and you must find every copy. With a variable there's one pl
 
 Run the starter code. The last two lines are the point: \`a\` and \`b\` end up different, because \`b = a\` copied a *reference*, not a promise.
 `,
+        ar: `# المتغيرات
+
+**المتغير** اسم لقيمة، تستعمله لاحقا دون أن تكرر القيمة نفسها.
+
+---
+
+## إنشاء متغير
+
+\`\`\`python
+name = "CyberKhana"
+year = 2026
+\`\`\`
+
+لا كلمة مفتاحية، ولا تصريح بالنوع، فقط \`name = value\`. والعلامة \`=\` هي **عامل الإسناد**: تأخذ القيمة التي على اليمين وتربط بها الاسم الذي على اليسار.
+
+وهي ليست مساواة. فـ \`=\` تسند، و\`==\` تقارن. والخلط بينهما طقس عبور يمر به الجميع.
+
+وما إن يرتبط الاسم حتى ينوب عن القيمة:
+
+\`\`\`python
+print("Year:", year)   # Year: 2026
+\`\`\`
+
+وإن استعملت اسما لم تسنده توقفت بايثون:
+
+\`\`\`python
+print(city)   # NameError: name 'city' is not defined
+\`\`\`
+
+---
+
+## الاسم لصاقة لا صندوق
+
+"المتغير صندوق يحمل قيمة" هو الشرح الأول المعتاد، وسيضللك قريبا. فمتغير بايثون **لصاقة ملصقة على قيمة**.
+
+ولماذا يهم هذا:
+
+\`\`\`python
+a = "first"
+b = a          # b labels the same value as a
+a = "second"   # a now labels a different value
+print(a)       # second
+print(b)       # first
+\`\`\`
+
+السطر \`b = a\` لم ينسخ شيئا ولم يربط \`b\` بـ \`a\`. بل وجه \`b\` إلى القيمة التي كانت لدى \`a\` *في تلك اللحظة*. وإعادة توجيه \`a\` بعد ذلك لا علاقة لها بـ \`b\`.
+
+احتفظ بهذه الصورة. فحين نصل إلى القوائم، وهي *قابلة* للتغيير في مكانها، تنتج القاعدة نفسها نتائج تبدو مفاجئة حتى تتذكر أن الأسماء لصاقات على القيم.
+
+---
+
+## ولماذا نتكبد هذا العناء
+
+\`\`\`python
+print("Report for CyberKhana")
+print("Welcome to CyberKhana")
+\`\`\`
+
+غير اسم المنصة وستضطر إلى تعقب كل نسخة منه. أما مع المتغير فهناك موضع واحد تعدله، والاسم يقول ما الذي *تعنيه* القيمة، فـ \`retries\` يشرح نفسه بينما الرقم \`3\` المجرد لا يفعل.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. السطران الأخيران هما بيت القصيد: ينتهي \`a\` و\`b\` مختلفين، لأن \`b = a\` نسخ *إشارة* لا وعدا.
+`,
+      },
     },
 
     /* ── 4. Naming and Reassigning (lesson) ── */
@@ -303,7 +507,8 @@ a, b = 1, 2
 a, b = b, a
 print("a =", a, "| b =", b)
 `,
-      markdownContent: `# Naming and Reassigning
+      markdownContent: {
+        en: `# Naming and Reassigning
 
 ---
 
@@ -398,6 +603,102 @@ x = y = 0   # both names point at 0
 
 Run the starter code. Then try \`class = 1\` and read the \`SyntaxError\`, Python names the exact problem.
 `,
+        ar: `# التسمية وإعادة الإسناد
+
+---
+
+## القواعد
+
+اسم المتغير **يجب** أن:
+
+- يبدأ بحرف أو بشرطة سفلية، لا برقم
+- يحتوي على حروف وأرقام وشرطات سفلية فقط
+- يتجنب الكلمات المفتاحية المحجوزة في بايثون
+
+\`\`\`python
+user_name = "Sara"    # fine
+_private  = 1         # fine
+name2     = "Ali"     # fine
+
+2name = "x"           # SyntaxError, starts with a digit
+user-name = "x"       # SyntaxError, '-' is a minus sign
+class = "x"           # SyntaxError, 'class' is a keyword
+\`\`\`
+
+والأسماء **حساسة لحالة الأحرف**: فـ \`name\` و\`Name\` و\`NAME\` ثلاثة متغيرات مختلفة.
+
+ولرؤية الكلمات المحجوزة:
+
+\`\`\`python
+import keyword
+print(keyword.kwlist)
+\`\`\`
+
+---
+
+## الأعراف المتبعة
+
+ليست ملزمة، لكنها سائدة في شيفرة بايثون:
+
+- **\`snake_case\`** للمتغيرات والدوال، أي \`scan_count\` لا \`scanCount\`.
+- **\`UPPER_CASE\`** للثوابت، مثل \`MAX_RETRIES = 3\`.
+- **الوصف أفضل من الاختصار**، فـ \`timeout_seconds\` أفضل من \`t\`. وستقرأ الشيفرة أضعاف ما تكتبها.
+
+وأيضا: لا تحجب الدوال المدمجة. فالسطر \`list = [1, 2]\` يعمل، ثم ينكسر \`list("abc")\` لأنك استبدلت المدمجة \`list\`. والأمر نفسه ينطبق على \`str\` و\`type\` و\`id\` و\`input\`.
+
+---
+
+## إعادة الإسناد
+
+يمكن إعادة توجيه المتغير في أي وقت إلى أي نوع:
+
+\`\`\`python
+count = 0
+count = "zero"   # legal, dynamic typing
+\`\`\`
+
+مسموح، لكنه فكرة سيئة عادة: فالاسم الذي يغير نوعه في منتصف السكربت يصعب تتبعه.
+
+والحالة الشائعة هي تحديث قيمة انطلاقا من نفسها:
+
+\`\`\`python
+scan_count = scan_count + 1
+scan_count += 1              # identical, shorter
+\`\`\`
+
+يقيم الطرف الأيمن **أولا**، ثم يعاد ربط الاسم بالنتيجة. وتتبع \`+=\` و\`-=\` و\`*=\` و\`/=\` هذا النمط كلها.
+
+---
+
+## الإسناد المتعدد دفعة واحدة
+
+\`\`\`python
+host, port = "10.0.0.5", 8080
+\`\`\`
+
+تزاوج بايثون بينها من اليسار إلى اليمين. ويجب أن يتطابق العددان وإلا حصلت على \`ValueError\`.
+
+وهذا يعطيك أنظف تبديل في أي لغة:
+
+\`\`\`python
+a, b = b, a
+\`\`\`
+
+فالطرف الأيمن يقيم بالكامل قبل أن يحدث أي إسناد، فلا حاجة إلى متغير مؤقت.
+
+وتستطيع أيضا التسلسل:
+
+\`\`\`python
+x = y = 0   # both names point at 0
+\`\`\`
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. ثم جرب \`class = 1\` واقرأ \`SyntaxError\`، فبايثون تسمي المشكلة بدقة.
+`,
+      },
     },
 
     /* ── 5. Escape Sequences (lesson) ── */
@@ -422,7 +723,8 @@ print("C:\\\\Users\\\\Sara")
 # A raw string takes backslashes literally
 print(r"C:\\Users\\Sara")
 `,
-      markdownContent: `# Escape Sequences
+      markdownContent: {
+        en: `# Escape Sequences
 
 Some characters can't simply be typed inside a string. A newline would end the line; a quote would end the string. An **escape sequence**, a backslash plus a letter, represents them instead.
 
@@ -488,6 +790,73 @@ Same output, far more readable. Reach for \`r"..."\` whenever backslashes are da
 
 Run the starter code and compare the last two lines: the escaped version and the raw version print identically, but one is much easier to read.
 `,
+        ar: `# متتاليات الهروب
+
+بعض المحارف لا يمكن كتابتها ببساطة داخل نص. فسطر جديد سينهي السطر، وعلامة اقتباس ستنهي النص. لذلك تمثلها **متتالية هروب (escape sequence)**، وهي شرطة مائلة عكسية يتبعها حرف.
+
+---
+
+## المتتاليات الشائعة
+
+| المتتالية | المعنى |
+|---|---|
+| \`\\n\` | سطر جديد |
+| \`\\t\` | مسافة جدولة |
+| \`\\\\\` | شرطة مائلة عكسية حرفية |
+| \`\\"\` | علامة اقتباس مزدوجة |
+| \`\\'\` | علامة اقتباس مفردة |
+
+\`\`\`python
+print("Line one\\nLine two")
+\`\`\`
+
+**المخرجات:**
+\`\`\`
+Line one
+Line two
+\`\`\`
+
+هذا نص **واحد**. فـ \`\\n\` ليست محرفين في المخرجات، بل محرف سطر جديد واحد. وتعمل \`\\t\` بالطريقة نفسها وهي مفيدة لمحاذاة الأعمدة.
+
+---
+
+## علامات الاقتباس
+
+ينتهي النص عند علامة الاقتباس المطابقة، فعلامة الاقتباس بداخله تحتاج انتباها:
+
+\`\`\`python
+print("She said "hello"")     # SyntaxError
+print("She said \\"hello\\"")   # escape it
+print('She said "hello"')     # or use the other quote style
+\`\`\`
+
+الأخير عادة هو الأنظف: إن كان نصك يحوي علامات اقتباس مزدوجة فأحطه بعلامات مفردة. ولا تلجأ إلى الهروب إلا حين تحتاج الاثنتين معا.
+
+---
+
+## الشرطات المائلة العكسية
+
+الشرطة المائلة العكسية تبدأ متتالية هروب، فالحرفية منها يجب أن تضاعف:
+
+\`\`\`python
+print("C:\\\\Users\\\\Sara")   # C:\\Users\\Sara
+\`\`\`
+
+وهذا يؤرقك في مسارات ويندوز والتعابير النمطية، فهي مليئة بالشرطات المائلة العكسية. ومن هنا جاءت **النصوص الخام (raw strings)**، تسبقها بـ \`r\` فتفقد الشرطات معناها الخاص:
+
+\`\`\`python
+print(r"C:\\Users\\Sara")   # C:\\Users\\Sara
+\`\`\`
+
+المخرجات نفسها، والقراءة أيسر بكثير. فالجأ إلى \`r"..."\` كلما كانت الشرطات المائلة العكسية بيانات لا تعليمات.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية وقارن السطرين الأخيرين: النسخة الهاربة والنسخة الخام تطبعان الشيء نفسه، لكن إحداهما أسهل قراءة بكثير.
+`,
+      },
     },
 
     /* ── 6. Concatenation (lesson) ── */
@@ -514,7 +883,8 @@ print("Year: " + str(year))
 # print() with commas needs no conversion, it adds spaces itself
 print("Year:", year)
 `,
-      markdownContent: `# Concatenation
+      markdownContent: {
+        en: `# Concatenation
 
 **Concatenation** is joining strings end to end.
 
@@ -586,6 +956,79 @@ Concatenation is still worth knowing: it's the clearest way to see that types do
 
 Run the starter code. Then delete the \`str()\` on the \`"Year: " + str(year)\` line and read the \`TypeError\`, it names both types it was given.
 `,
+        ar: `# الدمج
+
+**الدمج (concatenation)** هو وصل النصوص طرفا بطرف.
+
+---
+
+## العامل +
+
+\`\`\`python
+first = "Cyber"
+second = "Khana"
+print(first + second)          # CyberKhana
+print(first + " " + second)    # Cyber Khana
+\`\`\`
+
+يصل \`+\` ما تعطيه إياه بالضبط، دون إضافة مسافات. فإن أردت مسافة فأدرجها بنفسك.
+
+## العامل *
+
+ضرب نص في عدد صحيح يكرره:
+
+\`\`\`python
+print("-" * 20)    # --------------------
+print("ab" * 3)    # ababab
+\`\`\`
+
+طريقة سريعة لرسم خط فاصل.
+
+---
+
+## فخ الأنواع
+
+هذا هو الخطأ الذي ستصطدم به اليوم:
+
+\`\`\`python
+year = 2026
+print("Year: " + year)
+\`\`\`
+
+\`\`\`
+TypeError: can only concatenate str (not "int") to str
+\`\`\`
+
+فـ \`+\` تعني "اجمع" للأعداد و"صل" للنصوص. وحين تعطيها واحدا من كل نوع لا تخمن بايثون، بل ترفض. حول النوع صراحة بـ \`str()\`:
+
+\`\`\`python
+print("Year: " + str(year))   # Year: 2026
+\`\`\`
+
+والعكس كذلك: \`"5" + 5\` يفشل، و\`"5" * 3\` يعطي \`"555"\` لا \`15\`.
+
+---
+
+## ثلاث طرق لبناء سطر
+
+\`\`\`python
+year = 2026
+print("Year: " + str(year))   # concatenation, needs str()
+print("Year:", year)          # commas, converts, adds a space
+print(f"Year: {year}")        # f-string, converts, full control
+\`\`\`
+
+كلها تطبع \`Year: 2026\`. صيغة الفاصلة أسهل للمخرجات السريعة لكنها تضع دائما مسافة بين القيم. أما **f-string** فهي ما ستستعمله في الشيفرة الحقيقية، ووحدة النصوص تغطيها كما ينبغي.
+
+ويبقى الدمج جديرا بالمعرفة: فهو أوضح ما يريك أن الأنواع لا تختلط ضمنيا في بايثون.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. ثم احذف \`str()\` من سطر \`"Year: " + str(year)\` واقرأ \`TypeError\`، فهو يسمي النوعين اللذين أعطيا له.
+`,
+      },
     },
 
     /* ── 7. Challenge: Profile Card ── */
@@ -639,7 +1082,8 @@ print("Role:  " + role)
 print("Level: " + str(level))
 print(border)
 `,
-      markdownContent: `# Challenge: Profile Card
+      markdownContent: {
+        en: `# Challenge: Profile Card
 
 Put the module together: variables, concatenation, repetition and type conversion.
 
@@ -680,6 +1124,48 @@ Assignment, \`+\`, \`*\`, and \`str()\`, everything from this module.
 
 Click **Submit** when ready. The **Hint** button is there if the alignment fights you.
 `,
+        ar: `# تحد: بطاقة تعريف
+
+اجمع الوحدة كلها: المتغيرات، والدمج، والتكرار، وتحويل الأنواع.
+
+---
+
+## التعليمات
+
+أنشئ ثلاثة متغيرات:
+
+\`\`\`python
+name  = "Sara"
+role  = "Analyst"
+level = 3
+\`\`\`
+
+ثم اطبع هذا **بالضبط**:
+
+\`\`\`
+==============
+Name:  Sara
+Role:  Analyst
+Level: 3
+==============
+\`\`\`
+
+## القواعد
+
+- الحد الفاصل مكون من **14** محرف \`=\`. ابنه بـ \`*\` ولا تكتبه محرفا محرفا.
+- يجب أن تأتي القيم من المتغيرات لا أن تعاد كتابتها كقيم حرفية.
+- انتبه للمسافات: يتبع \`Name:\` و\`Role:\` **مسافتان**، ويتبع \`Level:\` **مسافة واحدة**، لتتحاذى القيم.
+- المتغير \`level\` من نوع \`int\`، ووصله بنص عبر \`+\` يحتاج \`str()\`.
+
+## ما تحتاجه
+
+الإسناد، و\`+\`، و\`*\`، و\`str()\`، أي كل ما في هذه الوحدة.
+
+---
+
+اضغط **Submit** حين تجهز. وزر **Hint** موجود إن عاندتك المحاذاة.
+`,
+      },
     },
   ],
 };

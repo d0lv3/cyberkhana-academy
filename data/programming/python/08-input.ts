@@ -37,7 +37,8 @@ print(f"Hello {name}, next year you turn {age + 1}")
 answer = input("Continue? ")
 print("clean:", repr(answer.strip().lower()))
 `,
-      markdownContent: `# User Input
+      markdownContent: {
+        en: `# User Input
 
 \`input()\` pauses the program, waits for a line, and hands it back.
 
@@ -127,6 +128,97 @@ When input "looks right" but won't match, \`repr()\` shows you why.
 
 Run the starter code with the given input, then edit the Input box. Try entering \`abc\` for the age and read the \`ValueError\`, that's your program meeting the real world.
 `,
+        ar: `# مدخلات المستخدم
+
+الدالة \`input()\` توقف البرنامج، وتنتظر سطرا، ثم تسلمه لك.
+
+\`\`\`python
+name = input("Name: ")
+print(f"Hello {name}")
+\`\`\`
+
+والوسيط هو **المحث (prompt)**، ويطبع بلا سطر جديد، فيستقر المؤشر بعده. وهو اختياري، لكن \`input()\` مجردة تجعل برنامجك يبدو وكأنه تجمد.
+
+وفي هذا المحرر لا توجد لوحة مفاتيح ينتظرها، لذلك يزودها **صندوق Input** بالأسطر بدلا من ذلك، سطرا لكل استدعاء لـ \`input()\` بالترتيب. وكل ما عدا ذلك يسلك تماما كما يسلك في الطرفية.
+
+---
+
+## input() تعيد نصا دائما
+
+هذه أهم حقيقة عنها. دائما. بلا استثناء:
+
+\`\`\`python
+raw_age = input("Age: ")   # you type 21
+type(raw_age)              # str , "21", not 21
+raw_age + 1                # TypeError
+\`\`\`
+
+فحول قبل إجراء أي حساب:
+
+\`\`\`python
+age = int(raw_age)
+print(age + 1)   # 22
+\`\`\`
+
+والنسخة الصامتة من الخطأ نفسه، من الوحدة 7:
+
+\`\`\`python
+if raw_age >= 18:    # TypeError, str vs int
+if raw_age == 18:    # no error, just never True
+\`\`\`
+
+والثاني أسوأ. فـ \`"18" == 18\` تساوي \`False\`، وتقارن بايثون في هدوء ولا ينطلق الاختبار أبدا. لا أثر تتبع ولا دليل.
+
+## المدخل السيئ يرفع خطأ
+
+استدعاء \`int()\` على ما ليس عددا يوقف البرنامج:
+
+\`\`\`python
+age = int(input("Age: "))   # user types "abc" -> ValueError
+\`\`\`
+
+وتلك هي خطورة المدخلات كلها: فهي تأتي من **الخارج**، فلا تستطيع افتراض أي شيء عنها. احرسها:
+
+\`\`\`python
+raw = input("Age: ")
+if raw.isdigit():
+    age = int(raw)
+else:
+    print("Please enter a whole number.")
+\`\`\`
+
+والجواب الكامل هو \`try\` و\`except\` في وحدة الأخطاء.
+
+---
+
+## ما الذي تبقيه input()
+
+تزيل السطر الجديد في النهاية ولا شيء غيره. أما المسافات في البداية والنهاية **فتبقى**:
+
+\`\`\`python
+answer = input("Continue? ")   # user types "  YES  "
+answer == "yes"                # False, spaces and capitals
+answer.strip().lower() == "yes"  # True
+\`\`\`
+
+استعمل \`.strip().lower()\` قبل مقارنة أي شيء كتبه إنسان. وهي القاعدة نفسها من الوحدة 3.
+
+والدالة \`repr()\` تستحق المعرفة هنا، فهي تظهر علامات الاقتباس وأي مسافات خفية تخفيها \`print()\`:
+
+\`\`\`python
+print(answer)         #   YES
+print(repr(answer))   # '  YES  '
+\`\`\`
+
+فحين يبدو المدخل "صحيحا" ولا يطابق، تريك \`repr()\` السبب.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية بالمدخل المعطى، ثم عدل صندوق Input. جرب إدخال \`abc\` للعمر واقرأ \`ValueError\`، فذاك برنامجك وهو يلتقي بالعالم الحقيقي.
+`,
+      },
     },
 
     /* ── 2. Practical: Email Slice ── */
@@ -160,7 +252,8 @@ print("First name:", user.split(".")[0].capitalize())
 # A crude validity check
 print("Valid-ish:", email.count("@") == 1 and "." in domain)
 `,
-      markdownContent: `# Practical: Email Parts
+      markdownContent: {
+        en: `# Practical: Email Parts
 
 Pulling an email apart, indexing, slicing and string methods together.
 
@@ -233,6 +326,80 @@ That instinct generalises: for anything with a specification (emails, URLs, date
 
 Run the starter code, then change the email, try one with no \`@\` and watch which lines break, and which don't.
 `,
+        ar: `# تطبيق عملي: أجزاء البريد الإلكتروني
+
+تفكيك عنوان بريد إلكتروني، بجمع الفهرسة والتقطيع وتوابع النصوص معا.
+
+---
+
+## بالتقطيع
+
+جد \`@\` ثم اقطع حولها:
+
+\`\`\`python
+email = "sara.ahmed@cyberkhana.tech"
+
+at = email.index("@")
+user = email[:at]        # everything before
+domain = email[at + 1:]  # everything after
+\`\`\`
+
+والزيادة \`+ 1\` مهمة: فـ \`email[at:]\` كانت ستبقي \`@\` نفسها، لأن الشرائح تشمل البداية.
+
+ويرفع \`index()\` خطأ \`ValueError\` إن لم توجد \`@\`، وهذا صحيح هنا. فالبريد الذي بلا \`@\` معطوب، وستحب أن تعرف بذلك.
+
+## بـ split()
+
+وهي أوضح عادة:
+
+\`\`\`python
+user, domain = email.split("@")
+\`\`\`
+
+سطر واحد يفكك مباشرة إلى اسمين. والمأخذ: أنه يرفع \`ValueError\` إن لم توجد \`@\` **واحدة بالضبط**، لأن العددين لن يتطابقا.
+
+## بـ partition()
+
+وهي الأأمن، لأنها تعيد ثلاثة أجزاء دائما:
+
+\`\`\`python
+name, sep, host = email.partition("@")
+\`\`\`
+
+فإن لم توجد \`@\` صار \`sep\` هو \`""\` وتستطيع التحقق من ذلك بدل معالجة استثناء.
+
+ثلاث أدوات لمهمة واحدة، اختر بحسب ما ينبغي أن يحدث حين يكون المدخل مشوها.
+
+---
+
+## أبعد من ذلك
+
+سلسل التوابع:
+
+\`\`\`python
+domain.split(".")[-1]              # 'tech' , the TLD
+user.split(".")[0].capitalize()    # 'Sara' , the first name
+\`\`\`
+
+اقرأ من اليسار إلى اليمين: قسم عند النقاط، ثم خذ القطعة الأخيرة. والفهرس \`[-1]\` يؤدي عملا حقيقيا، فهو العنصر الأخير مهما كان عدد النقاط، فيتعامل مع \`mail.co.uk\` أيضا.
+
+## كلمة عن التحقق
+
+\`\`\`python
+email.count("@") == 1 and "." in domain
+\`\`\`
+
+جيد بما يكفي لتلميح في نموذج، وهو **ليس** تحققا حقيقيا. فالقواعد الفعلية معقدة إلى حد الأسطورة، من نصوص مقتبسة، وتعليقات، وعناوين تبدو غير قانونية وهي قانونية. لا تكتب تحققك بنفسك، فالاختبار الحقيقي الوحيد هو إرسال رسالة ورؤية هل تصل.
+
+وهذه الغريزة تعمم: فكل ما له مواصفة قياسية (البريد الإلكتروني، والروابط، والتواريخ) الجأ فيه إلى المكتبة قبل كتابة سطر ذكي.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية، ثم غير البريد، وجرب واحدا بلا \`@\` وراقب أي الأسطر ينكسر وأيها لا ينكسر.
+`,
+      },
     },
 
     /* ── 3. Practical: Age in Detail ── */
@@ -262,7 +429,8 @@ d = total // 86400
 h = total % 86400 // 3600
 print(f"Check: {d:,} days and {h} hours")
 `,
-      markdownContent: `# Practical: Age in Detail
+      markdownContent: {
+        en: `# Practical: Age in Detail
 
 Take an age in years and express it in every unit down to seconds. Input, conversion, arithmetic and formatting in one go.
 
@@ -328,6 +496,73 @@ That's Module 13. The point stands: know when your arithmetic is a model rather 
 
 Run it, then change the age in the Input box. Try \`0\`, everything is zero, and nothing breaks.
 `,
+        ar: `# تطبيق عملي: العمر بالتفصيل
+
+خذ عمرا بالسنوات وعبر عنه بكل وحدة نزولا إلى الثواني. المدخلات، والتحويل، والحساب، والتنسيق في عمل واحد.
+
+---
+
+## الشكل العام
+
+كل وحدة هي التي فوقها مضروبة في معامل ثابت:
+
+\`\`\`python
+years = int(input("Age in years: "))
+
+days = years * 365
+hours = days * 24
+minutes = hours * 60
+seconds = minutes * 60
+\`\`\`
+
+ولاحظ أن كل سطر يبني على سابقه بدل إعادة الحساب من السنوات. والتعبير \`hours = years * 365 * 24\` يعمل أيضا، لكنك عند \`seconds\` ستحدق في \`years * 365 * 24 * 60 * 60\`. فالبناء على خطوات أسهل قراءة وأسهل تدقيقا.
+
+## التنسيق
+
+الأعداد الكبيرة لا تقرأ خاما. وهنا يثبت فاصل الآلاف من الوحدة 3 جدواه:
+
+\`\`\`python
+print(f"Seconds: {seconds:,}")   # Seconds: 662,256,000
+\`\`\`
+
+وعرض ثابت للعناوين يحاذي المخرجات:
+
+\`\`\`python
+print(f"Years:   {years}")
+print(f"Minutes: {minutes:,}")
+\`\`\`
+
+## في الاتجاه المعاكس
+
+العاملان \`//\` و\`%\` من الوحدة 4 يعكسان ذلك:
+
+\`\`\`python
+d = total // 86400          # whole days
+h = total % 86400 // 3600   # leftover seconds -> whole hours
+\`\`\`
+
+اقرأ السطر الثاني هكذا: خذ ما تبقى بعد إزالة الأيام الكاملة، ثم انظر كم ساعة كاملة تسعها. وهذه الخطوتان، \`%\` لأخذ الباقي ثم \`//\` لأخذ الوحدة التالية، هما نمط أي تفكيك إلى وحدات.
+
+---
+
+## تحفظ صريح
+
+التعبير \`years * 365\` تقريب. فهو يتجاهل السنوات الكبيسة، فيحيد بمقدار يوم تقريبا كل أربع سنوات. وللحصول على جواب حقيقي تستعمل تواريخ فعلية:
+
+\`\`\`python
+from datetime import date
+days = (date.today() - date(2004, 5, 1)).days
+\`\`\`
+
+وتلك هي الوحدة 13. ويبقى المقصود قائما: اعرف متى يكون حسابك نموذجا لا حقيقة، وقل ذلك صراحة.
+
+---
+
+## جربها
+
+شغلها، ثم غير العمر في صندوق Input. جرب \`0\`، فكل شيء يصير صفرا ولا شيء ينكسر.
+`,
+      },
     },
 
     /* ── 4. Challenge: Login Report ── */
@@ -384,7 +619,8 @@ print(f"First: {first}")
 print(f"Adult: {age >= 18}")
 print(f"Days: {age * 365:,}")
 `,
-      markdownContent: `# Challenge: Login Report
+      markdownContent: {
+        en: `# Challenge: Login Report
 
 Everything so far, on data that arrives from outside.
 
@@ -428,6 +664,51 @@ Two reminders:
 
 Click **Submit** when ready.
 `,
+        ar: `# تحد: تقرير الدخول
+
+كل ما سبق، على بيانات تصل من الخارج.
+
+---
+
+## التعليمات
+
+اقرأ **سطرين** بـ \`input()\`:
+
+1. عنوان بريد إلكتروني
+2. عمرا بالسنوات
+
+يحمل صندوق Input القيمتين \`sara.ahmed@cyberkhana.tech\` و\`21\`. ولهما اطبع هذا **بالضبط**:
+
+\`\`\`
+User: sara.ahmed
+Domain: cyberkhana.tech
+First: Sara
+Adult: True
+Days: 7,665
+\`\`\`
+
+## القواعد
+
+- اقرأ كلتا القيمتين بـ \`input()\`، ولا تكتب شيئا ثابتا.
+- و**First** هي الجزء من اسم المستخدم قبل النقطة، بحرف أول كبير.
+- و**Adult** هي ما إذا كان العمر 18 أو أكثر.
+- و**Days** هي العمر مضروبا في 365، وتطبع **بفاصل آلاف**.
+- استعمل \`.strip()\` على البريد قبل استعماله.
+
+## ما تحتاجه
+
+\`input()\`، و\`.strip()\`، و\`.split()\`، و\`.capitalize()\`، و\`int()\`، ومقارنة، ومواصفة التنسيق \`:,\`.
+
+وتذكيران:
+
+- الدالة \`input()\` تعيد **نصا**، فالعمر يحتاج \`int()\` قبل أن تقارن أو تضرب.
+- والتعبير \`{age >= 18}\` داخل f-string يطبع \`True\` مباشرة، فلا حاجة إلى \`if\`.
+
+---
+
+اضغط **Submit** حين تجهز.
+`,
+      },
     },
   ],
 };

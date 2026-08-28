@@ -36,7 +36,8 @@ print(bool(None))
 print(True + True)
 print(sum([True, False, True]))
 `,
-      markdownContent: `# Booleans
+      markdownContent: {
+        en: `# Booleans
 
 A **bool** has exactly two values: \`True\` and \`False\`. Capitalised, \`true\` is a \`NameError\`.
 
@@ -119,6 +120,90 @@ So counting how many things are true is just \`sum()\` over the tests. Occasiona
 
 Run the starter code. Stare at \`bool("False")\` being \`True\`, that one bites people in real code.
 `,
+        ar: `# القيم المنطقية
+
+للنوع **\`bool\`** قيمتان لا ثالث لهما: \`True\` و\`False\`. بحرف أول كبير، فـ \`true\` تعطي \`NameError\`.
+
+وهما ما تنتجه كل مقارنة، وما تستهلكه كل جملة \`if\`.
+
+\`\`\`python
+print(10 > 5)   # True
+\`\`\`
+
+---
+
+## الصدقية
+
+تتيح لك بايثون استعمال **أي** قيمة في موضع يتوقع قيمة منطقية. والدالة \`bool()\` تريك كيف تحكم على كل واحدة:
+
+\`\`\`python
+bool(0)      # False
+bool(1)      # True
+bool("")     # False
+bool("a")    # True
+bool([])     # False
+bool([0])    # True
+bool(None)   # False
+\`\`\`
+
+والقاعدة قصيرة: **الفارغ والصفر كاذبان، وكل ما عداهما صادق.**
+
+والقيم الكاذبة بتمامها:
+
+- \`False\` و\`None\`
+- الصفر من أي نوع عددي: \`0\` و\`0.0\`
+- الحاويات الفارغة: \`""\` و\`[]\` و\`()\` و\`{}\` و\`set()\`
+
+وكل ما عدا ذلك صادق. ولهذا يعد هذا أسلوب بايثون المتعارف عليه:
+
+\`\`\`python
+if items:          # instead of: if len(items) > 0
+if not name:       # instead of: if name == ""
+\`\`\`
+
+وفخان يستحقان الترسيخ:
+
+\`\`\`python
+bool("False")   # True! , a non-empty string
+bool("0")       # True! , also non-empty
+bool([0])       # True  , a list holding one item
+\`\`\`
+
+فالنص صادق لأن فيه محارف، بغض النظر عما تهجئه. والنص \`"0"\` المقروء من مدخل أو ملف **صادق**، فحول قبل الاختبار.
+
+## None ليست False
+
+القيمة \`None\` كاذبة، لكنها ليست مساوية لـ \`False\`:
+
+\`\`\`python
+bool(None)      # False, None is falsy
+None == False   # False, but None is not the value False
+\`\`\`
+
+يطبع السطران \`False\`، لسببين مختلفين تماما. فالأول يقول "تحسب None كاذبة في جملة \`if\`". والثاني يقول "None ليست الشيء نفسه الذي هو False".
+
+ويهم هذا التمييز حين تعني \`None\` "لا جواب بعد" وتعني \`False\` "الجواب لا"، أي إعداد لم يضبط مقابل إعداد أطفئ. واختبر بـ \`is None\` لا بـ \`== False\`.
+
+---
+
+## القيم المنطقية أعداد صحيحة
+
+طرافة لها استعمالات حقيقية، فـ \`bool\` صنف مشتق من \`int\`، حيث \`True\` هي \`1\` و\`False\` هي \`0\`:
+
+\`\`\`python
+True + True            # 2
+sum([True, False, True])  # 2
+\`\`\`
+
+فعد الأشياء الصادقة ليس إلا \`sum()\` على الاختبارات. وهو أنيق أحيانا، ولا يستحق أبدا التذاكي به.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. وحدق في \`bool("False")\` وهي تساوي \`True\`، فهذه تلدغ الناس في الشيفرة الحقيقية.
+`,
+      },
     },
 
     /* ── 2. Comparison Operators ── */
@@ -153,7 +238,8 @@ print(x is None)
 print(1 == 1.0)
 print("1" == 1)
 `,
-      markdownContent: `# Comparison Operators
+      markdownContent: {
+        en: `# Comparison Operators
 
 Six of them, all returning a \`bool\`:
 
@@ -249,6 +335,103 @@ Never use \`is\` on numbers or strings. \`a is b\` for small ints may print \`Tr
 
 Run the starter code. \`a == b\` is \`True\` while \`a is b\` is \`False\`, same contents, different objects.
 `,
+        ar: `# عوامل المقارنة
+
+ستة منها، وكلها تعيد \`bool\`:
+
+\`\`\`python
+5 == 5   # True   equal
+5 != 4   # True   not equal
+5 > 4    # True   greater
+5 < 4    # False  less
+5 >= 5   # True   greater or equal
+5 <= 5   # True   less or equal
+\`\`\`
+
+فـ \`==\` مقارنة، و\`=\` إسناد. وكتابة \`if x = 5\` تعطي \`SyntaxError\`، فبايثون تمسك لك هذا الخطأ.
+
+---
+
+## مقارنة النصوص
+
+تقارن النصوص **أبجديا**، محرفا بمحرف:
+
+\`\`\`python
+"apple" < "banana"   # True
+\`\`\`
+
+لكن المقارنة في الحقيقة **برمز المحرف**، وكل حرف كبير يسبق كل حرف صغير:
+
+\`\`\`python
+"Z" < "a"   # True , 'Z' is 90, 'a' is 97
+\`\`\`
+
+لذلك \`"Apple" < "apple"\`، وترتيب نص مختلط حالة الأحرف يعطي ترتيبا يبدو خاطئا لعين الإنسان. فوحد الحالة بـ \`.lower()\` حين تقصد الترتيب الأبجدي البشري.
+
+## الأنواع مهمة
+
+\`\`\`python
+1 == 1.0     # True  , same value, int and float compare fine
+"1" == 1     # False , a string is never equal to a number
+\`\`\`
+
+والسطر الثاني صامت. فمقارنة قيمة آتية من \`input()\` (وهي نص دائما) بعدد خطأ كلاسيكي، إذ لا يرفع شيء خطأ، وإنما لا ينجح الاختبار أبدا.
+
+أما الترتيب بين أنواع غير متقاربة **فيرفع** خطأ:
+
+\`\`\`python
+"a" < 1   # TypeError: '<' not supported between 'str' and 'int'
+\`\`\`
+
+## التسلسل
+
+تتيح لك بايثون التسلسل، وهو يقرأ تماما كالرياضيات:
+
+\`\`\`python
+18 <= age < 65
+\`\`\`
+
+وهو مكافئ لـ \`18 <= age and age < 65\`، لكن \`age\` يقيم مرة واحدة. ومعظم اللغات لا تسمح بهذا.
+
+---
+
+## == مقابل is
+
+التمييز الذي يعثر الجميع فيه:
+
+- **\`==\`** تسأل: هل لهما **القيمة** نفسها؟
+- **\`is\`** تسأل: هل هما **الكائن نفسه** في الذاكرة؟
+
+\`\`\`python
+a = [1, 2]
+b = [1, 2]
+a == b   # True , same contents
+a is b   # False, two separate lists
+
+c = a
+a is c   # True , one list, two names
+\`\`\`
+
+الأسماء لصاقات على القيم، كما في الوحدة 2. و\`is\` تسأل هل يلصق الاسمان على القيمة *نفسها*.
+
+**استعمل \`==\` للقيم. واستعمل \`is\` مع \`None\` فقط:**
+
+\`\`\`python
+if x is None:      # correct
+if x == None:      # works, but not idiomatic
+\`\`\`
+
+فـ \`None\` كائن وحيد، لا يوجد منه إلا واحد، فالهوية هي السؤال الصحيح.
+
+ولا تستعمل \`is\` أبدا مع الأعداد أو النصوص. فـ \`a is b\` مع أعداد صحيحة صغيرة قد تطبع \`True\` لأن بايثون تخزنها مؤقتا، وتطبع \`False\` مع الكبيرة. والاعتماد على ذلك خلل ينتظر وقوعه.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. فـ \`a == b\` تساوي \`True\` بينما \`a is b\` تساوي \`False\`، أي المحتوى نفسه وكائنان مختلفان.
+`,
+      },
     },
 
     /* ── 3. Boolean Operators ── */
@@ -276,7 +459,8 @@ print(None or 0 or "last")
 items = []
 print(items and items[0])
 `,
-      markdownContent: `# Boolean Operators
+      markdownContent: {
+        en: `# Boolean Operators
 
 Three: **\`and\`**, **\`or\`**, **\`not\`**. Words, not symbols, no \`&&\` or \`||\`.
 
@@ -364,6 +548,95 @@ Fine in an \`if\` (\`[]\` is falsy), but don't print it expecting \`False\`.
 
 Run the starter code. The last four lines return values rather than booleans, that's the lesson.
 `,
+        ar: `# العوامل المنطقية
+
+ثلاثة: **\`and\`** و**\`or\`** و**\`not\`**. كلمات لا رموز، فلا وجود لـ \`&&\` أو \`||\`.
+
+\`\`\`python
+True and False   # False, both must be true
+True or False    # True , either will do
+not True         # False, flips it
+\`\`\`
+
+\`\`\`python
+if age >= 18 and has_id:
+    ...
+\`\`\`
+
+---
+
+## الأولوية
+
+يرتبط \`not\` بأشد قوة، ثم \`and\`، ثم \`or\`:
+
+\`\`\`python
+True or False and False    # True , the 'and' runs first
+(True or False) and False  # False
+\`\`\`
+
+فـ \`and\` قبل \`or\`، مثل \`*\` قبل \`+\`. وحين يكون الأمر مهما فاستعمل الأقواس بدل أن تحمل القارئ عبء تذكر هذا.
+
+---
+
+## القطع القصير
+
+تتوقف بايثون فور استقرار الجواب:
+
+- في \`A and B\`، إن كانت \`A\` كاذبة **فلن تقيم** \`B\` أبدا.
+- وفي \`A or B\`، إن كانت \`A\` صادقة **فلن تقيم** \`B\` أبدا.
+
+وهذه ليست طرفة، بل أداة. فهذا آمن:
+
+\`\`\`python
+if items and items[0] == "x":
+\`\`\`
+
+فإن كانت \`items\` فارغة لم ينفذ \`items[0]\` أبدا، فلا \`IndexError\`. رتب الشروط بحيث يأتي الاختبار الرخيص أو الحامي أولا.
+
+## وهما يعيدان أحد المعاملين
+
+الجزء الذي يفاجئ الناس: لا يعيد \`and\` و\`or\` قيمة \`True\` أو \`False\`، بل يعيدان **إحدى القيمتين**:
+
+\`\`\`python
+0 or "fallback"      # 'fallback'
+"a" and "b"          # 'b'
+None or 0 or "last"  # 'last'
+\`\`\`
+
+والقاعدة:
+
+- **\`or\`** يعيد أول معامل **صادق**، وإلا أعاد الأخير.
+- **\`and\`** يعيد أول معامل **كاذب**، وإلا أعاد الأخير.
+
+وهذا يفسر الأسلوب الكلاسيكي للقيمة الافتراضية:
+
+\`\`\`python
+name = user_input or "anonymous"
+\`\`\`
+
+فالمدخل الفارغ كاذب، فيصير \`name\` هو \`"anonymous"\`.
+
+وفيه مأخذ واحد: أنه ينطلق مع *أي* قيمة كاذبة، فـ \`port = given or 8080\` تستبدل أيضا قيمة \`0\` مشروعة. وحين يكون \`0\` أو \`""\` صالحين فاختبر صراحة:
+
+\`\`\`python
+port = 8080 if given is None else given
+\`\`\`
+
+وأيضا:
+
+\`\`\`python
+items and items[0]   # [] -> returns [], not False
+\`\`\`
+
+وهذا لا بأس به داخل \`if\` (فـ \`[]\` كاذبة)، لكن لا تطبعه متوقعا \`False\`.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. الأسطر الأربعة الأخيرة تعيد قيما لا قيما منطقية، وهذا هو الدرس.
+`,
+      },
     },
 
     /* ── 4. Assignment Operators ── */
@@ -403,7 +676,8 @@ d = c
 c = c + [3]
 print("d:", d)
 `,
-      markdownContent: `# Assignment Operators
+      markdownContent: {
+        en: `# Assignment Operators
 
 Shorthand for "update this variable using its own value."
 
@@ -470,6 +744,74 @@ Same-looking lines, different outcomes. It's the aliasing rule from Module 5 aga
 
 Run the starter code. The last two blocks are the point: \`b\` changed, \`d\` didn't.
 `,
+        ar: `# عوامل الإسناد
+
+اختصار لعبارة "حدث هذا المتغير باستعمال قيمته هو".
+
+\`\`\`python
+count += 5    # count = count + 5
+count -= 3    # subtract
+count *= 2    # multiply
+count /= 2    # divide  -> float
+count //= 4   # floor divide
+count %= 3    # remainder
+count **= 2   # power
+\`\`\`
+
+يقيم الطرف الأيمن **أولا**، ثم يعاد ربط الاسم بالنتيجة. والسطر \`x += 1\` أكثر سطر شيوعا في البرمجة.
+
+ولاحظ أن \`/=\` يتبع \`/\`: فهو ينتج **عددا عشريا** دائما، حتى مع الأعداد الصحيحة.
+
+ويجب أن يكون المتغير موجودا أصلا، فـ \`x += 1\` على \`x\` غير معرف يعطي \`NameError\`، لأنه يحتاج القيمة القديمة.
+
+---
+
+## مع النصوص
+
+\`\`\`python
+s = "a"
+s += "b"   # 'ab'
+\`\`\`
+
+النصوص غير قابلة للتغيير، فهذا لا يعدل شيئا، بل يبني نصا **جديدا** ويعيد توجيه \`s\` إليه.
+
+ولبناء نص داخل حلقة كبيرة، النصيحة المعتادة هي جمع القطع في قائمة ثم وصلها بـ \`"".join()\` في النهاية. وهي العادة الأفضل، فهي أوضح ومتوقعة عبر تطبيقات بايثون المختلفة. وستجد غالبا أنها ليست أسرع فعلا في CPython، لسبب يستحق أن يقاس لا أن يلقن، والوحدة 13 تفعل ذلك بالضبط.
+
+---
+
+## العامل المفاجئ: += على قائمة
+
+مع الأنواع القابلة للتغيير، يختلف \`+=\` اختلافا حقيقيا عن \`x = x + y\`:
+
+\`\`\`python
+a = [1, 2]
+b = a
+a += [3]
+print(b)   # [1, 2, 3] , b changed too!
+\`\`\`
+
+مقابل:
+
+\`\`\`python
+c = [1, 2]
+d = c
+c = c + [3]
+print(d)   # [1, 2] , d untouched
+\`\`\`
+
+فـ **\`a += [3]\`** تعدل القائمة الموجودة في مكانها (مثل \`extend\`)، و\`b\` يلصق على القائمة نفسها، فيرى التغيير.
+
+أما **\`c = c + [3]\`** فتبني قائمة **جديدة** وتوجه \`c\` إليها. ويبقى \`d\` ملصقا على القديمة.
+
+سطران متشابهان في الشكل ومختلفان في النتيجة. وهي قاعدة تعدد الأسماء من الوحدة 5 من جديد: فمع القيم القابلة للتغيير، لا يتبادل *التعديل في المكان* و*إعادة الربط* المواقع.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. الكتلتان الأخيرتان هما بيت القصيد: تغير \`b\` ولم يتغير \`d\`.
+`,
+      },
     },
 
     /* ── 5. Type Conversion ── */
@@ -502,7 +844,8 @@ print(int(raw) + 1 if raw.isdigit() else "not a number")
 print(list("abc"), set([1, 1, 2]), tuple([1, 2]))
 print(dict([("a", 1)]))
 `,
-      markdownContent: `# Type Conversion
+      markdownContent: {
+        en: `# Type Conversion
 
 Turning one type into another. Also called *casting*.
 
@@ -588,6 +931,93 @@ dict([("a", 1)])   # {'a': 1}    , from (key, value) pairs
 
 Run the starter code. Compare \`int(3.9)\` (3) with \`round(3.9)\` (4), truncation is not rounding.
 `,
+        ar: `# تحويل الأنواع
+
+تحويل نوع إلى آخر. ويسمى أيضا *الصب (casting)*.
+
+---
+
+## الثلاثة الرئيسية
+
+\`\`\`python
+int("42")     # 42
+str(42)       # '42'
+float("3.14") # 3.14
+\`\`\`
+
+وأنت تستعمل \`str()\` منذ الوحدة 2، في \`"Year: " + str(year)\`. والعكس لا يقل أهمية، لأن **\`input()\` تعطي نصا دائما**:
+
+\`\`\`python
+age = input()      # "21", a string
+age + 1            # TypeError
+int(age) + 1       # 22
+\`\`\`
+
+---
+
+## int() تقتطع
+
+وهي **لا** تقرب:
+
+\`\`\`python
+int(3.9)    # 3
+int(-3.9)   # -3   , toward zero
+round(3.9)  # 4
+\`\`\`
+
+ولاحظ أن \`int()\` تقطع نحو **الصفر**، بينما \`//\` تقرب نحو **ما لا نهاية السالبة**. فـ \`int(-3.9)\` تساوي \`-3\` بينما \`-7 // 2\` تساوي \`-4\`. استعمل \`round()\` حين تقصد التقريب.
+
+## int() صارمة مع النصوص
+
+\`\`\`python
+int("42")     # 42
+int("3.14")   # ValueError, not a whole number
+int("abc")    # ValueError
+int(" 42 ")   # 42, surrounding whitespace is fine
+\`\`\`
+
+وللنص العشري مر عبر \`float\` أولا:
+
+\`\`\`python
+int(float("3.14"))   # 3
+\`\`\`
+
+## المدخل السيئ يرفع خطأ
+
+\`\`\`python
+int("abc")   # ValueError: invalid literal for int() with base 10: 'abc'
+\`\`\`
+
+وهذا يوقف برنامجك. ولأن التحويلات تجري عادة على بيانات آتية من الخارج، من مدخل أو ملف أو استجابة، فاحرسها:
+
+\`\`\`python
+if raw.isdigit():
+    value = int(raw)
+\`\`\`
+
+وتذكر أن \`isdigit()\` تساوي \`False\` لـ \`"-5"\` و\`"3.14"\`، فهي لا تغطي إلا الأعداد الصحيحة غير السالبة. والأداة الصحيحة هي \`try\` و\`except\` في وحدة الأخطاء.
+
+---
+
+## بين الحاويات
+
+\`\`\`python
+list("abc")        # ['a', 'b', 'c']
+set([1, 1, 2])     # {1, 2}      , dedupe
+tuple([1, 2])      # (1, 2)
+list({"a": 1})     # ['a']       , a dict gives its KEYS
+dict([("a", 1)])   # {'a': 1}    , from (key, value) pairs
+\`\`\`
+
+والتعبير \`set(my_list)\` لإزالة التكرار هو ما ستلجأ إليه باستمرار.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. وقارن \`int(3.9)\` التي تعطي 3 بـ \`round(3.9)\` التي تعطي 4، فالاقتطاع ليس تقريبا.
+`,
+      },
     },
 
     /* ── 6. Challenge: Access Check ── */
@@ -643,7 +1073,8 @@ print(f"Adult: {adult}")
 print(f"Allowed: {allowed}")
 print(f"Next year: {age + 1}")
 `,
-      markdownContent: `# Challenge: Access Check
+      markdownContent: {
+        en: `# Challenge: Access Check
 
 The whole module in one small gate: truthiness, conversion, comparison and logic.
 
@@ -686,6 +1117,50 @@ And \`name\` is \`""\`, which is falsy. That's exactly what \`or\` needs.
 
 Click **Submit** when ready.
 `,
+        ar: `# تحد: فحص الوصول
+
+الوحدة كلها في بوابة صغيرة واحدة: الصدقية، والتحويل، والمقارنة، والمنطق.
+
+---
+
+## التعليمات
+
+إذا أعطيت:
+
+\`\`\`python
+raw_age = "21"
+has_id = True
+name = ""
+\`\`\`
+
+اطبع هذا **بالضبط**:
+
+\`\`\`
+Name: anonymous
+Adult: True
+Allowed: True
+Next year: 22
+\`\`\`
+
+## القواعد
+
+- تعود **Name** إلى \`"anonymous"\` حين يكون \`name\` فارغا، فاستعمل \`or\`.
+- و**Adult** هي ما إذا كان العمر 18 أو أكثر. ولاحظ أن \`raw_age\` **نص**.
+- و**Allowed** هي كونه بالغا **و** لديه \`has_id\`.
+- و**Next year** هي العمر زائد 1، وتطبع عددا.
+- لا تكتب شيئا ثابتا، بل اشتق كل شيء من المتغيرات الثلاثة.
+
+## انتبه
+
+المتغير \`raw_age\` نص. والتعبير \`"21" >= 18\` يعطي \`TypeError\` لا مقارنة، فحول أولا.
+
+والمتغير \`name\` هو \`""\` وهي قيمة كاذبة. وهذا بالضبط ما يحتاجه \`or\`.
+
+---
+
+اضغط **Submit** حين تجهز.
+`,
+      },
     },
   ],
 };

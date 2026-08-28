@@ -41,7 +41,8 @@ print(json.dumps({"host": "10.0.0.5", "up": True}))
 print(hashlib.sha256(b"khana").hexdigest()[:16])
 print(sys.version_info.major, sys.version_info.minor)
 `,
-      markdownContent: `# Modules and Imports
+      markdownContent: {
+        en: `# Modules and Imports
 
 A **module** is a file of Python you can use from another file. The **standard library** is hundreds of them, shipped with Python, this is what "batteries included" means.
 
@@ -119,6 +120,85 @@ Convention (and PEP 8): all imports at the top of the file, standard library fir
 
 Run the starter code. \`dir(math)\` lists what a module contains, the fastest way to explore one without leaving Python.
 `,
+        ar: `# الوحدات والاستيراد
+
+**الوحدة (module)** ملف بايثون تستطيع استعماله من ملف آخر. و**المكتبة القياسية** مئات منها تشحن مع بايثون، وهذا هو معنى "البطاريات مضمنة".
+
+---
+
+## import
+
+\`\`\`python
+import math
+math.sqrt(16)   # 4.0
+\`\`\`
+
+يربط \`import math\` الاسم \`math\` بكائن الوحدة، وتصل إلى داخله بنقطة. والسابقة ميزة، فـ \`math.sqrt\` تقول من أين جاءت \`sqrt\`.
+
+## from ... import
+
+اسحب أسماء بعينها إلى ملفك مباشرة:
+
+\`\`\`python
+from random import randint, choice
+randint(1, 6)   # no prefix
+\`\`\`
+
+أقصر، وتخسر معرفة الأصل. ولا بأس بها مع الواضح (\`from datetime import date\`)، وهي محفوفة بالخطر عند التصادم، فـ \`from math import pow\` تحجب بصمت الدالة المدمجة \`pow\`.
+
+**ولا تفعل هذا أبدا:**
+
+\`\`\`python
+from math import *
+\`\`\`
+
+فهو يفرغ كل اسم في ملفك، ويطمس بصمت كل ما يحمل الاسم نفسه، ولا يستطيع أي قارئ معرفة من أين جاءت دالة ما.
+
+## import ... as
+
+أعد التسمية أثناء الدخول:
+
+\`\`\`python
+import datetime as dt
+\`\`\`
+
+للأسماء الطويلة، أو لتفادي تصادم. وبعض الأسماء المستعارة أعراف ستراها في كل مكان (\`import numpy as np\`).
+
+---
+
+## المكتبة القياسية التي ستستعملها فعلا
+
+\`\`\`python
+import os        # files, paths, environment
+import sys       # the interpreter itself
+import json      # parse and produce JSON
+import re        # regular expressions
+import random    # random numbers
+import math      # maths
+import datetime  # dates and times
+import hashlib   # md5, sha256, ...
+\`\`\`
+
+\`\`\`python
+json.dumps({"host": "10.0.0.5"})        # dict -> JSON string
+hashlib.sha256(b"khana").hexdigest()    # note the b"", bytes, not str
+\`\`\`
+
+والسابقة \`b\` مهمة: فالتجزئة تعمل على **البايتات** لا على النص. فـ \`sha256("khana")\` تعطي \`TypeError\`، واستعمل \`"khana".encode()\` مع المدخلات الحقيقية.
+
+وقبل أن تكتب أداة مساعدة، تحقق هل تملكها المكتبة القياسية أصلا. فهي تملكها عادة، وهي مختبرة أفضل من أداتك.
+
+## الاستيرادات تكتب في الأعلى
+
+العرف (ودليل PEP 8): كل الاستيرادات في أعلى الملف، المكتبة القياسية أولا، ثم الطرف الثالث، ثم ما كتبته أنت. والوحدات تخزن مؤقتا بعد أول استيراد، فإعادة الاستيراد لا تكلف شيئا، لكن الاستيراد في منتصف الملف يخفي اعتمادية.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. والدالة \`dir(math)\` تسرد ما تحتويه الوحدة، وهي أسرع وسيلة لاستكشافها دون مغادرة بايثون.
+`,
+      },
     },
 
     /* ── 2. Your Own Module ── */
@@ -149,7 +229,8 @@ print("tools.__name__:", tools.__name__)
 # ...while the file you are RUNNING is always __main__
 print("this file:", __name__)
 `,
-      markdownContent: `# Your Own Module
+      markdownContent: {
+        en: `# Your Own Module
 
 There's nothing special about a module. **Any \`.py\` file is one.** Save functions in \`tools.py\` and \`import tools\` works, that's the whole mechanism.
 
@@ -221,6 +302,79 @@ Same idea, one level up.
 
 Run the starter code, it writes \`tools.py\`, then imports it. \`tools.__name__\` is \`"tools"\` while your file is \`"__main__"\`, so \`tools.py\`'s guarded print never fires.
 `,
+        ar: `# وحدتك أنت
+
+لا شيء خاص في الوحدة. **فأي ملف \`.py\` وحدة.** احفظ دوالك في \`tools.py\` فيعمل \`import tools\`، وهذه هي الآلية كلها.
+
+---
+
+## صنع واحدة
+
+الملف \`tools.py\`:
+
+\`\`\`python
+VERSION = "1.0"
+
+def is_valid(port):
+    return 1 <= port <= 65535
+\`\`\`
+
+ثم من ملف آخر في المجلد نفسه:
+
+\`\`\`python
+import tools
+tools.is_valid(80)     # True
+tools.VERSION          # '1.0'
+
+from tools import is_valid
+is_valid(80)
+\`\`\`
+
+واسم الوحدة هو **اسم الملف بلا \`.py\`**. فيجب أن يكون اسم بايثون صالحا: فـ \`my_tools.py\` يستورد باسم \`my_tools\`، أما \`my-tools.py\` فلا يمكن استيراده أصلا.
+
+ولا تسم ملفا باسم وحدة من المكتبة القياسية. فملف \`random.py\` محلي يحجب الوحدة الحقيقية، والخطأ الذي تحصل عليه محير.
+
+---
+
+## if __name__ == "__main__"
+
+السطر الذي يظهر في كل ملف بايثون ويحير الجميع في البداية:
+
+\`\`\`python
+if __name__ == "__main__":
+    print("run directly")
+\`\`\`
+
+تضبط بايثون \`__name__\` في كل وحدة:
+
+- إن **شغلت الملف مباشرة** صار \`__name__\` هو \`"__main__"\`
+- وإن **استوردت الملف** صار \`__name__\` هو اسم الوحدة (\`"tools"\`)
+
+فتلك الكتلة تنفذ **حين ينفذ الملف مباشرة فقط**، وتتخطى حين يستورد.
+
+ولماذا يهم هذا: لأن **استيراد وحدة يشغل كل شيفرتها في المستوى الأعلى.** فلو كان في أعلى \`tools.py\` سطر \`print("starting scan")\` مجرد، لانطلق لحظة استيراد أحدهم لها، وهذا ليس أبدا ما يريده المستورد.
+
+فالخلاصة: التعريفات في المستوى الأعلى، وكل ما *يفعل* شيئا داخل الحارس. وهذا يجعل ملفا واحدا يخدم كمكتبة قابلة لإعادة الاستعمال وكسكربت قابل للتشغيل معا، ولهذا بالضبط تراه في كل مكان.
+
+---
+
+## أبعد من ملف واحد
+
+مجلد من الوحدات يسمى **حزمة (package)**. وكان يحتاج تاريخيا إلى ملف \`__init__.py\`، وبايثون الحديثة لا تشترطه وإن كنت ستراه. ثم:
+
+\`\`\`python
+from mypackage.scanner import scan
+\`\`\`
+
+الفكرة نفسها مستوى واحدا إلى الأعلى.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية، فهي تكتب \`tools.py\` ثم تستوردها. والقيمة \`tools.__name__\` هي \`"tools"\` بينما ملفك هو \`"__main__"\`، فلا تنطلق طباعة \`tools.py\` المحروسة أبدا.
+`,
+      },
     },
 
     /* ── 3. External Packages ── */
@@ -243,7 +397,8 @@ print("rotated:", img.rotate(90, expand=True).size)
 import PIL
 print("Pillow version:", PIL.__version__)
 `,
-      markdownContent: `# External Packages
+      markdownContent: {
+        en: `# External Packages
 
 The standard library is large. **PyPI**, the Python Package Index, is enormous: hundreds of thousands of packages other people wrote.
 
@@ -325,6 +480,89 @@ On your own machine, the same code needs \`pip install Pillow\` in an activated 
 
 Run the starter code. Pillow loads on demand the first time you import it, so give it a moment, after that it's cached.
 `,
+        ar: `# الحزم الخارجية
+
+المكتبة القياسية كبيرة. أما **PyPI**، أي فهرس حزم بايثون، فهائل: مئات الآلاف من الحزم كتبها آخرون.
+
+---
+
+## pip
+
+الأداة \`pip\` هي مثبت بايثون، وهي تأتي مع بايثون:
+
+\`\`\`
+pip install requests
+pip install Pillow
+pip uninstall requests
+pip list
+pip show requests
+\`\`\`
+
+وتشغل هذه في **الطرفية** لا داخل بايثون. وهذا يعثر الجميع مرة واحدة: فكتابة \`pip install x\` عند المحث \`>>>\` تعطي \`SyntaxError\`.
+
+ثم تستوردها كالمعتاد:
+
+\`\`\`python
+import requests
+\`\`\`
+
+## اسم التثبيت ليس دائما اسم الاستيراد
+
+\`\`\`
+pip install Pillow          ->  from PIL import Image
+pip install beautifulsoup4  ->  from bs4 import BeautifulSoup
+pip install pyyaml          ->  import yaml
+\`\`\`
+
+مصادفات تاريخية، ومصدر موثوق للحيرة. فحين يفشل استيراد، تحقق من الاسم الحقيقي للحزمة.
+
+---
+
+## البيئات الافتراضية
+
+الجزء المهم، وهو الذي يتخطاه المبتدئون.
+
+فالتثبيت العام يعني أن كل المشاريع تتقاسم مجموعة إصدارات واحدة. فإن احتاج المشروع الأول \`requests\` بإصدار 2.25 واحتاج الثاني 2.31، لم تستطع جمعهما، والترقية لأجل الثاني تكسر الأول بصمت.
+
+و**البيئة الافتراضية (virtual environment)** بايثون خاصة بمشروع واحد:
+
+\`\`\`
+python -m venv .venv
+source .venv/bin/activate     # Linux / macOS
+.venv\\Scripts\\activate        # Windows
+pip install requests
+\`\`\`
+
+الآن لا يمس \`pip install\` إلا هذا المشروع. واحذف المجلد فيختفي نظيفا.
+
+وسجل ما تعتمد عليه:
+
+\`\`\`
+pip freeze > requirements.txt
+pip install -r requirements.txt
+\`\`\`
+
+والملف \`requirements.txt\` هو كيف يعيد غيرك، أو خادم، أو أنت بعد ستة أشهر، إنتاج إعدادك. أنشئ بيئة افتراضية لكل مشروع في كل مرة. فهما أمران اثنان يمنعان صنفا كاملا من التعاسة.
+
+## التثبيت تشغيل لشيفرة غيرك
+
+يستحق هذا أن يقال في دورة أمنية: فأمر \`pip install\` ينزل شيفرة ويمكن أن ينفذها أثناء التهيئة. والتصيد بالأخطاء المطبعية (typosquatting) على PyPI حقيقي، أي حزمة تختلف بحرف واحد عن حزمة شائعة وتفعل شيئا مؤذيا. تحقق من الاسم، وتحقق من عدد التنزيلات، وفضل الحزم المعروفة، وثبت الإصدارات في \`requirements.txt\`.
+
+---
+
+## في هذا المحرر
+
+الحزم **مثبتة مسبقا وتقدم من خوادم الأكاديمية نفسها**، فلا وجود لـ \`pip\` هنا، ولا يجلب شيء من PyPI أثناء عملك. والحزمة Pillow متاحة لأن هذا الدرس يحتاجها، وتبقى البيئة المعزولة مغلقة.
+
+وعلى جهازك أنت، تحتاج الشيفرة نفسها إلى \`pip install Pillow\` داخل بيئة افتراضية مفعلة أولا.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. تحمل Pillow عند الطلب في أول استيراد لها، فامنحها لحظة، وبعدها تكون مخزنة مؤقتا.
+`,
+      },
     },
 
     /* ── 4. Dates and Times ── */
@@ -360,7 +598,8 @@ print(date(2026, 1, 1) < d)
 parsed = datetime.strptime("2026-07-16", "%Y-%m-%d").date()
 print("parsed:", parsed, parsed == d)
 `,
-      markdownContent: `# Dates and Times
+      markdownContent: {
+        en: `# Dates and Times
 
 Dates look simple and are not. Leap years, months of different lengths, time zones, daylight saving. **Never do date arithmetic by hand**, the \`datetime\` module exists precisely so you don't.
 
@@ -440,6 +679,87 @@ Log timestamps without time zones are a genuine problem in security work, correl
 
 Run the starter code. \`d - born\` counts real days, leap years and all, no 365 approximation.
 `,
+        ar: `# التواريخ والأوقات
+
+تبدو التواريخ بسيطة وليست كذلك. فهناك السنوات الكبيسة، والشهور المتفاوتة الطول، والمناطق الزمنية، والتوقيت الصيفي. **فلا تجر حساب التواريخ بيدك أبدا**، فوحدة \`datetime\` موجودة لهذا السبب بالذات.
+
+---
+
+## الأنواع الثلاثة
+
+\`\`\`python
+from datetime import date, datetime, timedelta
+
+date(2026, 7, 16)                  # a day
+datetime(2026, 7, 16, 14, 30, 5)   # a day and a time
+timedelta(days=30)                 # a DURATION, not a moment
+\`\`\`
+
+والدالتان \`date.today()\` و\`datetime.now()\` تعطيان الحالي.
+
+والخصائص كما تتوقع: \`.year\` و\`.month\` و\`.day\` و\`.hour\`. وواحدة تستحق الانتباه:
+
+\`\`\`python
+d.weekday()   # Monday is 0, Sunday is 6
+\`\`\`
+
+تبدأ من الصفر كسائر ما في بايثون. (والتابع \`isoweekday()\` يبدأ الاثنين من 1 إن كنت تفضل ذلك.)
+
+---
+
+## الحساب
+
+اطرح تاريخين فتحصل على **timedelta**:
+
+\`\`\`python
+age = date(2026, 7, 16) - date(2004, 5, 1)
+age.days   # 8111
+\`\`\`
+
+وهذه هي النسخة الصادقة من تطبيق الوحدة 8. فتلك استعملت \`years * 365\` وأشرت إلى أنها نموذج، أما هذه فتعد الأيام الحقيقية بما فيها السنوات الكبيسة.
+
+وأضف مدة لتحصل على تاريخ جديد:
+
+\`\`\`python
+d + timedelta(days=30)   # handles month ends for you
+\`\`\`
+
+ولاحظ ما *لا* تستطيع فعله: فـ \`timedelta(months=1)\` غير موجودة. فالشهر ليس طولا ثابتا، فهل الشهر بعد 31 يناير هو 28 أو 29 فبراير أم 3 مارس؟ لا جواب صحيح، لذلك ترفض المكتبة التخمين. استعمل \`dateutil.relativedelta\` إن احتجت ذلك.
+
+والتواريخ تقارن بـ \`<\` و\`>\` و\`==\` كما تأمل.
+
+## التحليل
+
+حول نصا إلى تاريخ حقيقي:
+
+\`\`\`python
+datetime.strptime("2026-07-16", "%Y-%m-%d")
+\`\`\`
+
+فـ **str-p-time** تعني "حلل الوقت". وأخطئ في النسق فترفع \`ValueError\`، وهذا صحيح، فالتاريخ الذي لا تستطيع تحليله مشكلة.
+
+---
+
+## تحذير واحد: المناطق الزمنية
+
+تعطي \`datetime.now()\` وقتا **ساذجا (naive)**: بلا منطقة زمنية، مجرد أرقام. ولا بأس بذلك لمؤقت محلي، وهو خطأ لحظة يقارن جهازان ملاحظاتهما.
+
+ولأي شيء حقيقي، اعمل بتوقيت UTC وأرفق منطقة:
+
+\`\`\`python
+from datetime import timezone
+datetime.now(timezone.utc)
+\`\`\`
+
+والطوابع الزمنية في السجلات بلا مناطق زمنية مشكلة حقيقية في العمل الأمني، فربط الأحداث عبر الخوادم مستحيل إن كنت لا تعرف ماذا كانت تعني "14:30" هناك.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. فالتعبير \`d - born\` يعد الأيام الحقيقية بكل سنواتها الكبيسة، بلا تقريب 365.
+`,
+      },
     },
 
     /* ── 5. Formatting Dates ── */
@@ -476,7 +796,8 @@ try:
 except ValueError as e:
     print("ValueError:", str(e)[:40])
 `,
-      markdownContent: `# Formatting Dates
+      markdownContent: {
+        en: `# Formatting Dates
 
 Two directions, two functions with confusingly similar names:
 
@@ -550,6 +871,81 @@ Loud, and correct. A misparsed date is worse than no date.
 
 Run the starter code. Then swap \`%M\` for \`%m\` somewhere and watch the minutes turn into a month.
 `,
+        ar: `# تنسيق التواريخ
+
+اتجاهان، ودالتان باسمين متشابهين إلى حد الالتباس:
+
+- **\`strftime\`**، أي *نسق* الوقت: من datetime إلى نص
+- **\`strptime\`**، أي *حلل* الوقت: من نص إلى datetime
+
+فالحرف \`f\` للتنسيق (format) والحرف \`p\` للتحليل (parse). وهذه هي الوسيلة الوحيدة للتفريق بينهما.
+
+---
+
+## strftime
+
+\`\`\`python
+dt.strftime("%Y-%m-%d")           # 2026-07-16
+dt.strftime("%d/%m/%Y %H:%M")     # 16/07/2026 14:30
+dt.strftime("%A %d %B %Y")        # Thursday 16 July 2026
+dt.strftime("%I:%M %p")           # 02:30 PM
+\`\`\`
+
+والرموز الجديرة بالمعرفة:
+
+| الرمز | المعنى |
+|---|---|
+| \`%Y\` و \`%y\` | 2026 و 26 |
+| \`%m\` و \`%B\` و \`%b\` | 07 و July و Jul |
+| \`%d\` | اليوم، محشو بالأصفار |
+| \`%A\` و \`%a\` | Thursday و Thu |
+| \`%H\` و \`%I\` | الساعة بنظام 24 والساعة بنظام 12 |
+| \`%M\` و \`%S\` | الدقيقة والثانية |
+| \`%p\` | AM أو PM |
+
+وحالة الحرف مهمة: فـ \`%M\` للدقائق و\`%m\` للشهور. والخلط بينهما كلاسيكي.
+
+وتقبل f-strings الرموز نفسها مباشرة، وهذا أنظف عادة:
+
+\`\`\`python
+f"{dt:%Y-%m-%d}"
+\`\`\`
+
+## نسق ISO
+
+\`\`\`python
+dt.isoformat()   # '2026-07-16T14:30:05'
+\`\`\`
+
+**استعمل هذا كلما كانت الآلة هي القارئ.** فهو المعيار الدولي: لا لبس فيه، ويرتب ترتيبا صحيحا كنص عادي، لأن أجزاءه تسير من الأكبر إلى الأصغر. فـ \`sorted()\` على نصوص تواريخ ISO تعطي ترتيبا زمنيا مجانا.
+
+وهذا هو السبب الحقيقي لتفضيل \`%Y-%m-%d\` على \`%d/%m/%Y\` في أسماء الملفات والسجلات.
+
+واللبس ليس نظريا: فـ \`07/08/2026\` هو 7 أغسطس في بغداد و8 يوليو في بوسطن. النص نفسه وتاريخان. أما ISO فله معنى واحد في كل مكان.
+
+والقاعدة: **ISO للآلات، و\`strftime\` للبشر.**
+
+## strptime
+
+\`\`\`python
+datetime.strptime("16/07/2026 14:30", "%d/%m/%Y %H:%M")
+\`\`\`
+
+ويجب أن يطابق نص النسق المدخل **بالضبط**، كل فاصل وكل رقم. وعدم التطابق يرفع \`ValueError\`:
+
+\`\`\`python
+datetime.strptime("16-07-2026", "%d/%m/%Y")   # ValueError
+\`\`\`
+
+بصوت عال، وهذا صحيح. فالتاريخ المحلل تحليلا خاطئا أسوأ من غياب التاريخ.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. ثم بدل \`%M\` بـ \`%m\` في موضع ما وراقب الدقائق وهي تتحول إلى شهر.
+`,
+      },
     },
 
     /* ── 6. Iterables and Iterators ── */
@@ -585,7 +981,8 @@ print(list(nums), list(nums))
 it2 = iter(nums)
 print(list(it2), list(it2))
 `,
-      markdownContent: `# Iterables and Iterators
+      markdownContent: {
+        en: `# Iterables and Iterators
 
 Two words that sound identical and mean different things. This lesson explains behaviour you've already been surprised by.
 
@@ -662,6 +1059,84 @@ That's the trade: **laziness buys memory and costs re-use.**
 
 Run the starter code. The hand-written \`while\`/\`next()\`/\`StopIteration\` loop is precisely what \`for\` does for you.
 `,
+        ar: `# القابلات للتكرار والمكررات
+
+كلمتان تبدوان متطابقتين وتعنيان أمرين مختلفين. وهذا الدرس يفسر سلوكا فاجأك من قبل.
+
+---
+
+## الفرق
+
+- **القابل للتكرار (iterable)** يستطيع أن *يعطيك* مكررا. كالقوائم والصفوف والنصوص والمجموعات والقواميس والملفات.
+- و**المكرر (iterator)** ينتج القيم **واحدة في كل مرة**، ويتذكر أين وصل.
+
+\`\`\`python
+nums = [1, 2, 3]     # iterable
+it = iter(nums)      # iterator
+next(it)             # 1
+next(it)             # 2
+next(it)             # 3
+next(it)             # StopIteration
+\`\`\`
+
+دالتان: \`iter()\` تطلب من القابل للتكرار مكررا، و\`next()\` تطلب من المكرر القيمة التالية. وحين يستنفد يرفع **\`StopIteration\`**.
+
+## وهذا كل ما تفعله حلقة for
+
+\`\`\`python
+for n in nums:
+    print(n)
+\`\`\`
+
+هي بالضبط:
+
+\`\`\`python
+it = iter(nums)
+while True:
+    try:
+        n = next(it)
+    except StopIteration:
+        break
+    print(n)
+\`\`\`
+
+فـ \`for\` تستدعي \`iter()\` ثم \`next()\` حتى \`StopIteration\` وتلتقطها نيابة عنك. وهذه هي الآلية كلها، وهي سبب عمل \`for\` بالطريقة نفسها على القوائم والملفات والقواميس والمولدات. فكلها تجيب \`iter()\`.
+
+---
+
+## النتيجة التي اصطدمت بها من قبل
+
+**القابل للتكرار يمكن المشي عليه مرارا. أما المكرر فذو استعمال واحد.**
+
+\`\`\`python
+list(nums), list(nums)     # both full, nums is an iterable
+
+it = iter(nums)
+list(it)   # [1, 2, 3]
+list(it)   # []  <- spent
+\`\`\`
+
+وهذا يفسر ثلاثة أمور من وحدات سابقة:
+
+- أعطت \`map\` و\`filter\` القيمة \`[]\` في المرة الثانية، لأنهما مكرران.
+- وأعطت قراءة الملف مرتين النص \`''\`، فكائن الملف مكرر نفسه.
+- وتسلك \`zip\` و\`enumerate\` و\`reversed\` السلوك نفسه.
+
+قاعدة واحدة وأعراض عدة. فإن احتجت القيم مرتين فجسدها: \`data = list(it)\`.
+
+## ولماذا نتكبد الكسل
+
+المكرر يحمل **عنصرا واحدا** لا الحاوية كلها. فتستطيع المشي على ملف حجمه 10 غيغابايت، أو على دفق لا ينتهي، بذاكرة ثابتة. وبناء القائمة أولا كان سيكون مستحيلا.
+
+وتلك هي المقايضة: **الكسل يشتري الذاكرة ويكلف إعادة الاستعمال.**
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. فحلقة \`while\` مع \`next()\` و\`StopIteration\` المكتوبة يدويا هي بالضبط ما تفعله \`for\` نيابة عنك.
+`,
+      },
     },
 
     /* ── 7. Generators ── */
@@ -707,7 +1182,8 @@ squares = (n * n for n in range(5))
 print(type(squares).__name__, list(squares))
 print(sum(n * n for n in range(1000)))
 `,
-      markdownContent: `# Generators
+      markdownContent: {
+        en: `# Generators
 
 The easy way to make an iterator: a function with **\`yield\`** in it.
 
@@ -794,6 +1270,94 @@ Generators are iterators, so **single-use**, and you can't index or \`len()\` th
 
 Run the starter code. \`chatty()\` prints nothing until the first \`next()\`, the function is frozen until you ask.
 `,
+        ar: `# المولدات
+
+الطريق السهل لصنع مكرر: دالة فيها **\`yield\`**.
+
+---
+
+## yield
+
+\`\`\`python
+def count_to(n):
+    for i in range(1, n + 1):
+        yield i
+\`\`\`
+
+ضع \`yield\` في دالة فتكف عن كونها دالة عادية. واستدعاؤها **لا يشغل شيئا**، بل يسلمك **كائن مولد (generator)**:
+
+\`\`\`python
+gen = count_to(3)   # no output; the body has not run
+list(gen)           # [1, 2, 3] , now it runs
+\`\`\`
+
+## yield توقف مؤقتا و return تنهي
+
+وتلك هي الفكرة كلها. فـ \`return\` تنهي الدالة وترمي حالتها المحلية. أما \`yield\` **فتسلم قيمة وتجمد الدالة**، محتفظة بكل متغير محلي، مستعدة للاستئناف عند \`next()\` التالية:
+
+\`\`\`python
+def chatty():
+    print("start")
+    yield 1
+    print("resumed")
+    yield 2
+\`\`\`
+
+لا يطبع شيء حتى أول \`next()\`. فتعمل حتى أول \`yield\` ثم **تتوقف**. وتستأنف \`next()\` الثانية *بعد* ذلك الـ yield فتطبع \`resumed\`.
+
+والدالة القادرة على التوقف في المنتصف ثم المتابعة لاحقا مختلفة اختلافا حقيقيا عن كل ما سبق هذه الوحدة.
+
+---
+
+## لماذا لها أهمية
+
+**الذاكرة.** فالمولد يحمل قيمة واحدة في كل مرة:
+
+\`\`\`python
+[n * n for n in range(10_000_000)]   # a list, hundreds of MB
+(n * n for n in range(10_000_000))   # a generator, a few bytes
+\`\`\`
+
+**والمتتاليات اللانهائية تصير ممكنة:**
+
+\`\`\`python
+def naturals():
+    n = 1
+    while True:
+        yield n
+        n += 1
+\`\`\`
+
+فتلك \`while True\` لا تنتهي أبدا، ولا بأس بذلك، لأنها لا تعمل إلا بقدر ما تطلب. فـ \`list(naturals())\` كانت ستعلق إلى الأبد، أما \`next()\` خمس مرات فلا تكلف شيئا.
+
+## تعابير المولدات
+
+اشتمال بأقواس هلالية:
+
+\`\`\`python
+[n * n for n in range(5)]   # list, built now
+(n * n for n in range(5))   # generator, built on demand
+\`\`\`
+
+وتستطيع إسقاط الأقواس حين يكون الوسيط الوحيد:
+
+\`\`\`python
+sum(n * n for n in range(1000))
+\`\`\`
+
+وهذا هو الاستعمال اليومي: أطعم \`sum\` و\`any\` و\`all\` و\`max\` من مولد فلا يبنى شيء في الذاكرة. وقد كتبت هذا أصلا، فـ \`all(m == "GET" for m in methods)\` في الوحدة 12 كانت تعبير مولد.
+
+## المأخذ
+
+المولدات مكررات، فهي **ذات استعمال واحد**، ولا تستطيع فهرستها ولا استعمال \`len()\` عليها. فإن احتجت البيانات مرتين فحولها بـ \`list()\`.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. فـ \`chatty()\` لا تطبع شيئا حتى أول \`next()\`، إذ تبقى الدالة مجمدة حتى تطلب.
+`,
+      },
     },
 
     /* ── 8. Decorators ── */
@@ -840,7 +1404,8 @@ def ping():
 
 print(ping())
 `,
-      markdownContent: `# Decorators
+      markdownContent: {
+        en: `# Decorators
 
 A **decorator** wraps a function to add behaviour, without editing the function.
 
@@ -928,6 +1493,95 @@ You'll *use* decorators long before you write one, \`@app.route("/")\` in Flask,
 
 Run the starter code. The \`plain = shout(plain)\` line proves \`@\` is only sugar, same result, no \`@\`.
 `,
+        ar: `# المزخرفات
+
+**المزخرف (decorator)** يغلف دالة ليضيف إليها سلوكا دون تعديلها.
+
+وهو يقوم على حقيقة واحدة من الوحدة 11: **الدوال قيم.** فتستطيع تمريرها وإعادتها.
+
+---
+
+## الفكرة
+
+\`\`\`python
+def shout(fn):
+    def wrapper(*args, **kwargs):
+        return fn(*args, **kwargs).upper()
+    return wrapper
+
+@shout
+def greet(name):
+    return f"hello {name}"
+
+greet("sara")   # 'HELLO SARA'
+\`\`\`
+
+تأخذ \`shout\` دالة وتعيد دالة **جديدة** تستدعي الأصلية وتفعل شيئا إضافيا.
+
+والسطر \`@shout\` مجرد تحلية صياغية. فهو يعني بالضبط:
+
+\`\`\`python
+greet = shout(greet)
+\`\`\`
+
+هذا كل شيء. فسطر \`@\` يعيد ربط الاسم بالنسخة المغلفة. وما إن ترى ذلك حتى تكف المزخرفات عن كونها سحرا.
+
+## ولماذا ‏*args و **kwargs
+
+الغلاف لا يعرف ما الذي يغلفه، فوجب أن يقبل **أي شيء** ويمرره كما هو:
+
+\`\`\`python
+def wrapper(*args, **kwargs):
+    return fn(*args, **kwargs)
+\`\`\`
+
+جمع عند الدخول ونشر عند الخروج، والنصفان من الوحدة 11، ولهذا كانا موجودين.
+
+## functools.wraps
+
+بدونه تحل هوية الغلاف محل هوية الأصل:
+
+\`\`\`python
+greet.__name__   # 'wrapper'  <- wrong, and confusing in tracebacks
+\`\`\`
+
+والمزخرف \`@functools.wraps(fn)\` ينسخ الاسم والـ docstring والتوقيع. **أدرجه دائما.** فهو يكلف سطرا واحدا ويوفر ألما حقيقيا في تتبع الأخطاء.
+
+---
+
+## المزخرفات ذات الوسائط
+
+لكتابة \`@repeat(3)\` تحتاج **ثلاث** طبقات:
+
+\`\`\`python
+def repeat(times):          # 1. takes the ARGUMENT
+    def decorator(fn):      # 2. takes the FUNCTION
+        @functools.wraps(fn)
+        def wrapper(*a, **kw):   # 3. takes the CALL
+            return [fn(*a, **kw) for _ in range(times)]
+        return wrapper
+    return decorator
+\`\`\`
+
+وذلك لأن \`@repeat(3)\` **تستدعي** \`repeat(3)\` أولا، وما يعود منها يستعمل مزخرفا. أي:
+
+\`\`\`python
+ping = repeat(3)(ping)
+\`\`\`
+
+ثلاث طبقات لثلاث مهام: الوسيط، والدالة، والاستدعاء. ولا أحد يجد هذا بديهيا في المرة الأولى. اكتبها استدعاءات متداخلة حين تحيرك.
+
+## أين ستقابلها
+
+ستستعمل المزخرفات قبل أن تكتب واحدا بزمن طويل، كـ \`@app.route("/")\` في Flask، و\`@pytest.fixture\`، و\`@property\`، و\`@staticmethod\`، و\`@functools.cache\`. ومعرفة أنها ليست إلا \`f = decorator(f)\` تزيل الغموض عنها كلها.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. السطر \`plain = shout(plain)\` يبرهن أن \`@\` مجرد تحلية، فالنتيجة نفسها بلا \`@\`.
+`,
+      },
     },
 
     /* ── 9. Practical: Timing Decorator ── */
@@ -977,7 +1631,8 @@ build_comprehension(N)
 join_strings(N)
 concat_strings(N)
 `,
-      markdownContent: `# Practical: Timing Decorator
+      markdownContent: {
+        en: `# Practical: Timing Decorator
 
 The decorator you'll actually write. It answers "which of these is faster?" without touching either function.
 
@@ -1045,6 +1700,75 @@ Note the numbers will shift between runs, and this is a browser. Compare the **r
 
 Run it a couple of times. Look at \`concat_strings\` against \`join_strings\`, same output, different algorithmic cost.
 `,
+        ar: `# تطبيق عملي: مزخرف التوقيت
+
+المزخرف الذي ستكتبه فعلا. وهو يجيب عن سؤال "أيهما أسرع؟" دون أن يمس أي دالة منهما.
+
+---
+
+## الغلاف
+
+\`\`\`python
+def timed(fn):
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        start = time.perf_counter()
+        result = fn(*args, **kwargs)
+        elapsed = time.perf_counter() - start
+        print(f"  {fn.__name__} took {elapsed * 1000:.2f} ms")
+        return result
+    return wrapper
+\`\`\`
+
+وثلاث تفاصيل تستحق الانتباه:
+
+**\`time.perf_counter()\`** لا \`time.time()\`. فـ \`time.time()\` ساعة حائط قد تقفز حين تضبط ساعة النظام، وهي خشنة الدقة. أما \`perf_counter\` فمؤقت رتيب عالي الدقة مصمم لقياس المدد بالضبط.
+
+**\`result = fn(...)\` ثم \`return result\`.** فالغلاف يجب أن يسلم ما أعادته الأصلية. وانس \`return\` فتعيد كل دالة مزخرفة \`None\` بصمت، وهو خلل خبيث لأن التوقيت يظل يطبع ويبدو سليما.
+
+**\`fn.__name__\`** يعمل بفضل \`@functools.wraps\`. فبدونه كان كل سطر سيقول \`wrapper\`.
+
+---
+
+## ماذا يخبرك
+
+**الحلقة مع append** مقابل **اشتمال القائمة**: يتفوق الاشتمال عادة بفارق ضئيل، لأن التكرار يجري في لغة C لا في بايتكود بايثون عندك.
+
+**و\`"".join(...)\`** مقابل **\`s += str(i)\`**: وهنا يصير الأمر شائقا، وهذا أنفع ما في الدرس.
+
+يقول التراث الشائع إن \`+=\` على النصوص كارثة. والتعليل يبدو محكما: فالنصوص غير قابلة للتغيير (الوحدة 3)، فكل \`+=\` يجب أن يبني نصا جديدا كاملا وينسخ القديم، فتنمو التكلفة الكلية مع *مربع* الطول.
+
+**وقسه فتنهار الحكاية.** فالاثنان يقعان في المجال نفسه، بفارق بضع عشرات من النسبة المئوية في أي من الاتجاهين، بحسب ما تصله. ولا شيء من الكارثة الموعودة.
+
+والاختبار الحاسم هو كيف **يتوسع** الأمر. فالتربيعي يعني أن مضاعفة العمل *تربع* الزمن. جرب \`N\` عند 25000 ثم 50000 ثم 100000: فيتضاعف الزمن تقريبا عند كل خطوة. وهذا خطي، فحكاية النسخ في كل مرة ليست ببساطة ما يجري.
+
+والسبب: أن CPython تغش. فحين يكون للنص النامي **إشارة واحدة** بالضبط، تعيد تحجيم المخزن في مكانه بدل النسخ، فتبقى الحلقة خطية. وعدم قابلية التغيير محفوظة من وجهة نظرك، والتحسين يحدث في العمق.
+
+## فهل التراث الشائع خاطئ؟
+
+ليس تماما، بل هو **مشروط**، وهذا أسوأ من الخطأ، لأنه صحيح بما يكفي ليبدو ذا سلطة.
+
+فذلك التحسين يتبخر لحظة يمسك شيء آخر بإشارة إلى النص. احتفظ بكل نتيجة وسيطة فيعود النسخ، تربيعيا وقاسيا. وهو أيضا تفصيل في تطبيق CPython: فلا تعد به أي بايثون أخرى.
+
+فتبقى \`join\` العادة الأفضل، فهي متوقعة، وقابلة للنقل، وتقول "ابن نصا واحدا من قطع كثيرة" تقولا أكثر مباشرة من الحلقة. لكن ليس للسبب الذي قيل لك.
+
+## الدرس الفعلي
+
+**قس. ولا تثق بالتراث الشائع، بما فيه تراثي.**
+
+فالحدس في الأداء غير موثوق، والتفسيرات الواثقة أقل ما يوثق به، لأن الحكاية الجيدة مقنعة سواء أكانت صحيحة أم لا. فحين تظن شيئا بطيئا فوقته. والمزخرف يجعل ذلك تغييرا من سطر واحد تستطيع إزالته بالسهولة نفسها.
+
+وللعمل الجاد استعمل وحدة \`timeit\`، فهي تشغل مقطعا مرات كثيرة وتتولى الإحصاء. وهذا المزخرف هو النسخة السريعة، وهو مثالي لسؤال "هل هذا سيئ سوءا بينا؟"
+
+ولاحظ أن الأرقام ستتغير بين تشغيل وآخر، وهذا متصفح. قارن **النسب** لا الميلي ثانية المطلقة.
+
+---
+
+## جربها
+
+شغلها مرتين أو ثلاثا. وانظر إلى \`concat_strings\` مقابل \`join_strings\`، فالمخرجات نفسها والتكلفة الخوارزمية مختلفة.
+`,
+      },
     },
 
     /* ── 10. Practical: zip ── */
@@ -1081,7 +1805,8 @@ print(list(zip(*rows)))
 for i, (name, port) in enumerate(zip(names, ports), start=1):
     print(i, name, port)
 `,
-      markdownContent: `# Practical: Many Lists at Once
+      markdownContent: {
+        en: `# Practical: Many Lists at Once
 
 \`zip\` walks several iterables in step, handing you one item from each.
 
@@ -1156,6 +1881,82 @@ Note the parentheses around \`(name, port)\`: \`enumerate\` yields \`(index, ite
 
 Run the starter code. The \`strict=True\` line raises where the line above it silently dropped data, same inputs, very different behaviour.
 `,
+        ar: `# تطبيق عملي: قوائم كثيرة دفعة واحدة
+
+تمشي \`zip\` على عدة قابلات للتكرار معا، فتسلمك عنصرا من كل واحدة.
+
+---
+
+## الاستعمال الأساسي
+
+\`\`\`python
+for name, port, state in zip(names, ports, states):
+    print(f"{name:<6} {port:<5} {state}")
+\`\`\`
+
+أي عدد من القابلات للتكرار. وكل دورة تنتج صفا يفكك إلى أسمائك.
+
+قارن ذلك بنسخة الفهرس:
+
+\`\`\`python
+for i in range(len(names)):
+    print(names[i], ports[i], states[i])
+\`\`\`
+
+تعمل، وهي أسوأ: فهي تفترض تساوي الأطوال، وهي ضاجة، و\`[i]\` ثلاث مرات تدعو إلى خطأ مطبعي. **فإن كنت تفهرس عدة قوائم بالعداد نفسه فأنت تريد \`zip\`.**
+
+## بناء قاموس
+
+\`\`\`python
+dict(zip(names, ports))   # {'ssh': 22, 'http': 80, 'https': 443}
+\`\`\`
+
+أنظف طريقة لمزاوجة المفاتيح بالقيم من مصدرين، كترويسات ملف CSV مع صف منه مثلا.
+
+---
+
+## تتوقف عند الأقصر، بصمت
+
+\`\`\`python
+list(zip([1, 2, 3], ["a"]))   # [(1, 'a')]
+\`\`\`
+
+اختفى عنصران ولم يحذرك شيء. وهذا مريح عادة، وهو أحيانا خلل فقدان بيانات لا تلاحظه أبدا.
+
+ومنذ الإصدار 3.10 تستطيع أن تشترط التطابق:
+
+\`\`\`python
+list(zip([1, 2, 3], ["a"], strict=True))   # ValueError
+\`\`\`
+
+استعمل \`strict=True\` كلما كان تساوي الأطوال افتراضا لا مصادفة. فالخطأ الصاخب خير من تقرير مبتور في صمت.
+
+## zip(*rows) تنقل المصفوفة
+
+حيلة تستحق المعرفة:
+
+\`\`\`python
+rows = [(1, 2, 3), (4, 5, 6)]
+list(zip(*rows))   # [(1, 4), (2, 5), (3, 6)]
+\`\`\`
+
+فـ \`*rows\` تنشر الصفوف وسائط منفصلة (الوحدة 11)، فتزاوج \`zip\` بينها عنصرا بعنصر، فتحول الصفوف إلى أعمدة. وتطبيقها مرتين يعيدك إلى حيث بدأت.
+
+## مع enumerate
+
+\`\`\`python
+for i, (name, port) in enumerate(zip(names, ports), start=1):
+\`\`\`
+
+ولاحظ القوسين حول \`(name, port)\`: فـ \`enumerate\` تنتج \`(index, item)\` حيث العنصر نفسه صف \`zip\`، فتفكك الشكل المتداخل. وإخطاء هذا يعطي \`ValueError\` عن التفكيك، وقد صرت تعرف السبب.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. فسطر \`strict=True\` يرفع خطأ حيث أسقط السطر الذي فوقه بيانات في صمت، المدخلات نفسها وسلوك مختلف جدا.
+`,
+      },
     },
 
     /* ── 11. Challenge: Scan Report ── */
@@ -1224,7 +2025,8 @@ print(f"Open ports: {open_ports}")
 print(f"Open count: {sum(1 for s in states if s == 'open')}")
 print(f"Next scan: {(scanned + timedelta(days=7)).isoformat()}")
 `,
-      markdownContent: `# Challenge: Scan Report
+      markdownContent: {
+        en: `# Challenge: Scan Report
 
 Dates, \`zip\` and a generator expression together.
 
@@ -1272,6 +2074,55 @@ scanned + timedelta(days=7)
 
 Click **Submit** when ready.
 `,
+        ar: `# تحد: تقرير الفحص
+
+التواريخ و\`zip\` وتعبير مولد معا.
+
+---
+
+## التعليمات
+
+باستعمال البيانات التي في المحرر، اطبع هذا **بالضبط**:
+
+\`\`\`
+Date: 2026-07-16
+Weekday: Thursday
+ssh:22 open
+http:80 open
+https:443 closed
+mysql:3306 open
+Open ports: [22, 80, 3306]
+Open count: 3
+Next scan: 2026-07-23
+\`\`\`
+
+## القواعد
+
+- امش على القوائم الثلاث بـ **\`zip\`**، ولا تستعمل \`range(len(...))\`.
+- و**Weekday** تأتي من \`strftime\`.
+- و**Open ports** هي المنافذ التي حالتها \`"open"\`.
+- ويجب أن تستعمل **Open count** الدالة \`sum()\` على **تعبير مولد**.
+- و**Next scan** بعد 7 أيام، فاستعمل \`timedelta\`.
+
+## ما تحتاجه
+
+\`\`\`python
+scanned.isoformat()          # 2026-07-16
+scanned.strftime("%A")       # Thursday
+zip(names, ports, states)
+sum(1 for s in states if s == "open")
+scanned + timedelta(days=7)
+\`\`\`
+
+## انتبه
+
+يحتاج \`timedelta\` إلى استيراد إلى جانب \`date\`. والتعبير \`sum(1 for ...)\` يعد بإضافة 1 لكل تطابق، وهي طريقة تعبير المولد في العد دون بناء قائمة.
+
+---
+
+اضغط **Submit** حين تجهز.
+`,
+      },
     },
   ],
 };

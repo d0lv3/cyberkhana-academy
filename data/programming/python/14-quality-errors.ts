@@ -45,7 +45,8 @@ print("bytes on disk:", os.path.getsize("banner.png"))
 reopened = Image.open("banner.png")
 print("reopened:", reopened.size, reopened.format)
 `,
-      markdownContent: `# Images with Pillow
+      markdownContent: {
+        en: `# Images with Pillow
 
 **Pillow** is the standard image library, resizing, converting, cropping, reading metadata. It's third-party, so on your machine: \`pip install Pillow\`, imported as \`PIL\`.
 
@@ -115,6 +116,77 @@ Stripping it before publishing is a real task, and Pillow is how you do it. Imag
 
 Run the starter code, it builds an image, transforms it, saves it into the browser's virtual filesystem and reads it back. Pillow loads on first import, so the first run is slower.
 `,
+        ar: `# الصور مع Pillow
+
+المكتبة **Pillow** هي مكتبة الصور القياسية، للتحجيم والتحويل والقص وقراءة البيانات الوصفية. وهي من الطرف الثالث، فعلى جهازك: \`pip install Pillow\`، وتستورد باسم \`PIL\`.
+
+---
+
+## الإنشاء والفحص
+
+\`\`\`python
+from PIL import Image
+
+img = Image.new("RGB", (200, 100), (20, 40, 80))
+img.size       # (200, 100) , (width, height)
+img.mode       # 'RGB'
+img.getpixel((0, 0))   # (20, 40, 80)
+\`\`\`
+
+وعادة ستفتح ملفا حقيقيا بدل ذلك:
+
+\`\`\`python
+img = Image.open("photo.jpg")
+\`\`\`
+
+والدالة \`Image.open()\` **كسولة**، إذ تقرأ الترويسة لأجل \`size\` و\`format\` دون فك ترميز البكسلات. ولهذا فهي سريعة على ملف ضخم، ولهذا أيضا قد لا تشتكي الصورة التالفة فعلا حتى تمس بياناتها.
+
+و**النمط (mode)** هو صيغة البكسل: \`"RGB"\` (ملون)، و\`"RGBA"\` (مع شفافية)، و\`"L"\` (تدرج رمادي بقناة واحدة). والتحويل بينها خطوة أولى شائعة.
+
+## التحويل
+
+\`\`\`python
+img.rotate(90, expand=True)   # expand=True keeps the corners
+img.resize((100, 50))
+img.crop((0, 0, 50, 50))      # (left, upper, right, lower)
+ImageOps.grayscale(img)
+img.filter(ImageFilter.BLUR)
+\`\`\`
+
+وكل واحدة منها **تعيد صورة جديدة** وتترك الأصل وشأنه، وهي القاعدة نفسها التي في توابع النصوص. فـ \`img.rotate(90)\` في سطر مستقل لا تفعل شيئا، بل يجب أن تحتفظ بالنتيجة.
+
+والاستثناء هو \`thumbnail()\` التي تعدل **في المكان** وتعيد \`None\`. وهو عدم اتساق يستحق المعرفة قبل أن يلدغك.
+
+وبدون \`expand=True\` تبقي \`rotate\` اللوحة الأصلية وتقطع الزوايا.
+
+## الحفظ
+
+\`\`\`python
+img.save("banner.png")
+img.save("banner.jpg", quality=85)
+\`\`\`
+
+والصيغة تؤخذ من **الامتداد**. وحفظ RGBA إلى JPEG يرفع خطأ، لأن JPEG بلا شفافية، فحول أولا بـ \`img.convert("RGB")\`.
+
+---
+
+## لماذا هذا في دورة أمنية
+
+الصور تحمل أكثر من البكسلات. فالبيانات الوصفية **EXIF** قد تحمل إحداثيات GPS وطوابع زمنية وأرقاما تسلسلية للأجهزة، وهو تسريب حقيقي في أي صورة ترفع:
+
+\`\`\`python
+img._getexif()   # None, or a dict of metadata
+\`\`\`
+
+وتجريدها قبل النشر مهمة حقيقية، وPillow هي كيف تؤديها. ومحللات الصور أيضا سطح هجوم كلاسيكي: ملف مشوه موجه إلى فاك الترميز لا إلى المشاهد. وقد نالت Pillow نصيبها من الثغرات المسجلة (CVEs)، فأبقها محدثة، وعامل الصور المرفوعة معاملة المدخل غير الموثوق.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية، فهي تبني صورة وتحولها وتحفظها في نظام ملفات المتصفح الافتراضي ثم تقرؤها. وتحمل Pillow عند أول استيراد، فيكون التشغيل الأول أبطأ.
+`,
+      },
     },
 
     /* ── 2. Docstrings ── */
@@ -155,7 +227,8 @@ print(math.sqrt.__doc__.splitlines()[0])
 # help() reads the docstring
 # help(is_valid)
 `,
-      markdownContent: `# Docstrings
+      markdownContent: {
+        en: `# Docstrings
 
 A **docstring** is a string as the **first statement** of a function, class or module. Python keeps it, and it becomes the object's documentation.
 
@@ -237,6 +310,89 @@ If the docstring only restates the signature, delete it. Good naming already did
 
 Run the starter code. \`is_valid.__doc__\` exists at runtime; the comment inside \`undocumented\` is gone entirely.
 `,
+        ar: `# سلاسل التوثيق
+
+الـ **docstring** نص يكون **أول تعليمة** في دالة أو صنف أو وحدة. وتحتفظ به بايثون فيصير توثيق ذلك الكائن.
+
+\`\`\`python
+def is_valid(port):
+    """Return True if port is a usable TCP/UDP port."""
+    return 1 <= port <= 65535
+
+is_valid.__doc__   # 'Return True if port is a usable TCP/UDP port.'
+help(is_valid)     # prints it
+\`\`\`
+
+---
+
+## ليست تعليقا
+
+هذا هو التمييز الذي وعدت الوحدة 2 بالعودة إليه:
+
+- **التعليق** (\`#\`) ينزع. فهو لا يوجد إلا في المصدر، لمن يقرأ الملف.
+- أما **الـ docstring** فخاصية كائن حقيقية حية أثناء التنفيذ. فتقرؤها \`help()\` وتلميحات المحرر ومولدات التوثيق.
+
+ولهذا كان النص الثلاثي الاقتباس في **الموضع الأول** خاصا، وكان الذي بعده مجرد نص يرمى.
+
+## العرف المتبع
+
+\`\`\`python
+def scan(host, ports, timeout=5):
+    """Scan host for open ports.
+
+    Args:
+        host: IP or hostname to scan.
+        ports: iterable of port numbers.
+        timeout: seconds to wait per port.
+
+    Returns:
+        list[int]: the ports found open.
+
+    Raises:
+        ValueError: if ports is empty.
+    """
+\`\`\`
+
+والشكل (بحسب PEP 257): **ملخص من سطر واحد** أولا بصيغة الأمر، أي "Return the..." لا "Returns the..." ولا "This function returns..."، ثم سطر فارغ، ثم التفصيل.
+
+والسطر الواحد هو الأهم: فهو ما يظهر في التلميحات وقوائم الفهرسة. وإن لم تستطع تلخيص الدالة في سطر واحد فالأرجح أنها تفعل أكثر مما ينبغي.
+
+---
+
+## التوثيق مقابل التعليق
+
+مهمتان مختلفتان، والخلط بينهما ينتج ضجيجا:
+
+**التعليقات** تشرح *لماذا*، لمن سيعدل الشيفرة. من الوحدة 2:
+
+\`\`\`python
+x = 10  # max retries before we treat the host as down
+\`\`\`
+
+**وسلاسل التوثيق** تشرح *ماذا وكيف تستعمل*، لمن **يستدعي** الدالة، أي لشخص لن يقرأ جسمها أبدا:
+
+\`\`\`python
+"""Return the ports found open on host."""
+\`\`\`
+
+فالمستدعي يحتاج أن يعرف ما الذي يدخل وما الذي يخرج وما الذي قد يعطب. وهو لا يحتاج ملاحظاتك عن التنفيذ، فتلك تعليقات.
+
+## لا توثق البديهي
+
+\`\`\`python
+def get_name(self):
+    """Get the name."""    # adds nothing
+\`\`\`
+
+إن كانت سلسلة التوثيق لا تفعل إلا إعادة صياغة التوقيع فاحذفها. فالتسمية الجيدة أدت المهمة أصلا. ادخر التوثيق لما *لا تستطيع* الشيفرة قوله: كالوحدات، والحالات الحدية، وما الذي يرفع خطأ، وماذا تعني القيمة المعادة حين تكون فارغة.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. فـ \`is_valid.__doc__\` موجودة أثناء التنفيذ، أما التعليق داخل \`undocumented\` فقد اختفى تماما.
+`,
+      },
     },
 
     /* ── 3. Linting ── */
@@ -271,7 +427,8 @@ def broken():
 # Nothing above RUNS wrong until you call broken().
 # A linter would tell you before you ever ran it.
 `,
-      markdownContent: `# Linting and Style
+      markdownContent: {
+        en: `# Linting and Style
 
 A **linter** reads your code without running it and reports problems, typos, unused imports, unreachable lines, style violations.
 
@@ -344,6 +501,80 @@ Read the starter code and find the problems yourself. That's the same skill; the
 
 Run the starter code, it works, despite everything wrong with it. Then read the comments and count how many issues a linter would have flagged before you ever hit Run.
 `,
+        ar: `# التدقيق والأسلوب
+
+**المدقق (linter)** يقرأ شيفرتك دون تشغيلها ويبلغ عن المشكلات: الأخطاء المطبعية، والاستيرادات غير المستعملة، والأسطر التي لا يصلها التنفيذ، ومخالفات الأسلوب.
+
+---
+
+## لماذا يهم
+
+لا تكتشف بايثون معظم الأخطاء إلا حين ينفذ السطر. وهذا ملف صالح تماما:
+
+\`\`\`python
+def broken():
+    total = 0
+    return totl    # a typo
+\`\`\`
+
+فلا خطأ حتى يستدعي أحدهم \`broken()\`. وإن كان ذلك في فرع نادر فسيشحن مع المنتج. والمدقق يجده في ثانية، قبل أن تشغل أي شيء.
+
+وتلك هي القيمة الحقيقية: **التحليل الساكن يمسك ما يمرره التنميط الديناميكي.**
+
+## الأدوات
+
+\`\`\`
+pip install pylint
+pylint myfile.py
+
+pip install flake8      # lighter, style-focused
+pip install ruff        # much faster, increasingly the default
+\`\`\`
+
+وتبدو المخرجات هكذا:
+
+\`\`\`
+myfile.py:3:0: C0103: Constant name "l" doesn't conform to naming style
+myfile.py:5:4: W0612: Unused variable 'z'
+myfile.py:8:0: E0602: Undefined variable 'totl'
+\`\`\`
+
+والحروف هي الخطورة: **E** خطأ (معطوب على الأرجح)، و**W** تحذير (مريب)، و**C** عرف (أسلوب)، و**R** إعادة هيكلة (يمكن أن يكون أبسط).
+
+وتعطيك Pylint درجة من 10. ومطاردة 10 من 10 مضيعة للوقت، فكثير من شكاواها مسائل ذوق. أصلح حالات **E** دائما، واقرأ حالات **W**، واستبعد بالإعدادات حالات **C** التي لا توافق عليها (في \`pyproject.toml\` أو \`.pylintrc\`).
+
+## المنسقات شيء آخر
+
+المدقق *يبلغ*، أما **المنسق (formatter)** *فيعيد الكتابة*:
+
+\`\`\`
+pip install black
+black myfile.py
+\`\`\`
+
+والأداة **Black** تعيد التنسيق إلى أسلوب واحد متسق بلا خيارات تقريبا. وهذا هو المقصود: فلا يتجادل أحد في المسافات مرة أخرى، وتكف الفروق (diffs) عن الامتلاء بضجيج إعادة التنسيق. شغل منسقا عند الحفظ ومدققا في التكامل المستمر.
+
+## PEP 8
+
+هو دليل الأسلوب الذي تجسده الأدوات: إزاحة بأربع مسافات، ودوال بـ \`snake_case\`، وثوابت بـ \`UPPER_CASE\`، ومسافات حول العوامل، وأسطر بنحو 79 محرفا. وأنت تتبعه منذ الوحدة 2.
+
+والسبب ليس جماليا. فالشيفرة المتسقة **قابلة للمسح بالعين**: فحين يتشابه كل شيء يبرز المختلف. وهكذا تكتشف الأخطاء بالنظر.
+
+---
+
+## في هذا المحرر
+
+لا يوجد مدقق هنا، فهذا زمن تشغيل بايثون لا بيئة تطوير متكاملة. وعلى جهازك يشغل محررك مدققا أثناء كتابتك ويسطر المشكلات مباشرة.
+
+اقرأ الشيفرة الابتدائية وجد المشكلات بنفسك. فهذه هي المهارة نفسها، والأداة لا تمل أبدا.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية، فهي تعمل رغم كل ما فيها من عيوب. ثم اقرأ التعليقات وعد كم مشكلة كان المدقق سيشير إليها قبل أن تضغط Run أصلا.
+`,
+      },
     },
 
     /* ── 4. Errors and Raising ── */
@@ -376,7 +607,8 @@ for bad in ["80", 0, 99999]:
 
 print(set_port(80))
 `,
-      markdownContent: `# Errors and Raising
+      markdownContent: {
+        en: `# Errors and Raising
 
 An **exception** is Python's way of saying "I can't do this." It stops the program rather than continuing with a wrong answer, which is the right instinct.
 
@@ -447,6 +679,78 @@ That's the recurring theme from Module 6: Python gives you a loud version and a 
 
 Run the starter code. The first block shows six familiar failures with their real types and messages; the second raises its own.
 `,
+        ar: `# الأخطاء ورفعها
+
+**الاستثناء (exception)** هو طريقة بايثون في قول "لا أستطيع فعل هذا". فهو يوقف البرنامج بدل أن يمضي بجواب خاطئ، وتلك هي الغريزة الصحيحة.
+
+---
+
+## ما تعرفه منها
+
+قابلت معظم هذه أصلا:
+
+| الاستثناء | السبب |
+|---|---|
+| \`ValueError\` | النوع صحيح والقيمة مستحيلة، مثل \`int("abc")\` |
+| \`TypeError\` | النوع خاطئ، مثل \`"a" + 1\` |
+| \`IndexError\` | فهرس قائمة خارج المدى |
+| \`KeyError\` | مفتاح قاموس مفقود |
+| \`ZeroDivisionError\` | مثل \`1 / 0\` |
+| \`NameError\` | اسم غير معرف |
+| \`FileNotFoundError\` | ملف مفقود |
+| \`AttributeError\` | لا وجود لهذا التابع |
+
+والتمييز الذي ينبغي ضبطه هو \`ValueError\` مقابل \`TypeError\`: فـ \`int("abc")\` هي **ValueError**، إذ النص هو النوع الصحيح، وذلك النص بعينه ليس عددا. أما \`int([])\` فهي **TypeError**.
+
+---
+
+## raise
+
+ارفع استثناءك حين يكون شيء ما خاطئا:
+
+\`\`\`python
+def set_port(port):
+    if not isinstance(port, int):
+        raise TypeError(f"port must be an int, got {type(port).__name__}")
+    if not 1 <= port <= 65535:
+        raise ValueError(f"port out of range: {port}")
+    return port
+\`\`\`
+
+والكلمة \`raise\` توقف الدالة فورا، مثل \`return\` لكن بصراخ.
+
+**ارفع مبكرا.** تحقق عند الحدود، فترفض القيمة السيئة حيث تدخل لا بعد خمس دوال حيث تصير الرسالة بلا معنى.
+
+**واختر النوع الصحيح.** فـ \`TypeError\` للصنف الخاطئ من الأشياء، و\`ValueError\` للقيمة الخاطئة. والمستدعون يلتقطون استثناءات بعينها، فالنوع جزء من الواجهة.
+
+**وقل ما الخطب في الرسالة.** قارن:
+
+\`\`\`python
+raise ValueError("bad input")            # useless
+raise ValueError(f"port out of range: {port}")   # actionable
+\`\`\`
+
+فالثانية تخبرك بالقاعدة وبالقيمة المخالفة. وستقرأ هذه الرسالة يوما ما في الثالثة فجرا.
+
+## لا تعد رمز خطأ
+
+\`\`\`python
+def set_port(port):
+    if not valid:
+        return -1     # don't
+\`\`\`
+
+فالمستدعي مضطر إلى تذكر التحقق، والقيمة \`-1\` تنساب إلى الأمام بصمت حين لا يتذكر. أما الاستثناء فلا يمكن تجاهله بالخطأ. **افشل بصوت عال.**
+
+وهذا هو الموضوع المتكرر من الوحدة 6: بايثون تعطيك نسخة صاخبة وأخرى هادئة. وحين يكون شيء ما خاطئا فعلا فاختر الصاخبة.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. الكتلة الأولى تعرض ستة إخفاقات مألوفة بأنواعها ورسائلها الحقيقية، والثانية ترفع استثناءها الخاص.
+`,
+      },
     },
 
     /* ── 5. try / except / else / finally ── */
@@ -491,7 +795,8 @@ try:
 except Exception as e:
     print("bare-ish:", type(e).__name__)
 `,
-      markdownContent: `# try / except / else / finally
+      markdownContent: {
+        en: `# try / except / else / finally
 
 Handling an exception instead of letting it stop the program.
 
@@ -592,6 +897,108 @@ For files, EAFP is genuinely more correct: the file can vanish between \`exists(
 
 Run the starter code and watch the order: \`finally\` runs even after \`return\`.
 `,
+        ar: `# try / except / else / finally
+
+معالجة الاستثناء بدل ترك البرنامج يتوقف.
+
+---
+
+## الأجزاء الأربعة
+
+\`\`\`python
+try:
+    value = int(raw)        # might fail
+except ValueError:
+    print("not a number")   # runs ONLY on that failure
+else:
+    print("parsed fine")    # runs only if NOTHING failed
+finally:
+    print("always runs")    # runs no matter what
+\`\`\`
+
+**\`try\`** هي الشيفرة المحفوفة بالخطر. أبقها **قصيرة**: السطر الذي قد يفشل فقط. فالكتلة \`try\` الكبيرة تلتقط أخطاء لم تقصد التقاطها.
+
+**و\`except\`** هي ما تفعله حياله.
+
+**و\`else\`** تنفذ حين لا ينطلق أي استثناء. ولماذا نتكبد ذلك؟ لأنها تبقي \`try\` في حدها الأدنى: ضع الاستدعاء الخطر في \`try\` وضع العمل التالي في \`else\`، فلا يبتلع معالجك فشلا يقع *هناك*.
+
+**و\`finally\`** تنفذ دائما: عند النجاح، وعند الفشل، وحتى مع \`return\` داخل \`try\`. وهي للتنظيف، كإغلاق الأشياء وتحرير الأقفال. و\`with\` مبنية على هذه الفكرة، ولهذا لا تستطيع \`with open(...)\` أن تسرب.
+
+---
+
+## التقط استثناءات بعينها
+
+أهم قاعدة:
+
+\`\`\`python
+try:
+    value = int(raw)
+except ValueError:      # yes, the one thing you expect
+except Exception:       # rarely
+except:                 # never
+\`\`\`
+
+فـ **\`except:\`** المجردة تلتقط كل شيء، بما في ذلك \`NameError\` من خطئك المطبعي أنت، و\`KeyboardInterrupt\` حين يحاول المستخدم الخروج. فيستمر برنامجك معطوبا في هدوء، وتختفي المشكلة الحقيقية.
+
+\`\`\`python
+try:
+    result = compute()
+except:
+    result = 0     # was it bad input, or did you misspell a variable?
+\`\`\`
+
+ولن تعرف أبدا. **التقط الاستثناء الذي تستطيع معالجته فعلا**، ودع البقية تنهار، لأن الانهيار مع أثر تتبع يخبرك بالضبط بما ينبغي إصلاحه.
+
+وعدة استثناءات دفعة واحدة، مع الاحتفاظ بالكائن:
+
+\`\`\`python
+except (KeyError, IndexError) as e:
+    print(type(e).__name__, e)
+\`\`\`
+
+**ورتب الخاص قبل العام.** فأول \`except\` مطابقة تفوز، فوضع العامة أولا يجعل البقية غير قابلة للوصول، وهي القاعدة نفسها التي في \`elif\` بالوحدة 9.
+
+## لا تكتمه
+
+\`\`\`python
+try:
+    risky()
+except Exception:
+    pass         # the worst two lines in Python
+\`\`\`
+
+فهذا خلل لن تجده أبدا. وإن كان لا بد لك من المتابعة فعلا فـ **سجله**:
+
+\`\`\`python
+except Exception as e:
+    logger.warning("risky() failed: %s", e)
+\`\`\`
+
+---
+
+## مبدأ EAFP
+
+أسلوب بايثون هو **"طلب الصفح أسهل من طلب الإذن"**:
+
+\`\`\`python
+try:                       # EAFP, Pythonic
+    value = data["key"]
+except KeyError:
+    value = None
+
+if "key" in data:          # LBYL, fine, but racy for files
+    value = data["key"]
+\`\`\`
+
+ومع الملفات يكون EAFP أصح فعلا: فقد يختفي الملف بين \`exists()\` و\`open()\` كما أشارت الوحدة 12. أما \`try\` فلا فجوة فيها.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية وراقب الترتيب: فـ \`finally\` تنفذ حتى بعد \`return\`.
+`,
+      },
     },
 
     /* ── 6. Exceptions in Practice ── */
@@ -637,7 +1044,8 @@ try:
 except InvalidPort as e:
     print(f"{e} | caused by {type(e.__cause__).__name__}")
 `,
-      markdownContent: `# Exceptions in Practice
+      markdownContent: {
+        en: `# Exceptions in Practice
 
 ---
 
@@ -707,6 +1115,77 @@ That's why \`parse_port\` raises rather than printing. It doesn't know whether i
 
 Run it, the Input box has \`abc\`, then \`99999\`, then \`8080\`. Each is rejected by a different handler for a different reason.
 `,
+        ar: `# الاستثناءات في الممارسة
+
+---
+
+## نوع الاستثناء الخاص بك
+
+\`\`\`python
+class InvalidPort(Exception):
+    """Raised when a port is outside 1-65535."""
+\`\`\`
+
+وهذا صنف كامل، ترث من \`Exception\` وتعطيه سلسلة توثيق وانتهى الأمر. (والأصناف خارج نطاق هذه الدورة، وهذا النمط هو كل ما تحتاجه.)
+
+ولماذا نتكبد ذلك ما دامت \`ValueError\` موجودة؟ لأنه يتيح للمستدعين التقاط إخفاقك **أنت** تحديدا:
+
+\`\`\`python
+except InvalidPort:      # exactly this problem
+except ValueError:       # this, and every other value error
+\`\`\`
+
+سمه باسم المشكلة، وأنهه بـ \`Error\` إن كان خطأ. وورث دائما من \`Exception\` لا من \`BaseException\` أبدا، فتلك هي التي تستعملها \`KeyboardInterrupt\`، والتقاطها يمنع المستخدمين من الخروج.
+
+## حلقة التحقق
+
+كل ما سبق في شكل واحد:
+
+\`\`\`python
+while True:
+    raw = input("Port: ").strip()
+    try:
+        port = parse_port(raw)
+    except ValueError:
+        print("  not a number, try again")
+    except InvalidPort as e:
+        print(f"  {e}, try again")
+    else:
+        break
+\`\`\`
+
+نمطا فشل، ورسالتان، و\`else\` مع \`break\` للخروج عند النجاح. وهذه هي النسخة الصادقة من حلقة الوحدة 10، فـ \`isdigit()\` لم تستطع التعامل مع \`"-5"\` ولا \`"3.14"\`، أما \`try/except\` فتتعامل مع كل ما ترفضه \`int()\`، لأنها تسأل \`int()\` نفسها.
+
+## التسلسل بـ from
+
+غلف إخفاقا منخفض المستوى بآخر ذي معنى، دون أن تفقد الأثر:
+
+\`\`\`python
+try:
+    return int(raw)
+except ValueError as e:
+    raise InvalidPort(f"bad port {raw!r}") from e
+\`\`\`
+
+فيحصل المستدعي على \`InvalidPort\`، وهو الخطأ الذي يعني له شيئا، ويظل أثر التتبع يظهر \`ValueError\` تحته عبر \`__cause__\`. فتحصل على واجهة نظيفة *و* على التشخيص معا.
+
+وبدون \`from e\` تظل بايثون تعرض "During handling of the above exception, another occurred"، لكن \`from\` تجعل العلاقة صريحة ومقصودة.
+
+## أين تعالج
+
+القاعدة: **التقطه حيث تستطيع فعل شيء حياله.**
+
+فالأداة العميقة التي تلتقط وتعيد \`None\` قد دمرت معلومة كان المستدعي يحتاجها. دعها ترفع، وعالج عند المستوى الذي يعرف ماذا يفعل: أيعيد المحاولة، أم يستعمل قيمة افتراضية، أم يخبر المستخدم، أم يستسلم.
+
+ولهذا ترفع \`parse_port\` بدل أن تطبع. فهي لا تعرف أتخدم واجهة سطر أوامر، أم طلب ويب، أم اختبارا.
+
+---
+
+## جربها
+
+شغلها، فصندوق Input يحمل \`abc\` ثم \`99999\` ثم \`8080\`. وكل واحد يرفض بمعالج مختلف لسبب مختلف.
+`,
+      },
     },
 
     /* ── 7. Debugging ── */
@@ -748,7 +1227,8 @@ mystery = {"a": 1}.keys()
 print(type(mystery).__name__)
 print([m for m in dir(mystery) if not m.startswith("_")])
 `,
-      markdownContent: `# Debugging
+      markdownContent: {
+        en: `# Debugging
 
 Code fails. The skill is finding out **why**, quickly.
 
@@ -831,6 +1311,90 @@ Most bugs are a value not being what you assumed. Print it and the mystery usual
 
 Run the starter code. The traceback shows three frames, read it bottom-up and find \`level_three\` in one step.
 `,
+        ar: `# تتبع الأخطاء
+
+الشيفرة تفشل. والمهارة هي معرفة **لماذا** بسرعة.
+
+---
+
+## اقرأ أثر التتبع
+
+يرى المبتدئون جدارا من النص فيفزعون. وهو تقرير دقيق، فاقرأه **من الأسفل إلى الأعلى**:
+
+\`\`\`
+Traceback (most recent call last):
+  File "x.py", line 12, in level_one
+    return level_two({"a": 1})
+  File "x.py", line 9, in level_two
+    return level_three(data)
+  File "x.py", line 6, in level_three
+    return data["missing"]
+KeyError: 'missing'
+\`\`\`
+
+- **السطر الأخير** هو ما الذي أخفق: \`KeyError: 'missing'\`.
+- **والسطر الذي فوقه** هو أين: في \`level_three\` بالسطر 6.
+- **والبقية** هي كيف وصلت إلى هناك، أي سلسلة الاستدعاءات، من الخارج إلى الداخل.
+
+وعبارة "most recent call last" تعني أن أعمق إطار في الأسفل. ابدأ من هناك، فذاك هو خللك في 90% من الحالات. أما السلسلة التي فوقه فتهم حين تكون المشكلة الحقيقية هي *أي* مستدع مرر بيانات سيئة.
+
+## التتبع بـ print مقبول
+
+ثمة استعلاء على التتبع بـ \`print()\`. تجاهله، فهو سريع ويعمل دائما ولا يحتاج إعدادا.
+
+وحيلة \`=\` في f-string من الوحدة 3 تجعله بلا ألم:
+
+\`\`\`python
+print(f"{port = }, {host = }")   # port = 8080, host = '10.0.0.5'
+print(f"{port > 1024 = }")       # port > 1024 = True
+\`\`\`
+
+الاسم والقيمة معا، بلا كتابة الاسم مرتين، وبلا انحراف حين تعيد التسمية.
+
+## repr تظهر ما تخفيه print
+
+\`\`\`python
+value = " 42\\n"
+print(value)        # 42        <- looks fine!
+print(repr(value))  # ' 42\\n'   <- there's the bug
+\`\`\`
+
+فحين تبدو القيمة "صحيحة" ولا تتساوى في المقارنة، **استعمل \`repr()\` عليها**. فالمسافات، و\`"42"\` مقابل \`42\`، و\`None\` مقابل \`"None"\`، كلها غير مرئية لـ \`print\` وبديهية لـ \`repr\`.
+
+## حين لا تعرف ما الذي تحمله
+
+\`\`\`python
+type(x).__name__   # what is it?
+dir(x)             # what can it do?
+vars(x)            # what's inside it?
+\`\`\`
+
+## المنقح الحقيقي
+
+\`\`\`python
+breakpoint()   # drops into pdb, right there
+\`\`\`
+
+ثم \`n\` (التالي)، و\`s\` (ادخل)، و\`c\` (تابع)، و\`p x\` (اطبع x)، و\`q\` (اخرج). وهو تفاعلي فيحتاج طرفية، ولن يعمل في هذا المحرر، والمنقح الرسومي في بيئة تطويرك أجمل على كل حال.
+
+## المنهج
+
+حين تتعثر تكون العلة أنك **تخمن**. وبدل ذلك:
+
+1. **اقرأ الخطأ.** اقرأه فعلا. فهو يسمي المشكلة عادة.
+2. **جد أصغر حالة تفشل.** واقطع كل ما يبقى الفشل قائما بدونه.
+3. **تحقق من افتراضاتك**، فلهذا وجدت \`print(f"{x = }")\`. والخلل يكون دائما تقريبا حيث كنت *متيقنا* من صوابك.
+4. **غير شيئا واحدا في كل مرة.**
+
+ومعظم الأخطاء قيمة ليست كما افترضت. اطبعها فيتبخر اللغز عادة.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. يعرض أثر التتبع ثلاثة إطارات، فاقرأه من الأسفل إلى الأعلى وستجد \`level_three\` في خطوة واحدة.
+`,
+      },
     },
 
     /* ── 8. Type Hinting ── */
@@ -867,7 +1431,8 @@ print(lookup("ssh"), lookup("nope"))
 print(is_valid.__annotations__)
 print(open_ports.__annotations__)
 `,
-      markdownContent: `# Type Hinting
+      markdownContent: {
+        en: `# Type Hinting
 
 **Type hints** say what types a function expects and returns.
 
@@ -948,6 +1513,88 @@ is_valid.__annotations__   # {'port': <class 'int'>, 'return': <class 'bool'>}
 
 Run the starter code. \`describe("80", "tcp")\` works despite the hint saying \`int\`, Python doesn't care, but mypy would have told you.
 `,
+        ar: `# تلميحات الأنواع
+
+**تلميحات الأنواع (type hints)** تقول ما الأنواع التي تتوقعها الدالة وتعيدها.
+
+\`\`\`python
+def is_valid(port: int) -> bool:
+    return 1 <= port <= 65535
+\`\`\`
+
+فـ \`port: int\` تعني أن المعامل ينبغي أن يكون \`int\`. و\`-> bool\` تعني أنها تعيد \`bool\`.
+
+---
+
+## بايثون لا تفرضها
+
+وهذا ما ينبغي فهمه أولا:
+
+\`\`\`python
+describe("80", "tcp")   # runs fine, no error
+\`\`\`
+
+فبايثون **تتجاهل** التلميحات أثناء التنفيذ. فهي حواش لا فحوص. ولا شيء يمنعك من تمرير النوع الخاطئ، وتبقى بايثون ديناميكية التنميط.
+
+فما الفائدة إذن؟
+
+**1. توثيق لا يمكن أن ينحرف.** فالتعليق الذي يقول "port عدد صحيح" قد يتقادم. أما التلميح فهو في التوقيع حيث ينظر القارئ أولا.
+
+**2. محررك.** فمع التلميحات يكمل VS Code لك \`.upper()\` على معامل من نوع \`str\` ويشير إلى \`port.upper()\` على \`int\`، وأنت تكتب، قبل أن تشغل.
+
+**3. الفاحصات الساكنة.** وهذا هو المكسب الحقيقي:
+
+\`\`\`
+pip install mypy
+mypy myfile.py
+\`\`\`
+
+\`\`\`
+myfile.py:5: error: Argument 1 to "describe" has incompatible type "str"; expected "int"
+\`\`\`
+
+مثل المدقق لكن للأنواع. وهو يمسك صنفا كاملا من الأخطاء، من نوع \`"18" == 18\` في الوحدة 7، دون تشغيل أي شيء.
+
+## الصياغة
+
+\`\`\`python
+name: str = "sara"                     # variables too
+def f(port: int, proto: str = "tcp") -> str:
+def g(ports: list[int]) -> list[int]:
+def h(host: str) -> dict[str, int]:
+def i(name: str) -> int | None:        # int OR None
+def j() -> None:                       # returns nothing
+\`\`\`
+
+والصيغة \`int | None\` هي الاتحاد الحديث (منذ 3.10)، والشيفرة الأقدم تكتب \`Optional[int]\` من \`typing\`. وهي التوقيع الصادق لكل ما قد لا يجد جوابا، كـ \`.get()\` أو بحث أو تحليل.
+
+والصيغتان الصغيرتان \`list[int]\` و\`dict[str, int]\` هما الحاليتان (منذ 3.9). أما \`List\` و\`Dict\` من \`typing\` فهما الطريقة القديمة، وما زالتا شائعتين في القواعد البرمجية الأقدم.
+
+## أين تستعملها
+
+لمح **توقيعات دوالك**، أي الحدود. فهناك تنفع المعلومة المستدعي والفاحص.
+
+ولا تلمح كل متغير محلي، فذلك ضجيج، والقيمة واضحة من السطر الذي فوقه:
+
+\`\`\`python
+count: int = 0   # adds nothing
+\`\`\`
+
+والتلميحات اختيارية وتراكمية. أضفها إلى الشيفرة الجديدة وإلى المواضع الشائكة من القديمة. ولا بأس بقاعدة شيفرة ملمحة جزئيا، فـ mypy يفحص ما يستطيع.
+
+وهي قابلة للقراءة أثناء التنفيذ إن أردت:
+
+\`\`\`python
+is_valid.__annotations__   # {'port': <class 'int'>, 'return': <class 'bool'>}
+\`\`\`
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. فـ \`describe("80", "tcp")\` تعمل رغم أن التلميح يقول \`int\`، فبايثون لا تبالي، لكن mypy كان سيخبرك.
+`,
+      },
     },
 
     /* ── 9. HTTP with requests ── */
@@ -993,7 +1640,8 @@ try:
 except Exception as e:
     print("raise_for_status:", e)
 `,
-      markdownContent: `# HTTP with requests
+      markdownContent: {
+        en: `# HTTP with requests
 
 **requests** is the standard way to speak HTTP from Python. Third-party: \`pip install requests\`.
 
@@ -1080,6 +1728,94 @@ Otherwise every response looks fine and you'll happily parse an error page as da
 
 Run the starter code, the fake Response mirrors the real API, including \`raise_for_status()\` staying silent on 200 and raising on 404.
 `,
+        ar: `# بروتوكول HTTP مع requests
+
+المكتبة **requests** هي الطريقة القياسية للتحدث بـ HTTP من بايثون. وهي من الطرف الثالث: \`pip install requests\`.
+
+---
+
+## كلمة عن هذا المحرر
+
+لا يمكن تشغيل HTTP حقيقي **هنا**. فالبيئة المعزولة في المتصفح بلا مقابس خام، والصفحة لا تصل إلا إلى الخوادم التي تسمح لها. وهي البيئة المعزولة نفسها التي تجعل هذا المحرر آمنا.
+
+لذلك تحاكي الشيفرة الابتدائية كائن \`Response\` بدلا من ذلك، لتريك شكل الواجهة. وكل مقطع في هذا الدرس هو بالضبط ما ستكتبه على جهازك.
+
+---
+
+## GET
+
+\`\`\`python
+import requests
+
+r = requests.get("https://api.github.com/users/d0lv3")
+print(r.status_code)   # 200
+print(r.text)          # the raw body, as a string
+print(r.json())        # parsed, if it's JSON
+\`\`\`
+
+تعيد \`requests.get()\` كائن **Response**. وأجزاؤه المفيدة:
+
+| | |
+|---|---|
+| \`r.status_code\` | 200 أو 404 أو 500 وغيرها |
+| \`r.ok\` | \`True\` حين تكون الحالة أقل من 400 |
+| \`r.text\` | الجسم بصيغة \`str\` |
+| \`r.content\` | الجسم بصيغة \`bytes\`، للصور والملفات |
+| \`r.json()\` | JSON محلل إلى قاموس أو قائمة |
+| \`r.headers\` | ترويسات الاستجابة (قاموس غير حساس لحالة الأحرف) |
+
+والدالة \`r.json()\` ترفع خطأ إن لم يكن الجسم JSON، فتحقق من نوع المحتوى أو غلفها بـ \`try\`.
+
+## معاملات الاستعلام
+
+لا تبن الرابط بيدك:
+
+\`\`\`python
+requests.get("https://api.example.com/search?q=" + term)          # no
+requests.get("https://api.example.com/search", params={"q": term}) # yes
+\`\`\`
+
+فالوسيط \`params\` **يرمز** لك. فمصطلح فيه مسافة أو \`&\` أو \`/\` يكسر النسخة الأولى، وإن كان ذلك المصطلح قد جاء من مستخدم فبناء الرابط بالنصوص خلل حقن. فالمكتبة تهرب المحارف تهريبا صحيحا، وأنت لن تفعل.
+
+وهو المبدأ نفسه في ألا تبني SQL بـ f-string أبدا.
+
+## POST
+
+\`\`\`python
+requests.post(url, data={"user": "sara"})    # form-encoded
+requests.post(url, json={"user": "sara"})    # JSON body
+\`\`\`
+
+والوسيط \`json=\` يضبط \`Content-Type: application/json\` ويسلسل لك. ومعظم الواجهات البرمجية تريد هذا.
+
+---
+
+## الحالة 404 ليست خطأ
+
+الفخ الذي يلتقط الجميع:
+
+\`\`\`python
+r = requests.get("https://example.com/nope")
+print(r.status_code)   # 404, and NO exception was raised
+\`\`\`
+
+فالطلب **نجح**، والخادم أجاب، وكان جوابه "غير موجود". وبالنسبة إلى \`requests\` هذه استجابة عادية، فلا يرفع شيء خطأ.
+
+وإن أردت أن تكون الحالة السيئة استثناء:
+
+\`\`\`python
+r.raise_for_status()   # raises HTTPError on 4xx/5xx
+\`\`\`
+
+وإلا بدت كل استجابة سليمة وحللت صفحة خطأ على أنها بيانات في رضا تام.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية، فكائن Response الوهمي يحاكي الواجهة الحقيقية، بما في ذلك بقاء \`raise_for_status()\` صامتة عند 200 ورفعها خطأ عند 404.
+`,
+      },
     },
 
     /* ── 10. requests in Practice ── */
@@ -1119,7 +1855,8 @@ print("call:", json.dumps(call, indent=None))
 for name in ["Timeout", "ConnectionError", "HTTPError", "TooManyRedirects"]:
     print(f"  requests.exceptions.{name}")
 `,
-      markdownContent: `# requests in Practice
+      markdownContent: {
+        en: `# requests in Practice
 
 The four things that separate a script that works on your machine from one that works.
 
@@ -1215,6 +1952,103 @@ except requests.exceptions.RequestException as e:
 
 Run the starter code, it prints the shapes without touching the network. Then write the real version on your machine, and point it at a proxy to watch it work.
 `,
+        ar: `# requests في الممارسة
+
+الأمور الأربعة التي تفصل بين سكربت يعمل على جهازك وسكربت يعمل.
+
+---
+
+## 1. الترويسات
+
+مجرد قاموس:
+
+\`\`\`python
+headers = {
+    "User-Agent": "cyberkhana-scanner/1.0",
+    "Authorization": "Bearer " + token,
+    "Accept": "application/json",
+}
+r = requests.get(url, headers=headers)
+\`\`\`
+
+والترويسة \`User-Agent\` تستحق أن تضبطها بصدق، فكثير من الخوادم ترفض الافتراضية، والتعريف بأداتك أدب أساسي حين تكون مصرحا لك بالفحص أصلا.
+
+**ولا تكتب رمزا مميزا (token) ثابتا في الشيفرة أبدا.** فهو ينتهي في git، وgit يتذكر إلى الأبد:
+
+\`\`\`python
+token = os.environ["API_TOKEN"]   # from the environment
+\`\`\`
+
+وهذه أشيع طريقة على الإطلاق لتسرب الأسرار. فمتغيرات البيئة أو ملف \`.env\` مدرج في \`.gitignore\`، ولا قيمة حرفية في المصدر أبدا.
+
+## 2. المهل
+
+**مرر مهلة دائما:**
+
+\`\`\`python
+requests.get(url, timeout=10)
+\`\`\`
+
+فالمكتبة \`requests\` تنتظر **إلى الأبد** افتراضيا. والخادم الذي يقبل اتصالك ولا يجيب أبدا سيعلق سكربتك إلى ما لا نهاية، بلا خطأ وبلا خروج. والفحص المعلق في الثالثة فجرا سببه عادة مهلة مفقودة.
+
+ولا توجد قيمة افتراضية لأن المكتبة لا تستطيع تخمين المعقول. فقلها أنت.
+
+## 3. الجلسات
+
+هل تجري عدة استدعاءات إلى مضيف واحد؟ استعمل \`Session\`:
+
+\`\`\`python
+with requests.Session() as s:
+    s.headers.update({"Authorization": f"Bearer {token}"})
+    s.get(url1)
+    s.get(url2)
+\`\`\`
+
+فهي **تعيد استعمال اتصال TCP** (وهو أسرع بكثير عبر طلبات كثيرة) و**تحفظ الكعكات (cookies)**، وهكذا تبقى مسجل الدخول بعد الاستيثاق. واضبط الترويسات مرة واحدة بدل ضبطها في كل استدعاء.
+
+ولاحظ \`with\`: فالجلسة تمسك اتصالات، فهي تريد الإغلاق. وهي فكرة مدير السياق نفسها التي في الملفات.
+
+## 4. الوسطاء
+
+\`\`\`python
+proxies = {"http": "http://127.0.0.1:8080",
+           "https": "http://127.0.0.1:8080"}
+requests.get(url, proxies=proxies)
+\`\`\`
+
+وجه سكربتك إلى Burp أو mitmproxy على المنفذ 8080 فتستطيع **أن ترى بالضبط ما الذي يرسله**. وهذا لا يقدر بثمن حين ترفضك واجهة برمجية ولا تفهم السبب.
+
+واعتراض HTTPS يحتاج إلى الوثوق بشهادة CA الخاصة بالوسيط. والوسيط \`verify=False\` يعطل فحص الشهادات، ولا بأس به مع وسيطك أنت أثناء التتبع، و**لا** يستعمل أبدا في شيفرة حقيقية. فهو يطفئ الحماية التي وجد TLS من أجلها، وستحذرك \`requests\` بصوت عال.
+
+---
+
+## عالج الإخفاقات
+
+استدعاءات الشبكة تفشل. وهذا طبيعي لا استثنائي:
+
+\`\`\`python
+try:
+    r = requests.get(url, timeout=10)
+    r.raise_for_status()
+except requests.exceptions.Timeout:
+    print("too slow")
+except requests.exceptions.ConnectionError:
+    print("unreachable, DNS, refused, no route")
+except requests.exceptions.HTTPError as e:
+    print("bad status:", e)
+except requests.exceptions.RequestException as e:
+    print("something else:", e)
+\`\`\`
+
+والصنف \`RequestException\` هو الصنف الأساس لها كلها، فالتقطه أخيرا بوصفه الحالة العامة. الخاص قبل العام، تماما كما قالت الوحدة 9 والدرس الخامس.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية، فهي تطبع الأشكال دون أن تمس الشبكة. ثم اكتب النسخة الحقيقية على جهازك، ووجهها إلى وسيط لتراها تعمل.
+`,
+      },
     },
 
     /* ── 11. Challenge: Robust Fetch ── */
@@ -1323,7 +2157,8 @@ for status, body in responses:
         ok += 1
 print("OK:", ok)
 `,
-      markdownContent: `# Challenge: Robust Parser
+      markdownContent: {
+        en: `# Challenge: Robust Parser
 
 Real API responses lie. Some are errors, some aren't JSON, some are JSON with nonsense in it. A parser that assumes the happy path crashes on the first one.
 
@@ -1335,7 +2170,7 @@ Write \`parse_one(status, body)\`, returning a string. Check **in this order**:
 
 1. \`"bad status: 404"\`, status is 400 or above
 2. \`"bad json"\`, the body won't parse
-3. \`"bad port: 99999"\`, port isn't 1–65535
+3. \`"bad port: 99999"\`, port isn't 1-65535
 4. \`"10.0.0.5:22"\`, all good
 
 ## Expected output
@@ -1370,6 +2205,54 @@ Row 5 is a \`500\` with a *valid* JSON body. The status check must come first, o
 
 Click **Submit** when ready.
 `,
+        ar: `# تحد: محلل متين
+
+استجابات الواجهات البرمجية الحقيقية تكذب. فبعضها أخطاء، وبعضها ليس JSON، وبعضها JSON فيه هراء. والمحلل الذي يفترض المسار السعيد ينهار عند أولها.
+
+---
+
+## التعليمات
+
+اكتب \`parse_one(status, body)\` التي تعيد نصا. وتحقق **بهذا الترتيب**:
+
+1. \`"bad status: 404"\`، حين تكون الحالة 400 أو أكثر
+2. \`"bad json"\`، حين لا يقبل الجسم التحليل
+3. \`"bad port: 99999"\`، حين لا يكون المنفذ بين 1 و65535
+4. \`"10.0.0.5:22"\`، حين يكون كل شيء سليما
+
+## المخرجات المتوقعة
+
+\`\`\`
+10.0.0.5:22
+bad status: 404
+bad json
+bad port: 99999
+bad status: 500
+10.0.0.7:443
+OK: 2
+\`\`\`
+
+## القواعد
+
+- استعمل **try/except** لأجل JSON، ولا تفحص النص بيدك.
+- والتقط \`json.JSONDecodeError\` تحديدا، لا \`except\` مجردة.
+- واترك الحلقة في الأسفل كما هي.
+
+## الشكل
+
+**الجمل الحارسة** (الوحدة 9) تجعل هذا نظيفا: افحص الحالة وعد مبكرا. وجرب التحليل وعد مبكرا عند الفشل. وافحص المنفذ وعد مبكرا. فينتهي المسار السعيد أخيرا وبلا إزاحة.
+
+ولاحظ أن الترتيب ليس اعتباطيا، ففحص المنفذ قبل التأكد من نجاح التحليل كان سينهار على الصف الذي ليس JSON. **تحقق من الخارج إلى الداخل.**
+
+## انتبه
+
+الصف الخامس حالته \`500\` وجسمه JSON *صالح*. فيجب أن يأتي فحص الحالة أولا، وإلا أبلغت عن منفذ مفقود بدل خطأ الخادم الذي وقع فعلا.
+
+---
+
+اضغط **Submit** حين تجهز.
+`,
+      },
     },
   ],
 };

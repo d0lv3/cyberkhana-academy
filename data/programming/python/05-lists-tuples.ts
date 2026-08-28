@@ -42,7 +42,8 @@ print(tools)
 
 print("burp" in tools)
 `,
-      markdownContent: `# Lists
+      markdownContent: {
+        en: `# Lists
 
 A **list** is an ordered, changeable collection. It's the workhorse container in Python.
 
@@ -118,6 +119,83 @@ That second point is where the surprises live, the next lesson is about exactly 
 
 Run the starter code. Note \`tools[0] = "nmap-ng"\` really did modify the list. Then try the same on a string and watch it refuse.
 `,
+        ar: `# القوائم
+
+**القائمة (list)** مجموعة مرتبة وقابلة للتغيير. وهي الحاوية التي تحمل عبء العمل في بايثون.
+
+---
+
+## إنشاء قائمة
+
+أقواس مربعة، والعناصر مفصولة بفواصل:
+
+\`\`\`python
+tools = ["nmap", "burp", "wireshark"]
+empty = []
+\`\`\`
+
+وتستطيع القائمة أن تحمل **أي** أنواع مختلطة:
+
+\`\`\`python
+mixed = ["sara", 21, True, 3.5]
+\`\`\`
+
+مسموح، وهو غالبا مؤشر على خلل في التصميم، فالقائمة تعني عادة "أشياء كثيرة من النوع نفسه". أما الأنواع المختلطة فالقواميس والأصناف هي المخصصة لها.
+
+ويمكن تعشيش القوائم:
+
+\`\`\`python
+grid = [[1, 2], [3, 4]]
+grid[1][0]   # 3, row 1, then item 0
+\`\`\`
+
+---
+
+## هي متتالية، فأنت تعرفها أصلا
+
+القائمة متتالية تماما كالنص. فكل ما في وحدة النصوص ينتقل إليها:
+
+\`\`\`python
+len(tools)      # 3
+tools[0]        # 'nmap'
+tools[-1]       # 'wireshark'
+tools[0:2]      # ['nmap', 'burp']
+"burp" in tools # True
+\`\`\`
+
+الفهرسة من 0، والسالبة من اليمين، والشرائح تستثني النهاية، و\`in\` للانتماء. تعلم قواعد المتتاليات مرة واحدة فتنطبق في كل مكان.
+
+وتقطيع القائمة يعيد **قائمة**، أما الفهرسة فتعيد **عنصرا واحدا**:
+
+\`\`\`python
+tools[0]     # 'nmap'    , a string
+tools[0:1]   # ['nmap']  , a list holding one string
+\`\`\`
+
+---
+
+## الفارق الكبير: القوائم قابلة للتغيير
+
+النصوص غير قابلة للتغيير. أما القوائم فـ **قابلة**:
+
+\`\`\`python
+tools[0] = "nmap-ng"   # works
+\`\`\`
+
+والسطر نفسه على نص يعطي \`TypeError\`. وهذا الفارق وحده يقود كل ما تبقى:
+
+- توابع القوائم عادة **تغير القائمة وتعيد \`None\`**، بينما توابع النصوص تعيد نصا جديدا.
+- يستطيع اسمان أن يشيرا إلى قائمة واحدة، فيظهر التغيير عبر أحدهما في الآخر.
+
+والنقطة الثانية هي موطن المفاجآت، والدرس التالي عنها بالضبط.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. ولاحظ أن \`tools[0] = "nmap-ng"\` عدلت القائمة فعلا. ثم جرب الشيء نفسه على نص وراقب رفضه.
+`,
+      },
     },
 
     /* ── 2. List Methods: Adding and Removing ── */
@@ -156,7 +234,8 @@ print(last, "|", tools)
 result = tools.append("x")
 print(result)
 `,
-      markdownContent: `# List Methods: Adding & Removing
+      markdownContent: {
+        en: `# List Methods: Adding & Removing
 
 ---
 
@@ -240,6 +319,91 @@ It's the exact opposite of strings, where you *must* assign the result. The rule
 
 Run the starter code. Compare the \`append([3, 4])\` and \`extend([3, 4])\` outputs, and note the final \`None\`.
 `,
+        ar: `# توابع القوائم: الإضافة والحذف
+
+---
+
+## الإضافة
+
+\`\`\`python
+tools.append("wireshark")        # one item, at the end
+tools.insert(0, "metasploit")    # one item, at an index
+tools.extend(["sqlmap", "hydra"])  # many items
+\`\`\`
+
+التابع \`append()\` هو ما ستستعمله أكثر من غيره. أما \`insert()\` فيأخذ الفهرس الذي تريد الإدراج *قبله*، فـ \`insert(0, x)\` تضع \`x\` أولا.
+
+## append مقابل extend
+
+الفرق الذي يوقع الجميع:
+
+\`\`\`python
+a = [1, 2]
+a.append([3, 4])
+print(a)            # [1, 2, [3, 4]]   <- ONE new item, a list
+
+b = [1, 2]
+b.extend([3, 4])
+print(b)            # [1, 2, 3, 4]     <- TWO new items
+\`\`\`
+
+يضيف \`append\` وسيطه **كعنصر واحد** مهما كان. أما \`extend\` **فيمر** على وسيطه ويضيف كل عنصر فيه. لذلك تضيف \`extend("ab")\` المحرف \`'a'\` والمحرف \`'b'\`، لأن النص قابل للتكرار عليه، وهذا نادرا ما يكون مقصودك.
+
+والعامل \`+\` يصل القوائم أيضا، لكنه يبني قائمة **جديدة**:
+
+\`\`\`python
+c = [1, 2] + [3, 4]   # new list; the originals are untouched
+\`\`\`
+
+---
+
+## الحذف
+
+\`\`\`python
+tools.remove("burp")   # by VALUE, first match only
+last = tools.pop()     # by POSITION, removes and RETURNS it
+first = tools.pop(0)   # from an index
+del tools[0]           # by position, returns nothing
+tools.clear()          # empty it
+\`\`\`
+
+يرفع \`remove()\` خطأ \`ValueError\` إن لم تكن القيمة موجودة، فتحقق بـ \`in\` أولا حين يحتمل غيابها.
+
+والتابع \`pop()\` هو الوحيد بين أدوات الحذف الذي **يعيد العنصر إليك**، وهذا ما يجعله مفيدا:
+
+\`\`\`python
+task = queue.pop(0)   # take the next job off the front
+\`\`\`
+
+---
+
+## التوابع تعيد None
+
+قل هذا بصوت مرتفع، فهو الخطأ الأول في التعامل مع القوائم:
+
+\`\`\`python
+result = tools.append("x")
+print(result)   # None
+\`\`\`
+
+غير \`append()\` القائمة **في مكانها** وأعاد \`None\`. لذلك يدمر هذا السطر بياناتك:
+
+\`\`\`python
+tools = tools.append("x")   # tools is now None
+\`\`\`
+
+وهو عكس النصوص تماما، حيث *يجب* أن تسند النتيجة. والقاعدة:
+
+- **النصوص** غير قابلة للتغيير، فتوابعها **تعيد** نصا جديدا، فأسنده.
+- **القوائم** قابلة للتغيير، فتوابعها **تغير** القائمة، فلا تسند.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. وقارن مخرجات \`append([3, 4])\` و\`extend([3, 4])\`، ولاحظ \`None\` في النهاية.
+`,
+      },
     },
 
     /* ── 3. List Methods: Ordering and Copying ── */
@@ -278,7 +442,8 @@ c = a.copy()
 c.append(5)
 print(a, c)
 `,
-      markdownContent: `# List Methods: Ordering & Copying
+      markdownContent: {
+        en: `# List Methods: Ordering & Copying
 
 ---
 
@@ -363,6 +528,92 @@ For that, use \`copy.deepcopy()\`. It rarely comes up, but when it does, this is
 
 Run the starter code. The two blocks at the end are the lesson: \`b = a\` leaks changes, \`a.copy()\` doesn't.
 `,
+        ar: `# توابع القوائم: الترتيب والنسخ
+
+---
+
+## sort() مقابل sorted()
+
+كلاهما يرتب العناصر، والفرق فيما يمسه كل منهما:
+
+\`\`\`python
+nums = [3, 1, 2]
+nums.sort()            # changes nums, returns None
+print(nums)            # [1, 2, 3]
+
+sorted([3, 1, 2])      # returns a NEW list, original untouched
+\`\`\`
+
+فـ \`sort()\` تابع قائمة يغيرها. و\`sorted()\` **دالة مدمجة** تعمل على أي كائن قابل للتكرار، بما فيه النصوص والصفوف، وتسلمك دائما قائمة جديدة.
+
+استعمل \`sorted()\` حين تحتاج الأصل سليما، و\`sort()\` حين لا تحتاجه.
+
+وكلاهما يأخذ الخيارات نفسها:
+
+\`\`\`python
+sorted([3, 1, 2], reverse=True)      # [3, 2, 1]
+sorted(["banana", "fig"], key=len)   # shortest first
+\`\`\`
+
+والوسيط \`key\` يأخذ **دالة** تطبق على كل عنصر لتحديد رتبته. فـ \`key=len\` يرتب حسب الطول، و\`key=str.lower\` يرتب النص دون حساسية لحالة الأحرف. ولاحظ \`len\` بلا أقواس، فأنت تمرر الدالة لا تستدعيها.
+
+والأنواع المختلطة لا ترتب: فـ \`sorted([1, "a"])\` يرفع \`TypeError\`، لأن بايثون لن تخمن هل يأتي \`1\` قبل \`"a"\`.
+
+## reverse و count و index
+
+\`\`\`python
+nums.reverse()    # flips in place, returns None
+nums.count(2)     # how many 2s
+nums.index(2)     # position of the first 2, ValueError if absent
+\`\`\`
+
+والتعبير \`nums[::-1]\` يعكس أيضا، لكنه يعيد قائمة **جديدة** بدل أن يغير الأصل.
+
+---
+
+## فخ الأسماء المتعددة
+
+هذه أهم فكرة في الوحدة:
+
+\`\`\`python
+a = [1, 2, 3]
+b = a
+b.append(4)
+print(a)   # [1, 2, 3, 4]  <- a changed too!
+\`\`\`
+
+السطر \`b = a\` **لم** ينسخ القائمة. بل أعطى القائمة نفسها اسما ثانيا، وتذكر من وحدة المتغيرات: الأسماء لصاقات على القيم. فهناك قائمة واحدة هنا، ويشير إليها كل من \`a\` و\`b\`.
+
+وقد أخفت عنك النصوص هذا الأمر: فهي غير قابلة للتغيير، فلا يمكنك ملاحظته أبدا. أما القوائم فتتغير، فتستطيع ملاحظته.
+
+وللحصول على نسخة حقيقية:
+
+\`\`\`python
+c = a.copy()     # clearest
+c = a[:]         # a full slice, same effect
+c = list(a)      # also works
+\`\`\`
+
+الآن صار \`c\` قائمة منفصلة، وتغييرها يترك \`a\` وشأنه.
+
+**وهناك تحفظ واحد:** هذه نسخ **سطحية (shallow)**. فالقائمة الجديدة جديدة، لكن العناصر بداخلها ما زالت مشتركة. ففي قائمة من القوائم لا تنسخ القوائم الداخلية:
+
+\`\`\`python
+grid = [[1, 2], [3, 4]]
+copy = grid.copy()
+copy[0].append(99)
+print(grid)   # [[1, 2, 99], [3, 4]] , the inner list is shared
+\`\`\`
+
+ولهذه الحالة استعمل \`copy.deepcopy()\`. وهي نادرة الحدوث، لكن حين تحدث فهذا هو سببها.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. الكتلتان في النهاية هما الدرس: \`b = a\` يسرب التغييرات، و\`a.copy()\` لا يفعل.
+`,
+      },
     },
 
     /* ── 4. Tuples ── */
@@ -400,7 +651,8 @@ print(a, b)
 
 print(list(point), tuple([1, 2]))
 `,
-      markdownContent: `# Tuples
+      markdownContent: {
+        en: `# Tuples
 
 A **tuple** is an ordered collection that **cannot be changed** after creation. A list you can't edit.
 
@@ -491,6 +743,98 @@ tuple([1, 2])  # (1, 2)
 
 Run the starter code. Note \`(5,)\` is a tuple and \`(5)\` is an int, that comma is the entire difference.
 `,
+        ar: `# الصفوف
+
+**الصف (tuple)** مجموعة مرتبة **لا يمكن تغييرها** بعد إنشائها. أي قائمة لا تستطيع تحريرها.
+
+---
+
+## إنشاء صف
+
+\`\`\`python
+point = (10, 20)
+\`\`\`
+
+وكل ما تعرفه عن المتتاليات ينطبق عليه، من \`len()\` والفهرسة والتقطيع و\`in\` والتكرار:
+
+\`\`\`python
+point[0]     # 10
+point[0:1]   # (10,) , slicing a tuple gives a tuple
+\`\`\`
+
+والمفقود هو أي وسيلة لتغييره:
+
+\`\`\`python
+point[0] = 99   # TypeError: 'tuple' object does not support item assignment
+\`\`\`
+
+لا \`append\` ولا \`remove\` ولا \`sort\`. وله تابعان فقط هما \`count()\` و\`index()\`، لأن البقية كانت ستغيره.
+
+---
+
+## الفاصلة هي المهمة
+
+مزلقان يستحقان الحفظ.
+
+**الصف ذو العنصر الواحد يحتاج فاصلة في آخره:**
+
+\`\`\`python
+one = (5,)          # tuple
+not_a_tuple = (5)   # just the int 5, the parens are grouping
+\`\`\`
+
+**والأقواس اختيارية:**
+
+\`\`\`python
+t = 1, 2, 3   # a tuple
+\`\`\`
+
+فـ **الفاصلة** هي التي تبني الصف لا الأقواس. وهذا يفسر كثيرا من بايثون الذي يبدو لولاه سحرا، كدالة تعيد \`return x, y\` (صف واحد)، وكهذا السطر:
+
+\`\`\`python
+a, b = b, a
+\`\`\`
+
+فالطرف الأيمن يبني الصف \`(b, a)\`، ثم يفكك إلى \`a, b\`. وهذه هي الحيلة كلها.
+
+## التفكيك
+
+\`\`\`python
+host, port = ("10.0.0.5", 8080)
+\`\`\`
+
+ويجب أن يتطابق العددان وإلا حصلت على \`ValueError\`. واستعمل \`*\` لامتصاص الباقي:
+
+\`\`\`python
+first, *rest = (1, 2, 3)   # first=1, rest=[2, 3]
+\`\`\`
+
+---
+
+## لماذا وجدت الصفوف
+
+إن كانت القائمة تفعل أكثر، فلماذا نستعمل الصف؟
+
+1. **النية.** الصف يقول "هذه أشياء متلازمة ولن تتغير"، كإحداثية، أو لون RGB، أو زوج مضيف ومنفذ. ويتعلم القارئ ذلك مجانا.
+2. **الأمان.** لا يمكن تعديله بالخطأ، ولا حتى من دالة مررته إليها.
+3. **يصلح مفتاحا للقاموس.** والقوائم لا تصلح، وهذا هو السبب العملي. فمفاتيح القواميس يجب أن تكون غير قابلة للتغيير، لذلك يعمل \`{("10.0.0.5", 80): "http"}\` بينما يرفع المفتاح من نوع قائمة \`TypeError\`.
+
+وقاعدة عامة: أشياء كثيرة من النوع نفسه وتتغير، فاستعمل **list**. وأشياء قليلة مترابطة وثابتة، فاستعمل **tuple**.
+
+والتحويل بينهما حر:
+
+\`\`\`python
+list((1, 2))   # [1, 2]
+tuple([1, 2])  # (1, 2)
+\`\`\`
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. ولاحظ أن \`(5,)\` صف وأن \`(5)\` عدد صحيح، فتلك الفاصلة هي الفرق كله.
+`,
+      },
     },
 
     /* ── 5. Challenge: Top Ports ── */
@@ -542,7 +886,8 @@ print(f"Unique sorted: {unique}")
 print(f"Most common: {most_common} ({scan.count(most_common)} times)")
 print(f"Highest: {highest}")
 `,
-      markdownContent: `# Challenge: Port Report
+      markdownContent: {
+        en: `# Challenge: Port Report
 
 Summarising a scan result, the kind of thing you'll write constantly.
 
@@ -585,6 +930,50 @@ Two nudges:
 
 Click **Submit** when ready.
 `,
+        ar: `# تحد: تقرير المنافذ
+
+تلخيص نتيجة فحص، وهو من النوع الذي ستكتبه باستمرار.
+
+---
+
+## التعليمات
+
+انطلاقا من:
+
+\`\`\`python
+scan = [443, 22, 8080, 22, 80, 443, 22]
+\`\`\`
+
+اطبع هذا **بالضبط**:
+
+\`\`\`
+Total: 7
+Unique sorted: [22, 80, 443, 8080]
+Most common: 22 (3 times)
+Highest: 8080
+\`\`\`
+
+## القواعد
+
+- لا تكتب أي عدد ثابتا، بل اشتق كل شيء من \`scan\`.
+- يجب أن تكون **Unique sorted** خالية من التكرار ومرتبة تصاعديا.
+- و**Most common** هو المنفذ الأكثر ظهورا، مع عدد مرات ظهوره.
+- اترك \`scan\` نفسها **دون تغيير**، ففضل \`sorted()\` على \`.sort()\`.
+
+## ما تحتاجه
+
+\`len()\`، و\`sorted()\`، و\`max()\`، و\`.count()\`، وf-strings.
+
+وتلميحان:
+
+- الدالة \`set()\` تزيل التكرار في خطوة واحدة (والوحدة 6 تغطي المجموعات كما ينبغي، فاكتف باستعمالها هنا).
+- والدالة \`max()\` تأخذ \`key\` تماما مثل \`sorted()\`. فـ \`max(unique, key=scan.count)\` تعيد العنصر صاحب أعلى عدد.
+
+---
+
+اضغط **Submit** حين تجهز.
+`,
+      },
     },
   ],
 };

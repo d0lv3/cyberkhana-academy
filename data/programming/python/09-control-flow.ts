@@ -46,7 +46,8 @@ if score > 50:
     print("inside the if")
 print("always runs")
 `,
-      markdownContent: `# If, Elif, Else
+      markdownContent: {
+        en: `# If, Elif, Else
 
 Until now your code ran top to bottom, every line, every time. \`if\` is how it starts making decisions.
 
@@ -139,6 +140,100 @@ Separate \`if\` statements are **independent**, so a 95 prints both. Use \`elif\
 
 Run the starter code with \`score = 74\`, then try \`95\`. Then reorder the branches lowest-first and watch it quietly give wrong answers.
 `,
+        ar: `# if و elif و else
+
+حتى الآن كانت شيفرتك تعمل من الأعلى إلى الأسفل، كل سطر في كل مرة. وبـ \`if\` تبدأ باتخاذ القرارات.
+
+---
+
+## if
+
+\`\`\`python
+if score >= 50:
+    print("pass")
+\`\`\`
+
+ثلاثة أجزاء: الكلمة المفتاحية، ثم شرط، ثم نقطتان، ثم **كتلة مزاحة** لا تنفذ إلا حين يكون الشرط صادقا.
+
+والنقطتان والإزاحة كلتاهما مطلوبة. فإن أهملت النقطتين حصلت على \`SyntaxError\`، وإن أهملت الإزاحة حصلت على \`IndentationError\`.
+
+ولا يشترط أن يكون الشرط مقارنة. فأي قيمة تصلح، ويحكم عليها بالصدقية:
+
+\`\`\`python
+if items:      # truthy when non-empty
+if not name:   # truthy when name is ""
+\`\`\`
+
+## else
+
+البديل حين يكون الشرط كاذبا:
+
+\`\`\`python
+if score >= 50:
+    print("pass")
+else:
+    print("fail")
+\`\`\`
+
+وينفذ واحد منهما بالضبط. دائما.
+
+## elif
+
+لأكثر من نتيجتين:
+
+\`\`\`python
+if score >= 90:
+    print("A")
+elif score >= 80:
+    print("B")
+elif score >= 70:
+    print("C")
+else:
+    print("F")
+\`\`\`
+
+فـ \`elif\` تعني "وإلا إذا"، ولا تفحص إلا حين تفشل كل الفروع التي فوقها.
+
+---
+
+## الترتيب هو اللعبة كلها
+
+**لا ينفذ إلا أول فرع مطابق**، ثم تتخطى البقية بالكامل. ولهذا يسير المثال من الأعلى إلى الأدنى.
+
+اعكسه فينكسر:
+
+\`\`\`python
+if score >= 70:
+    print("C")
+elif score >= 90:
+    print("A")   # unreachable, 95 already matched >= 70
+\`\`\`
+
+فدرجة 95 تطبع \`C\`، لأن \`95 >= 70\` طابقت أولا. لا خطأ ولا تحذير، بل جواب خاطئ فحسب. وحين تتداخل الفروع فرتبها من الأكثر تخصيصا إلى الأكثر عموما.
+
+ولأن فرعا واحدا فقط ينفذ، فلا تكرر الحدود:
+
+\`\`\`python
+elif score >= 80:              # 90+ is already gone
+elif score >= 80 and score < 90:   # correct but redundant
+\`\`\`
+
+## if مقابل سلسلة من if
+
+\`\`\`python
+if score >= 90: print("A")
+if score >= 80: print("B")   # separate, also runs!
+\`\`\`
+
+جمل \`if\` المنفصلة **مستقلة**، فدرجة 95 تطبع الاثنين. استعمل \`elif\` حين تكون الحالات بدائل، وجمل \`if\` منفصلة حين تكون أسئلة غير مترابطة فعلا.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية بـ \`score = 74\`، ثم جرب \`95\`. ثم أعد ترتيب الفروع من الأدنى أولا وراقبها وهي تعطي أجوبة خاطئة في هدوء.
+`,
+      },
     },
 
     /* ── 2. Nested Conditions ── */
@@ -183,7 +278,8 @@ def check(age, has_id, banned):
 print(check(21, True, False))
 print(check(16, True, False))
 `,
-      markdownContent: `# Nested Conditions
+      markdownContent: {
+        en: `# Nested Conditions
 
 An \`if\` can live inside another \`if\`. Each level is another indent.
 
@@ -249,6 +345,73 @@ This is one of the highest-value habits in programming. When you catch yourself 
 
 Run the starter code, all three versions agree. Then flip \`has_id\` to \`False\` and confirm all three still agree.
 `,
+        ar: `# الشروط المتداخلة
+
+تستطيع جملة \`if\` أن تسكن داخل جملة \`if\` أخرى. وكل مستوى إزاحة إضافية.
+
+\`\`\`python
+if age >= 18:
+    if has_id:
+        print("allowed")
+    else:
+        print("no id")
+else:
+    print("too young")
+\`\`\`
+
+ولا يصل التنفيذ إلى \`if\` الداخلية إلا حين تنجح الخارجية، فحين تقرأ \`has_id\` يكون العمر قد ثبت أنه سليم.
+
+وإخطاء الإزاحة يغير المعنى دون أي خطأ. فـ \`else\` ترتبط بـ \`if\` التي في **مستوى إزاحتها هي**، فإزاحتها أربع مسافات تعيد توصيل منطقك بصمت. ولهذا تصر بايثون على اتساق الإزاحة.
+
+---
+
+## سطح البنية حين تستطيع
+
+التداخل سهل الكتابة صعب القراءة. فثلاثة مستويات عمقا تعني تتبع ثلاثة شروط في آن واحد.
+
+وحين تؤدي الفروع كلها إلى المكان نفسه، فـ **\`and\` أكثر تسطيحا**:
+
+\`\`\`python
+if age >= 18 and has_id and not banned:
+    print("allowed")
+\`\`\`
+
+سطر واحد وإزاحة واحدة، ويقرأ كالجملة التي كنت ستقولها بصوتك. والقطع القصير يجعله كفئا أيضا، فلا يفحص \`has_id\` أبدا إن كان العمر قد فشل أصلا.
+
+ولا تستعمل التداخل إلا حين تختلف المستويات اختلافا حقيقيا، أي حين يحتاج كل فشل إلى رد مميز خاص به.
+
+## الجمل الحارسة
+
+النمط الأفضل حين يكون لكل فشل رسالته: عالج الحالات السيئة **أولا** واخرج مبكرا.
+
+\`\`\`python
+def check(age, has_id, banned):
+    if age < 18:
+        return "too young"
+    if not has_id:
+        return "no id"
+    if banned:
+        return "banned"
+    return "allowed"
+\`\`\`
+
+قارن ذلك بالنسخة المتداخلة. المنطق نفسه، لكن:
+
+- لا شيء مزاح أكثر من مرة واحدة
+- وكل قاعدة سطر واحد يقرأ منفردا
+- و**المسار السعيد** أخيرا وبلا إزاحة، فما يحدث عادة هو أسهل ما يعثر عليه
+
+وهذه من أعلى العادات قيمة في البرمجة. فحين تضبط نفسك على عمق ثلاثة مستويات، اسأل ما الذي كان بوسعك رفضه مبكرا بدل ذلك.
+
+(والكلمة \`def\` من وحدة الدوال، واكتف هنا بقراءة \`return\` بمعنى "أجب وتوقف".)
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية، فالنسخ الثلاث متفقة. ثم اقلب \`has_id\` إلى \`False\` وتأكد أن الثلاث ما زلن متفقات.
+`,
+      },
     },
 
     /* ── 3. The Ternary Operator ── */
@@ -283,7 +446,8 @@ print(total / count if count else 0)
 score = 74
 print("A" if score >= 90 else "B" if score >= 80 else "C" if score >= 70 else "F")
 `,
-      markdownContent: `# The Ternary Operator
+      markdownContent: {
+        en: `# The Ternary Operator
 
 A one-line \`if/else\` that **produces a value**.
 
@@ -360,6 +524,84 @@ The rule: if you're picking a value, ternary. If you're deciding what to *do*, \
 
 Run the starter code. The last line is the anti-pattern on purpose, compare it against the elif chain in lesson 1 and notice which one you'd rather debug.
 `,
+        ar: `# العامل الثلاثي
+
+جملة \`if/else\` في سطر واحد **تنتج قيمة**.
+
+---
+
+## الشكل
+
+\`\`\`python
+status = "adult" if age >= 18 else "minor"
+\`\`\`
+
+اقرأه هكذا: *هذه القيمة*، **إن** تحقق *الشرط*، **وإلا** *تلك القيمة*.
+
+والترتيب غير مألوف، فالنتيجة تأتي أولا ثم الاختبار. ومعظم اللغات تضع الشرط أولا (\`age >= 18 ? "adult" : "minor"\`). أما بايثون فاختارت أن تقرأ كالإنجليزية.
+
+وهو يحل محل هذا:
+
+\`\`\`python
+if age >= 18:
+    status = "adult"
+else:
+    status = "minor"
+\`\`\`
+
+أربعة أسطر، ومتغير واحد، وقرار واحد. والعامل الثلاثي يقول الشيء نفسه دون هذه المراسم.
+
+---
+
+## هو تعبير
+
+وهذا هو الفارق الحقيقي. فالجملة (statement) *تفعل* شيئا، أما **التعبير (expression)** *فيقيم إلى قيمة*. وجملة \`if\` جملة، فلا تستطيع إسنادها:
+
+\`\`\`python
+status = if age >= 18: "adult"   # SyntaxError
+\`\`\`
+
+أما العامل الثلاثي فتعبير، فيصلح في أي موضع تصلح فيه قيمة:
+
+\`\`\`python
+f"You are an {'adult' if age >= 18 else 'minor'}"   # inside an f-string
+[n if n > 0 else 0 for n in nums]                   # inside a comprehension
+print(total / count if count else 0)                # as an argument
+\`\`\`
+
+والأخير حارس أنيق: فإن كان \`count\` يساوي \`0\` فهو كاذب، فلا تحدث القسمة أبدا وتتفادى \`ZeroDivisionError\`.
+
+والجزء \`else\` **ليس اختياريا**. فالتعبير يجب أن ينتج قيمة دائما، فلا وجود لـ \`if\` من سطر واحد بدونه.
+
+---
+
+## متى لا تستعمله
+
+هو مخصص لـ **الاختيار بين قيمتين**. لا أكثر.
+
+فلا تسلسله:
+
+\`\`\`python
+"A" if score >= 90 else "B" if score >= 80 else "C" if score >= 70 else "F"
+\`\`\`
+
+هذا مسموح، ولا أحد يريد قراءته. فسلسلة \`elif\` أطول وواضحة على الفور، اخترها.
+
+ولا تستعمله لأثر جانبي أيضا:
+
+\`\`\`python
+print("hi") if debug else None   # works; use a plain if
+\`\`\`
+
+والقاعدة: إن كنت تنتقي قيمة فالعامل الثلاثي. وإن كنت تقرر ماذا *تفعل* فـ \`if\`.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. السطر الأخير نمط سيئ متعمد، قارنه بسلسلة elif في الدرس الأول ولاحظ أيهما تفضل تتبع أخطائه.
+`,
+      },
     },
 
     /* ── 4. Membership Operators ── */
@@ -392,7 +634,8 @@ print(user in ("sara", "ali", "zaid"))
 print("22" in "8022")
 print(22 in [8022])
 `,
-      markdownContent: `# Membership Operators
+      markdownContent: {
+        en: `# Membership Operators
 
 Two: **\`in\`** and **\`not in\`**. Both return a \`bool\`.
 
@@ -466,6 +709,81 @@ So checking a port against a string of ports gives nonsense, \`"22" in "8022,443
 
 Run the starter code. The last two lines are the trap, same question, different answer, because the containers are different.
 `,
+        ar: `# عوامل الانتماء
+
+اثنان: **\`in\`** و**\`not in\`**. وكلاهما يعيد \`bool\`.
+
+وأنت تستعمل \`in\` منذ الوحدة 3، وهذه هي الصورة الكاملة.
+
+---
+
+## يعمل مع كل شيء
+
+\`\`\`python
+"adm" in "admin"     # True, substring
+22 in [22, 80]       # True, list element
+22 in (22, 80)       # True, tuple element
+22 in {22, 80}       # True, set member
+\`\`\`
+
+عامل واحد وكل الحاويات. وهذا الاتساق بايثوني جدا: تعلم الفكرة مرة وطبقها في كل مكان.
+
+## القواميس تفحص المفاتيح
+
+\`\`\`python
+host = {"ip": "10.0.0.5", "port": 8080}
+"ip" in host            # True , a key
+"10.0.0.5" in host      # False, that's a VALUE
+"10.0.0.5" in host.values()   # True
+\`\`\`
+
+فالافتراضي هو **المفاتيح** دائما. وإن أردت القيم فقل \`.values()\`. وهذا جدير بالتذكر، لأن \`"10.0.0.5" in host\` تعيد \`False\` بدل أن ترفع خطأ، أي جوابا خاطئا صامتا.
+
+## not in
+
+\`\`\`python
+"root" not in ["sara", "ali"]   # True
+\`\`\`
+
+فضلها على \`not (x in y)\`. النتيجة نفسها، والقراءة كالإنجليزية.
+
+---
+
+## أين يتألق
+
+في اختصار سلسلة من \`or\`:
+
+\`\`\`python
+if user == "sara" or user == "ali" or user == "zaid":   # noisy
+if user in ("sara", "ali", "zaid"):                     # better
+\`\`\`
+
+أقصر، وإضافة اسم تعني تعديل صف واحد.
+
+---
+
+## الفخ: النص الجزئي ليس عنصرا
+
+\`\`\`python
+"22" in "8022"    # True! , "22" appears inside "8022"
+22 in [8022]      # False , 8022 is not 22
+\`\`\`
+
+فمع النصوص يسأل \`in\`: "هل يظهر هذا **في أي موضع بالداخل**؟" ومع القوائم يسأل: "هل هذا **أحد العناصر**؟"
+
+لذلك فحص منفذ مقابل نص من المنافذ يعطي هراء، فـ \`"22" in "8022,443"\` تساوي \`True\` مع أن المنفذ 22 ليس في تلك القائمة. احفظ البيانات المهيكلة في قائمة أو مجموعة لا في نص.
+
+## ملاحظة عن السرعة
+
+العامل \`in\` على **قائمة** يفحص العناصر واحدا واحدا. وعلى **مجموعة** أو **قاموس** يقفز إليها مباشرة. ومع حفنة من العناصر لا فرق، أما مع الآلاف المفحوصة مرارا فهو الفرق بين الفوري والبطيء. فإن كانت شيفرتك تسأل كثيرا "هل رأيت هذا؟" فاحفظه في مجموعة.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. السطران الأخيران هما الفخ، السؤال نفسه وجواب مختلف، لأن الحاويتين مختلفتان.
+`,
+      },
     },
 
     /* ── 5. Practical: Access Control ── */
@@ -497,7 +815,8 @@ print(f"Role: {role}")
 print(f"Allowed: {allowed}")
 print(f"Can delete: {allowed and role == 'admin'}")
 `,
-      markdownContent: `# Practical: Access Control
+      markdownContent: {
+        en: `# Practical: Access Control
 
 A permission check, \`in\`, \`elif\` ordering and booleans doing real work.
 
@@ -561,6 +880,71 @@ Deleting needs *both*. Note \`==\` binds tighter than \`and\`, so no parentheses
 
 Run it with \`sara\`, then try \`mallory\`, \`omar\`, and something unknown. Then add \`mallory\` to \`ADMINS\` as well and confirm she's still refused, that's the ordering doing its job.
 `,
+        ar: `# تطبيق عملي: التحكم بالوصول
+
+فحص صلاحيات، حيث يؤدي \`in\` وترتيب \`elif\` والقيم المنطقية عملا حقيقيا.
+
+---
+
+## مجموعات بدل القوائم
+
+\`\`\`python
+ADMINS = {"sara", "ali"}
+BANNED = {"mallory"}
+\`\`\`
+
+مجموعات لا قوائم، لثلاثة أسباب: التكرار بلا معنى هنا، و\`in\` سريع، والأقواس المعقوفة تشير إلى "كيس من الأسماء" لا إلى متتالية مرتبة.
+
+والتسمية بـ \`UPPER_CASE\` تعلمها ثوابت، أي إعدادات ثابتة لا بيانات تتغير أثناء عمل البرنامج.
+
+## نظف المدخل أولا
+
+\`\`\`python
+user = input("User: ").strip().lower()
+\`\`\`
+
+لا تختبر مدخلا خاما أبدا. فـ \`" Sara "\` ينبغي أن يطابق \`"sara"\`، وبدون هذا لا يطابق، ويبدو الفشل كخلل في الصلاحيات لا كخلل في المسافات.
+
+ولاحظ أن هذا لا يعمل إلا لأن المجموعات مخزنة بأحرف صغيرة أيضا. فتوحيد طرف واحد لا يكفي، بل يحتاج الطرفان إلى الشكل نفسه.
+
+## الترتيب يجسد السياسة
+
+\`\`\`python
+if user in BANNED:      ...
+elif user in ADMINS:    ...
+elif user in USERS:     ...
+else:                   ...
+\`\`\`
+
+**تفحص \`BANNED\` أولا، وهذا قرار أمني.** فإن كان أحدهم في \`BANNED\` و\`ADMINS\` معا، فالترتيب هو الذي يحدد ما يحدث. وفحص المدير أولا كان سيمرر مديرا محظورا مباشرة.
+
+والقاعدة: **المنع قبل السماح**. فحين تتداخل الفروع تأتي النتيجة الأكثر أمانا أولا. والأخطاء في هذا الترتيب ليست شكلية، بل هي الثغرة نفسها.
+
+والجزء \`else\` لا يقل أهمية: فالمستخدم المجهول يمنع. اجعل الأصل هو "لا"، ودع القواعد تمنح الوصول صراحة.
+
+## إسناد اسمين دفعة واحدة
+
+\`\`\`python
+role, allowed = "admin", True
+\`\`\`
+
+تفكيك الصفوف من الوحدة 5. فتبقى الحقيقتان المتعلقتان بالفرع في سطر واحد، فيتضح أن كل فرع يضبط كليهما.
+
+## الدمج
+
+\`\`\`python
+allowed and role == "admin"
+\`\`\`
+
+فالحذف يحتاج *الاثنين*. ولاحظ أن \`==\` أشد ارتباطا من \`and\`، فلا حاجة إلى أقواس، وإن كانت لن تضر.
+
+---
+
+## جربها
+
+شغلها بـ \`sara\`، ثم جرب \`mallory\` و\`omar\` وشيئا مجهولا. ثم أضف \`mallory\` إلى \`ADMINS\` أيضا وتأكد أنها ما زالت مرفوضة، فذاك الترتيب وهو يؤدي عمله.
+`,
+      },
     },
 
     /* ── 6. Challenge: Grade Report ── */
@@ -639,7 +1023,8 @@ print(f"Grade: {grade}")
 print(f"Passed: {passed}")
 print(f"Status: {status}")
 `,
-      markdownContent: `# Challenge: Grade Report
+      markdownContent: {
+        en: `# Challenge: Grade Report
 
 The module in one program, and this one is checked against **three** different inputs, so it has to be genuinely right rather than right for one case.
 
@@ -678,6 +1063,46 @@ Your elif chain must run **highest to lowest**. Put \`score >= 60\` first and ev
 
 Click **Submit** when ready.
 `,
+        ar: `# تحد: تقرير الدرجات
+
+الوحدة كلها في برنامج واحد، وهذا يفحص مقابل **ثلاثة** مدخلات مختلفة، فيجب أن يكون صحيحا فعلا لا صحيحا لحالة واحدة.
+
+---
+
+## التعليمات
+
+اقرأ **سطرين**:
+
+1. اسما
+2. درجة من 0 إلى 100
+
+ولأجل \`sara\` و\`74\`، اطبع هذا **بالضبط**:
+
+\`\`\`
+Name: Sara
+Score: 74
+Grade: C
+Passed: True
+Status: pass
+\`\`\`
+
+## القواعد
+
+- **Grade**: 90 فأكثر تعطي \`A\`، و80 فأكثر تعطي \`B\`، و70 فأكثر تعطي \`C\`، و60 فأكثر تعطي \`D\`، وإلا \`F\`. استعمل \`if\` و\`elif\` و\`else\`.
+- **Passed**: الدرجة 60 أو أكثر.
+- **Status**: إما \`"pass"\` أو \`"fail"\`، واستعمل **العامل الثلاثي**.
+- **Name**: منظف بـ strip وبحرف أول كبير.
+- والدرجة تصل **نصا**.
+
+## انتبه
+
+يجب أن تسير سلسلة elif **من الأعلى إلى الأدنى**. فإن وضعت \`score >= 60\` أولا صارت كل درجة ناجحة \`D\`، وسيفشل اختبار \`74\` بصوت عال، وهذا هو المقصود من الاختبار بأكثر من مدخل واحد.
+
+---
+
+اضغط **Submit** حين تجهز.
+`,
+      },
     },
   ],
 };

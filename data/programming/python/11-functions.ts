@@ -51,7 +51,8 @@ def first_even(nums):
 print(first_even([1, 3, 4, 5]))
 print(first_even([1, 3, 5]))
 `,
-      markdownContent: `# Functions and return
+      markdownContent: {
+        en: `# Functions and return
 
 A **function** is a named piece of work you can run whenever you want.
 
@@ -131,6 +132,87 @@ The moment you copy-paste a block and tweak one value, that block wanted to be a
 
 Run the starter code. \`shout\` returns \`None\` despite printing, that's the lesson.
 `,
+        ar: `# الدوال و return
+
+**الدالة (function)** قطعة عمل مسماة تستطيع تشغيلها متى شئت.
+
+\`\`\`python
+def greet():
+    print("hello")
+
+greet()
+\`\`\`
+
+الكلمة \`def\`، ثم اسم، ثم قوسان، ثم نقطتان، ثم كتلة مزاحة، وهي قاعدة الكتلة نفسها التي في \`if\` و\`for\`.
+
+وتعريف الدالة لا يشغلها. فالجسم لا ينفذ إلا حين **تستدعيها**، والقوسان هما ما يستدعيانها:
+
+\`\`\`python
+greet     # the function itself
+greet()   # calling it
+\`\`\`
+
+ونسيان القوسين خلل صامت: فـ \`greet\` وحدها تعبير سليم تماما لا يفعل شيئا.
+
+---
+
+## return
+
+الدالة \`print\` تعرض قيمة لإنسان. أما **\`return\` فتسلمها إلى الشيفرة التي استدعت الدالة**، وهذا ما يجعل الدوال قابلة للتركيب:
+
+\`\`\`python
+def double(n):
+    return n * 2
+
+result = double(5)   # 10
+print(result + 1)    # 11
+\`\`\`
+
+والفرق هو أكثر الالتباسات شيوعا في هذه الوحدة:
+
+\`\`\`python
+def shout(word):
+    print(word.upper())
+
+x = shout("hi")   # prints HI
+print(x)          # None
+\`\`\`
+
+طبعت \`shout\` شيئا لكنها **لم تعد شيئا**، فصار \`x\` هو \`None\`. والدالة التي بلا \`return\` تعيد \`None\` دائما. فلا تستطيع إجراء حساب عليها، ولا تخزينها تخزينا مفيدا، ولا تمريرها.
+
+وقاعدة عامة: الدوال التي **تحسب** ينبغي أن تستعمل \`return\`. ولا تستعمل \`print\` إلا الدوال التي مهمتها كلها الإخراج. وخلط الاثنين يجعل الدالة صعبة إعادة الاستعمال ومستحيلة الاختبار.
+
+## return تخرج فورا
+
+\`\`\`python
+def first_even(nums):
+    for n in nums:
+        if n % 2 == 0:
+            return n      # stops here, loop and function both end
+    return None
+\`\`\`
+
+فـ \`return\` لا تضبط قيمة فحسب، بل **تغادر الدالة في الحال**. وكل ما بعدها يتخطى، بما في ذلك بقية الحلقة. وهذا ما يجعل الجمل الحارسة (الوحدة 9) تعمل.
+
+ويمكن أن يكون في الدالة عدة \`return\`. والأولى التي يصل إليها التنفيذ هي الفائزة.
+
+---
+
+## ولماذا نتكبد هذا العناء
+
+1. **لا تكرر نفسك.** تعريف واحد واستدعاءات كثيرة. وتصلح الخلل مرة واحدة.
+2. **التسمية.** فـ \`is_valid_port(p)\` تقول ما الذي *يعنيه* الشرط.
+3. **العزل.** فالدالة صندوق بمدخل ومخرج واضحين، تستطيع التفكير فيه وحده.
+
+وفي اللحظة التي تنسخ فيها كتلة وتلصقها ثم تعدل قيمة واحدة، تكون تلك الكتلة قد أرادت أن تكون دالة ذات وسيط.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. الدالة \`shout\` تعيد \`None\` رغم أنها تطبع، وهذا هو الدرس.
+`,
+      },
     },
 
     /* ── 2. Parameters and Arguments ── */
@@ -162,7 +244,8 @@ print(scan("10.0.0.5"))
 print(scan("10.0.0.5", 443))
 print(scan("10.0.0.5", timeout=1))
 `,
-      markdownContent: `# Parameters and Arguments
+      markdownContent: {
+        en: `# Parameters and Arguments
 
 Two words for two sides of the same thing:
 
@@ -264,6 +347,109 @@ Never use a mutable default (\`[]\`, \`{}\`, \`set()\`). Use \`None\` and build 
 
 Run the starter code. Then try the mutable-default version above and watch the list grow across calls.
 `,
+        ar: `# المعاملات والوسائط
+
+كلمتان لوجهين للشيء نفسه:
+
+- **المعامل (parameter)** هو الاسم في التعريف، كما في \`def connect(host, port)\`
+- و**الوسيط (argument)** هو القيمة التي تمررها، كما في \`connect("10.0.0.5", 8080)\`
+
+---
+
+## الوسائط الموضعية
+
+تطابق بحسب **الترتيب**:
+
+\`\`\`python
+connect("10.0.0.5", 8080)   # host, then port
+\`\`\`
+
+بدلهما فلن تلاحظ بايثون، إذ لا سبيل لها إلى معرفة أن \`8080\` ليس اسم مضيف. فتحصل على جواب خاطئ لا على خطأ.
+
+أما تمرير **العدد** الخاطئ فيرفع خطأ فورا:
+
+\`\`\`python
+connect("10.0.0.5")   # TypeError: missing 1 required positional argument: 'port'
+\`\`\`
+
+## الوسائط المفتاحية
+
+تطابق بحسب **الاسم**، فيتوقف الترتيب عن الأهمية:
+
+\`\`\`python
+connect(port=8080, host="10.0.0.5")
+\`\`\`
+
+وهي توثق نفسها. قارن:
+
+\`\`\`python
+scan("10.0.0.5", 443, 1, True, False)      # what are those?
+scan("10.0.0.5", port=443, timeout=1)      # obvious
+\`\`\`
+
+وقاعدة عامة: مرر الأول أو الأولين موضعيا، وسم كل ما كان سيبقى عددا غامضا.
+
+**والوسائط الموضعية يجب أن تأتي أولا.** فـ \`connect(host="x", 8080)\` تعطي \`SyntaxError\`.
+
+---
+
+## القيم الافتراضية
+
+أعط المعامل قيمة افتراضية فيصير اختياريا:
+
+\`\`\`python
+def scan(host, port=80, timeout=5):
+    ...
+
+scan("10.0.0.5")               # port=80, timeout=5
+scan("10.0.0.5", 443)          # port=443
+scan("10.0.0.5", timeout=1)    # skip port, set timeout
+\`\`\`
+
+والاستدعاء الأخير هو سبب أهمية الكلمات المفتاحية: فتستطيع ضبط معامل متأخر دون إعادة ذكر ما قبله.
+
+**والمعاملات ذات القيم الافتراضية يجب أن تأتي بعد التي بلا قيم افتراضية**، وإلا صار الاستدعاء الموضعي ملتبسا:
+
+\`\`\`python
+def scan(port=80, host):   # SyntaxError
+\`\`\`
+
+---
+
+## فخ القيمة الافتراضية القابلة للتغيير
+
+المزلق الشهير في بايثون:
+
+\`\`\`python
+def add(item, items=[]):     # DON'T
+    items.append(item)
+    return items
+
+add("a")   # ['a']
+add("b")   # ['a', 'b']   <- the SAME list!
+\`\`\`
+
+فالقيمة الافتراضية تقيم **مرة واحدة عند تعريف الدالة** لا عند كل استدعاء. فتتقاسم كل الاستدعاءات قائمة واحدة تنمو إلى الأبد.
+
+والحل هو نفسه دائما:
+
+\`\`\`python
+def add(item, items=None):
+    if items is None:
+        items = []
+    items.append(item)
+    return items
+\`\`\`
+
+لا تستعمل أبدا قيمة افتراضية قابلة للتغيير (\`[]\` أو \`{}\` أو \`set()\`). استعمل \`None\` وابنها بالداخل.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. ثم جرب نسخة القيمة الافتراضية القابلة للتغيير أعلاه وراقب القائمة وهي تنمو عبر الاستدعاءات.
+`,
+      },
     },
 
     /* ── 3. *args and **kwargs ── */
@@ -298,7 +484,8 @@ print(total(*nums))
 opts = {"host": "10.0.0.5", "port": 22}
 print(describe(**opts))
 `,
-      markdownContent: `# *args and **kwargs
+      markdownContent: {
+        en: `# *args and **kwargs
 
 For when you don't know how many arguments there will be.
 
@@ -387,6 +574,96 @@ That's exactly how decorators work (Module 13). Don't reach for \`*args\` when t
 
 Run the starter code. The last two lines are unpacking: the same \`*\` and \`**\` doing the reverse job.
 `,
+        ar: `# ‏*args و **kwargs
+
+لحين لا تعرف كم وسيطا سيكون هناك.
+
+---
+
+## ‏*args، الوسائط الموضعية الزائدة
+
+\`\`\`python
+def total(*nums):
+    return sum(nums)
+
+total(1, 2)          # 3
+total(1, 2, 3, 4)    # 10
+total()              # 0
+\`\`\`
+
+يجمع \`*nums\` كل وسيط موضعي زائد في **صف (tuple)**. صف لا قائمة، فليس مقصودا أن تعدله.
+
+والنجمة \`*\` هي الصياغة، أما \`args\` فمجرد اسم متعارف عليه. و\`*nums\` أوضح حين تعرف ما هي.
+
+## ‏**kwargs، الوسائط المفتاحية الزائدة
+
+\`\`\`python
+def describe(**info):
+    return ", ".join(f"{k}={v}" for k, v in info.items())
+
+describe(host="10.0.0.5", port=80)   # 'host=10.0.0.5, port=80'
+\`\`\`
+
+يجمع \`**info\` الوسائط **المفتاحية** الزائدة في **قاموس**، مفاتيحه الأسماء وقيمه القيم.
+
+## معا
+
+الترتيب ثابت وتفرضه بايثون:
+
+\`\`\`python
+def demo(required, *args, **kwargs):
+    ...
+
+demo("a", 1, 2, x=9)
+# required = "a"
+# args     = (1, 2)
+# kwargs   = {"x": 9}
+\`\`\`
+
+المعاملات العادية، ثم \`*args\`، ثم \`**kwargs\`. وأي ترتيب غير ذلك \`SyntaxError\`.
+
+---
+
+## الاتجاه الآخر: التفكيك
+
+الرمزان نفسهما **يفككان** عند موضع الاستدعاء، وهذا هو النصف الذي يفوت الناس:
+
+\`\`\`python
+nums = [1, 2, 3]
+total(*nums)          # same as total(1, 2, 3)
+
+opts = {"host": "10.0.0.5", "port": 22}
+describe(**opts)      # same as describe(host="10.0.0.5", port=22)
+\`\`\`
+
+فـ \`*\` تنشر متتالية إلى وسائط موضعية، و\`**\` تنشر قاموسا إلى وسائط مفتاحية.
+
+فالمعنى إذن يعتمد على موضع الكتابة:
+
+- **في التعريف** تعني *جمع* الكثير في واحد
+- **في الاستدعاء** تعني *نشر* الواحد إلى كثير
+
+مهمتان متعاكستان برمز واحد. وهذا التناظر هو سبب تشابه \`total(*nums)\` و\`def total(*nums)\`.
+
+## أين ستستعملها فعلا
+
+في الأغلب حين تغلف دالة أخرى، فتقبل أي شيء وتمرره كما هو:
+
+\`\`\`python
+def logged(*args, **kwargs):
+    print("calling with", args, kwargs)
+    return real_function(*args, **kwargs)
+\`\`\`
+
+وهكذا تعمل المزخرفات (decorators) بالضبط (الوحدة 13). ولا تلجأ إلى \`*args\` حين تكفي ثلاثة معاملات مسماة، فالمعاملات المسماة توثق نفسها.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. السطران الأخيران تفكيك: \`*\` و\`**\` نفساهما تؤديان العمل المعاكس.
+`,
+      },
     },
 
     /* ── 4. Scope ── */
@@ -432,7 +709,8 @@ def add():
 add()
 print("items:", items)
 `,
-      markdownContent: `# Scope
+      markdownContent: {
+        en: `# Scope
 
 **Scope** is where a name is visible.
 
@@ -534,6 +812,109 @@ First match wins. It's also why \`list = [1, 2]\` breaks \`list("abc")\`: your g
 
 Run the starter code, then uncomment the \`print(x)\` in \`broken()\` and read the \`UnboundLocalError\`.
 `,
+        ar: `# المجال
+
+**المجال (scope)** هو المدى الذي يرى فيه الاسم.
+
+كل استدعاء لدالة يحصل على حيزه الخاص. والأسماء المنشأة بداخله **محلية**، توجد ما دامت تعمل وتختفي حين تعود:
+
+\`\`\`python
+def f():
+    y = 1
+f()
+print(y)   # NameError: name 'y' is not defined
+\`\`\`
+
+وهذه ميزة. فتستطيع دالتان استعمال \`i\` دون أن تصطدما.
+
+---
+
+## القراءة مقابل الإسناد
+
+تستطيع الدالة أن **تقرأ** اسما من الخارج:
+
+\`\`\`python
+x = "global"
+def show():
+    print(x)   # works
+\`\`\`
+
+لكن **الإسناد** ينشئ اسما *محليا جديدا* يحجب الخارجي:
+
+\`\`\`python
+def shadow():
+    x = "local"   # a different x
+    print(x)      # local
+shadow()
+print(x)          # global, untouched
+\`\`\`
+
+وهنا الحد الحاد. فبايثون تقرر أمحلي هو أم عام بمسح **الدالة كلها** وقت التعريف. فإن أسند الاسم في *أي موضع* فيها صار محليا في *كل مواضعها*، بما في ذلك قبل الإسناد:
+
+\`\`\`python
+def broken():
+    print(x)      # UnboundLocalError
+    x = "local"
+\`\`\`
+
+يقرأ هذا وكأنه ينبغي أن يطبع القيمة العامة. وهو لا يفعل. فالسطر \`x = "local"\` التالي جعل \`x\` محليا في الدالة كلها أصلا، وقد قرأته قبل أن يضبط.
+
+## global
+
+للإسناد إلى اسم على مستوى الوحدة من الداخل:
+
+\`\`\`python
+counter = 0
+def bump():
+    global counter
+    counter += 1
+\`\`\`
+
+وبدون \`global\` يحتاج \`counter += 1\` إلى القيمة القديمة لاسم قررت لتوها أنه محلي، فيعطي \`UnboundLocalError\`.
+
+واستعملها بحذر. فالدالة التي تغير حالة عامة في هدوء صعبة الاختبار صعبة الائتمان. وفضل أن تأخذ وسيطا وتعيد نتيجة:
+
+\`\`\`python
+def bump(counter):
+    return counter + 1
+\`\`\`
+
+## التغيير ليس إسنادا
+
+وهذا يعثر من تعلموا القاعدة نصف تعلم:
+
+\`\`\`python
+items = []
+def add():
+    items.append("x")   # no global needed!
+add()
+print(items)   # ['x']
+\`\`\`
+
+فـ \`items.append(...)\` لا تسند إلى \`items\`، بل **تستدعي تابعا على القيمة التي يشير إليها أصلا**. فلا ينشأ اسم جديد، ولا حاجة إلى \`global\`.
+
+أما \`items = [...]\` فكانت ستكون إسنادا، وكانت ستحتاج \`global\`. فالأسماء لصاقات على القيم (الوحدة 2): و\`global\` تتعلق بـ **إعادة ربط الاسم** لا بمس القيمة.
+
+---
+
+## ترتيب LEGB
+
+تحل بايثون الاسم بهذا الترتيب:
+
+1. **L** المحلي، أي هذه الدالة
+2. **E** المحيط، أي أي دالة تغلفها
+3. **G** العام، أي الوحدة
+4. **B** المدمج، مثل \`print\` و\`len\` وغيرهما
+
+والمطابقة الأولى تفوز. وهذا أيضا سبب كسر \`list = [1, 2]\` للاستدعاء \`list("abc")\`: فمتغيرك العام يحجب المدمج.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية، ثم أزل التعليق عن \`print(x)\` داخل \`broken()\` واقرأ \`UnboundLocalError\`.
+`,
+      },
     },
 
     /* ── 5. Recursion ── */
@@ -575,7 +956,8 @@ print(flatten([1, [2, [3, [4]], 5]]))
 import sys
 print("limit:", sys.getrecursionlimit())
 `,
-      markdownContent: `# Recursion
+      markdownContent: {
+        en: `# Recursion
 
 A function that **calls itself**.
 
@@ -651,6 +1033,83 @@ Each call keeps a frame on the stack until it returns, so recursion uses memory 
 
 Run the starter code. Then remove the base case from \`countdown\` and read the \`RecursionError\`, the limit protecting you.
 `,
+        ar: `# الاستدعاء الذاتي
+
+دالة **تستدعي نفسها**.
+
+\`\`\`python
+def countdown(n):
+    if n == 0:
+        print("liftoff")
+        return
+    print(n)
+    countdown(n - 1)
+\`\`\`
+
+---
+
+## جزآن، دائما
+
+كل دالة ذاتية الاستدعاء تحتاج الاثنين:
+
+1. **حالة أساس**، أي متى تتوقف.
+2. **حالة تكرارية**، أي تستدعي نفسها على مسألة **أصغر**.
+
+فإن أهملت حالة الأساس لم تتوقف أبدا. وإن أخفقت في تصغير المسألة لم تصل إلى حالة الأساس أبدا. وفي الحالتين تحصل على:
+
+\`\`\`
+RecursionError: maximum recursion depth exceeded
+\`\`\`
+
+وهذا حارس بايثون، عند عمق ألف إطار تقريبا (\`sys.getrecursionlimit()\`). ولولاه لأسقطت المفسر.
+
+اكتب حالة الأساس **أولا**. ثم اسأل: كيف أصغر المسألة؟
+
+\`\`\`python
+def factorial(n):
+    if n <= 1:
+        return 1              # base
+    return n * factorial(n - 1)   # smaller
+\`\`\`
+
+ولاحظ \`n <= 1\` لا \`n == 1\`. فـ \`factorial(0)\` ينبغي أن تساوي 1، و\`==\` كانت ستتجاوزها مبحرة نحو ما لا نهاية السالبة. فحالات الأساس تريد أن تلتقط *كل شيء* عند الحد أو خلفه.
+
+---
+
+## متى تكون الأداة الصحيحة
+
+للعد التنازلي، الاستدعاء الذاتي حلقة \`for\` أسوأ، أبطأ وأهش.
+
+وهو يستحق مكانه مع **البيانات المتداخلة مجهولة العمق**:
+
+\`\`\`python
+def flatten(items):
+    out = []
+    for item in items:
+        if isinstance(item, list):
+            out.extend(flatten(item))   # a list? flatten that too
+        else:
+            out.append(item)
+    return out
+
+flatten([1, [2, [3, [4]], 5]])   # [1, 2, 3, 4, 5]
+\`\`\`
+
+جرب ذلك بالحلقات. كنت ستحتاج حلقة لكل مستوى، وأنت لا تعرف كم مستوى هناك. أما الاستدعاء الذاتي فلا يبالي، إذ يعالج كل استدعاء مستوى واحدا ويفوض البقية إلى نفسه.
+
+وتلك هي العلامة: **مسألة شكلها شكل نفسها بحجم أصغر.** كمجلدات داخل مجلدات، وJSON داخل JSON، وشجرة من الردود. عمل حقيقي لا ألغاز.
+
+## الثمن
+
+كل استدعاء يبقي إطارا على المكدس حتى يعود، فالاستدعاء الذاتي يستهلك ذاكرة لا تستهلكها الحلقة، وبايثون لا تملك تحسين الاستدعاء الذيلي. والاستدعاء الذاتي العميق على قائمة طويلة سيصطدم بالحد. فإن عبرت الحلقة عن الأمر تعبيرا طبيعيا فاستعمل الحلقة.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. ثم احذف حالة الأساس من \`countdown\` واقرأ \`RecursionError\`، فذاك الحد وهو يحميك.
+`,
+      },
     },
 
     /* ── 6. Lambda ── */
@@ -680,7 +1139,8 @@ print(max([1, -5, 3], key=lambda n: abs(n)))
 # One expression only, no statements
 # bad = lambda n: print(n); return n   # SyntaxError
 `,
-      markdownContent: `# Lambda
+      markdownContent: {
+        en: `# Lambda
 
 A **lambda** is a small, anonymous function written in one expression.
 
@@ -754,6 +1214,81 @@ If your lambda just calls one function on its argument, pass that function direc
 
 Run the starter code. Compare the two \`sorted(words, ...)\` lines, same output, and the second says more with less.
 `,
+        ar: `# lambda
+
+الـ **lambda** دالة صغيرة مجهولة الاسم تكتب في تعبير واحد.
+
+\`\`\`python
+double = lambda n: n * 2
+double(5)   # 10
+\`\`\`
+
+وهي مطابقة لـ:
+
+\`\`\`python
+def double(n):
+    return n * 2
+\`\`\`
+
+والشكل هو \`lambda parameters: expression\`. ونتيجة التعبير تعاد تلقائيا، فلا كلمة \`return\` ولا موضع لها.
+
+---
+
+## الحدود
+
+**تعبير واحد. ولا جمل.** فلا كتل \`if\`، ولا حلقات، ولا إسنادات، ولا أسطر متعددة:
+
+\`\`\`python
+lambda n: print(n); return n   # SyntaxError
+\`\`\`
+
+والعامل الثلاثي مسموح لأنه تعبير:
+
+\`\`\`python
+lambda n: "even" if n % 2 == 0 else "odd"
+\`\`\`
+
+---
+
+## لا تسم lambda
+
+المثال الأول أسلوب سيئ، ودليل الأسلوب يقول ذلك صراحة:
+
+\`\`\`python
+double = lambda n: n * 2   # don't
+def double(n):             # do
+    return n * 2
+\`\`\`
+
+فإن كنت ستعطيها اسما فاستعمل \`def\`. فهي أوضح، وقادرة على النمو، ويظهر اسمها ظهورا سليما في آثار التتبع، بينما تبلغ lambda المسماة عن نفسها بـ \`<lambda>\` حين تفشل، وهذا عديم الفائدة أثناء تتبع الأخطاء.
+
+## أين تنتمي lambda
+
+تمرر **إلى دالة أخرى**، وتستعمل مرة واحدة، ولا تستحق التسمية:
+
+\`\`\`python
+sorted(people, key=lambda p: p[1])   # sort by the second item
+max([1, -5, 3], key=lambda n: abs(n))
+\`\`\`
+
+وأنت ترى \`key=\` منذ الوحدة 5. فهي تريد *دالة*، وlambda تكتب واحدة في مكانها بدل تعريف \`def\` كامل لشيء يستعمل مرة واحدة.
+
+لكن تحقق أولا هل توجد دالة جاهزة:
+
+\`\`\`python
+sorted(words, key=lambda w: len(w))   # works
+sorted(words, key=len)                # better, len IS the function
+\`\`\`
+
+فإن كانت lambda لا تفعل إلا استدعاء دالة واحدة على وسيطها فمرر تلك الدالة مباشرة.
+
+---
+
+## جربها
+
+شغل الشيفرة الابتدائية. وقارن سطري \`sorted(words, ...)\`، فالمخرجات نفسها، والثاني يقول أكثر بأقل.
+`,
+      },
     },
 
     /* ── 7. Challenge: Port Toolkit ── */
@@ -828,7 +1363,8 @@ print(describe(80), describe(53, "udp"))
 print(summarise(80, 8080, 22, 99999))
 print(summarise(0))
 `,
-      markdownContent: `# Challenge: Port Toolkit
+      markdownContent: {
+        en: `# Challenge: Port Toolkit
 
 Three small functions that use most of this module.
 
@@ -877,6 +1413,56 @@ Note the whole point of \`is_valid\` returning a bool: \`summarise\` can just *u
 
 Click **Submit** when ready.
 `,
+        ar: `# تحد: عدة المنافذ
+
+ثلاث دوال صغيرة تستعمل معظم ما في هذه الوحدة.
+
+---
+
+## التعليمات
+
+اكتب هذه الدوال، واترك استدعاءات \`print\` في الأسفل كما هي:
+
+**1. \`is_valid(port)\`**، تعطي \`True\` حين يكون المنفذ بين 1 و65535 شاملة الطرفين، وإلا \`False\`.
+
+**2. \`describe(port, proto="tcp")\`**، تعيد \`"80/tcp"\`. ويجب أن يكون لـ \`proto\` قيمة **افتراضية**.
+
+**3. \`summarise(*ports)\`**، تأخذ **أي عدد** من المنافذ وتعيد:
+
+\`\`\`python
+{"count": 4, "valid": 3, "highest": 8080}
+\`\`\`
+
+- \`count\`، كم منفذا مرر
+- \`valid\`، كم منها يجتاز \`is_valid\`
+- \`highest\`، أعلى منفذ **صالح**، أو \`None\` إن لم يوجد أي منها
+
+## المخرجات المتوقعة
+
+\`\`\`
+True False
+80/tcp 53/udp
+{'count': 4, 'valid': 3, 'highest': 8080}
+{'count': 1, 'valid': 0, 'highest': None}
+\`\`\`
+
+## القواعد
+
+- استعمل \`return\` من الدوال ولا تستعمل \`print\` بداخلها.
+- ويجب أن تستعمل \`describe\` **معاملا بقيمة افتراضية**.
+- ويجب أن تستعمل \`summarise\` صيغة **\`*args\`**.
+
+## انتبه
+
+الدالة \`max()\` على قائمة **فارغة** ترفع \`ValueError\`. والحالة الأخيرة بلا منافذ صالحة، فاحرسها، والعامل الثلاثي يفعلها في سطر واحد.
+
+ولاحظ أن المقصود كله من إعادة \`is_valid\` قيمة منطقية هو أن تستطيع \`summarise\` *استعمالها* مباشرة.
+
+---
+
+اضغط **Submit** حين تجهز.
+`,
+      },
     },
   ],
 };
