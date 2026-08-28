@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   Play,
   RotateCcw,
@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import CodeEditor from './CodeEditor';
 import OutputPanel from './OutputPanel';
+import ResizeHandle from './ResizeHandle';
 import type { ExecutionResult } from './PythonExecutor';
 import { runCode, isRunnerReady } from './runners';
 import type { TestCase } from '../../data/programming/types';
@@ -32,6 +33,52 @@ function readsInput(code: string, language: string): boolean {
   if (language === 'python') return /(^|[^\w.])input\s*\(/m.test(code);
   if (language === 'cpp') return /\b(cin|getline|scanf)\b/.test(code);
   return /\bread\b|\$\(cat\)/.test(code);
+}
+
+const FILE_NAMES: Record<string, string> = {
+  python: 'main.py',
+  cpp: 'main.cpp',
+  bash: 'main.sh',
+};
+
+/* ── Resizable panels ──
+ *
+ * The editor takes whatever space the panels below it leave, so giving the
+ * output a height is all that is needed to make the split draggable: pull the
+ * handle up and the output grows while the editor gives way.
+ *
+ * Heights are remembered across lessons. The lesson page remounts this
+ * component for every concept (key={concept.id}), so without storing them a
+ * student who wants a tall output pane would have to drag it open again on
+ * every single page. */
+const PANEL_MIN_PX = 56;
+const PANEL_MAX_FRACTION = 0.7;
+const DEFAULTS = { output: 128, tests: 144, stdin: 64 };
+
+type PanelName = keyof typeof DEFAULTS;
+
+const storageKey = (panel: PanelName) => `ck.editorPanel.${panel}`;
+
+function usePanelHeight(panel: PanelName) {
+  const [height, setHeight] = useState<number>(() => {
+    try {
+      const saved = Number(localStorage.getItem(storageKey(panel)));
+      return Number.isFinite(saved) && saved >= PANEL_MIN_PX ? saved : DEFAULTS[panel];
+    } catch {
+      // Private browsing and blocked site data both throw here; the default is fine.
+      return DEFAULTS[panel];
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(storageKey(panel), String(height));
+    } catch {
+      /* Not being able to remember the size is not worth interrupting anyone over. */
+    }
+  }, [panel, height]);
+
+  return [height, setHeight] as const;
 }
 
 type TestResult = {
@@ -62,8 +109,23 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
   const [revealedHints, setRevealedHints] = useState(0);
   const [showSolution, setShowSolution] = useState(false);
 
+  const shellRef = useRef<HTMLDivElement>(null);
+  const [outputHeight, setOutputHeight] = usePanelHeight('output');
+  const [testsHeight, setTestsHeight] = usePanelHeight('tests');
+  const [stdinHeight, setStdinHeight] = usePanelHeight('stdin');
+
   const isChallenge = testCases && testCases.length > 0;
   const allPassed = testResults?.every((t) => t.passed) ?? false;
+
+  /* Capped at a fraction of the workspace so a panel can never swallow the
+     editor whole; the editor keeps its own min-height as a second guard. */
+  const resizer = useCallback(
+    (setHeight: (fn: (h: number) => number) => void) => (deltaY: number) => {
+      const max = Math.max(PANEL_MIN_PX, (shellRef.current?.clientHeight ?? 0) * PANEL_MAX_FRACTION);
+      setHeight((h) => Math.min(max, Math.max(PANEL_MIN_PX, h + deltaY)));
+    },
+    []
+  );
 
   const handleRun = useCallback(async () => {
     setIsRunning(true);
@@ -146,8 +208,10 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
     if (hints && revealedHints < hints.length) setRevealedHints((h) => h + 1);
   };
 
+  const showStdin = readsInput(code, language) && !isChallenge;
+
   return (
-    <div className="flex flex-col h-full" dir="ltr">
+    <div ref={shellRef} className="flex flex-col h-full" dir="ltr">
 
       {/* ── Toolbar ── */}
       <div className="flex items-center justify-between px-3 py-2 bg-[#0b1019] border border-[#151d2e] rounded-t-lg">
@@ -155,7 +219,9 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
           {/* File tab */}
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#080c14] border border-[#151d2e]">
             <span className="w-2 h-2 rounded-full bg-[#00a859]" />
-            <span className="text-[11px] font-medium text-[#8390ac]">main.py</span>
+            <span className="text-[11px] font-medium text-[#8390ac]">
+              {FILE_NAMES[language] ?? 'main.txt'}
+            </span>
           </div>
         </div>
 
@@ -199,96 +265,121 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
         </div>
       </div>
 
-      {/* ── Editor ── */}
-      <div className="flex-1 min-h-0 overflow-hidden border-x border-[#151d2e]">
-        <CodeEditor value={code} onChange={setCode} language={language} minHeight="100%" />
+      {/* ── Editor ──
+           height="100%" rather than a min-height: it is what gives CodeMirror a
+           scroller of its own, so long files scroll here instead of running off
+           the bottom of a clipped box. */}
+      <div className="flex-1 min-h-[6rem] overflow-hidden border-x border-[#151d2e]">
+        <CodeEditor value={code} onChange={setCode} language={language} height="100%" />
       </div>
 
       {/* ── Input (stdin) — only for code that reads it. Challenges feed their
            own input per test case, so this is for the Run button on lessons. ── */}
-      {readsInput(code, language) && !isChallenge && (
-        <div className="border-x border-t border-[#151d2e] bg-[#0b1019]">
-          <label
-            htmlFor="stdin-box"
-            className="flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-[#8390ac]"
-          >
-            <Keyboard size={12} className="text-[#4d5a73]" />
-            Input
-            <span className="text-[#4d5a73]">, one line per input() call</span>
-          </label>
-          <textarea
-            id="stdin-box"
-            value={stdin}
-            onChange={(e) => setStdin(e.target.value)}
-            spellCheck={false}
-            rows={2}
-            dir="ltr"
-            placeholder="Type the lines your program should read..."
-            className="w-full resize-y bg-[#080c14] px-3 py-2 font-mono text-xs text-[#d2d7e3] placeholder:text-[#3d4a63] focus:outline-none"
+      {showStdin && (
+        <>
+          <ResizeHandle
+            label="Input panel"
+            onResize={resizer(setStdinHeight)}
+            onReset={() => setStdinHeight(DEFAULTS.stdin)}
           />
-        </div>
+          <div className="flex-shrink-0 border-x border-[#151d2e] bg-[#0b1019]">
+            <label
+              htmlFor="stdin-box"
+              className="flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-[#8390ac]"
+            >
+              <Keyboard size={12} className="text-[#4d5a73]" />
+              Input
+              <span className="text-[#4d5a73]">, one line per input() call</span>
+            </label>
+            <textarea
+              id="stdin-box"
+              value={stdin}
+              onChange={(e) => setStdin(e.target.value)}
+              spellCheck={false}
+              dir="ltr"
+              style={{ height: stdinHeight }}
+              placeholder="Type the lines your program should read..."
+              className="w-full resize-none bg-[#080c14] px-3 py-2 font-mono text-xs text-[#d2d7e3] placeholder:text-[#3d4a63] focus:outline-none custom-scrollbar"
+            />
+          </div>
+        </>
       )}
 
       {/* ── Test Results ── */}
       {testResults && (
-        <div className="border-x border-t border-[#151d2e] bg-[#0b1019]">
-          <div className="px-3 py-2 border-b border-[#151d2e]">
-            <div className="flex items-center gap-2">
-              {allPassed ? (
-                <>
-                  <CheckCircle2 size={13} className="text-[#00a859]" />
-                  <span className="text-[11px] font-bold text-[#00a859]">All tests passed</span>
-                </>
-              ) : (
-                <>
-                  <XCircle size={13} className="text-[#ef4444]" />
-                  <span className="text-[11px] font-bold text-[#ef4444]">
-                    {testResults.filter((t) => t.passed).length}/{testResults.length} tests passed
-                  </span>
-                </>
-              )}
+        <>
+          <ResizeHandle
+            label="Test results panel"
+            onResize={resizer(setTestsHeight)}
+            onReset={() => setTestsHeight(DEFAULTS.tests)}
+          />
+          <div className="flex-shrink-0 border-x border-[#151d2e] bg-[#0b1019]">
+            <div className="px-3 py-2 border-b border-[#151d2e]">
+              <div className="flex items-center gap-2">
+                {allPassed ? (
+                  <>
+                    <CheckCircle2 size={13} className="text-[#00a859]" />
+                    <span className="text-[11px] font-bold text-[#00a859]">All tests passed</span>
+                  </>
+                ) : (
+                  <>
+                    <XCircle size={13} className="text-[#ef4444]" />
+                    <span className="text-[11px] font-bold text-[#ef4444]">
+                      {testResults.filter((t) => t.passed).length}/{testResults.length} tests passed
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+            <div style={{ height: testsHeight }} className="overflow-y-auto custom-scrollbar">
+              {testResults.map((tr) => (
+                <div
+                  key={tr.id}
+                  className={`flex items-start gap-2.5 px-3 py-2 border-b border-[#151d2e]/60 ${
+                    tr.passed ? '' : 'bg-[#1a0a0a]/20'
+                  }`}
+                >
+                  {tr.passed ? (
+                    <CheckCircle2 size={12} className="text-[#00a859] mt-0.5 flex-shrink-0" />
+                  ) : (
+                    <XCircle size={12} className="text-[#ef4444] mt-0.5 flex-shrink-0" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-medium text-[#b4bcd0]">{tr.description}</p>
+                    {!tr.passed && (
+                      <div className="mt-1.5 space-y-0.5 text-[10px] font-mono">
+                        <p className="text-[#4d5a73]">
+                          Expected: <span className="text-[#00a859]">{tr.expected || '(empty)'}</span>
+                        </p>
+                        <p className="text-[#4d5a73]">
+                          Got: <span className="text-[#ef4444]">{tr.actual || '(empty)'}</span>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-          <div className="max-h-36 overflow-y-auto custom-scrollbar">
-            {testResults.map((tr) => (
-              <div
-                key={tr.id}
-                className={`flex items-start gap-2.5 px-3 py-2 border-b border-[#151d2e]/60 ${
-                  tr.passed ? '' : 'bg-[#1a0a0a]/20'
-                }`}
-              >
-                {tr.passed ? (
-                  <CheckCircle2 size={12} className="text-[#00a859] mt-0.5 flex-shrink-0" />
-                ) : (
-                  <XCircle size={12} className="text-[#ef4444] mt-0.5 flex-shrink-0" />
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-[11px] font-medium text-[#b4bcd0]">{tr.description}</p>
-                  {!tr.passed && (
-                    <div className="mt-1.5 space-y-0.5 text-[10px] font-mono">
-                      <p className="text-[#4d5a73]">
-                        Expected: <span className="text-[#00a859]">{tr.expected || '(empty)'}</span>
-                      </p>
-                      <p className="text-[#4d5a73]">
-                        Got: <span className="text-[#ef4444]">{tr.actual || '(empty)'}</span>
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        </>
       )}
 
       {/* ── Output Panel ── */}
-      <div className="h-32 flex-shrink-0 border border-[#151d2e] rounded-b-lg overflow-hidden">
+      <ResizeHandle
+        label="Output panel"
+        onResize={resizer(setOutputHeight)}
+        onReset={() => setOutputHeight(DEFAULTS.output)}
+      />
+      <div
+        style={{ height: outputHeight }}
+        className="flex-shrink-0 border border-[#151d2e] rounded-b-lg overflow-hidden"
+      >
         <OutputPanel output={output} error={error} durationMs={durationMs} isRunning={isRunning} onClear={clearOutput} />
       </div>
 
       {/* ── Hints & Solution ── */}
       {isChallenge && (hints?.length || solution) && (
-        <div className="flex items-center gap-2 mt-3 flex-wrap">
+        <div className="flex items-center gap-2 mt-3 flex-wrap flex-shrink-0">
           {hints && hints.length > 0 && revealedHints < hints.length && (
             <button
               onClick={revealNextHint}
@@ -311,7 +402,7 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
       )}
 
       {revealedHints > 0 && hints && (
-        <div className="mt-2 space-y-1">
+        <div className="mt-2 space-y-1 flex-shrink-0">
           {hints.slice(0, revealedHints).map((hint, i) => (
             <div key={i} className="flex items-start gap-2 px-3 py-2 rounded bg-[#1a1608]/50 border border-[#3d2e0a]/40">
               <ChevronRight size={11} className="text-[#f3a43a] mt-0.5 flex-shrink-0" />
@@ -322,7 +413,7 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
       )}
 
       {showSolution && solution && (
-        <div className="mt-2 rounded-lg border border-[#1e2a3d] overflow-hidden">
+        <div className="mt-2 rounded-lg border border-[#1e2a3d] overflow-hidden flex-shrink-0">
           <div className="px-3 py-1.5 bg-[#0b1019] border-b border-[#1e2a3d]">
             <span className="text-[10px] font-bold uppercase tracking-wider text-[#4d5a73]">Solution</span>
           </div>

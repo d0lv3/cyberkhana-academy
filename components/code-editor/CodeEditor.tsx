@@ -12,6 +12,9 @@ interface CodeEditorProps {
   language?: 'python' | 'cpp' | 'bash';
   readOnly?: boolean;
   minHeight?: string;
+  /** A definite height gives CodeMirror its own scroller; without one the
+   *  editor grows to fit the file and long code gets clipped by its container. */
+  height?: string;
 }
 
 /* ── Green-oriented syntax highlighting ──
@@ -108,6 +111,14 @@ const editorTheme = EditorView.theme({
     fontSize: '13.5px',
     fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace",
   },
+  /* CodeMirror's base theme only scrolls horizontally. Without this, code
+     taller than the editor is simply unreachable — no scrollbar, no wheel.
+     `contain` keeps the wheel inside the editor instead of handing the scroll
+     on to the lesson pane once the bottom of the file is reached. */
+  '.cm-scroller': {
+    overflow: 'auto',
+    overscrollBehavior: 'contain',
+  },
   '.cm-content': {
     caretColor: '#00a859',
     padding: '14px 0',
@@ -188,6 +199,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   language = 'python',
   readOnly = false,
   minHeight = '200px',
+  height,
 }) => {
   return (
     <CodeMirror
@@ -206,7 +218,11 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
         highlightSelectionMatches: true,
         indentOnInput: true,
       }}
-      style={{ minHeight, fontSize: '13.5px' }}
+      height={height}
+      /* The height has to go on the wrapper as well as the editor: the `height`
+         prop only styles `.cm-editor`, and a percentage there resolves against
+         this wrapper, which would otherwise be auto-sized by its content. */
+      style={{ height, minHeight: height ? undefined : minHeight, fontSize: '13.5px' }}
     />
   );
 };
