@@ -218,6 +218,32 @@ export const AVATAR_PRESETS: AvatarPreset[] = [
       </>
     ),
   },
+  {
+    id: 'knight',
+    label: { en: 'Knight', ar: 'الفارس' },
+    /* Pearl rather than another saturated hue: the set had twelve of those, and
+       a chess piece is the one glyph here whose own colour is ivory. */
+    accent: '#cbd5e1',
+    art: (
+      <>
+        {/* Head, neck and base as one closed silhouette — a knight is the most
+            intricate outline in the set, and as pure line art it turned to mush
+            at 28px. The wash inside is what carries it once the strokes stop
+            resolving, the same trick the recon sweep uses. */}
+        <path
+          d="M36 6 39.6 12.4C43.6 15.4 46.2 20.6 46.6 26.4 47.3 34 45.4 41 42.4 46
+             L45.5 46 48 55 16 55 18.5 46 21.6 46C24.4 42.4 25.1 39.6 25 37
+             L17 37C13.4 37 12.2 33.6 14.8 31.4L23 27.5C22.6 22.4 24.8 17.6 28.6 14.6
+             30.4 13 32.4 12 34.5 11.6Z"
+          {...S}
+          fill="currentColor"
+          fillOpacity={0.22}
+        />
+        <circle cx="30.5" cy="20.5" r="2" fill="currentColor" />
+        <circle cx="18" cy="32.6" r="1.1" fill="currentColor" />
+      </>
+    ),
+  },
 ];
 
 const PRESET_BY_ID = new Map(AVATAR_PRESETS.map((p) => [p.id, p]));
