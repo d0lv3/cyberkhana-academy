@@ -10,6 +10,12 @@ import { useLang } from '../contexts/LangContext';
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 const GSI_SCRIPT_ID = 'google-gsi-client';
 
+/* Google draws its button at a fixed pixel width and offers no way to say
+ * "fill your parent", so the parent has to be measured and the number handed
+ * back. These are the bounds the SDK itself clamps to. */
+const GSI_MIN_WIDTH = 200;
+const GSI_MAX_WIDTH = 400;
+
 /* Minimal typing for the Google Identity Services SDK. */
 interface GsiSdk {
   accounts: {
@@ -153,20 +159,52 @@ const LoginPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // (Re)render the official Google button — re-runs on language switch.
-  useEffect(() => {
+  /* (Re)draw the official Google button at the width its card actually has.
+   * It was pinned at 320px, which is wider than the card's content box on any
+   * phone narrower than about 430px: 24px of page padding and 28px of card
+   * padding a side leave 269px on a 375px screen, so the button hung out over
+   * the card edge. Measured after clearing, since the host is a block whose
+   * width comes from its parent, not from the button previously inside it. */
+  const drawGoogleButton = useCallback(() => {
     const gsi = getGsi();
-    if (!gisReady || !gsi || !googleBtnRef.current) return;
-    googleBtnRef.current.innerHTML = '';
-    gsi.accounts.id.renderButton(googleBtnRef.current, {
+    const host = googleBtnRef.current;
+    if (!gisReady || !gsi || !host) return;
+    host.innerHTML = '';
+    const available = Math.round(host.clientWidth);
+    gsi.accounts.id.renderButton(host, {
       theme: 'outline',
       size: 'large',
       text: 'continue_with',
       shape: 'pill',
-      width: 320,
+      width: Math.min(GSI_MAX_WIDTH, Math.max(GSI_MIN_WIDTH, available || GSI_MAX_WIDTH)),
       locale: ar ? 'ar' : 'en',
     });
   }, [gisReady, ar]);
+
+  // Re-runs on language switch, and once the SDK is ready.
+  useEffect(() => {
+    drawGoogleButton();
+  }, [drawGoogleButton]);
+
+  /* Rotating the phone changes the card's width, and a button already drawn
+   * keeps whatever size it was born at. The card is only ever resized by the
+   * viewport, so a plain resize listener covers it, and unlike a
+   * ResizeObserver it does not depend on the page running its rendering steps.
+   * Redrawn on a real width change only: tearing the button down and building
+   * it again on every pixel of a desktop drag would flicker it. */
+  useEffect(() => {
+    const host = googleBtnRef.current;
+    if (!gisReady || !host) return;
+    let last = host.clientWidth;
+    const onResize = () => {
+      const next = host.clientWidth;
+      if (!next || next === last) return;
+      last = next;
+      drawGoogleButton();
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [gisReady, drawGoogleButton]);
 
   return (
     <div className="min-h-screen bg-[#0a0e15] flex flex-col relative overflow-hidden">
