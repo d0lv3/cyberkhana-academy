@@ -5,6 +5,7 @@ import { BookOpen, Trophy, ChevronRight, Youtube } from 'lucide-react';
 import EnhancedCard from '../../components/ui/EnhancedCard';
 import Button from '../../components/ui/EnhancedButton';
 import PageHeader from '../../components/ui/PageHeader';
+import EmptyState from '../../components/ui/EmptyState';
 import { useLang } from '../../contexts/LangContext';
 import { getLanguage } from '../../data/programming';
 
@@ -49,7 +50,20 @@ const ProgrammingLanguagePage: React.FC = () => {
         }
       />
 
-      {/* Module list */}
+      {/* Module list. A language with nothing published yet is a normal state,
+          not an error: its modules are authored in the creator tools and merged
+          in once they go live. */}
+      {language.modules.length === 0 ? (
+        <EmptyState
+          icon={BookOpen}
+          title={lang === 'ar' ? 'قريباً' : 'Coming Soon'}
+          description={
+            lang === 'ar'
+              ? 'لا توجد وحدات منشورة لهذه اللغة بعد. عد قريباً!'
+              : 'No modules have been published for this language yet. Check back soon!'
+          }
+        />
+      ) : (
       <div className="space-y-4">
         {language.modules.map((mod, modIdx) => {
           const lessonCount = mod.concepts.filter((c) => c.type === 'lesson').length;
@@ -130,6 +144,7 @@ const ProgrammingLanguagePage: React.FC = () => {
           );
         })}
       </div>
+      )}
     </div>
   );
 };
