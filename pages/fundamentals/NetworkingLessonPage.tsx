@@ -20,6 +20,7 @@ import LessonMarkdown from '../../components/ui/LessonMarkdown';
 import LessonQuiz from '../../components/ui/LessonQuiz';
 import { useLang } from '../../contexts/LangContext';
 import { useScrollToTop } from '../../hooks/useScrollToTop';
+import { useStoredState, storedBoolean, storedNumber } from '../../hooks/useStoredState';
 import { isNetworkingDone, markNetworkingDone, recordActivity } from '../../services/progressService';
 
 type Tab = 'content' | 'simulation';
@@ -38,30 +39,6 @@ const SIM_PCT_MAX = 78;
 
 const clampPct = (v: number) => Math.min(SIM_PCT_MAX, Math.max(SIM_PCT_MIN, v));
 
-/** Reads and writes one remembered value, tolerating storage being unavailable. */
-function useStored<T>(key: string, fallback: T, parse: (raw: string) => T | null) {
-  const [value, setValue] = useState<T>(() => {
-    try {
-      const raw = localStorage.getItem(key);
-      const parsed = raw === null ? null : parse(raw);
-      return parsed === null ? fallback : parsed;
-    } catch {
-      // Private browsing and blocked site data both throw here; the default is fine.
-      return fallback;
-    }
-  });
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(key, String(value));
-    } catch {
-      /* Not being able to remember a panel size is not worth interrupting anyone over. */
-    }
-  }, [key, value]);
-
-  return [value, setValue] as const;
-}
-
 const NetworkingLessonPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
@@ -75,13 +52,8 @@ const NetworkingLessonPage: React.FC = () => {
   const [mobileTab, setMobileTab] = useState<Tab>('content');
   const [done, setDone] = useState(() => (lesson ? isNetworkingDone(lesson.id) : false));
 
-  const [simPct, setSimPct] = useStored(SIM_PCT_KEY, SIM_PCT_DEFAULT, (raw) => {
-    const n = Number(raw);
-    return Number.isFinite(n) ? clampPct(n) : null;
-  });
-  const [simOpen, setSimOpen] = useStored(SIM_OPEN_KEY, true, (raw) =>
-    raw === 'true' ? true : raw === 'false' ? false : null
-  );
+  const [simPct, setSimPct] = useStoredState(SIM_PCT_KEY, SIM_PCT_DEFAULT, storedNumber(clampPct));
+  const [simOpen, setSimOpen] = useStoredState(SIM_OPEN_KEY, true, storedBoolean);
 
   /* Pixels dragged become a share of the body, so the same drag means the same
      thing whatever the window is doing. */

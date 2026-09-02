@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -10,6 +10,8 @@ import {
   Trophy,
   CheckCircle2,
   Youtube,
+  PanelRightClose,
+  PanelRightOpen,
 } from 'lucide-react';
 import { getLanguage, getModule, getConcept } from '../../data/programming';
 import type { ProgrammingConcept } from '../../data/programming';
@@ -17,13 +19,29 @@ import { CodingEnvironment } from '../../components/code-editor';
 import { runnerFor } from '../../components/code-editor/runners';
 import Button from '../../components/ui/EnhancedButton';
 import LessonMarkdown from '../../components/ui/LessonMarkdown';
+import ResizeHandle from '../../components/ui/ResizeHandle';
 import { youtubeEmbedUrl } from '../../services/youtube';
 import { useLang } from '../../contexts/LangContext';
 import { mdFor } from '../../services/creatorTypes';
 import { useScrollToTop } from '../../hooks/useScrollToTop';
+import { useStoredState, storedBoolean, storedNumber } from '../../hooks/useStoredState';
 import { getProgrammingDone, markProgrammingDone, recordActivity } from '../../services/progressService';
 
 type Tab = 'content' | 'code';
+
+/* ── The split between the lesson and the workspace ──
+ *
+ * Held as a percentage of the body rather than pixels, so a split chosen on a
+ * wide monitor does not squeeze the prose to nothing on a laptop. Remembered,
+ * because how you like to read while you code is not a preference worth
+ * restating on every concept. */
+const CODE_PCT_KEY = 'ck.progLesson.codePct';
+const CODE_OPEN_KEY = 'ck.progLesson.codeOpen';
+const CODE_PCT_DEFAULT = 50;
+const CODE_PCT_MIN = 25;
+const CODE_PCT_MAX = 75;
+
+const clampPct = (v: number) => Math.min(CODE_PCT_MAX, Math.max(CODE_PCT_MIN, v));
 
 const ProgrammingLessonPage: React.FC = () => {
   const { langSlug, moduleSlug, conceptSlug } = useParams<{
@@ -43,6 +61,21 @@ const ProgrammingLessonPage: React.FC = () => {
   const workspaceRef = useScrollToTop<HTMLDivElement>(conceptSlug);
 
   const [mobileTab, setMobileTab] = useState<Tab>('content');
+  const bodyRef = useRef<HTMLDivElement>(null);
+
+  const [codePct, setCodePct] = useStoredState(CODE_PCT_KEY, CODE_PCT_DEFAULT, storedNumber(clampPct));
+  const [codeOpen, setCodeOpen] = useStoredState(CODE_OPEN_KEY, true, storedBoolean);
+
+  /* Pixels dragged become a share of the body, so the same drag means the same
+     thing whatever the window is doing. */
+  const resizeSplit = useCallback(
+    (deltaX: number) => {
+      const width = bodyRef.current?.clientWidth ?? 0;
+      if (width <= 0) return;
+      setCodePct((p) => clampPct(p + (deltaX / width) * 100));
+    },
+    [setCodePct]
+  );
   const [videoOpen, setVideoOpen] = useState(true);
   const [completed, setCompleted] = useState<Set<string>>(() =>
     getProgrammingDone(langSlug || '')
@@ -144,24 +177,50 @@ const ProgrammingLessonPage: React.FC = () => {
           )}
         </div>
 
-        {/* Concept progress indicator */}
-        <div className="flex items-center gap-1.5 touch:gap-2.5" dir="ltr">
-          {concepts.map((c, i) => (
-            <button
-              key={c.id}
-              onClick={() => goTo(c)}
-              className={`tap-expand-y w-2 h-2 rounded-full transition-all ${
-                c.slug === conceptSlug
-                  ? 'w-5 bg-[#00a859]'
-                  : completed.has(c.id)
-                  ? 'bg-[#00a859]/40'
-                  : c.type === 'challenge'
-                  ? 'bg-[#f3a43a]/30'
-                  : 'bg-[#263248]'
-              }`}
-              title={c.title[lang]}
-            />
-          ))}
+        <div className="flex items-center gap-3">
+          {/* Put the workspace away and read. Desktop only: on a phone the two
+              panes are already tabs, so there is nothing to minimise. */}
+          <button
+            onClick={() => setCodeOpen((open) => !open)}
+            title={
+              codeOpen
+                ? lang === 'ar'
+                  ? 'إخفاء مساحة الكود'
+                  : 'Hide the workspace'
+                : lang === 'ar'
+                  ? 'إظهار مساحة الكود'
+                  : 'Show the workspace'
+            }
+            aria-pressed={codeOpen}
+            className="hidden md:inline-flex items-center gap-1.5 rounded-md border border-[#263248] bg-[#0e1522] px-2.5 py-1 text-[10px] font-semibold text-[#9aa5bf] transition-colors hover:border-[#00a859]/40 hover:text-[#00a859]"
+          >
+            {codeOpen ? (
+              <PanelRightClose size={12} className="rtl-flip" />
+            ) : (
+              <PanelRightOpen size={12} className="rtl-flip" />
+            )}
+            {lang === 'ar' ? 'الكود' : 'Code'}
+          </button>
+
+          {/* Concept progress indicator */}
+          <div className="flex items-center gap-1.5 touch:gap-2.5" dir="ltr">
+            {concepts.map((c) => (
+              <button
+                key={c.id}
+                onClick={() => goTo(c)}
+                className={`tap-expand-y w-2 h-2 rounded-full transition-all ${
+                  c.slug === conceptSlug
+                    ? 'w-5 bg-[#00a859]'
+                    : completed.has(c.id)
+                    ? 'bg-[#00a859]/40'
+                    : c.type === 'challenge'
+                    ? 'bg-[#f3a43a]/30'
+                    : 'bg-[#263248]'
+                }`}
+                title={c.title[lang]}
+              />
+            ))}
+          </div>
         </div>
       </header>
 
@@ -190,18 +249,22 @@ const ProgrammingLessonPage: React.FC = () => {
       </div>
 
       {/* ── BODY ── */}
-      <div className="flex-1 flex overflow-hidden">
+      <div ref={bodyRef} className="flex-1 flex overflow-hidden">
 
-        {/* ── LEFT: Markdown ── */}
+        {/* ── LEFT: Markdown. Takes whatever the workspace is not using, which
+             is the whole screen once the workspace is put away. ── */}
         <div
+          /* `flex` lives in the conditional, not the base: paired with `hidden`
+             it would be two display rules on one element, and which one won
+             would come down to the order Tailwind happened to emit them in. */
           className={`
-            md:w-1/2 md:border-r md:border-[#263248] flex flex-col overflow-hidden
-            ${mobileTab === 'content' ? 'w-full' : 'hidden md:flex'}
+            min-w-0 flex-1 flex-col overflow-hidden
+            ${mobileTab === 'content' ? 'flex w-full' : 'hidden md:flex'}
           `}
         >
           <div ref={proseRef} className="flex-1 overflow-y-auto custom-scrollbar">
             {mod.videoId && (
-              <div className="max-w-2xl mx-auto px-6 pt-6 md:px-8">
+              <div className={`mx-auto px-6 pt-6 md:px-8 ${codeOpen ? 'max-w-2xl' : 'max-w-4xl'}`}>
                 <div className="rounded-xl border border-[#263248] bg-[#0e1522] overflow-hidden">
                   <button
                     onClick={() => setVideoOpen((o) => !o)}
@@ -227,7 +290,9 @@ const ProgrammingLessonPage: React.FC = () => {
                 </div>
               </div>
             )}
-            <article className="max-w-2xl mx-auto px-6 py-8 md:px-8 md:py-10">
+            <article
+              className={`mx-auto px-6 py-8 md:px-8 md:py-10 ${codeOpen ? 'max-w-2xl' : 'max-w-4xl'}`}
+            >
               <LessonMarkdown content={mdFor(concept.markdownContent, lang)} />
             </article>
           </div>
@@ -305,11 +370,29 @@ const ProgrammingLessonPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Desktop: drag the boundary between reading and writing. Hidden while
+            the workspace is put away, since there is nothing on the far side of
+            it to grow. */}
+        {codeOpen && (
+          <div className="hidden md:flex">
+            <ResizeHandle
+              orientation="vertical"
+              label={lang === 'ar' ? 'مساحة الكود' : 'Coding workspace'}
+              onResize={resizeSplit}
+              onReset={() => setCodePct(CODE_PCT_DEFAULT)}
+            />
+          </div>
+        )}
+
         {/* ── RIGHT: Coding Environment ── */}
         <div
+          /* The width only applies to the desktop split; on a phone the pane is
+             whichever tab is showing, and takes the screen. */
+          style={codeOpen ? { flexBasis: `${codePct}%` } : undefined}
           className={`
-            md:w-1/2 flex flex-col overflow-hidden
-            ${mobileTab === 'code' ? 'w-full' : 'hidden md:flex'}
+            flex-col overflow-hidden border-[#263248] md:border-s
+            ${codeOpen ? 'md:flex md:flex-shrink-0 md:min-w-0' : 'md:hidden'}
+            ${mobileTab === 'code' ? 'flex w-full' : 'hidden'}
           `}
         >
           <div ref={workspaceRef} className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-3 md:p-4">
