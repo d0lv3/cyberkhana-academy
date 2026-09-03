@@ -35,6 +35,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import CourseTerminalLauncher from '../../components/terminal/CourseTerminalLauncher';
 import { mdFor, type LocalizedMarkdown } from '../../services/creatorTypes';
 import { emitProgressChange, recordActivity } from '../../services/progressService';
+import { requestFeedback } from '../../components/feedback/FeedbackHost';
 
 type Lecture = {
   id: string;
@@ -92,6 +93,15 @@ const shuffleOptions = (q: QuizQuestion): QuizQuestion => {
     options: order.map((i) => q.options[i]),
     correctIndex: order.indexOf(q.correctIndex),
   };
+};
+
+/** Where a module sits, recorded alongside its feedback so a creator reading
+ *  the OS / Modules card can tell an OS module from a standalone one. */
+const PILLAR_LABEL: Record<string, string> = {
+  'operating-systems': 'Operating Systems',
+  programming: 'Programming',
+  networking: 'Networking',
+  general: 'Modules',
 };
 
 /** The hands-on capstone (e.g. "Linux Final Cyber Challenge") gets a flag field. */
@@ -262,7 +272,19 @@ const ModuleViewerPage: React.FC = () => {
 
   const markComplete = (id: string) => {
     if (isCompleted(id)) return;
-    persistProgress([...completedLectures, id]);
+    const next = [...completedLectures, id];
+    persistProgress(next);
+
+    /* The last lecture closes the module out, which is the point worth asking
+       about. Previews are the creator's own draft, not a finished course. */
+    if (!isPreview && allLectures.length > 0 && next.length >= allLectures.length) {
+      requestFeedback({
+        track: 'os-modules',
+        contextId: fundamentalModule.id,
+        contextTitle: fundamentalModule.title.en || fundamentalModule.title.ar,
+        contextSub: PILLAR_LABEL[fundamentalModule.category] ?? 'Modules',
+      });
+    }
   };
 
   const handleSelectLecture = (lectureId: string) => {

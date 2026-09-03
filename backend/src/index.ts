@@ -12,6 +12,7 @@ import collabRoutes from './routes/collab';
 import contentRoutes from './routes/content';
 import progressRoutes from './routes/progress';
 import leaderboardRoutes from './routes/leaderboard';
+import feedbackRoutes from './routes/feedback';
 import adminRoutes from './routes/admin';
 import uploadRoutes, { UPLOADS_DIR } from './routes/uploads';
 
@@ -44,6 +45,7 @@ app.use('/api/content', contentRoutes);
 app.use('/api/collab', collabRoutes);
 app.use('/api/progress', progressRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
+app.use('/api/feedback', feedbackRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/uploads', uploadRoutes);
 

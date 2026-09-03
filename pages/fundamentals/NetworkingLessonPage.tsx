@@ -22,6 +22,7 @@ import { useLang } from '../../contexts/LangContext';
 import { useScrollToTop } from '../../hooks/useScrollToTop';
 import { useStoredState, storedBoolean, storedNumber } from '../../hooks/useStoredState';
 import { isNetworkingDone, markNetworkingDone, recordActivity } from '../../services/progressService';
+import { requestFeedback } from '../../components/feedback/FeedbackHost';
 
 type Tab = 'content' | 'simulation';
 
@@ -70,6 +71,14 @@ const NetworkingLessonPage: React.FC = () => {
     if (!lesson) return;
     markNetworkingDone(lesson.id);
     setDone(true);
+    /* Finishing the lesson is the moment the learner has an opinion about it.
+       The title is stored in English so the studio's list reads as one list
+       whichever language it was answered in. */
+    requestFeedback({
+      track: 'networking',
+      contextId: lesson.id,
+      contextTitle: lesson.title.en || lesson.title.ar,
+    });
   };
 
   useEffect(() => {

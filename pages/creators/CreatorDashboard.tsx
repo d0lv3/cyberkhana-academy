@@ -17,9 +17,11 @@ import {
   PenTool,
   Route,
   Box,
+  MessageSquare,
 } from 'lucide-react';
 import EnhancedCard from '../../components/ui/EnhancedCard';
 import StatusBadge from '../../components/creators/StatusBadge';
+import FeedbackSummaryBand from '../../components/creators/FeedbackSummaryBand';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLang } from '../../contexts/LangContext';
 import { hasPerm, type CreatorPermission } from '../../services/permissions';
@@ -347,6 +349,17 @@ const CreatorDashboard: React.FC = () => {
             </EnhancedCard>
           ))}
         </div>
+      </div>
+
+      {/* ─── Feedback ─── */}
+      <div>
+        <div className="flex items-center gap-2 mb-4">
+          <MessageSquare size={15} className="text-[#00a859]" />
+          <h2 className="text-sm font-bold text-[#d2d7e3] uppercase tracking-wider">
+            {lang === 'ar' ? 'الملاحظات' : 'Feedback'}
+          </h2>
+        </div>
+        <FeedbackSummaryBand />
       </div>
 
       {/* ─── Your Content ─── */}

@@ -4,6 +4,7 @@ import { MotionConfig } from 'framer-motion';
 import { LangProvider } from './contexts/LangContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ConfirmHost from './components/ui/ConfirmHost';
+import FeedbackHost from './components/feedback/FeedbackHost';
 import ErrorBoundary from './components/ErrorBoundary';
 
 import { FullscreenLiquidLoader } from './components/ui/LiquidLogoLoader';
@@ -40,6 +41,8 @@ const OSModulesCreator = lazy(() => import('./pages/creators/OSModulesCreator'))
 const ModulesCreator = lazy(() => import('./pages/creators/ModulesCreator'));
 const ModuleEditor = lazy(() => import('./pages/creators/ModuleEditor'));
 const PathsCreator = lazy(() => import('./pages/creators/PathsCreator'));
+const FeedbackCreator = lazy(() => import('./pages/creators/FeedbackCreator'));
+const FeedbackTrackPage = lazy(() => import('./pages/creators/FeedbackTrackPage'));
 const PathEditor = lazy(() => import('./pages/creators/PathEditor'));
 const PathDetailPage = lazy(() => import('./pages/paths/PathDetailPage'));
 const MembersPage = lazy(() => import('./pages/admin/MembersPage'));
@@ -204,6 +207,8 @@ function AppRoutes() {
             <Route path="/creators/paths" element={<PathsCreator />} />
             <Route path="/creators/paths/new" element={<PathEditor />} />
             <Route path="/creators/paths/edit/:id" element={<PathEditor />} />
+            <Route path="/creators/feedback" element={<FeedbackCreator />} />
+            <Route path="/creators/feedback/:track" element={<FeedbackTrackPage />} />
           </Route>
 
           {/* Admin */}
@@ -234,6 +239,7 @@ const App: React.FC = () => {
               <AppRoutes />
             </ErrorBoundary>
             <ConfirmHost />
+            <FeedbackHost />
           </LangProvider>
         </AuthProvider>
       </HashRouter>

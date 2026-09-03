@@ -26,6 +26,7 @@ import { mdFor } from '../../services/creatorTypes';
 import { useScrollToTop } from '../../hooks/useScrollToTop';
 import { useStoredState, storedBoolean, storedNumber } from '../../hooks/useStoredState';
 import { getProgrammingDone, markProgrammingDone, recordActivity } from '../../services/progressService';
+import { requestFeedback } from '../../components/feedback/FeedbackHost';
 
 type Tab = 'content' | 'code';
 
@@ -92,15 +93,35 @@ const ProgrammingLessonPage: React.FC = () => {
   const goTo = (c: ProgrammingConcept) =>
     navigate(`/fundamentals/programming/${langSlug}/${moduleSlug}/${c.slug}`);
 
-  const markDone = (id: string) => setCompleted(markProgrammingDone(langSlug || '', id));
+  const markDone = (id: string) => {
+    const next = markProgrammingDone(langSlug || '', id);
+    setCompleted(next);
+    return next;
+  };
+
+  /* A module is finished the moment its last concept is ticked off, and it is
+     the module, not the single concept, that a learner has an opinion about.
+     Both ways in are covered: reading the final lesson, or a challenge's tests
+     going green. */
+  const askAboutModule = (done: Set<string>) => {
+    if (!mod || !language || mod.concepts.length === 0) return;
+    if (!mod.concepts.every((c) => done.has(c.id))) return;
+    requestFeedback({
+      track: 'programming',
+      contextId: mod.id,
+      contextTitle: mod.title.en || mod.title.ar,
+      contextSub: language.name,
+    });
+  };
 
   const handleChallengePass = () => {
-    if (concept) markDone(concept.id);
+    if (!concept) return;
+    askAboutModule(markDone(concept.id));
   };
 
   const handleCompleteLesson = () => {
     if (!concept) return;
-    markDone(concept.id);
+    askAboutModule(markDone(concept.id));
     if (nextConcept) goTo(nextConcept);
   };
 
