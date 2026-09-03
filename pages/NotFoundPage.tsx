@@ -79,7 +79,7 @@ const NotFoundPage: React.FC = () => {
               <span className="w-2.5 h-2.5 rounded-full bg-[#febc2e]" />
               <span className="w-2.5 h-2.5 rounded-full bg-[#28c840]" />
             </span>
-            <span className="text-[10px] text-[#4d5a73]" style={{ fontFamily: MONO }}>
+            <span className="text-[10px] text-[#7c8aa6]" style={{ fontFamily: MONO }}>
               404.log
             </span>
           </div>

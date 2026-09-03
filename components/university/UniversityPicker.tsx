@@ -24,13 +24,13 @@ const UniversityPicker: React.FC<UniversityPickerProps> = ({ value, onSelect, la
     <div className="flex flex-col min-h-0">
       {/* Search */}
       <div className="relative mb-3">
-        <Search size={15} className="absolute start-3 top-1/2 -translate-y-1/2 text-[#6e7a94]" />
+        <Search size={15} className="absolute start-3 top-1/2 -translate-y-1/2 text-[#8592ad]" />
         <input
           autoFocus={autoFocus}
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder={ar ? 'ابحث عن جامعتك...' : 'Search your university...'}
-          className="w-full bg-[#0e1522] border border-[#263248] rounded-lg ps-9 pe-3 py-2.5 text-sm text-[#f3f6ff] placeholder-[#6e7a94] focus:outline-none focus:border-[#00a859]/50 transition-colors"
+          className="w-full bg-[#0e1522] border border-[#263248] rounded-lg ps-9 pe-3 py-2.5 text-sm text-[#f3f6ff] placeholder-[#8592ad] focus:outline-none focus:border-[#00a859]/50 transition-colors"
         />
       </div>
 
@@ -44,7 +44,7 @@ const UniversityPicker: React.FC<UniversityPickerProps> = ({ value, onSelect, la
             value === NOT_ENROLLED ? 'bg-[#00a859]/10' : 'hover:bg-[#182235]'
           }`}
         >
-          <Ban size={15} className="flex-shrink-0 text-[#6e7a94]" />
+          <Ban size={15} className="flex-shrink-0 text-[#8592ad]" />
           <span className="flex-1 text-sm font-medium text-[#d2d7e3]">
             {ar ? 'لست مسجّلاً في جامعة' : "I'm not enrolled in a university"}
           </span>
@@ -52,7 +52,7 @@ const UniversityPicker: React.FC<UniversityPickerProps> = ({ value, onSelect, la
         </button>
 
         {results.length === 0 ? (
-          <p className="px-4 py-6 text-center text-sm text-[#6e7a94]">
+          <p className="px-4 py-6 text-center text-sm text-[#8592ad]">
             {ar ? 'لا توجد نتائج مطابقة' : 'No matching universities'}
           </p>
         ) : (
@@ -71,15 +71,15 @@ const UniversityPicker: React.FC<UniversityPickerProps> = ({ value, onSelect, la
               >
                 <GraduationCap
                   size={15}
-                  className={`flex-shrink-0 ${selected ? 'text-[#00a859]' : 'text-[#6e7a94]'}`}
+                  className={`flex-shrink-0 ${selected ? 'text-[#00a859]' : 'text-[#8592ad]'}`}
                 />
                 <span className="flex-1 min-w-0">
                   <span className={`block text-sm font-medium truncate ${selected ? 'text-[#00a859]' : 'text-[#f3f6ff]'}`}>
                     {label}
                   </span>
-                  {sub && <span className="block text-[11px] text-[#6e7a94] truncate">{sub}</span>}
+                  {sub && <span className="block text-[11px] text-[#8592ad] truncate">{sub}</span>}
                 </span>
-                <span className="flex-shrink-0 text-[10px] font-bold uppercase tracking-wide text-[#6e7a94]">
+                <span className="flex-shrink-0 text-[10px] font-bold uppercase tracking-wide text-[#8592ad]">
                   {u.type === 'public'
                     ? ar ? 'حكومية' : 'Public'
                     : ar ? 'أهلية' : 'Private'}

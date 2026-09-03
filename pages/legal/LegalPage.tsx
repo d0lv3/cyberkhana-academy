@@ -354,7 +354,7 @@ const LegalPage: React.FC<{ kind: 'privacy' | 'terms' }> = ({ kind }) => {
         <article className="max-w-3xl mx-auto">
           <Link
             to="/"
-            className="inline-flex items-center gap-1.5 touch:min-h-tap text-sm text-[#6e7a94] hover:text-[#9fef00] transition-colors mb-6 sm:mb-8"
+            className="inline-flex items-center gap-1.5 touch:min-h-tap text-sm text-[#8592ad] hover:text-[#9fef00] transition-colors mb-6 sm:mb-8"
           >
             <ArrowLeft size={15} className="rtl:rotate-180" />
             {lang === 'ar' ? 'العودة إلى الرئيسية' : 'Back to home'}
@@ -366,7 +366,7 @@ const LegalPage: React.FC<{ kind: 'privacy' | 'terms' }> = ({ kind }) => {
           >
             {doc.title}
           </h1>
-          <p className="mt-2 text-sm text-[#6e7a94]">{doc.updated}</p>
+          <p className="mt-2 text-sm text-[#8592ad]">{doc.updated}</p>
 
           <p className="mt-6 text-[#9aa5bf] leading-relaxed">{doc.intro}</p>
 

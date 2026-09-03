@@ -152,7 +152,7 @@ const CodeBlock: React.FC<{ text: string; isRtl: boolean }> = ({ text, isRtl }) 
         className={`absolute end-2 top-2 z-10 inline-flex items-center gap-1 rounded-md border px-2 py-1 touch:min-h-tap touch:px-3 text-[11px] font-semibold backdrop-blur-sm transition-colors ${
           copied
             ? 'border-[#00a859]/45 bg-[#00a859]/15 text-[#00a859]'
-            : 'border-[#263248] bg-[#121a2a]/85 text-[#6e7a94] hover:border-[#3d4a63] hover:text-[#d2d7e3]'
+            : 'border-[#263248] bg-[#121a2a]/85 text-[#8592ad] hover:border-[#3d4a63] hover:text-[#d2d7e3]'
         }`}
       >
         {copied ? <Check size={12} /> : <Copy size={12} />}

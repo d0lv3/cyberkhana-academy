@@ -555,11 +555,11 @@ const FundamentalsRoadmap: React.FC = () => {
                       <div className="h-1.5 flex-1 max-w-[140px] rounded-full bg-[#1c2740] overflow-hidden">
                         <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: c }} />
                       </div>
-                      <span className="text-[10px] font-semibold text-[#6e7a94]">{pct}%</span>
+                      <span className="text-[10px] font-semibold text-[#8592ad]">{pct}%</span>
                     </div>
                   )}
                 </div>
-                <ChevronRight size={17} className="flex-shrink-0 text-[#4d5a73] rtl:rotate-180" />
+                <ChevronRight size={17} className="flex-shrink-0 text-[#7c8aa6] rtl:rotate-180" />
               </button>
             </div>
           );

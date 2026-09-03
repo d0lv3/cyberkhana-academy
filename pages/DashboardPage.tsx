@@ -196,7 +196,7 @@ const DashboardPage: React.FC = () => {
                   style={{ width: `${data.overallPct}%` }}
                 />
               </div>
-              <p className="text-[10px] text-[#6e7a94] mt-1" dir="ltr">
+              <p className="text-[10px] text-[#8592ad] mt-1" dir="ltr">
                 {data.completedUnits} / {data.totalUnits} {t('dashboard.lessonsLabel')}
               </p>
             </div>
@@ -213,7 +213,7 @@ const DashboardPage: React.FC = () => {
           {/* Level ring */}
           <div className="flex items-center gap-5 self-start md:self-center" dir="ltr">
             <ProgressRing progress={data.xpInLevel} color="#9fef00">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#6e7a94]">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#8592ad]">
                 {t('dashboard.level')}
               </span>
               <span className="text-3xl font-black text-[#f3f6ff] leading-none">{data.level}</span>
@@ -222,9 +222,9 @@ const DashboardPage: React.FC = () => {
               <div className="flex items-center gap-1.5 text-[#9fef00]">
                 <Zap size={15} />
                 <span className="text-xl font-black">{data.xp}</span>
-                <span className="text-xs font-semibold text-[#6e7a94]">{t('dashboard.xp')}</span>
+                <span className="text-xs font-semibold text-[#8592ad]">{t('dashboard.xp')}</span>
               </div>
-              <p className="text-xs text-[#6e7a94] mt-1">
+              <p className="text-xs text-[#8592ad] mt-1">
                 {100 - data.xpInLevel} {t('dashboard.toNextLevel')}
               </p>
             </div>
@@ -248,10 +248,10 @@ const DashboardPage: React.FC = () => {
           >
             <div className="flex items-center justify-between px-6 py-4 border-b border-[#263248]">
               <h2 className="text-base font-bold text-[#f3f6ff] flex items-center gap-2">
-                <Flame size={17} className={streak.current > 0 ? 'text-[#f3a43a]' : 'text-[#4d5a73]'} />
+                <Flame size={17} className={streak.current > 0 ? 'text-[#f3a43a]' : 'text-[#7c8aa6]'} />
                 {lang === 'ar' ? 'التتابع اليومي' : 'Daily streak'}
               </h2>
-              <span className="text-xs text-[#6e7a94]" dir="ltr">
+              <span className="text-xs text-[#8592ad]" dir="ltr">
                 {lang === 'ar' ? 'الأطول' : 'best'} {streak.longest}
               </span>
             </div>
@@ -283,7 +283,7 @@ const DashboardPage: React.FC = () => {
                           ? 'border-[#f3a43a]/40 bg-[#f3a43a]/10 text-[#f3a43a]'
                           : d.isFuture
                           ? 'border-[#1c2740] bg-[#0d1420] text-[#33415e]'
-                          : 'border-[#263248] bg-[#0d1420] text-[#4d5a73]'
+                          : 'border-[#263248] bg-[#0d1420] text-[#7c8aa6]'
                       }`}
                     >
                       {d.done ? <Check size={13} /> : WEEK_LABELS[lang][di]}
@@ -310,7 +310,7 @@ const DashboardPage: React.FC = () => {
                     }}
                   />
                 </div>
-                <p className="text-[11px] text-[#6e7a94] mt-2">
+                <p className="text-[11px] text-[#8592ad] mt-2">
                   {streak.daysThisWeek >= streak.weeklyGoal
                     ? lang === 'ar'
                       ? 'أنجزت هدف هذا الأسبوع.'
@@ -373,7 +373,7 @@ const DashboardPage: React.FC = () => {
               className="rounded-2xl border border-[#263248] bg-[#121a2a] p-4"
             >
               <div className="flex items-center justify-between px-2 mb-3 gap-2">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-[#6e7a94]">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[#8592ad]">
                   {moduleShortlist.started
                     ? lang === 'ar'
                       ? 'وحدات قيد التقدم'
@@ -384,7 +384,7 @@ const DashboardPage: React.FC = () => {
                 </h3>
                 <button
                   onClick={() => navigate('/modules')}
-                  className="text-[11px] font-semibold text-[#6e7a94] hover:text-[#00a859] transition-colors flex-shrink-0 touch:min-h-tap touch:px-2 -me-2 select-none"
+                  className="text-[11px] font-semibold text-[#8592ad] hover:text-[#00a859] transition-colors flex-shrink-0 touch:min-h-tap touch:px-2 -me-2 select-none"
                 >
                   {lang === 'ar' ? 'عرض الكل' : 'View all'}
                 </button>
@@ -417,19 +417,19 @@ const DashboardPage: React.FC = () => {
                               style={{ width: `${pct}%`, backgroundColor: mod.iconColor }}
                             />
                           </div>
-                          <span className="text-[10px] text-[#4d5a73] tabular-nums flex-shrink-0">
+                          <span className="text-[10px] text-[#7c8aa6] tabular-nums flex-shrink-0">
                             {done}/{mod.totalLessons}
                           </span>
                         </div>
                       ) : (
-                        <p className="text-[10px] text-[#4d5a73] mt-0.5" dir="ltr">
+                        <p className="text-[10px] text-[#7c8aa6] mt-0.5" dir="ltr">
                           {mod.totalLessons} {t('dashboard.lessonsLabel')}
                         </p>
                       )}
                     </div>
                     <ChevronRight
                       size={15}
-                      className="text-[#4d5a73] group-hover:text-[#9aa5bf] transition-colors flex-shrink-0 rtl-flip"
+                      className="text-[#7c8aa6] group-hover:text-[#9aa5bf] transition-colors flex-shrink-0 rtl-flip"
                     />
                   </button>
                 ))}

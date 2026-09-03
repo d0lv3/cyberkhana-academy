@@ -26,13 +26,13 @@ const BilingualMarkdown: React.FC<BilingualMarkdownProps> = ({ value, onChange, 
             className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${
               lang === l
                 ? 'bg-[#1a2332] text-[#f3f6ff] border border-[#263248]'
-                : 'text-[#6e7a94] hover:text-[#d2d7e3]'
+                : 'text-[#8592ad] hover:text-[#d2d7e3]'
             }`}
           >
             {l === 'en' ? 'English' : 'العربية'}
           </button>
         ))}
-        <span className="px-2 text-[10px] text-[#6e7a94]">
+        <span className="px-2 text-[10px] text-[#8592ad]">
           {lang === 'en' ? 'Required' : 'Optional, falls back to English'}
         </span>
       </div>

@@ -429,7 +429,7 @@ const ProgrammingConceptEditor: React.FC = () => {
 
   const tabCls = (active: boolean) =>
     `flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-      active ? 'bg-[#1a2332] text-[#f3f6ff] border border-[#263248]' : 'text-[#6e7a94] hover:text-[#d2d7e3]'
+      active ? 'bg-[#1a2332] text-[#f3f6ff] border border-[#263248]' : 'text-[#8592ad] hover:text-[#d2d7e3]'
     }`;
 
   return (
@@ -510,7 +510,7 @@ const ProgrammingConceptEditor: React.FC = () => {
               {mdFor(markdownContent, mdLang).trim() ? (
                 <MarkdownPreview content={mdFor(markdownContent, mdLang)} />
               ) : (
-                <p className="text-sm text-[#6e7a94] italic">No markdown content yet, switch to the Editor tab to add some.</p>
+                <p className="text-sm text-[#8592ad] italic">No markdown content yet, switch to the Editor tab to add some.</p>
               )}
             </div>
           </EnhancedCard>
@@ -564,7 +564,7 @@ const ProgrammingConceptEditor: React.FC = () => {
                     >
                       <span
                         className={`mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg transition-colors ${
-                          type === 'lesson' ? 'bg-[#00a859]/15 text-[#00a859]' : 'bg-[#121a2a] text-[#6e7a94]'
+                          type === 'lesson' ? 'bg-[#00a859]/15 text-[#00a859]' : 'bg-[#121a2a] text-[#8592ad]'
                         }`}
                       >
                         <BookOpen size={18} />
@@ -590,7 +590,7 @@ const ProgrammingConceptEditor: React.FC = () => {
                     >
                       <span
                         className={`mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg transition-colors ${
-                          type === 'challenge' ? 'bg-[#f3a43a]/15 text-[#f3a43a]' : 'bg-[#121a2a] text-[#6e7a94]'
+                          type === 'challenge' ? 'bg-[#f3a43a]/15 text-[#f3a43a]' : 'bg-[#121a2a] text-[#8592ad]'
                         }`}
                       >
                         <Trophy size={18} />
@@ -656,7 +656,7 @@ const ProgrammingConceptEditor: React.FC = () => {
             {/* Starter Code */}
             <EnhancedCard padding="none" className="overflow-hidden">
               <div className="px-4 py-3 border-b border-[#263248] bg-[#0b1019] flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-[#6e7a94]">Starter Code</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-[#8592ad]">Starter Code</span>
                 <button
                   type="button"
                   onClick={insertStarterTemplate}
@@ -674,7 +674,7 @@ const ProgrammingConceptEditor: React.FC = () => {
                 {/* Solution */}
                 <EnhancedCard padding="none" className="overflow-hidden">
                   <div className="px-4 py-3 border-b border-[#263248] bg-[#0b1019] flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider text-[#6e7a94]">Solution Code</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#8592ad]">Solution Code</span>
                     <button
                       type="button"
                       onClick={verifySolution}
@@ -699,10 +699,10 @@ const ProgrammingConceptEditor: React.FC = () => {
                             <p className="text-[11px] font-medium text-[#b4bcd0]">{r.description}</p>
                             {!r.passed && (
                               <div className="mt-1 space-y-0.5 text-[10px] font-mono">
-                                <p className="text-[#4d5a73]">
+                                <p className="text-[#7c8aa6]">
                                   Expected: <span className="text-[#00a859] whitespace-pre-wrap">{r.expected || '(empty)'}</span>
                                 </p>
-                                <p className="text-[#4d5a73]">
+                                <p className="text-[#7c8aa6]">
                                   Got: <span className="text-[#ef4444] whitespace-pre-wrap">{r.actual || '(empty)'}</span>
                                 </p>
                               </div>
@@ -739,7 +739,7 @@ const ProgrammingConceptEditor: React.FC = () => {
                         />
                         <div className="grid grid-cols-2 gap-2">
                           <div>
-                            <label className="block text-[10px] font-semibold text-[#4d5a73] mb-1">
+                            <label className="block text-[10px] font-semibold text-[#7c8aa6] mb-1">
                               Stdin input (optional)
                             </label>
                             <textarea
@@ -753,7 +753,7 @@ const ProgrammingConceptEditor: React.FC = () => {
                             />
                           </div>
                           <div>
-                            <label className="block text-[10px] font-semibold text-[#4d5a73] mb-1">
+                            <label className="block text-[10px] font-semibold text-[#7c8aa6] mb-1">
                               Expected output
                             </label>
                             <textarea
@@ -800,9 +800,9 @@ const ProgrammingConceptEditor: React.FC = () => {
           <div className="space-y-4">
             <EnhancedCard padding="none" className="overflow-hidden sticky top-4">
               <div className="px-4 py-3 border-b border-[#263248] bg-[#0b1019] flex items-center gap-2">
-                <Eye size={13} className="text-[#6e7a94]" />
-                <span className="text-xs font-bold uppercase tracking-wider text-[#6e7a94]">Content Preview</span>
-                <span className="ms-auto text-[10px] font-semibold text-[#6e7a94]">
+                <Eye size={13} className="text-[#8592ad]" />
+                <span className="text-xs font-bold uppercase tracking-wider text-[#8592ad]">Content Preview</span>
+                <span className="ms-auto text-[10px] font-semibold text-[#8592ad]">
                   {mdLang === 'ar' ? 'العربية' : 'English'}
                 </span>
               </div>

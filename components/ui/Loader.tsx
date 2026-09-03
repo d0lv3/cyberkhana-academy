@@ -9,7 +9,7 @@ const Loader: React.FC = () => {
           <div className="w-8 h-8 border-4 border-[#263248] rounded-full animate-spin border-b-[#9fef00]" style={{ animationDirection: 'reverse', animationDuration: '0.8s' }} />
         </div>
       </div>
-      <p className="mt-6 text-sm text-[#6e7a94] animate-pulse">Loading...</p>
+      <p className="mt-6 text-sm text-[#8592ad] animate-pulse">Loading...</p>
     </div>
   );
 };

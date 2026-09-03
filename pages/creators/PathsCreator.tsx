@@ -131,7 +131,7 @@ const PathsCreator: React.FC = () => {
         </div>
 
         <div className="space-y-3">
-          <h2 className="text-sm font-bold text-[#6e7a94] uppercase tracking-wider">
+          <h2 className="text-sm font-bold text-[#8592ad] uppercase tracking-wider">
             {t('studio.yourPaths')} {paths.length > 0 && `(${paths.length})`}
           </h2>
 
@@ -140,7 +140,7 @@ const PathsCreator: React.FC = () => {
               <div className="w-14 h-14 rounded-2xl bg-[#121a2a] border border-[#263248] flex items-center justify-center mx-auto mb-4">
                 <Route size={24} className="text-[#a78bfa]" />
               </div>
-              <p className="text-sm text-[#6e7a94] mb-4 max-w-sm mx-auto">
+              <p className="text-sm text-[#8592ad] mb-4 max-w-sm mx-auto">
                 {lang === 'ar'
                   ? 'لا توجد مسارات بعد. اجمع أفضل محتواك في مسار يركّز على المهنة.'
                   : 'No paths yet. Bundle your best content into a career-focused track.'}
@@ -176,19 +176,19 @@ const PathsCreator: React.FC = () => {
                     <h3 className="text-sm font-bold text-[#f3f6ff] truncate">
                       {path.title.en || t('studio.untitled')}
                     </h3>
-                    <p className="text-xs text-[#6e7a94] truncate mt-0.5">
+                    <p className="text-xs text-[#8592ad] truncate mt-0.5">
                       {path.description.en || t('studio.noDescription')}
                     </p>
                   </div>
 
                   <div className="flex items-center gap-2 flex-shrink-0" dir="ltr">
-                    <span className="hidden md:flex text-[10px] font-medium text-[#4d5a73] items-center gap-1">
+                    <span className="hidden md:flex text-[10px] font-medium text-[#7c8aa6] items-center gap-1">
                       <User size={10} /> {authorOf(path)}
                     </span>
-                    <span className="hidden sm:flex text-[10px] text-[#4d5a73] items-center gap-1">
+                    <span className="hidden sm:flex text-[10px] text-[#7c8aa6] items-center gap-1">
                       <ListChecks size={10} /> {path.steps.length} {t('studio.stepsLabel')}
                     </span>
-                    <span className="hidden sm:flex text-[10px] text-[#4d5a73] items-center gap-1">
+                    <span className="hidden sm:flex text-[10px] text-[#7c8aa6] items-center gap-1">
                       <Clock size={10} /> {path.estimatedHours}h
                     </span>
                     <DifficultyBadge difficulty={path.difficulty} />
@@ -197,19 +197,19 @@ const PathsCreator: React.FC = () => {
                     <button
                       onClick={() => handleTogglePublish(path)}
                       title={statusOf(path) === 'published' ? t('studio.unpublish') : t('studio.publish')}
-                      className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#00a859] hover:bg-[#00a859]/10 transition-all"
+                      className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#8592ad] hover:text-[#00a859] hover:bg-[#00a859]/10 transition-all"
                     >
                       {statusOf(path) === 'published' ? <EyeOff size={13} /> : <Eye size={13} />}
                     </button>
                     <button
                       onClick={() => navigate(`/creators/paths/edit/${path.id}`)}
-                      className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#60a5fa] hover:bg-[#60a5fa]/10 transition-all"
+                      className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#8592ad] hover:text-[#60a5fa] hover:bg-[#60a5fa]/10 transition-all"
                     >
                       <Edit3 size={13} />
                     </button>
                     <button
                       onClick={() => handleDelete(path.id)}
-                      className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-red-400 hover:bg-red-500/10 transition-all"
+                      className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#8592ad] hover:text-red-400 hover:bg-red-500/10 transition-all"
                     >
                       <Trash2 size={13} />
                     </button>

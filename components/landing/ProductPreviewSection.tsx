@@ -17,7 +17,7 @@ const CodeLabMockup: React.FC = () => (
         <span className="w-2.5 h-2.5 rounded-full bg-[#2c3a54]" />
         <span className="w-2.5 h-2.5 rounded-full bg-[#2c3a54]" />
         <span className="w-2.5 h-2.5 rounded-full bg-[#2c3a54]" />
-        <span className="ml-2 text-[10px] font-semibold text-[#4d5a73]" style={{ fontFamily: MONO }}>
+        <span className="ml-2 text-[10px] font-semibold text-[#7c8aa6]" style={{ fontFamily: MONO }}>
           port_scanner.py
         </span>
         <span className="ml-auto inline-flex items-center gap-1 text-[9px] px-2 py-0.5 rounded bg-[#9fef00]/10 border border-[#9fef00]/30 text-[#9fef00] font-bold">
@@ -48,7 +48,7 @@ const CodeLabMockup: React.FC = () => (
 
       {/* output */}
       <div className="border-t border-[#1a2332] bg-[#080c14] px-4 py-3 text-[10.5px]" style={{ fontFamily: MONO }}>
-        <p className="text-[#4d5a73] mb-1">{'>'} output</p>
+        <p className="text-[#7c8aa6] mb-1">{'>'} output</p>
         <p className="text-[#9fef00]">Port 80 is OPEN ✓</p>
         <p className="inline-flex items-center gap-1.5 text-[#2dd4bf] mt-1">
           <CheckCircle2 size={11} /> Lesson passed
@@ -82,7 +82,7 @@ const NetSimMockup: React.FC = () => (
         <span className="w-2.5 h-2.5 rounded-full bg-[#2c3a54]" />
         <span className="w-2.5 h-2.5 rounded-full bg-[#2c3a54]" />
         <span className="w-2.5 h-2.5 rounded-full bg-[#2c3a54]" />
-        <span className="ml-2 text-[10px] font-semibold text-[#4d5a73]" style={{ fontFamily: MONO }}>
+        <span className="ml-2 text-[10px] font-semibold text-[#7c8aa6]" style={{ fontFamily: MONO }}>
           packet-flow.sim
         </span>
       </div>
@@ -136,7 +136,7 @@ const NetSimMockup: React.FC = () => (
             left: { duration: SIM_CYCLE, times: [0.55, 0.73, 0.92], repeat: Infinity, ease: 'easeInOut' },
             opacity: { duration: SIM_CYCLE, times: [0, 0.54, 0.59, 0.88, 0.94, 1], repeat: Infinity },
           }}
-          className="absolute top-[34%] -translate-x-1/2 px-2 py-0.5 rounded-full bg-[#00a859] text-white text-[9px] font-black shadow-lg shadow-[#00a859]/30"
+          className="absolute top-[34%] -translate-x-1/2 px-2 py-0.5 rounded-full bg-[#007a42] text-white text-[9px] font-black shadow-lg shadow-[#00a859]/30"
           style={{ fontFamily: MONO }}
         >
           200 OK
@@ -165,7 +165,7 @@ const EXPLOIT_LINES: readonly (readonly (readonly [string, string])[])[] = [
   [],
   [['void', '#c084fc'], [' vuln(', '#60a5fa'], ['char', '#c084fc'], [' *in) {', '#d2d7e3']],
   [['  char', '#c084fc'], [' buf[', '#d2d7e3'], ['64', '#9fef00'], ['];', '#d2d7e3']],
-  [['  strcpy(buf, in);', '#d2d7e3'], ['  // no bounds check', '#4d5a73']],
+  [['  strcpy(buf, in);', '#d2d7e3'], ['  // no bounds check', '#7c8aa6']],
   [['}', '#d2d7e3']],
 ];
 
@@ -213,7 +213,7 @@ const PracticeLabMockup: React.FC = () => {
           <span className="w-2.5 h-2.5 rounded-full bg-[#2c3a54]" />
           <span className="w-2.5 h-2.5 rounded-full bg-[#2c3a54]" />
           <span className="w-2.5 h-2.5 rounded-full bg-[#2c3a54]" />
-          <span className="ml-2 text-[10px] font-semibold text-[#4d5a73]" style={{ fontFamily: MONO }}>
+          <span className="ml-2 text-[10px] font-semibold text-[#7c8aa6]" style={{ fontFamily: MONO }}>
             exploit.c
           </span>
           <span className="ml-auto inline-flex items-center gap-1 text-[9px] px-2 py-0.5 rounded bg-[#f3a43a]/10 border border-[#f3a43a]/30 text-[#f3a43a] font-bold">

@@ -249,7 +249,7 @@ const CreatorDashboard: React.FC = () => {
                   className="absolute end-0 z-30 mt-2 w-72 rounded-xl border border-[#263248] bg-[#0e1522] p-1.5 shadow-xl shadow-black/50"
                 >
                   {creatableTypes.length === 0 && (
-                    <p className="px-3 py-2.5 text-xs text-[#6e7a94]">
+                    <p className="px-3 py-2.5 text-xs text-[#8592ad]">
                       {lang === 'ar'
                         ? 'لم يمنحك المدير صلاحيات إنشاء بعد.'
                         : 'An admin hasn’t granted you any creation permissions yet.'}
@@ -303,7 +303,7 @@ const CreatorDashboard: React.FC = () => {
                   <span className="block text-xl font-black text-[#f3f6ff] leading-none" dir="ltr">
                     {tile.value}
                   </span>
-                  <span className="block text-[11px] text-[#6e7a94] mt-1">{tile.label}</span>
+                  <span className="block text-[11px] text-[#8592ad] mt-1">{tile.label}</span>
                 </span>
               </button>
             );
@@ -333,14 +333,14 @@ const CreatorDashboard: React.FC = () => {
                 >
                   <type.icon size={24} style={{ color: type.color }} />
                 </div>
-                <span className="text-[11px] font-semibold text-[#6e7a94]">
+                <span className="text-[11px] font-semibold text-[#8592ad]">
                   {type.count} {type.count === 1 ? t('studio.item') : t('studio.items')}
                 </span>
               </div>
               <h3 className="text-base font-bold text-[#f3f6ff] mb-1.5">{type.title}</h3>
               <p className="text-xs text-[#9aa5bf] leading-relaxed mb-5">{type.description}</p>
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#6e7a94] group-hover:text-[#d2d7e3] transition-colors">
+                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#8592ad] group-hover:text-[#d2d7e3] transition-colors">
                   {t('studio.manage')} <ArrowUpRight size={12} />
                 </span>
               </div>
@@ -378,7 +378,7 @@ const CreatorDashboard: React.FC = () => {
                     key={f}
                     onClick={() => setFilter(f)}
                     className={`flex-shrink-0 whitespace-nowrap px-2.5 py-1.5 touch:min-h-tap touch:px-3.5 rounded-md text-[11px] font-semibold transition-colors select-none ${
-                      filter === f ? 'bg-[#1a2332] text-[#f3f6ff]' : 'text-[#6e7a94] hover:text-[#d2d7e3]'
+                      filter === f ? 'bg-[#1a2332] text-[#f3f6ff]' : 'text-[#8592ad] hover:text-[#d2d7e3]'
                     }`}
                   >
                     {labels[f]}
@@ -389,13 +389,13 @@ const CreatorDashboard: React.FC = () => {
 
             {/* Search */}
             <div className="relative w-full sm:w-auto min-w-0">
-              <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#4d5a73]" />
+              <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#7c8aa6]" />
               <input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t('studio.search')}
-                className="w-full sm:w-40 bg-[#0b1019] border border-[#263248] rounded-lg pl-8 pr-3 py-2 text-xs text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#3d4a63]"
+                className="w-full sm:w-40 bg-[#0b1019] border border-[#263248] rounded-lg pl-8 pr-3 py-2 text-xs text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#7c8aa6]"
                 dir="ltr"
               />
             </div>
@@ -405,12 +405,12 @@ const CreatorDashboard: React.FC = () => {
         {filtered.length === 0 ? (
           <EnhancedCard padding="xl" className="text-center">
             <div className="w-14 h-14 rounded-2xl bg-[#121a2a] border border-[#263248] flex items-center justify-center mx-auto mb-4">
-              <PenTool size={24} className="text-[#6e7a94]" />
+              <PenTool size={24} className="text-[#8592ad]" />
             </div>
             <h3 className="text-base font-bold text-[#f3f6ff] mb-1.5">
               {allContent.length === 0 ? t('studio.startCreating') : t('studio.nothingMatches')}
             </h3>
-            <p className="text-sm text-[#6e7a94] max-w-sm mx-auto mb-5">
+            <p className="text-sm text-[#8592ad] max-w-sm mx-auto mb-5">
               {allContent.length === 0 ? t('studio.emptyHint') : t('studio.tryDifferent')}
             </p>
             {allContent.length === 0 && (
@@ -444,16 +444,16 @@ const CreatorDashboard: React.FC = () => {
                       <p className="text-sm font-semibold text-[#f3f6ff] truncate group-hover:text-[#00a859] transition-colors">
                         {item.title}
                       </p>
-                      <p className="text-[11px] text-[#6e7a94] truncate" dir="ltr">
+                      <p className="text-[11px] text-[#8592ad] truncate" dir="ltr">
                         {item.kindLabel}
                         {item.subtitle ? ` · ${item.subtitle}` : ''}
                       </p>
                     </div>
 
-                    <span className="hidden md:block text-[11px] text-[#6e7a94] flex-shrink-0">
+                    <span className="hidden md:block text-[11px] text-[#8592ad] flex-shrink-0">
                       {item.author}
                     </span>
-                    <span className="hidden sm:block text-[11px] text-[#4d5a73] flex-shrink-0 w-16 text-right" dir="ltr">
+                    <span className="hidden sm:block text-[11px] text-[#7c8aa6] flex-shrink-0 w-16 text-right" dir="ltr">
                       {timeAgo(item.updatedAt, lang)}
                     </span>
                     <StatusBadge status={item.status} />

@@ -327,7 +327,7 @@ const CourseTerminal = forwardRef<CourseTerminalHandle, CourseTerminalProps>(({ 
             )}
             {l.kind === 'out' && <span className="text-[#c9d3e0]">{l.text}</span>}
             {l.kind === 'err' && <span className="text-[#ff6b6b]">{l.text}</span>}
-            {l.kind === 'sys' && <span className="text-[#6e7a94]">{l.text}</span>}
+            {l.kind === 'sys' && <span className="text-[#8592ad]">{l.text}</span>}
           </div>
         ))}
 

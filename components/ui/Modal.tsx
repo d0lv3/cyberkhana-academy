@@ -24,7 +24,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, classNa
         {title && (
           <div className="flex justify-between items-center p-6 pb-0 mb-4">
             <h2 className="text-xl font-bold text-[#f3f6ff]">{title}</h2>
-            <button onClick={onClose} className="text-[#6e7a94] hover:text-[#d2d7e3] transition-colors">
+            <button onClick={onClose} className="text-[#8592ad] hover:text-[#d2d7e3] transition-colors">
               <X size={24} />
             </button>
           </div>
@@ -32,7 +32,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, classNa
         {!title && (
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-[#6e7a94] hover:text-white transition-colors z-10"
+            className="absolute top-4 right-4 text-[#8592ad] hover:text-white transition-colors z-10"
           >
             <X size={24} />
           </button>

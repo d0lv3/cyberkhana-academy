@@ -52,14 +52,14 @@ const CreatorLayout: React.FC<CreatorLayoutProps> = ({
           <button
             onClick={() => navigate(backTo)}
             aria-label={backLabel ?? t('studio.backDefault')}
-            className="flex items-center justify-center sm:justify-start gap-2 text-sm text-[#6e7a94] hover:text-[#d2d7e3] transition-colors flex-shrink-0 min-h-tap min-w-tap sm:min-w-0 sm:mt-1 -ms-2 sm:ms-0"
+            className="flex items-center justify-center sm:justify-start gap-2 text-sm text-[#8592ad] hover:text-[#d2d7e3] transition-colors flex-shrink-0 min-h-tap min-w-tap sm:min-w-0 sm:mt-1 -ms-2 sm:ms-0"
           >
             <ArrowLeft size={16} className="rtl-flip" />
             <span className="hidden sm:inline">{backLabel ?? t('studio.backDefault')}</span>
           </button>
           <div className="min-w-0 self-center sm:self-auto">
             <h1 className="text-lg sm:text-2xl font-bold text-[#f3f6ff] truncate">{title}</h1>
-            {subtitle && <p className="text-sm text-[#6e7a94] mt-0.5 truncate">{subtitle}</p>}
+            {subtitle && <p className="text-sm text-[#8592ad] mt-0.5 truncate">{subtitle}</p>}
           </div>
         </div>
 
@@ -78,7 +78,7 @@ const CreatorLayout: React.FC<CreatorLayoutProps> = ({
               href={previewHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-[#6e7a94] bg-[#121a2a] border border-[#263248] hover:text-[#d2d7e3] hover:border-[#354562] transition-all"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-[#8592ad] bg-[#121a2a] border border-[#263248] hover:text-[#d2d7e3] hover:border-[#354562] transition-all"
             >
               <ExternalLink size={13} /> {t('studio.preview')}
             </a>

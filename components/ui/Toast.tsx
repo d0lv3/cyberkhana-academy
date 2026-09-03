@@ -52,6 +52,11 @@ const Toast: React.FC<ToastProps> = ({ id, type, message, duration = 5000, onClo
 
   return (
     <div
+      /* A toast was previously announced to nobody: the type was carried by an
+         icon and a colour only. Failures interrupt; successes and info wait for
+         a pause, so they do not talk over whatever is being read. */
+      role={type === 'error' || type === 'warning' ? 'alert' : 'status'}
+      aria-live={type === 'error' || type === 'warning' ? 'assertive' : 'polite'}
       className={`
         ${getBackgroundColor()}
         ${isVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}

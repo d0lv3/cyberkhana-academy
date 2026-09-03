@@ -102,7 +102,7 @@ const LessonQuiz: React.FC<LessonQuizProps> = ({ questions, onPass, passed = fal
             <h3 className="text-sm font-bold text-[#f3f6ff]">
               {ar ? 'اختبر فهمك' : 'Check your understanding'}
             </h3>
-            <p className="text-xs text-[#6e7a94]" dir="ltr">
+            <p className="text-xs text-[#8592ad]" dir="ltr">
               {questions.length} {ar ? 'أسئلة' : 'questions'} · {ar ? 'النجاح' : 'pass'} ≥ {passNeeded}
             </p>
           </div>
@@ -169,7 +169,7 @@ const LessonQuiz: React.FC<LessonQuizProps> = ({ questions, onPass, passed = fal
   return (
     <div className={frame}>
       <div className="px-5 py-3 border-b border-[#263248] bg-[#0e1626] flex items-center justify-between">
-        <span className="text-[11px] font-bold uppercase tracking-wider text-[#6e7a94]">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-[#8592ad]">
           {ar ? 'سؤال' : 'Question'} {idx + 1} / {qs.length}
         </span>
         <div className="flex items-center gap-1" dir="ltr">
@@ -195,7 +195,7 @@ const LessonQuiz: React.FC<LessonQuizProps> = ({ questions, onPass, passed = fal
             if (revealed) {
               if (isCorrect) cls = 'border-[#00a859] bg-[#00a859]/10 text-[#f3f6ff]';
               else if (isSelected) cls = 'border-red-500/60 bg-red-500/10 text-[#f3f6ff]';
-              else cls = 'border-[#263248] bg-[#0d1117] text-[#6e7a94]';
+              else cls = 'border-[#263248] bg-[#0d1117] text-[#8592ad]';
             } else if (isSelected) {
               cls = 'border-[#9fef00]/60 bg-[#9fef00]/10 text-[#f3f6ff]';
             }

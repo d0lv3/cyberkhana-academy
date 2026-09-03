@@ -99,7 +99,7 @@ const LiquidLogoLoader: React.FC<LiquidLogoLoaderProps> = ({ size = 96, classNam
 export const FullscreenLiquidLoader: React.FC<{ label?: string }> = ({ label }) => (
   <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-[#0d1117]">
     <LiquidLogoLoader size={104} />
-    {label ? <p className="text-sm tracking-wide text-[#6e7a94]">{label}</p> : null}
+    {label ? <p className="text-sm tracking-wide text-[#8592ad]">{label}</p> : null}
   </div>
 );
 

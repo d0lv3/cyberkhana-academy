@@ -68,7 +68,7 @@ function DynamicList<T>({
                 type="button"
                 onClick={() => moveUp(index)}
                 disabled={index === 0}
-                className="text-[#4d5a73] hover:text-[#d2d7e3] disabled:opacity-20 transition-colors"
+                className="text-[#7c8aa6] hover:text-[#d2d7e3] disabled:opacity-20 transition-colors"
               >
                 <ChevronUp size={12} />
               </button>
@@ -76,7 +76,7 @@ function DynamicList<T>({
                 type="button"
                 onClick={() => moveDown(index)}
                 disabled={index === items.length - 1}
-                className="text-[#4d5a73] hover:text-[#d2d7e3] disabled:opacity-20 transition-colors"
+                className="text-[#7c8aa6] hover:text-[#d2d7e3] disabled:opacity-20 transition-colors"
               >
                 <ChevronDown size={12} />
               </button>
@@ -91,7 +91,7 @@ function DynamicList<T>({
             <button
               type="button"
               onClick={() => removeItem(index)}
-              className="flex-shrink-0 w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#4d5a73] hover:text-red-400 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100"
+              className="flex-shrink-0 w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#7c8aa6] hover:text-red-400 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100"
             >
               <Trash2 size={13} />
             </button>
@@ -103,7 +103,7 @@ function DynamicList<T>({
         <button
           type="button"
           onClick={addItem}
-          className="mt-2 flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-[#6e7a94] bg-[#0d1420] border border-dashed border-[#263248] hover:border-[#00a859]/40 hover:text-[#00a859] transition-all w-full justify-center"
+          className="mt-2 flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-[#8592ad] bg-[#0d1420] border border-dashed border-[#263248] hover:border-[#00a859]/40 hover:text-[#00a859] transition-all w-full justify-center"
         >
           <Plus size={13} /> {addLabel}
         </button>

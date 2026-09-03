@@ -127,7 +127,7 @@ const FlagSubmission: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4" dir="ltr">
           <div className="relative group">
-            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-[#6e7a94] group-focus-within:text-[#9fef00] transition-colors">
+            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-[#8592ad] group-focus-within:text-[#9fef00] transition-colors">
               <Zap size={18} />
             </div>
             <input
@@ -135,7 +135,7 @@ const FlagSubmission: React.FC = () => {
               placeholder="khana{...}"
               value={flag}
               onChange={(e) => setFlag(e.target.value)}
-              className="w-full pl-12 pr-4 py-3.5 bg-[#0d1117] border border-[#263248] focus:border-[#9fef00]/50 focus:outline-none rounded-xl text-[#f3f6ff] font-mono text-sm placeholder:text-[#3d4a63] transition-all"
+              className="w-full pl-12 pr-4 py-3.5 bg-[#0d1117] border border-[#263248] focus:border-[#9fef00]/50 focus:outline-none rounded-xl text-[#f3f6ff] font-mono text-sm placeholder:text-[#7c8aa6] transition-all"
             />
           </div>
           <button
@@ -404,8 +404,8 @@ const ModuleViewerPage: React.FC = () => {
         </div>
         <div className="flex items-center gap-3" dir="ltr">
           <div className="hidden sm:block text-right">
-            <p className="text-[10px] text-[#6e7a94] font-semibold uppercase tracking-wider">Progress</p>
-            <p className="text-sm font-bold text-[#f3f6ff]">{completedCount}<span className="text-[#6e7a94]">/{totalLectures}</span></p>
+            <p className="text-[10px] text-[#8592ad] font-semibold uppercase tracking-wider">Progress</p>
+            <p className="text-sm font-bold text-[#f3f6ff]">{completedCount}<span className="text-[#8592ad]">/{totalLectures}</span></p>
           </div>
           <div className="w-28"><ProgressBar value={progressPct} color="neon" size="sm" /></div>
         </div>
@@ -524,7 +524,7 @@ const ModuleViewerPage: React.FC = () => {
                         <ClipboardCheck className="w-4 h-4 text-[#00a859]" />
                         <h3 className="text-sm font-semibold text-[#f3f6ff]">Knowledge Check</h3>
                       </div>
-                      <span className="text-xs text-[#6e7a94]">
+                      <span className="text-xs text-[#8592ad]">
                         {questions.length} {questions.length === 1 ? 'question' : 'questions'}
                       </span>
                     </div>
@@ -603,7 +603,7 @@ const ModuleViewerPage: React.FC = () => {
                                   }`}
                                 >
                                   <span className={`w-6 h-6 rounded-md border flex items-center justify-center text-xs font-semibold flex-shrink-0 ${
-                                    isSelected ? 'border-[#00a859]/50 bg-[#00a859]/10 text-[#00a859]' : 'border-[#263248] text-[#6e7a94]'
+                                    isSelected ? 'border-[#00a859]/50 bg-[#00a859]/10 text-[#00a859]' : 'border-[#263248] text-[#8592ad]'
                                   }`}>
                                     {LETTERS[idx]}
                                   </span>
@@ -666,14 +666,14 @@ const ModuleViewerPage: React.FC = () => {
                                   <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
                                     passed ? 'bg-[#0f1f15] border-2 border-[#00a859]/30' : 'bg-[#1a2332] border-2 border-[#263248]'
                                   }`}>
-                                    <Award size={28} className={passed ? 'text-[#00a859]' : 'text-[#6e7a94]'} />
+                                    <Award size={28} className={passed ? 'text-[#00a859]' : 'text-[#8592ad]'} />
                                   </div>
                                   <h4 className="text-lg font-bold text-[#f3f6ff] mb-1">
                                     {passed ? 'Assessment Passed' : 'Assessment Complete'}
                                   </h4>
                                   <p className="text-2xl font-bold text-[#f3f6ff] mb-1">
                                     {score}/{total}
-                                    <span className="text-sm text-[#6e7a94] ml-2">({pct}%)</span>
+                                    <span className="text-sm text-[#8592ad] ml-2">({pct}%)</span>
                                   </p>
                                   {passed ? (
                                     <p className="text-sm text-[#00a859]">All answers correct. This lesson is now complete.</p>

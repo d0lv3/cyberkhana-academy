@@ -238,7 +238,7 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
         <div className="flex items-center gap-1.5">
           <button
             onClick={handleReset}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[11px] font-medium text-[#4d5a73] hover:text-[#8390ac] hover:bg-[#0d1420] transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[11px] font-medium text-[#7c8aa6] hover:text-[#8390ac] hover:bg-[#0d1420] transition-colors"
             title="Reset to starter code"
           >
             <RotateCcw size={12} /> Reset
@@ -297,9 +297,9 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
               htmlFor="stdin-box"
               className="flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-[#8390ac]"
             >
-              <Keyboard size={12} className="text-[#4d5a73]" />
+              <Keyboard size={12} className="text-[#7c8aa6]" />
               Input
-              <span className="text-[#4d5a73]">, one line per input() call</span>
+              <span className="text-[#7c8aa6]">, one line per input() call</span>
             </label>
             <textarea
               id="stdin-box"
@@ -309,7 +309,7 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
               dir="ltr"
               style={{ height: stdinHeight }}
               placeholder="Type the lines your program should read..."
-              className="w-full resize-none bg-[#080c14] px-3 py-2 font-mono text-xs text-[#d2d7e3] placeholder:text-[#3d4a63] focus:outline-none custom-scrollbar"
+              className="w-full resize-none bg-[#080c14] px-3 py-2 font-mono text-xs text-[#d2d7e3] placeholder:text-[#7c8aa6] focus:outline-none custom-scrollbar"
             />
           </div>
         </>
@@ -358,10 +358,10 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
                     <p className="text-[11px] font-medium text-[#b4bcd0]">{tr.description}</p>
                     {!tr.passed && (
                       <div className="mt-1.5 space-y-0.5 text-[10px] font-mono">
-                        <p className="text-[#4d5a73]">
+                        <p className="text-[#7c8aa6]">
                           Expected: <span className="text-[#00a859]">{tr.expected || '(empty)'}</span>
                         </p>
-                        <p className="text-[#4d5a73]">
+                        <p className="text-[#7c8aa6]">
                           Got: <span className="text-[#ef4444]">{tr.actual || '(empty)'}</span>
                         </p>
                       </div>
@@ -402,7 +402,7 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
           {solution && (
             <button
               onClick={() => setShowSolution(!showSolution)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[11px] font-medium text-[#6e7a94] bg-[#0d1420] border border-[#1e2a3d] hover:border-[#2a3a52] transition-colors"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[11px] font-medium text-[#8592ad] bg-[#0d1420] border border-[#1e2a3d] hover:border-[#2a3a52] transition-colors"
             >
               <Eye size={11} />
               {showSolution ? 'Hide Solution' : 'Show Solution'}
@@ -425,7 +425,7 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
       {showSolution && solution && (
         <div className="mt-2 rounded-lg border border-[#1e2a3d] overflow-hidden flex-shrink-0">
           <div className="px-3 py-1.5 bg-[#0b1019] border-b border-[#1e2a3d]">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#4d5a73]">Solution</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#7c8aa6]">Solution</span>
           </div>
           <div className="pointer-events-none opacity-85">
             <CodeEditor value={solution} onChange={() => {}} language={language} readOnly />

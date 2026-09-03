@@ -22,7 +22,7 @@ interface VFile {
 
 const c = (color: string) => (txt: React.ReactNode) => <span style={{ color }}>{txt}</span>;
 const green = c('#9fef00');
-const dim = c('#6e7a94');
+const dim = c('#8592ad');
 const blue = c('#60a5fa');
 const teal = c('#2dd4bf');
 const amber = c('#f3a43a');
@@ -646,7 +646,7 @@ const InteractiveTerminal: React.FC<InteractiveTerminalProps> = ({ open, onClose
       } else {
         setHistory((h) => [
           ...h,
-          { output: <p className="text-[#6e7a94] whitespace-pre-wrap">{candidates.join('   ')}</p> },
+          { output: <p className="text-[#8592ad] whitespace-pre-wrap">{candidates.join('   ')}</p> },
         ]);
       }
       return;
@@ -703,12 +703,12 @@ const InteractiveTerminal: React.FC<InteractiveTerminalProps> = ({ open, onClose
               />
               <span className="w-3 h-3 rounded-full bg-[#febc2e]" />
               <span className="w-3 h-3 rounded-full bg-[#28c840]" />
-              <span className="ml-2 text-[11px] font-semibold text-[#6e7a94]" style={{ fontFamily: MONO }}>
+              <span className="ml-2 text-[11px] font-semibold text-[#8592ad]" style={{ fontFamily: MONO }}>
                 {USER}@{HOST}: ~
               </span>
               <button
                 onClick={onClose}
-                className="ml-auto text-[#4d5a73] hover:text-[#d2d7e3] transition"
+                className="ml-auto text-[#7c8aa6] hover:text-[#d2d7e3] transition"
                 aria-label="Close"
               >
                 <X size={15} />

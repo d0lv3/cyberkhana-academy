@@ -201,11 +201,11 @@ const NetworkingCreator: React.FC = () => {
       {/* Built-in lessons */}
       {visibleStatic.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-sm font-bold text-[#6e7a94] uppercase tracking-wider">
+          <h2 className="text-sm font-bold text-[#8592ad] uppercase tracking-wider">
             {t('studio.builtInLessons')}
           </h2>
           {isAdmin && (
-            <p className="text-xs text-[#6e7a94] -mt-1">
+            <p className="text-xs text-[#8592ad] -mt-1">
               {lang === 'ar'
                 ? 'كمشرف، يمكنك تعديل الدروس المدمجة. أول حفظ ينشئ نسخة قابلة للتعديل تحل محل الأصل.'
                 : 'As an admin you can edit built-in lessons. The first save creates an editable copy that replaces the original.'}
@@ -221,26 +221,26 @@ const NetworkingCreator: React.FC = () => {
                   <h3 className="text-sm font-bold text-[#f3f6ff] truncate">
                     {lesson.title.en}
                   </h3>
-                  <p className="text-xs text-[#6e7a94] truncate mt-0.5">
+                  <p className="text-xs text-[#8592ad] truncate mt-0.5">
                     {lesson.description.en}
                   </p>
                 </div>
                 <div className="flex items-center gap-3 flex-shrink-0" dir="ltr">
-                  <span className="text-[10px] font-medium text-[#4d5a73] flex items-center gap-1">
+                  <span className="text-[10px] font-medium text-[#7c8aa6] flex items-center gap-1">
                     <Clock size={10} /> {lesson.estimatedMinutes}m
                   </span>
-                  <span className="text-[10px] font-medium text-[#4d5a73] flex items-center gap-1">
+                  <span className="text-[10px] font-medium text-[#7c8aa6] flex items-center gap-1">
                     <Activity size={10} /> {simulationStepCount(lesson.simulation)}{' '}
                     {t('studio.stepsLabel')}
                   </span>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#1a2332] border border-[#263248] text-[#6e7a94]">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#1a2332] border border-[#263248] text-[#8592ad]">
                     {t('studio.builtIn')}
                   </span>
                   {isAdmin && (
                     <button
                       onClick={() => editBuiltin(lesson.id)}
                       title={lang === 'ar' ? 'تعديل (مشرف)' : 'Edit as admin'}
-                      className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#9fef00] hover:bg-[#9fef00]/10 transition-all"
+                      className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#8592ad] hover:text-[#9fef00] hover:bg-[#9fef00]/10 transition-all"
                     >
                       <Edit3 size={13} />
                     </button>
@@ -254,13 +254,13 @@ const NetworkingCreator: React.FC = () => {
 
       {/* Creator lessons */}
       <div className="space-y-3">
-        <h2 className="text-sm font-bold text-[#6e7a94] uppercase tracking-wider">
+        <h2 className="text-sm font-bold text-[#8592ad] uppercase tracking-wider">
           {t('studio.yourLessons')} {creatorLessons.length > 0 && `(${creatorLessons.length})`}
         </h2>
 
         {creatorLessons.length === 0 ? (
           <EnhancedCard padding="xl" className="text-center">
-            <p className="text-sm text-[#6e7a94] mb-4">
+            <p className="text-sm text-[#8592ad] mb-4">
               {lang === 'ar'
                 ? 'لا توجد دروس مخصصة بعد. أنشئ أول درس شبكات لك!'
                 : 'No custom lessons yet. Create your first networking lesson!'}
@@ -289,7 +289,7 @@ const NetworkingCreator: React.FC = () => {
                   {statusOf(lesson) === 'published' ? (
                     <Eye size={16} className="text-[#00a859]" />
                   ) : (
-                    <EyeOff size={16} className="text-[#6e7a94]" />
+                    <EyeOff size={16} className="text-[#8592ad]" />
                   )}
                 </div>
 
@@ -297,16 +297,16 @@ const NetworkingCreator: React.FC = () => {
                   <h3 className="text-sm font-bold text-[#f3f6ff] truncate">
                     {lesson.title.en || t('studio.untitled')}
                   </h3>
-                  <p className="text-xs text-[#6e7a94] truncate mt-0.5">
+                  <p className="text-xs text-[#8592ad] truncate mt-0.5">
                     {lesson.description.en || t('studio.noDescription')}
                   </p>
                 </div>
 
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <span className="hidden md:flex text-[10px] font-medium text-[#4d5a73] items-center gap-1">
+                  <span className="hidden md:flex text-[10px] font-medium text-[#7c8aa6] items-center gap-1">
                     <User size={10} /> {authorOf(lesson)}
                   </span>
-                  <span className="text-[10px] font-medium text-[#4d5a73] flex items-center gap-1">
+                  <span className="text-[10px] font-medium text-[#7c8aa6] flex items-center gap-1">
                     <Clock size={10} /> {lesson.estimatedMinutes}m
                   </span>
 
@@ -314,7 +314,7 @@ const NetworkingCreator: React.FC = () => {
 
                   <button
                     onClick={() => handleTogglePublish(lesson)}
-                    className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#00a859] hover:bg-[#00a859]/10 transition-all"
+                    className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#8592ad] hover:text-[#00a859] hover:bg-[#00a859]/10 transition-all"
                     title={statusOf(lesson) === 'published' ? t('studio.unpublish') : t('studio.publish')}
                   >
                     {statusOf(lesson) === 'published' ? <EyeOff size={13} /> : <Eye size={13} />}
@@ -322,7 +322,7 @@ const NetworkingCreator: React.FC = () => {
 
                   <button
                     onClick={() => navigate(`/creators/networking/edit/${lesson.id}`)}
-                    className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#60a5fa] hover:bg-[#60a5fa]/10 transition-all"
+                    className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#8592ad] hover:text-[#60a5fa] hover:bg-[#60a5fa]/10 transition-all"
                     title={t('studio.edit')}
                   >
                     <Edit3 size={13} />
@@ -330,7 +330,7 @@ const NetworkingCreator: React.FC = () => {
 
                   <button
                     onClick={() => handleDelete(lesson.id)}
-                    className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-red-400 hover:bg-red-500/10 transition-all"
+                    className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#8592ad] hover:text-red-400 hover:bg-red-500/10 transition-all"
                     title={t('studio.delete')}
                   >
                     <Trash2 size={13} />
@@ -348,7 +348,7 @@ const NetworkingCreator: React.FC = () => {
         title={(l) => l.title.en || t('studio.untitled')}
         subtitle={(l) => l.description.en || t('studio.noDescription')}
         meta={(l) => (
-          <span className="flex items-center gap-1 text-[10px] font-medium text-[#4d5a73]">
+          <span className="flex items-center gap-1 text-[10px] font-medium text-[#7c8aa6]">
             <Clock size={10} /> {l.estimatedMinutes}m
           </span>
         )}
@@ -363,12 +363,12 @@ const NetworkingCreator: React.FC = () => {
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <ShieldCheck size={14} className="text-[#f3a43a]" />
-            <h2 className="text-sm font-bold text-[#6e7a94] uppercase tracking-wider">
+            <h2 className="text-sm font-bold text-[#8592ad] uppercase tracking-wider">
               {lang === 'ar' ? 'دروس الشبكات المنشورة وقيد المراجعة' : 'Published & in-review networking lessons'} (
               {allPublished.length})
             </h2>
           </div>
-          <p className="text-xs text-[#6e7a94] -mt-1">
+          <p className="text-xs text-[#8592ad] -mt-1">
             {lang === 'ar'
               ? 'كل ما هو منشور على المنصة، بما في ذلك دروسك. يمكنك تعديل أي منها وتبقى ملكية المؤلف كما هي.'
               : "Everything live on the platform plus everything submitted for review, your own lessons included. You can edit any of them; the original author is kept."}
@@ -396,17 +396,17 @@ const NetworkingCreator: React.FC = () => {
                   <h3 className="text-sm font-bold text-[#f3f6ff] truncate">
                     {lesson.title.en || t('studio.untitled')}
                   </h3>
-                  <p className="text-xs text-[#6e7a94] truncate mt-0.5">
+                  <p className="text-xs text-[#8592ad] truncate mt-0.5">
                     {lesson.description.en || t('studio.noDescription')}
                   </p>
                 </div>
 
                 <div className="flex items-center gap-2 flex-shrink-0" dir="ltr">
-                  <span className="hidden md:flex text-[10px] font-medium text-[#4d5a73] items-center gap-1">
+                  <span className="hidden md:flex text-[10px] font-medium text-[#7c8aa6] items-center gap-1">
                     <User size={10} />{' '}
                     {ownerLabel(lesson._ownerId, lesson._ownerName, user?._id, lang)}
                   </span>
-                  <span className="text-[10px] font-medium text-[#4d5a73] flex items-center gap-1">
+                  <span className="text-[10px] font-medium text-[#7c8aa6] flex items-center gap-1">
                     <Clock size={10} /> {lesson.estimatedMinutes}m
                   </span>
                   <StatusBadge status={statusOf(lesson)} />
@@ -420,7 +420,7 @@ const NetworkingCreator: React.FC = () => {
                           ? 'تعديل (مشرف)'
                           : 'Edit as admin'
                     }
-                    className={`w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] transition-all ${
+                    className={`w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#8592ad] transition-all ${
                       isMine(lesson)
                         ? 'hover:text-[#60a5fa] hover:bg-[#60a5fa]/10'
                         : 'hover:text-[#f3a43a] hover:bg-[#f3a43a]/10'

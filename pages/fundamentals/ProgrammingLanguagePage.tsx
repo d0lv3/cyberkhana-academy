@@ -91,7 +91,7 @@ const ProgrammingLanguagePage: React.FC = () => {
               <div className="flex items-center gap-5 p-5">
                 {/* Module number */}
                 <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-[#1a2332] border border-[#263248] flex items-center justify-center">
-                  <span className="text-lg font-bold text-[#6e7a94] group-hover:text-[#00a859] transition-colors">
+                  <span className="text-lg font-bold text-[#8592ad] group-hover:text-[#00a859] transition-colors">
                     {modIdx + 1}
                   </span>
                 </div>
@@ -105,7 +105,7 @@ const ProgrammingLanguagePage: React.FC = () => {
                     {mod.description[lang]}
                   </p>
                   <div className="flex items-center gap-3 mt-2">
-                    <span className="flex items-center gap-1 text-xs text-[#6e7a94]">
+                    <span className="flex items-center gap-1 text-xs text-[#8592ad]">
                       <BookOpen size={12} /> {lessonCount} {lessonCount === 1 ? 'lesson' : 'lessons'}
                     </span>
                     {challengeCount > 0 && (
@@ -136,7 +136,7 @@ const ProgrammingLanguagePage: React.FC = () => {
 
                 <ChevronRight
                   size={18}
-                  className="text-[#3d4a63] group-hover:text-[#00a859] transition-colors flex-shrink-0"
+                  className="text-[#7c8aa6] group-hover:text-[#00a859] transition-colors flex-shrink-0"
                 />
               </div>
             </EnhancedCard>

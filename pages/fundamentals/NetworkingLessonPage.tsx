@@ -154,7 +154,7 @@ const NetworkingLessonPage: React.FC = () => {
             {lesson.tags.slice(0, 4).map((tag) => (
               <span
                 key={tag}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-[#0e1522] border border-[#263248] text-[#6e7a94]"
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-[#0e1522] border border-[#263248] text-[#8592ad]"
               >
                 <Tag size={8} /> {tag}
               </span>
@@ -197,7 +197,7 @@ const NetworkingLessonPage: React.FC = () => {
             className={`flex-1 flex items-center justify-center gap-2 py-3 text-xs font-semibold uppercase tracking-wider transition-colors ${
               mobileTab === 'content'
                 ? 'text-[#00a859] border-b-2 border-[#00a859]'
-                : 'text-[#6e7a94]'
+                : 'text-[#8592ad]'
             }`}
           >
             <BookOpen size={14} /> {lang === 'ar' ? 'المحتوى' : 'Content'}
@@ -207,7 +207,7 @@ const NetworkingLessonPage: React.FC = () => {
             className={`flex-1 flex items-center justify-center gap-2 py-3 text-xs font-semibold uppercase tracking-wider transition-colors ${
               mobileTab === 'simulation'
                 ? 'text-[#00a859] border-b-2 border-[#00a859]'
-                : 'text-[#6e7a94]'
+                : 'text-[#8592ad]'
             }`}
           >
             <Activity size={14} /> {lang === 'ar' ? 'المحاكاة' : 'Simulation'}
@@ -261,7 +261,7 @@ const NetworkingLessonPage: React.FC = () => {
               {done &&
                 (nextLesson ? (
                   <div className="rounded-xl border border-[#263248] bg-[#0e1626] p-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-[#6e7a94]">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-[#8592ad]">
                       {lang === 'ar' ? 'الدرس التالي' : 'Next lesson'}
                     </p>
                     <p className="mt-1 mb-3 text-sm font-bold text-[#f3f6ff]">
@@ -328,7 +328,7 @@ const NetworkingLessonPage: React.FC = () => {
                 onClick={() => setSimOpen(true)}
                 title={lang === 'ar' ? 'إظهار المحاكاة' : 'Show the simulation'}
                 aria-label={lang === 'ar' ? 'إظهار المحاكاة' : 'Show the simulation'}
-                className="hidden md:flex w-11 flex-shrink-0 flex-col items-center gap-2 border-s border-[#263248] bg-[#0e1522] pt-4 text-[#6e7a94] transition-colors hover:bg-[#121a2a] hover:text-[#60a5fa]"
+                className="hidden md:flex w-11 flex-shrink-0 flex-col items-center gap-2 border-s border-[#263248] bg-[#0e1522] pt-4 text-[#8592ad] transition-colors hover:bg-[#121a2a] hover:text-[#60a5fa]"
               >
                 <PanelRightOpen size={16} className="rtl-flip" />
                 <span className="text-[10px] font-bold" dir="ltr">

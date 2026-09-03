@@ -42,12 +42,12 @@ const Section: React.FC<{
 }> = ({ icon: Icon, title, hint, children }) => (
   <section className="border-t border-[#1e293b] py-5 first:border-t-0 first:pt-0">
     <div className="mb-4 flex items-start gap-2.5">
-      <span className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border border-[#263248] bg-[#0e1522] text-[#6e7a94]">
+      <span className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border border-[#263248] bg-[#0e1522] text-[#8592ad]">
         <Icon size={13} />
       </span>
       <div className="min-w-0">
         <h3 className="text-xs font-bold uppercase tracking-wider text-[#9aa5bf]">{title}</h3>
-        {hint && <p className="mt-0.5 text-xs text-[#6e7a94]">{hint}</p>}
+        {hint && <p className="mt-0.5 text-xs text-[#8592ad]">{hint}</p>}
       </div>
     </div>
     {children}
@@ -181,7 +181,7 @@ const ProfilePage: React.FC = () => {
     error: 'text-[#ff6b6b]',
     warn: 'text-[#f3a43a]',
     ok: 'text-[#00a859]',
-    muted: 'text-[#6e7a94]',
+    muted: 'text-[#8592ad]',
   }[handleState.tone];
 
   return (
@@ -208,7 +208,7 @@ const ProfilePage: React.FC = () => {
                   <h2 className="text-lg font-bold text-[#f3f6ff]">
                     {ar ? 'تعديل الملف الشخصي' : 'Edit profile'}
                   </h2>
-                  <p className="mt-0.5 text-xs text-[#6e7a94]">
+                  <p className="mt-0.5 text-xs text-[#8592ad]">
                     {ar
                       ? 'لا شيء يُحفظ حتى تضغط حفظ.'
                       : 'Nothing is saved until you press Save.'}
@@ -218,7 +218,7 @@ const ProfilePage: React.FC = () => {
                   type="button"
                   onClick={() => setEditing(false)}
                   title={t('profile.cancel')}
-                  className="flex h-8 w-8 touch:h-11 touch:w-11 flex-shrink-0 items-center justify-center rounded-lg text-[#6e7a94] transition-colors hover:bg-[#1a2332] hover:text-[#f3f6ff]"
+                  className="flex h-8 w-8 touch:h-11 touch:w-11 flex-shrink-0 items-center justify-center rounded-lg text-[#8592ad] transition-colors hover:bg-[#1a2332] hover:text-[#f3f6ff]"
                 >
                   <X size={16} />
                 </button>
@@ -259,7 +259,7 @@ const ProfilePage: React.FC = () => {
                       {ar ? 'اسم المستخدم' : 'Username'}
                     </label>
                     <div className="relative">
-                      <span className="absolute inset-y-0 start-0 flex items-center ps-3 text-[#6e7a94] pointer-events-none">
+                      <span className="absolute inset-y-0 start-0 flex items-center ps-3 text-[#8592ad] pointer-events-none">
                         <AtSign size={15} />
                       </span>
                       <input
@@ -272,7 +272,7 @@ const ProfilePage: React.FC = () => {
                         dir="ltr"
                         maxLength={20}
                         aria-invalid={handleState.tone === 'error' || handleState.tone === 'warn'}
-                        className={`w-full ps-9 pe-3 py-2.5 rounded-lg bg-[#1a2332] border text-[#f3f6ff] font-mono text-sm placeholder:text-[#3d4a63] focus:outline-none transition-colors ${
+                        className={`w-full ps-9 pe-3 py-2.5 rounded-lg bg-[#1a2332] border text-[#f3f6ff] font-mono text-sm placeholder:text-[#7c8aa6] focus:outline-none transition-colors ${
                           handleState.tone === 'error'
                             ? 'border-red-500 focus:border-red-500'
                             : handleState.tone === 'warn'
@@ -298,7 +298,7 @@ const ProfilePage: React.FC = () => {
                       </label>
                       <span
                         className={`text-[11px] tabular-nums ${
-                          bioTooLong ? 'text-[#ff6b6b]' : 'text-[#6e7a94]'
+                          bioTooLong ? 'text-[#ff6b6b]' : 'text-[#8592ad]'
                         }`}
                         dir="ltr"
                       >
@@ -310,7 +310,7 @@ const ProfilePage: React.FC = () => {
                       onChange={(e) => set('bio', e.target.value)}
                       placeholder={t('profile.bioPlaceholder')}
                       rows={3}
-                      className={`w-full bg-[#1a2332] border rounded-lg text-[#f3f6ff] placeholder-[#6e7a94] focus:outline-none focus:ring-2 transition-all p-3 resize-none ${
+                      className={`w-full bg-[#1a2332] border rounded-lg text-[#f3f6ff] placeholder-[#8592ad] focus:outline-none focus:ring-2 transition-all p-3 resize-none ${
                         bioTooLong
                           ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
                           : 'border-[#263248] focus:ring-[#00a859] focus:border-[#00a859]'
@@ -352,7 +352,7 @@ const ProfilePage: React.FC = () => {
                 >
                   {t('profile.cancel')}
                 </Button>
-                <span className="text-xs text-[#6e7a94]">
+                <span className="text-xs text-[#8592ad]">
                   {blocked
                     ? ar
                       ? 'أصلح الحقول المميزة أولا.'
@@ -402,24 +402,24 @@ const ProfilePage: React.FC = () => {
                   {/* An email address is a single unbreakable token, so on a
                       phone it either truncates or runs out of the card. */}
                   <span className="inline-flex items-center gap-2 min-w-0 max-w-full" dir="ltr">
-                    <Mail size={14} className="text-[#6e7a94] shrink-0" />
+                    <Mail size={14} className="text-[#8592ad] shrink-0" />
                     <span className="truncate" title={user.email}>{user.email}</span>
                   </span>
                   <span className="inline-flex items-center gap-2">
-                    <GraduationCap size={14} className="text-[#6e7a94]" />
+                    <GraduationCap size={14} className="text-[#8592ad]" />
                     {(() => {
                       const uni = universityLabel(user.university, lang);
-                      return uni.isSet ? uni.text : <span className="text-[#6e7a94]">{t('profile.notSet')}</span>;
+                      return uni.isSet ? uni.text : <span className="text-[#8592ad]">{t('profile.notSet')}</span>;
                     })()}
                   </span>
                   <span className="inline-flex items-center gap-2">
-                    <CalendarDays size={14} className="text-[#6e7a94]" /> {t('profile.memberSince')}{' '}
+                    <CalendarDays size={14} className="text-[#8592ad]" /> {t('profile.memberSince')}{' '}
                     {memberSince}
                   </span>
                 </div>
 
                 <p className="mt-3 text-sm text-[#d2d7e3] max-w-lg">
-                  {user.bio || <span className="text-[#6e7a94]">{t('profile.noBio')}</span>}
+                  {user.bio || <span className="text-[#8592ad]">{t('profile.noBio')}</span>}
                 </p>
               </div>
 
@@ -442,7 +442,7 @@ const ProfilePage: React.FC = () => {
 
         <div className="flex items-center justify-between py-3 border-b border-[#1e293b]">
           <span className="inline-flex items-center gap-2 text-sm text-[#d2d7e3]">
-            <Globe size={16} className="text-[#6e7a94]" /> {t('profile.language')}
+            <Globe size={16} className="text-[#8592ad]" /> {t('profile.language')}
           </span>
           <div className="flex items-center gap-1 rounded-lg bg-[#0e1522] border border-[#263248] p-0.5" dir="ltr">
             {(['en', 'ar'] as const).map((l) => (
@@ -450,7 +450,7 @@ const ProfilePage: React.FC = () => {
                 key={l}
                 onClick={() => setLang(l)}
                 className={`px-3 py-1 touch:min-h-tap touch:px-4 rounded-md text-xs font-bold transition-all select-none ${
-                  lang === l ? 'bg-[#00a859] text-white' : 'text-[#9aa5bf] hover:text-[#f3f6ff]'
+                  lang === l ? 'bg-[#007a42] text-white' : 'text-[#9aa5bf] hover:text-[#f3f6ff]'
                 }`}
               >
                 {l === 'en' ? 'EN' : 'عربي'}

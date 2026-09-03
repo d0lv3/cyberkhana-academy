@@ -253,7 +253,7 @@ const ProgrammingModuleEditor: React.FC = () => {
 
           <div>
             <label className="block text-xs font-semibold text-[#9aa5bf] mb-1.5">
-              YouTube video <span className="text-[#4d5a73] font-normal">(optional, URL or ID, shown at the top of each lesson)</span>
+              YouTube video <span className="text-[#7c8aa6] font-normal">(optional, URL or ID, shown at the top of each lesson)</span>
             </label>
             <input
               type="text"
@@ -292,7 +292,7 @@ const ProgrammingModuleEditor: React.FC = () => {
                 dir="ltr"
               />
               {isEditing && (
-                <p className="text-[10px] text-[#4d5a73] mt-1">
+                <p className="text-[10px] text-[#7c8aa6] mt-1">
                   Locked, concepts in this module are linked to this slug.
                 </p>
               )}

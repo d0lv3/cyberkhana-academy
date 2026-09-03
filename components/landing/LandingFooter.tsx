@@ -28,14 +28,14 @@ const LandingFooter: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-10">
           {/* Brand */}
           <div className="flex flex-col items-center md:items-start gap-3 max-w-xs mx-auto md:mx-0 text-center md:text-start">
-            <p className="text-sm text-[#6e7a94] leading-relaxed">
+            <p className="text-sm text-[#8592ad] leading-relaxed">
               {t('footer.tagline')}
             </p>
           </div>
 
           {/* Quick links */}
           <div className="flex flex-col items-center md:items-start gap-3">
-            <p className="text-[11px] font-bold tracking-[0.15em] text-[#4d5a73] uppercase">
+            <p className="text-[11px] font-bold tracking-[0.15em] text-[#7c8aa6] uppercase">
               {t('footer.product')}
             </p>
             <ul className="flex flex-col items-center md:items-start gap-2">
@@ -98,15 +98,15 @@ const LandingFooter: React.FC = () => {
 
         {/* Bottom bar */}
         <div className="mt-8 pt-6 border-t border-[#1a2332] flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-[#6e7a94] text-center sm:text-start">{t('footer.copyright')}</p>
+          <p className="text-xs text-[#8592ad] text-center sm:text-start">{t('footer.copyright')}</p>
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
-            <Link to="/privacy" className="inline-flex items-center touch:min-h-tap touch:px-2 text-xs text-[#6e7a94] hover:text-[#9fef00] transition-colors">
+            <Link to="/privacy" className="inline-flex items-center touch:min-h-tap touch:px-2 text-xs text-[#8592ad] hover:text-[#9fef00] transition-colors">
               {t('footer.privacy')}
             </Link>
-            <Link to="/terms" className="inline-flex items-center touch:min-h-tap touch:px-2 text-xs text-[#6e7a94] hover:text-[#9fef00] transition-colors">
+            <Link to="/terms" className="inline-flex items-center touch:min-h-tap touch:px-2 text-xs text-[#8592ad] hover:text-[#9fef00] transition-colors">
               {t('footer.terms')}
             </Link>
-            <span className="text-xs text-[#6e7a94] flex items-center gap-1.5">
+            <span className="text-xs text-[#8592ad] flex items-center gap-1.5">
               {t('footer.builtIn')} <span>🇮🇶</span>
             </span>
           </div>

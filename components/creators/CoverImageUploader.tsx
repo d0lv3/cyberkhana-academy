@@ -162,11 +162,11 @@ const CoverImageUploader: React.FC<CoverImageUploaderProps> = ({
               </button>
             )}
           </div>
-          <p className="text-[11px] text-[#6e7a94]">
+          <p className="text-[11px] text-[#8592ad]">
             PNG, JPEG, WebP, GIF (max 2 MB) or SVG (max ~200 KB) · shown on {shownOn}
           </p>
           {error && (
-            <p className="flex items-center gap-1.5 text-[11px] text-red-400">
+            <p role="alert" className="flex items-center gap-1.5 text-[11px] text-red-400">
               <AlertTriangle size={11} /> {error}
             </p>
           )}

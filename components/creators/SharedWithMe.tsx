@@ -77,11 +77,11 @@ function SharedWithMe<T extends { id: string } & Partial<CreatorMeta>>({
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <Users size={14} className="text-[#60a5fa]" />
-        <h2 className="text-sm font-bold uppercase tracking-wider text-[#6e7a94]">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-[#8592ad]">
           {ar ? 'مشارَك معك' : 'Shared with you'}
         </h2>
       </div>
-      <p className="-mt-1 text-xs text-[#6e7a94]">
+      <p className="-mt-1 text-xs text-[#8592ad]">
         {ar
           ? 'لديك نفس صلاحيات المالك هنا: التعديل والنشر والحذف. يبقى اسم المؤلف الأصلي على المحتوى.'
           : 'You have the owner’s rights here: edit, publish and delete. The original author stays on the content.'}
@@ -96,7 +96,7 @@ function SharedWithMe<T extends { id: string } & Partial<CreatorMeta>>({
                 {group.owner?.displayName ?? (ar ? 'مستخدم محذوف' : 'Removed user')}
               </span>
               {group.owner?.username && (
-                <span className="ms-1.5 font-mono text-[10px] text-[#4d5a73]" dir="ltr">
+                <span className="ms-1.5 font-mono text-[10px] text-[#7c8aa6]" dir="ltr">
                   @{group.owner.username}
                 </span>
               )}
@@ -104,7 +104,7 @@ function SharedWithMe<T extends { id: string } & Partial<CreatorMeta>>({
             <button
               onClick={() => leave(group)}
               title={ar ? 'مغادرة المشاركة' : 'Leave this share'}
-              className="flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-semibold text-[#6e7a94] transition-all hover:bg-[#263248]/60 hover:text-[#d2d7e3]"
+              className="flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-semibold text-[#8592ad] transition-all hover:bg-[#263248]/60 hover:text-[#d2d7e3]"
             >
               <LogOut size={11} className="rtl-flip" />
               {ar ? 'مغادرة' : 'Leave'}
@@ -126,7 +126,7 @@ function SharedWithMe<T extends { id: string } & Partial<CreatorMeta>>({
 
                 <div className="min-w-0 flex-1">
                   <h3 className="truncate text-sm font-bold text-[#f3f6ff]">{title(item)}</h3>
-                  <p className="mt-0.5 truncate text-xs text-[#6e7a94]">{subtitle(item)}</p>
+                  <p className="mt-0.5 truncate text-xs text-[#8592ad]">{subtitle(item)}</p>
                 </div>
 
                 <div className="flex flex-shrink-0 items-center gap-2" dir="ltr">
@@ -136,7 +136,7 @@ function SharedWithMe<T extends { id: string } & Partial<CreatorMeta>>({
                   <button
                     onClick={() => onTogglePublish(group.owner?.id ?? '', item)}
                     title={statusOf(item) === 'published' ? (ar ? 'إلغاء النشر' : 'Unpublish') : (ar ? 'نشر' : 'Publish')}
-                    className="flex h-7 w-7 items-center justify-center rounded-md text-[#6e7a94] transition-all hover:bg-[#00a859]/10 hover:text-[#00a859]"
+                    className="flex h-7 w-7 items-center justify-center rounded-md text-[#8592ad] transition-all hover:bg-[#00a859]/10 hover:text-[#00a859]"
                   >
                     {statusOf(item) === 'published' ? <EyeOff size={13} /> : <Eye size={13} />}
                   </button>
@@ -144,7 +144,7 @@ function SharedWithMe<T extends { id: string } & Partial<CreatorMeta>>({
                   <button
                     onClick={() => onEdit(group.owner?.id ?? '', item)}
                     title={ar ? 'تعديل' : 'Edit'}
-                    className="flex h-7 w-7 items-center justify-center rounded-md text-[#6e7a94] transition-all hover:bg-[#60a5fa]/10 hover:text-[#60a5fa]"
+                    className="flex h-7 w-7 items-center justify-center rounded-md text-[#8592ad] transition-all hover:bg-[#60a5fa]/10 hover:text-[#60a5fa]"
                   >
                     <Edit3 size={13} />
                   </button>
@@ -152,7 +152,7 @@ function SharedWithMe<T extends { id: string } & Partial<CreatorMeta>>({
                   <button
                     onClick={() => onDelete(group.owner?.id ?? '', item)}
                     title={ar ? 'حذف' : 'Delete'}
-                    className="flex h-7 w-7 items-center justify-center rounded-md text-[#6e7a94] transition-all hover:bg-red-500/10 hover:text-red-400"
+                    className="flex h-7 w-7 items-center justify-center rounded-md text-[#8592ad] transition-all hover:bg-red-500/10 hover:text-red-400"
                   >
                     <Trash2 size={13} />
                   </button>

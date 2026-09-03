@@ -24,7 +24,7 @@ const BilingualInput: React.FC<BilingualInputProps> = ({
   required = false,
 }) => {
   const inputClasses =
-    'w-full bg-[#0a0f18] border border-[#263248] rounded-lg px-3 py-2 text-sm text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#3d4a63]';
+    'w-full bg-[#0a0f18] border border-[#263248] rounded-lg px-3 py-2 text-sm text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#7c8aa6]';
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

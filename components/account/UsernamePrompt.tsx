@@ -85,7 +85,7 @@ const UsernamePrompt: React.FC = () => {
 
         <form onSubmit={submit} className="p-6">
           <div className="relative">
-            <span className="absolute inset-y-0 start-0 flex items-center ps-3.5 text-[#6e7a94] pointer-events-none">
+            <span className="absolute inset-y-0 start-0 flex items-center ps-3.5 text-[#8592ad] pointer-events-none">
               <AtSign size={16} />
             </span>
             <input
@@ -99,14 +99,14 @@ const UsernamePrompt: React.FC = () => {
               dir="ltr"
               maxLength={20}
               aria-invalid={!!error}
-              className="w-full ps-10 pe-3 py-3 rounded-xl bg-[#0a0f18] border border-[#263248] text-[#f3f6ff] font-mono text-sm placeholder:text-[#3d4a63] focus:outline-none focus:border-[#00a859]/50 transition-colors"
+              className="w-full ps-10 pe-3 py-3 rounded-xl bg-[#0a0f18] border border-[#263248] text-[#f3f6ff] font-mono text-sm placeholder:text-[#7c8aa6] focus:outline-none focus:border-[#00a859]/50 transition-colors"
             />
           </div>
 
           {/* One line that is either the rule, a local complaint, or the server's */}
           <p
             className={`mt-2 text-xs ${
-              error ? 'text-[#ff6b6b]' : trimmed && !localValid ? 'text-[#f3a43a]' : 'text-[#6e7a94]'
+              error ? 'text-[#ff6b6b]' : trimmed && !localValid ? 'text-[#f3a43a]' : 'text-[#8592ad]'
             }`}
           >
             {error
@@ -123,7 +123,7 @@ const UsernamePrompt: React.FC = () => {
           <button
             type="submit"
             disabled={!localValid || saving}
-            className="mt-5 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#00a859] text-white text-sm font-bold transition-all hover:bg-[#00934e] disabled:opacity-40 disabled:cursor-not-allowed"
+            className="mt-5 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#007a42] text-white text-sm font-bold transition-all hover:bg-[#006635] disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {saving && <Loader2 size={15} className="animate-spin" />}
             {saving ? (ar ? 'جارٍ الحفظ...' : 'Saving...') : ar ? 'تأكيد' : 'Confirm'}
@@ -133,7 +133,7 @@ const UsernamePrompt: React.FC = () => {
             <button
               type="button"
               onClick={() => setDismissed(true)}
-              className="mt-3 w-full text-center text-xs text-[#6e7a94] hover:text-[#d2d7e3] transition-colors underline underline-offset-2"
+              className="mt-3 w-full text-center text-xs text-[#8592ad] hover:text-[#d2d7e3] transition-colors underline underline-offset-2"
             >
               {ar
                 ? 'المتابعة الآن، سنطلب اسم المستخدم لاحقا'

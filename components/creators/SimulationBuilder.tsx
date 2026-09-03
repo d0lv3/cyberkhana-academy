@@ -109,8 +109,8 @@ const EXAMPLE: NetworkSimulation = {
 
 /* ── Small field helpers ── */
 const inputCls =
-  'w-full bg-[#0d1117] border border-[#1e2a3d] rounded px-2.5 py-1.5 text-xs text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#3d4a63]';
-const labelCls = 'block text-[10px] font-semibold text-[#6e7a94] mb-1 uppercase tracking-wide';
+  'w-full bg-[#0d1117] border border-[#1e2a3d] rounded px-2.5 py-1.5 text-xs text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#7c8aa6]';
+const labelCls = 'block text-[10px] font-semibold text-[#8592ad] mb-1 uppercase tracking-wide';
 
 const Section: React.FC<{
   icon: React.ElementType;
@@ -137,11 +137,11 @@ const Section: React.FC<{
         <span className="flex-1 text-left">
           <span className="block text-sm font-bold text-[#f3f6ff]">{title}</span>
         </span>
-        <span className="text-[11px] font-semibold text-[#6e7a94]">{count}</span>
+        <span className="text-[11px] font-semibold text-[#8592ad]">{count}</span>
         {open ? (
-          <ChevronDown size={15} className="text-[#6e7a94]" />
+          <ChevronDown size={15} className="text-[#8592ad]" />
         ) : (
-          <ChevronRight size={15} className="text-[#6e7a94]" />
+          <ChevronRight size={15} className="text-[#8592ad]" />
         )}
       </button>
       {open && <div className="px-4 pb-4 space-y-3">{children}</div>}
@@ -303,14 +303,14 @@ const SimulationBuilder: React.FC<SimulationBuilderProps> = ({
               className={`px-3 py-1 rounded-md text-xs font-bold transition-colors ${
                 lang === l
                   ? 'bg-[#1a2332] text-[#f3f6ff] border border-[#263248]'
-                  : 'text-[#6e7a94] hover:text-[#d2d7e3]'
+                  : 'text-[#8592ad] hover:text-[#d2d7e3]'
               }`}
             >
               {l === 'en' ? 'English' : 'العربية'}
             </button>
           ))}
         </div>
-        <span className="text-[10px] text-[#6e7a94]">
+        <span className="text-[10px] text-[#8592ad]">
           {ar
             ? 'Optional. An empty field falls back to English, shown greyed in the box.'
             : 'Required. Switch to العربية to translate the same topology.'}
@@ -343,7 +343,7 @@ const SimulationBuilder: React.FC<SimulationBuilderProps> = ({
               <button
                 type="button"
                 onClick={() => removeNode(node.id)}
-                className="w-7 h-7 flex items-center justify-center rounded text-[#4d5a73] hover:text-red-400 hover:bg-red-500/10 transition-all flex-shrink-0"
+                className="w-7 h-7 flex items-center justify-center rounded text-[#7c8aa6] hover:text-red-400 hover:bg-red-500/10 transition-all flex-shrink-0"
               >
                 <Trash2 size={13} />
               </button>
@@ -400,7 +400,7 @@ const SimulationBuilder: React.FC<SimulationBuilderProps> = ({
         <button
           type="button"
           onClick={addNode}
-          className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-[#6e7a94] bg-[#0d1420] border border-dashed border-[#263248] hover:border-[#60a5fa]/40 hover:text-[#60a5fa] transition-all"
+          className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-[#8592ad] bg-[#0d1420] border border-dashed border-[#263248] hover:border-[#60a5fa]/40 hover:text-[#60a5fa] transition-all"
         >
           <Plus size={13} /> Add Device
         </button>
@@ -408,7 +408,7 @@ const SimulationBuilder: React.FC<SimulationBuilderProps> = ({
 
       {/* ── Zones ── */}
       <Section icon={Frame} title="Network Zones" count={zones.length} color="#f3a43a" defaultOpen={zones.length > 0}>
-        <p className="text-[11px] text-[#6e7a94] -mt-1">
+        <p className="text-[11px] text-[#8592ad] -mt-1">
           Labeled boundary regions (LAN, DMZ, Internet) drawn behind the devices, they make the topology
           read like a real network diagram.
         </p>
@@ -454,7 +454,7 @@ const SimulationBuilder: React.FC<SimulationBuilderProps> = ({
               <button
                 type="button"
                 onClick={() => removeZone(zone.id)}
-                className="mb-0.5 w-7 h-7 flex items-center justify-center rounded text-[#4d5a73] hover:text-red-400 hover:bg-red-500/10 transition-all flex-shrink-0"
+                className="mb-0.5 w-7 h-7 flex items-center justify-center rounded text-[#7c8aa6] hover:text-red-400 hover:bg-red-500/10 transition-all flex-shrink-0"
               >
                 <Trash2 size={13} />
               </button>
@@ -486,7 +486,7 @@ const SimulationBuilder: React.FC<SimulationBuilderProps> = ({
         <button
           type="button"
           onClick={addZone}
-          className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-[#6e7a94] bg-[#0d1420] border border-dashed border-[#263248] hover:border-[#f3a43a]/40 hover:text-[#f3a43a] transition-all"
+          className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-[#8592ad] bg-[#0d1420] border border-dashed border-[#263248] hover:border-[#f3a43a]/40 hover:text-[#f3a43a] transition-all"
         >
           <Plus size={13} /> Add Zone
         </button>
@@ -495,7 +495,7 @@ const SimulationBuilder: React.FC<SimulationBuilderProps> = ({
       {/* ── Connections ── */}
       <Section icon={Share2} title="Connections" count={edges.length} color="#9fef00">
         {nodes.length < 2 ? (
-          <p className="text-xs text-[#6e7a94] italic">Add at least two devices to connect them.</p>
+          <p className="text-xs text-[#8592ad] italic">Add at least two devices to connect them.</p>
         ) : (
           <>
             {edges.map((edge) => (
@@ -516,7 +516,7 @@ const SimulationBuilder: React.FC<SimulationBuilderProps> = ({
                     </select>
                   </div>
 
-                  <span className="flex-shrink-0 pb-2 text-sm text-[#4d5a73]">→</span>
+                  <span className="flex-shrink-0 pb-2 text-sm text-[#7c8aa6]">→</span>
 
                   <div className="flex-1 min-w-0">
                     <label className={labelCls}>To</label>
@@ -548,7 +548,7 @@ const SimulationBuilder: React.FC<SimulationBuilderProps> = ({
                   <button
                     type="button"
                     onClick={() => removeEdge(edge.id)}
-                    className="mb-0.5 w-7 h-7 flex items-center justify-center rounded text-[#4d5a73] hover:text-red-400 hover:bg-red-500/10 transition-all flex-shrink-0"
+                    className="mb-0.5 w-7 h-7 flex items-center justify-center rounded text-[#7c8aa6] hover:text-red-400 hover:bg-red-500/10 transition-all flex-shrink-0"
                   >
                     <Trash2 size={13} />
                   </button>
@@ -559,7 +559,7 @@ const SimulationBuilder: React.FC<SimulationBuilderProps> = ({
             <button
               type="button"
               onClick={addEdge}
-              className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-[#6e7a94] bg-[#0d1420] border border-dashed border-[#263248] hover:border-[#9fef00]/40 hover:text-[#9fef00] transition-all"
+              className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-[#8592ad] bg-[#0d1420] border border-dashed border-[#263248] hover:border-[#9fef00]/40 hover:text-[#9fef00] transition-all"
             >
               <Plus size={13} /> Add Connection
             </button>
@@ -587,7 +587,7 @@ const SimulationBuilder: React.FC<SimulationBuilderProps> = ({
                   type="button"
                   onClick={() => moveStep(idx, -1)}
                   disabled={idx === 0}
-                  className="w-7 h-7 flex items-center justify-center rounded text-[#4d5a73] hover:text-[#d2d7e3] disabled:opacity-20 transition-colors"
+                  className="w-7 h-7 flex items-center justify-center rounded text-[#7c8aa6] hover:text-[#d2d7e3] disabled:opacity-20 transition-colors"
                 >
                   <ArrowUp size={13} />
                 </button>
@@ -595,14 +595,14 @@ const SimulationBuilder: React.FC<SimulationBuilderProps> = ({
                   type="button"
                   onClick={() => moveStep(idx, 1)}
                   disabled={idx === steps.length - 1}
-                  className="w-7 h-7 flex items-center justify-center rounded text-[#4d5a73] hover:text-[#d2d7e3] disabled:opacity-20 transition-colors"
+                  className="w-7 h-7 flex items-center justify-center rounded text-[#7c8aa6] hover:text-[#d2d7e3] disabled:opacity-20 transition-colors"
                 >
                   <ArrowDown size={13} />
                 </button>
                 <button
                   type="button"
                   onClick={() => removeStep(idx)}
-                  className="w-7 h-7 flex items-center justify-center rounded text-[#4d5a73] hover:text-red-400 hover:bg-red-500/10 transition-all"
+                  className="w-7 h-7 flex items-center justify-center rounded text-[#7c8aa6] hover:text-red-400 hover:bg-red-500/10 transition-all"
                 >
                   <Trash2 size={13} />
                 </button>
@@ -634,7 +634,7 @@ const SimulationBuilder: React.FC<SimulationBuilderProps> = ({
                         className={`px-2 py-1 rounded text-[10px] font-semibold transition-all ${
                           on
                             ? 'bg-[#00a859]/15 border border-[#00a859]/40 text-[#00a859]'
-                            : 'bg-[#0d1117] border border-[#263248] text-[#6e7a94] hover:text-[#d2d7e3]'
+                            : 'bg-[#0d1117] border border-[#263248] text-[#8592ad] hover:text-[#d2d7e3]'
                         }`}
                       >
                         {nodeName(n.label)}
@@ -656,7 +656,7 @@ const SimulationBuilder: React.FC<SimulationBuilderProps> = ({
                   >
                     {/* From → To */}
                     <div className="flex items-center gap-2">
-                      <Send size={12} className="text-[#4d5a73] flex-shrink-0" />
+                      <Send size={12} className="text-[#7c8aa6] flex-shrink-0" />
                       <div className="flex-1 min-w-0">
                         <select
                           value={pkt.from}
@@ -670,7 +670,7 @@ const SimulationBuilder: React.FC<SimulationBuilderProps> = ({
                           ))}
                         </select>
                       </div>
-                      <span className="text-[#4d5a73] flex-shrink-0 text-xs">→</span>
+                      <span className="text-[#7c8aa6] flex-shrink-0 text-xs">→</span>
                       <div className="flex-1 min-w-0">
                         <select
                           value={pkt.to}
@@ -687,7 +687,7 @@ const SimulationBuilder: React.FC<SimulationBuilderProps> = ({
                       <button
                         type="button"
                         onClick={() => removePacket(idx, pIdx)}
-                        className="w-7 h-7 flex items-center justify-center rounded text-[#4d5a73] hover:text-red-400 hover:bg-red-500/10 transition-all flex-shrink-0"
+                        className="w-7 h-7 flex items-center justify-center rounded text-[#7c8aa6] hover:text-red-400 hover:bg-red-500/10 transition-all flex-shrink-0"
                       >
                         <Trash2 size={12} />
                       </button>
@@ -729,7 +729,7 @@ const SimulationBuilder: React.FC<SimulationBuilderProps> = ({
                   <button
                     type="button"
                     onClick={() => addPacket(idx)}
-                    className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 rounded text-[11px] font-medium text-[#6e7a94] bg-[#0d1420] border border-dashed border-[#263248] hover:border-[#00a859]/40 hover:text-[#00a859] transition-all"
+                    className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 rounded text-[11px] font-medium text-[#8592ad] bg-[#0d1420] border border-dashed border-[#263248] hover:border-[#00a859]/40 hover:text-[#00a859] transition-all"
                   >
                     <Plus size={12} /> Add Packet
                   </button>
@@ -741,7 +741,7 @@ const SimulationBuilder: React.FC<SimulationBuilderProps> = ({
         <button
           type="button"
           onClick={addStep}
-          className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-[#6e7a94] bg-[#0d1420] border border-dashed border-[#263248] hover:border-[#00a859]/40 hover:text-[#00a859] transition-all"
+          className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-[#8592ad] bg-[#0d1420] border border-dashed border-[#263248] hover:border-[#00a859]/40 hover:text-[#00a859] transition-all"
         >
           <Plus size={13} /> Add Step
         </button>

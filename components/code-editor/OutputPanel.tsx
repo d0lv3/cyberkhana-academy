@@ -36,7 +36,7 @@ const OutputPanel: React.FC<OutputPanelProps> = ({
         {hasContent && (
           <button
             onClick={onClear}
-            className="text-[#2d3748] hover:text-[#4d5a73] transition-colors p-0.5"
+            className="text-[#2d3748] hover:text-[#7c8aa6] transition-colors p-0.5"
             title="Clear"
           >
             <Trash2 size={11} />
@@ -47,7 +47,7 @@ const OutputPanel: React.FC<OutputPanelProps> = ({
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-3 py-2.5 custom-scrollbar font-mono text-[13px] leading-relaxed">
         {isRunning && (
-          <div className="flex items-center gap-2 text-[#4d5a73]">
+          <div className="flex items-center gap-2 text-[#7c8aa6]">
             <div className="w-2.5 h-2.5 border-[1.5px] border-[#00a859] border-t-transparent rounded-full animate-spin" />
             <span className="text-[11px]">Running...</span>
           </div>

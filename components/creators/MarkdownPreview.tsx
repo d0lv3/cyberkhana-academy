@@ -13,7 +13,7 @@ interface MarkdownPreviewProps {
 const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, className = '' }) => {
   if (!content.trim()) {
     return (
-      <div className={`flex items-center justify-center h-full text-[#4d5a73] text-sm italic ${className}`}>
+      <div className={`flex items-center justify-center h-full text-[#7c8aa6] text-sm italic ${className}`}>
         No content to preview
       </div>
     );

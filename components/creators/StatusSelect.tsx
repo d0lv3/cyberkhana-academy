@@ -80,7 +80,7 @@ const StatusSelect: React.FC<StatusSelectProps> = ({ value, onChange }) => {
                 </span>
                 <span className="flex-1 min-w-0">
                   <span className="block text-xs font-semibold text-[#f3f6ff]">{labelOf(s)}</span>
-                  <span className="block text-[10px] text-[#6e7a94]">{t(DESCRIPTION_KEYS[s])}</span>
+                  <span className="block text-[10px] text-[#8592ad]">{t(DESCRIPTION_KEYS[s])}</span>
                 </span>
                 {active && <Check size={13} className="text-[#00a859] flex-shrink-0" />}
               </button>

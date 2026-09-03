@@ -51,8 +51,8 @@ const Button: React.FC<ButtonProps> = ({
 
   const variantClasses = {
     primary: [
-      'bg-[#00a859] text-white',
-      'hover:bg-[#007a42]',
+      'bg-[#007a42] text-white',
+      'hover:bg-[#006635]',
       'focus:ring-[#00a859]',
       'shadow-md hover:shadow-[0_0_16px_rgba(0,168,89,0.35)]',
     ].join(' '),

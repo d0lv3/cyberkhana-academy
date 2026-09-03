@@ -106,7 +106,7 @@ const MarkdownUploader: React.FC<MarkdownUploaderProps> = ({
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
             mode === 'editor'
               ? 'bg-[#1a2332] text-[#f3f6ff] border border-[#263248]'
-              : 'text-[#6e7a94] hover:text-[#d2d7e3]'
+              : 'text-[#8592ad] hover:text-[#d2d7e3]'
           }`}
         >
           <Edit3 size={12} /> Editor
@@ -117,7 +117,7 @@ const MarkdownUploader: React.FC<MarkdownUploaderProps> = ({
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
             mode === 'upload'
               ? 'bg-[#1a2332] text-[#f3f6ff] border border-[#263248]'
-              : 'text-[#6e7a94] hover:text-[#d2d7e3]'
+              : 'text-[#8592ad] hover:text-[#d2d7e3]'
           }`}
         >
           <Upload size={12} /> Upload
@@ -134,7 +134,7 @@ const MarkdownUploader: React.FC<MarkdownUploaderProps> = ({
           type="button"
           disabled={imageUploading}
           onClick={() => imageInputRef.current?.click()}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-[#6e7a94] hover:text-[#9fef00] transition-colors disabled:opacity-50"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-[#8592ad] hover:text-[#9fef00] transition-colors disabled:opacity-50"
           title="Upload an image (PNG, JPEG, WebP, GIF, max 2 MB)"
         >
           {imageUploading ? (
@@ -170,7 +170,7 @@ const MarkdownUploader: React.FC<MarkdownUploaderProps> = ({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full min-h-[300px] bg-[#0a0f18] border border-[#263248] rounded-lg px-4 py-3 text-sm text-[#c4cad6] font-mono resize-y focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#3d4a63] custom-scrollbar"
+          className="w-full min-h-[300px] bg-[#0a0f18] border border-[#263248] rounded-lg px-4 py-3 text-sm text-[#c4cad6] font-mono resize-y focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#7c8aa6] custom-scrollbar"
           spellCheck={false}
           dir="ltr"
         />
@@ -193,14 +193,14 @@ const MarkdownUploader: React.FC<MarkdownUploaderProps> = ({
           >
             <Upload
               size={22}
-              className={isDragging ? 'text-[#00a859]' : 'text-[#6e7a94]'}
+              className={isDragging ? 'text-[#00a859]' : 'text-[#8592ad]'}
             />
           </div>
           <div className="text-center">
             <p className="text-sm font-medium text-[#d2d7e3]">
               {isDragging ? 'Drop your file here' : 'Drag & drop a .md file'}
             </p>
-            <p className="text-xs text-[#6e7a94] mt-1">or click to browse</p>
+            <p className="text-xs text-[#8592ad] mt-1">or click to browse</p>
           </div>
           <input
             ref={fileInputRef}

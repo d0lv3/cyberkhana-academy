@@ -82,7 +82,7 @@ const SkillMatrix: React.FC<{ variant?: 'full' | 'compact'; className?: string }
             <h3 className="text-base font-bold text-[#f3f6ff] leading-tight">
               {lang === 'ar' ? 'مصفوفة المهارات' : 'Skill Matrix'}
             </h3>
-            <p className="text-[11px] text-[#6e7a94]">
+            <p className="text-[11px] text-[#8592ad]">
               {lang === 'ar'
                 ? 'تقييمك عبر ركائز الأمن السيبراني'
                 : 'Your proficiency across security pillars'}
@@ -93,7 +93,7 @@ const SkillMatrix: React.FC<{ variant?: 'full' | 'compact'; className?: string }
         <div className="text-end">
           <p className="text-2xl font-black leading-none" style={{ color: rank.color }} dir="ltr">
             {index}
-            <span className="text-sm text-[#6e7a94] font-bold">/100</span>
+            <span className="text-sm text-[#8592ad] font-bold">/100</span>
           </p>
           <p className="text-[11px] font-bold uppercase tracking-wide mt-1" style={{ color: rank.color }}>
             {rank.label[lang]}
@@ -206,7 +206,7 @@ const SkillMatrix: React.FC<{ variant?: 'full' | 'compact'; className?: string }
           ))}
 
           {strongest && index > 0 && (
-            <p className="text-[11px] text-[#6e7a94] pt-1.5">
+            <p className="text-[11px] text-[#8592ad] pt-1.5">
               {lang === 'ar' ? 'أقوى مجالاتك: ' : 'Strongest area: '}
               <span className="font-semibold" style={{ color: strongest.pillar.color }}>
                 {strongest.pillar.label[lang]}
@@ -246,7 +246,7 @@ const PillarRow: React.FC<{
           </span>
         </span>
         {muted ? (
-          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#4d5a73] flex-shrink-0">
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#7c8aa6] flex-shrink-0">
             <Lock size={10} /> {lang === 'ar' ? 'قريباً' : 'Soon'}
           </span>
         ) : (
@@ -279,7 +279,7 @@ const PillarRow: React.FC<{
         )}
       </div>
       {!compact && !muted && (
-        <p className="text-[10px] text-[#4d5a73] mt-1" dir="ltr">
+        <p className="text-[10px] text-[#7c8aa6] mt-1" dir="ltr">
           {r.doneItems}/{r.totalItems} · {r.earned.toLocaleString('en-US')} pts
         </p>
       )}

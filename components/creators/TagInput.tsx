@@ -61,7 +61,7 @@ const TagInput: React.FC<TagInputProps> = ({
               <button
                 type="button"
                 onClick={() => removeTag(tag)}
-                className="text-[#6e7a94] hover:text-red-400 transition-colors"
+                className="text-[#8592ad] hover:text-red-400 transition-colors"
               >
                 <X size={10} />
               </button>
@@ -78,14 +78,14 @@ const TagInput: React.FC<TagInputProps> = ({
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className="flex-1 bg-[#0a0f18] border border-[#263248] rounded-lg px-3 py-2 text-sm text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#3d4a63]"
+          className="flex-1 bg-[#0a0f18] border border-[#263248] rounded-lg px-3 py-2 text-sm text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#7c8aa6]"
           dir="ltr"
         />
         <button
           type="button"
           onClick={addTag}
           disabled={!input.trim()}
-          className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#1a2332] border border-[#263248] text-[#6e7a94] hover:text-[#00a859] hover:border-[#00a859]/40 transition-all disabled:opacity-40"
+          className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#1a2332] border border-[#263248] text-[#8592ad] hover:text-[#00a859] hover:border-[#00a859]/40 transition-all disabled:opacity-40"
         >
           <Plus size={14} />
         </button>

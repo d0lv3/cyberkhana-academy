@@ -118,7 +118,7 @@ const ShareTab: React.FC<ShareTabProps> = ({ bucket, label, onChange }) => {
                 <h3 className="text-sm font-bold text-[#f3f6ff]">
                   {ar ? `مشاركة ${label}` : `Share ${label}`}
                 </h3>
-                <p className="mt-0.5 text-xs text-[#6e7a94]">
+                <p className="mt-0.5 text-xs text-[#8592ad]">
                   {ar
                     ? 'يحصل من تشاركه على نفس صلاحياتك داخل هذا التبويب.'
                     : 'Whoever you add gets the same rights you have in this tab.'}
@@ -126,7 +126,7 @@ const ShareTab: React.FC<ShareTabProps> = ({ bucket, label, onChange }) => {
               </div>
               <button
                 onClick={() => setOpen(false)}
-                className="flex h-7 w-7 items-center justify-center rounded-md text-[#6e7a94] transition-colors hover:text-[#f3f6ff]"
+                className="flex h-7 w-7 items-center justify-center rounded-md text-[#8592ad] transition-colors hover:text-[#f3f6ff]"
                 aria-label={ar ? 'إغلاق' : 'Close'}
               >
                 <X size={16} />
@@ -159,7 +159,7 @@ const ShareTab: React.FC<ShareTabProps> = ({ bucket, label, onChange }) => {
                     placeholder="username"
                     autoFocus
                     spellCheck={false}
-                    className="w-full rounded-lg border border-[#263248] bg-[#0a0f18] px-3 py-2 font-mono text-sm text-[#d2d7e3] transition-colors placeholder:text-[#3d4a63] focus:border-[#00a859]/50 focus:outline-none"
+                    className="w-full rounded-lg border border-[#263248] bg-[#0a0f18] px-3 py-2 font-mono text-sm text-[#d2d7e3] transition-colors placeholder:text-[#7c8aa6] focus:border-[#00a859]/50 focus:outline-none"
                   />
                   <Button type="submit" size="sm" disabled={busy || !username.trim()} leftIcon={busy ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}>
                     {ar ? 'إضافة' : 'Add'}
@@ -167,18 +167,18 @@ const ShareTab: React.FC<ShareTabProps> = ({ bucket, label, onChange }) => {
                 </div>
               </form>
 
-              {error && <p className="text-xs text-red-400">{error}</p>}
+              {error && <p role="alert" className="text-xs text-red-400">{error}</p>}
               {notice && <p className="text-xs text-[#00a859]">{notice}</p>}
 
               <div className="space-y-2">
-                <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#6e7a94]">
+                <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#8592ad]">
                   {ar ? 'لديهم وصول' : 'Has access'} {grants.length > 0 && `(${grants.length})`}
                 </h4>
 
                 {loading ? (
-                  <p className="text-xs text-[#6e7a94]">{ar ? 'جارٍ التحميل…' : 'Loading…'}</p>
+                  <p className="text-xs text-[#8592ad]">{ar ? 'جارٍ التحميل…' : 'Loading…'}</p>
                 ) : grants.length === 0 ? (
-                  <p className="text-xs text-[#6e7a94]">
+                  <p className="text-xs text-[#8592ad]">
                     {ar ? 'لم تشارك هذا التبويب مع أحد بعد.' : "You haven't shared this tab with anyone yet."}
                   </p>
                 ) : (
@@ -192,7 +192,7 @@ const ShareTab: React.FC<ShareTabProps> = ({ bucket, label, onChange }) => {
                           {g.grantee?.displayName ?? (ar ? 'مستخدم محذوف' : 'Removed user')}
                         </p>
                         {g.grantee?.username && (
-                          <p className="truncate font-mono text-[10px] text-[#4d5a73]" dir="ltr">
+                          <p className="truncate font-mono text-[10px] text-[#7c8aa6]" dir="ltr">
                             @{g.grantee.username}
                           </p>
                         )}
@@ -200,7 +200,7 @@ const ShareTab: React.FC<ShareTabProps> = ({ bucket, label, onChange }) => {
                       <button
                         onClick={() => revoke(g)}
                         title={ar ? 'إلغاء الوصول' : 'Remove access'}
-                        className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md text-[#6e7a94] transition-all hover:bg-red-500/10 hover:text-red-400"
+                        className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md text-[#8592ad] transition-all hover:bg-red-500/10 hover:text-red-400"
                       >
                         <Trash2 size={13} />
                       </button>

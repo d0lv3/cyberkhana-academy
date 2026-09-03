@@ -53,14 +53,14 @@ const TerminalPage: React.FC = () => {
             onClick={() => setSplit((s) => !s)}
             title={split ? 'Back to one terminal' : 'Split into two terminals for the nc reverse-shell demo'}
             aria-pressed={split}
-            className={`inline-flex items-center gap-1.5 text-xs transition-colors ${split ? 'text-[#00c766]' : 'text-[#6e7a94] hover:text-[#00c766]'}`}
+            className={`inline-flex items-center gap-1.5 text-xs transition-colors ${split ? 'text-[#00c766]' : 'text-[#8592ad] hover:text-[#00c766]'}`}
           >
             <Rows2 size={13} /> {split ? 'Single view' : 'Split'}
           </button>
-          <button onClick={handleReset} className="inline-flex items-center gap-1.5 text-xs text-[#6e7a94] transition-colors hover:text-[#c9d3e0]">
+          <button onClick={handleReset} className="inline-flex items-center gap-1.5 text-xs text-[#8592ad] transition-colors hover:text-[#c9d3e0]">
             <RotateCcw size={13} /> Reset
           </button>
-          <button onClick={close} className="inline-flex items-center gap-1.5 text-xs text-[#6e7a94] transition-colors hover:text-[#c9d3e0]">
+          <button onClick={close} className="inline-flex items-center gap-1.5 text-xs text-[#8592ad] transition-colors hover:text-[#c9d3e0]">
             <X size={13} /> Close
           </button>
         </div>

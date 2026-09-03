@@ -107,7 +107,7 @@ const CourseViewerSidebar: React.FC<CourseViewerSidebarProps> = ({
         <div className="flex items-center justify-between mb-2.5">
           <div className="flex items-center gap-2">
             <BookOpen className="w-3.5 h-3.5 text-[#00a859]" />
-            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#6e7a94]">
+            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8592ad]">
               Course Progress
             </span>
           </div>
@@ -116,7 +116,7 @@ const CourseViewerSidebar: React.FC<CourseViewerSidebarProps> = ({
           </span>
         </div>
         <ProgressBar value={progressPct} color="green" size="sm" />
-        <p className="text-[11px] text-[#6e7a94] mt-2">
+        <p className="text-[11px] text-[#8592ad] mt-2">
           {completedCount} of {totalLectures} lessons completed
         </p>
       </div>
@@ -140,7 +140,7 @@ const CourseViewerSidebar: React.FC<CourseViewerSidebarProps> = ({
                 }`}
               >
                 {/* Chevron */}
-                <span className="flex-shrink-0 text-[#6e7a94] group-hover:text-[#9aa5bf] transition-colors">
+                <span className="flex-shrink-0 text-[#8592ad] group-hover:text-[#9aa5bf] transition-colors">
                   {isExpanded ? (
                     <ChevronDown className="w-4 h-4" />
                   ) : (
@@ -151,7 +151,7 @@ const CourseViewerSidebar: React.FC<CourseViewerSidebarProps> = ({
                 {/* Module info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-[#6e7a94] bg-[#1a2332] px-1.5 py-0.5 rounded">
+                    <span className="text-[10px] font-bold text-[#8592ad] bg-[#1a2332] px-1.5 py-0.5 rounded">
                       {modIdx + 1}
                     </span>
                     <h3 className={`text-[13px] font-semibold truncate ${
@@ -176,10 +176,10 @@ const CourseViewerSidebar: React.FC<CourseViewerSidebarProps> = ({
                         />
                       ))}
                     </div>
-                    <span className="text-[10px] text-[#6e7a94]">
+                    <span className="text-[10px] text-[#8592ad]">
                       {modCompleted}/{modTotal}
                     </span>
-                    <span className="text-[10px] text-[#6e7a94] flex items-center gap-1">
+                    <span className="text-[10px] text-[#8592ad] flex items-center gap-1">
                       <Clock className="w-2.5 h-2.5" />
                       {formatModuleDuration(mod.lectures)}
                     </span>
@@ -219,14 +219,14 @@ const CourseViewerSidebar: React.FC<CourseViewerSidebarProps> = ({
                             <CheckCircle2 className="w-[15px] h-[15px] text-[#00a859]" />
                           ) : (
                             <Circle className={`w-[15px] h-[15px] ${
-                              active ? 'text-[#00a859]' : 'text-[#3d4a63]'
+                              active ? 'text-[#00a859]' : 'text-[#7c8aa6]'
                             }`} />
                           )}
                         </span>
 
                         {/* Lecture number */}
                         <span className={`text-[10px] font-mono w-5 text-right flex-shrink-0 ${
-                          active ? 'text-[#00a859]' : 'text-[#4d5a73]'
+                          active ? 'text-[#00a859]' : 'text-[#7c8aa6]'
                         }`}>
                           {lectureIdx + 1}.
                         </span>
@@ -237,7 +237,7 @@ const CourseViewerSidebar: React.FC<CourseViewerSidebarProps> = ({
                             active
                               ? 'text-[#f3f6ff] font-semibold'
                               : done
-                              ? 'text-[#6e7a94]'
+                              ? 'text-[#8592ad]'
                               : 'text-[#c4cad6]'
                           }`}>
                             {lecture.title}
@@ -253,7 +253,7 @@ const CourseViewerSidebar: React.FC<CourseViewerSidebarProps> = ({
                             </span>
                           )}
                           <span className={`text-[10px] tabular-nums ${
-                            active ? 'text-[#9aa5bf]' : 'text-[#4d5a73]'
+                            active ? 'text-[#9aa5bf]' : 'text-[#7c8aa6]'
                           }`}>
                             {lecture.duration}
                           </span>

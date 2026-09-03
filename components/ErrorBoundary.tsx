@@ -55,7 +55,7 @@ class ErrorBoundary extends React.Component<Props, State> {
           </p>
           <button
             onClick={this.handleReload}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#00a859] text-white text-sm font-bold hover:bg-[#007a42] transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#007a42] text-white text-sm font-bold hover:bg-[#006635] transition-colors"
           >
             <RotateCcw size={15} />
             {ar ? 'إعادة التحميل' : 'Reload the app'}

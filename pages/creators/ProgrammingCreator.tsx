@@ -535,12 +535,12 @@ const ProgrammingCreator: React.FC = () => {
                     <h2 className="text-base font-bold text-[#f3f6ff] flex items-center gap-2">
                       {lang.name}
                       {!lang.available && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#6e7a94]">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#8592ad]">
                           <Lock size={10} /> {uiLang === 'ar' ? 'قريباً' : 'Coming Soon'}
                         </span>
                       )}
                     </h2>
-                    <p className="text-xs text-[#6e7a94]">
+                    <p className="text-xs text-[#8592ad]">
                       {lang.available
                         ? `${getDisplayModules(lang.slug, lang.modules).length} ${t('studio.modulesLabel')}`
                         : uiLang === 'ar'
@@ -562,14 +562,14 @@ const ProgrammingCreator: React.FC = () => {
                     if (!foreignLang) return null;
                     return (
                       <div className="flex items-center gap-1.5" dir="ltr">
-                        <span className="hidden md:inline text-[10px] font-medium text-[#4d5a73]">
+                        <span className="hidden md:inline text-[10px] font-medium text-[#7c8aa6]">
                           {foreignLang.entry.ownerName}
                         </span>
                         <StatusBadge status={statusOf(foreignLang.entry.item)} />
                         <button
                           onClick={() => editForeignLanguage(foreignLang.entry)}
                           title={uiLang === 'ar' ? 'تعديل (مشرف)' : 'Edit as admin'}
-                          className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#f3a43a] hover:bg-[#f3a43a]/10 transition-all"
+                          className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#8592ad] hover:text-[#f3a43a] hover:bg-[#f3a43a]/10 transition-all"
                         >
                           <Edit3 size={13} />
                         </button>
@@ -586,21 +586,21 @@ const ProgrammingCreator: React.FC = () => {
                         <button
                           onClick={() => handleToggleLanguagePublish(lang.slug)}
                           title={statusOf(def) === 'published' ? t('studio.unpublish') : t('studio.publish')}
-                          className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#00a859] hover:bg-[#00a859]/10 transition-all"
+                          className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#8592ad] hover:text-[#00a859] hover:bg-[#00a859]/10 transition-all"
                         >
                           {statusOf(def) === 'published' ? <EyeOff size={13} /> : <Eye size={13} />}
                         </button>
                         <button
                           onClick={() => navigate(`/creators/programming/edit-language/${lang.slug}`)}
                           title={uiLang === 'ar' ? 'تعديل اللغة' : 'Edit language'}
-                          className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#60a5fa] hover:bg-[#60a5fa]/10 transition-all"
+                          className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#8592ad] hover:text-[#60a5fa] hover:bg-[#60a5fa]/10 transition-all"
                         >
                           <Edit3 size={13} />
                         </button>
                         <button
                           onClick={() => handleDeleteLanguage(lang.slug, lang.name)}
                           title={uiLang === 'ar' ? 'حذف اللغة' : 'Delete language'}
-                          className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-red-400 hover:bg-red-500/10 transition-all"
+                          className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#8592ad] hover:text-red-400 hover:bg-red-500/10 transition-all"
                         >
                           <Trash2 size={13} />
                         </button>
@@ -672,15 +672,15 @@ const ProgrammingCreator: React.FC = () => {
                       className="w-full flex items-center gap-3 px-5 py-3 hover:bg-[#182235]/50 transition-colors text-left cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-[#00a859]/50"
                     >
                       {isExpanded ? (
-                        <ChevronDown size={14} className="text-[#6e7a94] flex-shrink-0" />
+                        <ChevronDown size={14} className="text-[#8592ad] flex-shrink-0" />
                       ) : (
-                        <ChevronRight size={14} className="text-[#6e7a94] flex-shrink-0" />
+                        <ChevronRight size={14} className="text-[#8592ad] flex-shrink-0" />
                       )}
                       <div className="flex-1 min-w-0">
                         <span className="text-sm font-semibold text-[#d2d7e3]">
                           {mod.title.en}
                         </span>
-                        <span className="text-xs text-[#4d5a73] ml-2">
+                        <span className="text-xs text-[#7c8aa6] ml-2">
                           {mod.concepts.length} {t('studio.conceptsLabel')}
                           {creatorConcepts.length > 0 && (
                             <span className="text-[#00a859]"> + {creatorConcepts.length} {t('studio.customLabel')}</span>
@@ -690,7 +690,7 @@ const ProgrammingCreator: React.FC = () => {
                       {(isCreatorMod || isAdmin) && (
                         <div className="flex items-center gap-1.5 flex-shrink-0" dir="ltr">
                           {foreignMod && (
-                            <span className="hidden md:inline text-[10px] font-medium text-[#4d5a73]">
+                            <span className="hidden md:inline text-[10px] font-medium text-[#7c8aa6]">
                               {foreignMod.ownerName}
                             </span>
                           )}
@@ -702,7 +702,7 @@ const ProgrammingCreator: React.FC = () => {
                                 handleToggleModulePublish(lang.slug, mod);
                               }}
                               title={statusOf(mod) === 'published' ? t('studio.unpublish') : t('studio.publish')}
-                              className="w-6 h-6 touch:w-11 touch:h-11 flex items-center justify-center rounded text-[#4d5a73] hover:text-[#00a859] transition-colors"
+                              className="w-6 h-6 touch:w-11 touch:h-11 flex items-center justify-center rounded text-[#7c8aa6] hover:text-[#00a859] transition-colors"
                             >
                               {statusOf(mod) === 'published' ? <EyeOff size={12} /> : <Eye size={12} />}
                             </button>
@@ -719,7 +719,7 @@ const ProgrammingCreator: React.FC = () => {
                                   ? 'تعديل (مشرف)'
                                   : 'Edit as admin'
                             }
-                            className={`w-6 h-6 touch:w-11 touch:h-11 flex items-center justify-center rounded text-[#4d5a73] transition-colors ${
+                            className={`w-6 h-6 touch:w-11 touch:h-11 flex items-center justify-center rounded text-[#7c8aa6] transition-colors ${
                               isCreatorMod
                                 ? 'hover:text-[#60a5fa]'
                                 : foreignMod
@@ -735,7 +735,7 @@ const ProgrammingCreator: React.FC = () => {
                                 e.stopPropagation();
                                 handleDeleteModule(lang.slug, mod.id);
                               }}
-                              className="w-6 h-6 touch:w-11 touch:h-11 flex items-center justify-center rounded text-[#4d5a73] hover:text-red-400 transition-colors"
+                              className="w-6 h-6 touch:w-11 touch:h-11 flex items-center justify-center rounded text-[#7c8aa6] hover:text-red-400 transition-colors"
                             >
                               <Trash2 size={12} />
                             </button>
@@ -763,17 +763,17 @@ const ProgrammingCreator: React.FC = () => {
                               {concept.type === 'challenge' ? (
                                 <Trophy size={12} className="text-[#f3a43a] flex-shrink-0" />
                               ) : (
-                                <BookOpen size={12} className="text-[#6e7a94] flex-shrink-0" />
+                                <BookOpen size={12} className="text-[#8592ad] flex-shrink-0" />
                               )}
                               <span className="text-xs text-[#c4cad6] flex-1 truncate">
                                 {concept.title.en}
                               </span>
                               {foreignConcept && (
-                                <span className="hidden md:inline text-[10px] text-[#4d5a73] flex-shrink-0">
+                                <span className="hidden md:inline text-[10px] text-[#7c8aa6] flex-shrink-0">
                                   {foreignConcept.ownerName}
                                 </span>
                               )}
-                              <span className="text-[10px] text-[#4d5a73] flex-shrink-0">
+                              <span className="text-[10px] text-[#7c8aa6] flex-shrink-0">
                                 {isCustom
                                   ? uiLang === 'ar'
                                     ? 'مخصص'
@@ -791,7 +791,7 @@ const ProgrammingCreator: React.FC = () => {
                                           ? 'تعديل (مشرف)'
                                           : 'Edit as admin'
                                     }
-                                    className={`w-6 h-6 touch:w-11 touch:h-11 flex items-center justify-center rounded text-[#4d5a73] transition-colors ${
+                                    className={`w-6 h-6 touch:w-11 touch:h-11 flex items-center justify-center rounded text-[#7c8aa6] transition-colors ${
                                       ownConcept
                                         ? 'hover:text-[#60a5fa]'
                                         : foreignConcept
@@ -806,7 +806,7 @@ const ProgrammingCreator: React.FC = () => {
                                       onClick={() =>
                                         handleDeleteConcept(lang.slug, mod.slug, concept.id)
                                       }
-                                      className="w-6 h-6 touch:w-11 touch:h-11 flex items-center justify-center rounded text-[#4d5a73] hover:text-red-400 transition-colors"
+                                      className="w-6 h-6 touch:w-11 touch:h-11 flex items-center justify-center rounded text-[#7c8aa6] hover:text-red-400 transition-colors"
                                     >
                                       <Trash2 size={11} />
                                     </button>
@@ -828,7 +828,7 @@ const ProgrammingCreator: React.FC = () => {
                               {concept.type === 'challenge' ? (
                                 <Trophy size={12} className="text-[#f3a43a] flex-shrink-0" />
                               ) : (
-                                <BookOpen size={12} className="text-[#6e7a94] flex-shrink-0" />
+                                <BookOpen size={12} className="text-[#8592ad] flex-shrink-0" />
                               )}
                               <span className="text-xs text-[#c4cad6] flex-1 truncate">
                                 {concept.title.en}
@@ -841,7 +841,7 @@ const ProgrammingCreator: React.FC = () => {
                                       `/creators/programming/${lang.slug}/${mod.slug}/${concept.slug}`
                                     )
                                   }
-                                  className="w-6 h-6 touch:w-11 touch:h-11 flex items-center justify-center rounded text-[#4d5a73] hover:text-[#60a5fa] transition-colors"
+                                  className="w-6 h-6 touch:w-11 touch:h-11 flex items-center justify-center rounded text-[#7c8aa6] hover:text-[#60a5fa] transition-colors"
                                 >
                                   <Edit3 size={11} />
                                 </button>
@@ -849,7 +849,7 @@ const ProgrammingCreator: React.FC = () => {
                                   onClick={() =>
                                     handleDeleteConcept(lang.slug, mod.slug, concept.id)
                                   }
-                                  className="w-6 h-6 touch:w-11 touch:h-11 flex items-center justify-center rounded text-[#4d5a73] hover:text-red-400 transition-colors"
+                                  className="w-6 h-6 touch:w-11 touch:h-11 flex items-center justify-center rounded text-[#7c8aa6] hover:text-red-400 transition-colors"
                                 >
                                   <Trash2 size={11} />
                                 </button>
@@ -863,7 +863,7 @@ const ProgrammingCreator: React.FC = () => {
                             onClick={() =>
                               navigate(`/creators/programming/new-concept/${lang.slug}/${mod.slug}`)
                             }
-                            className="flex items-center gap-1.5 px-8 py-2.5 text-xs font-medium text-[#6e7a94] hover:text-[#00a859] transition-colors w-full"
+                            className="flex items-center gap-1.5 px-8 py-2.5 text-xs font-medium text-[#8592ad] hover:text-[#00a859] transition-colors w-full"
                           >
                             <Plus size={12} /> {t('studio.addConcept')}
                           </button>
@@ -883,11 +883,11 @@ const ProgrammingCreator: React.FC = () => {
           <div className="space-y-3 pt-2">
             <div className="flex items-center gap-2">
               <Users size={14} className="text-[#60a5fa]" />
-              <h2 className="text-sm font-bold text-[#6e7a94] uppercase tracking-wider">
+              <h2 className="text-sm font-bold text-[#8592ad] uppercase tracking-wider">
                 {uiLang === 'ar' ? 'مشارَك معك' : 'Shared with you'}
               </h2>
             </div>
-            <p className="text-xs text-[#6e7a94] -mt-1">
+            <p className="text-xs text-[#8592ad] -mt-1">
               {uiLang === 'ar'
                 ? 'لديك نفس صلاحيات المالك هنا: التعديل والنشر والحذف.'
                 : "You have the owner's rights here: edit, publish and delete."}
@@ -931,7 +931,7 @@ const ProgrammingCreator: React.FC = () => {
                             <h3 className="truncate text-sm font-bold text-[#f3f6ff]">
                               {titleOf(row) || t('studio.untitled')}
                             </h3>
-                            <p className="mt-0.5 truncate text-xs text-[#6e7a94]" dir="ltr">
+                            <p className="mt-0.5 truncate text-xs text-[#8592ad]" dir="ltr">
                               {row.entry.languageSlug}
                               {row.entry.moduleSlug ? ` · ${row.entry.moduleSlug}` : ''}
                             </p>
@@ -946,7 +946,7 @@ const ProgrammingCreator: React.FC = () => {
                                   ? t('studio.unpublish')
                                   : t('studio.publish')
                               }
-                              className="flex h-7 w-7 items-center justify-center rounded-md text-[#6e7a94] transition-all hover:bg-[#00a859]/10 hover:text-[#00a859]"
+                              className="flex h-7 w-7 items-center justify-center rounded-md text-[#8592ad] transition-all hover:bg-[#00a859]/10 hover:text-[#00a859]"
                             >
                               {statusOf(row.entry.item) === 'published' ? (
                                 <EyeOff size={13} />
@@ -957,14 +957,14 @@ const ProgrammingCreator: React.FC = () => {
                             <button
                               onClick={() => editSharedRow(row)}
                               title={t('studio.edit')}
-                              className="flex h-7 w-7 items-center justify-center rounded-md text-[#6e7a94] transition-all hover:bg-[#60a5fa]/10 hover:text-[#60a5fa]"
+                              className="flex h-7 w-7 items-center justify-center rounded-md text-[#8592ad] transition-all hover:bg-[#60a5fa]/10 hover:text-[#60a5fa]"
                             >
                               <Edit3 size={13} />
                             </button>
                             <button
                               onClick={() => deleteSharedRow(row)}
                               title={t('studio.delete')}
-                              className="flex h-7 w-7 items-center justify-center rounded-md text-[#6e7a94] transition-all hover:bg-red-500/10 hover:text-red-400"
+                              className="flex h-7 w-7 items-center justify-center rounded-md text-[#8592ad] transition-all hover:bg-red-500/10 hover:text-red-400"
                             >
                               <Trash2 size={13} />
                             </button>
@@ -983,14 +983,14 @@ const ProgrammingCreator: React.FC = () => {
           <div className="space-y-3 pt-2">
             <div className="flex items-center gap-2">
               <ShieldCheck size={14} className="text-[#f3a43a]" />
-              <h2 className="text-sm font-bold text-[#6e7a94] uppercase tracking-wider">
+              <h2 className="text-sm font-bold text-[#8592ad] uppercase tracking-wider">
                 {uiLang === 'ar'
                   ? 'المحتوى البرمجي المنشور وقيد المراجعة'
                   : 'Published & in-review programming content'}{' '}
                 ({publishedRows.length})
               </h2>
             </div>
-            <p className="text-xs text-[#6e7a94] -mt-1">
+            <p className="text-xs text-[#8592ad] -mt-1">
               {uiLang === 'ar'
                 ? 'كل ما هو منشور على المنصة وكل ما أُرسل للمراجعة، بما في ذلك محتواك. يمكنك تعديل أي منه وتبقى ملكية المؤلف كما هي. المسودات تبقى خاصة بمؤلفها.'
                 : 'Everything live on the platform plus everything submitted for review, your own content included. You can edit any of it; the original author is kept. Drafts stay private to their author.'}
@@ -1033,7 +1033,7 @@ const ProgrammingCreator: React.FC = () => {
                       <h3 className="text-sm font-bold text-[#f3f6ff] truncate">
                         {titleOf(row) || t('studio.untitled')}
                       </h3>
-                      <p className="text-xs text-[#6e7a94] truncate mt-0.5" dir="ltr">
+                      <p className="text-xs text-[#8592ad] truncate mt-0.5" dir="ltr">
                         {entry.languageSlug}
                         {entry.moduleSlug ? ` · ${entry.moduleSlug}` : ''}
                         {' · '}
@@ -1056,7 +1056,7 @@ const ProgrammingCreator: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-2 flex-shrink-0" dir="ltr">
-                      <span className="hidden md:flex text-[10px] font-medium text-[#4d5a73] items-center gap-1">
+                      <span className="hidden md:flex text-[10px] font-medium text-[#7c8aa6] items-center gap-1">
                         <User size={10} />{' '}
                         {ownerLabel(entry.ownerId, entry.ownerName, user?._id, uiLang)}
                       </span>
@@ -1077,7 +1077,7 @@ const ProgrammingCreator: React.FC = () => {
                         title={
                           mine ? t('studio.edit') : uiLang === 'ar' ? 'تعديل (مشرف)' : 'Edit as admin'
                         }
-                        className={`w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] transition-all ${
+                        className={`w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#8592ad] transition-all ${
                           mine
                             ? 'hover:text-[#60a5fa] hover:bg-[#60a5fa]/10'
                             : 'hover:text-[#f3a43a] hover:bg-[#f3a43a]/10'

@@ -632,7 +632,7 @@ const NetworkSimulator: React.FC<NetworkSimulatorProps> = ({ simulation, onNodeM
 
         {/* Drag hint */}
         {nodes.length > 0 && (
-          <div className="absolute bottom-2.5 left-3 flex items-center gap-1.5 text-[10px] font-medium text-[#4d5a73] pointer-events-none select-none">
+          <div className="absolute bottom-2.5 left-3 flex items-center gap-1.5 text-[10px] font-medium text-[#7c8aa6] pointer-events-none select-none">
             <Move size={11} />{' '}
             {L === 'ar' ? 'اسحب الأجهزة لإعادة ترتيبها' : 'Drag devices to rearrange'}
           </div>

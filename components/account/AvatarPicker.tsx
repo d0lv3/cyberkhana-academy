@@ -63,7 +63,7 @@ const AvatarPicker: React.FC<AvatarPickerProps> = ({
           <p className="text-sm font-semibold text-[#f3f6ff]">
             {ar ? 'صورتك' : 'Your picture'}
           </p>
-          <p className="mt-0.5 text-xs text-[#6e7a94]">
+          <p className="mt-0.5 text-xs text-[#8592ad]">
             {ar
               ? 'تظهر في ملفك الشخصي ولوحة المتصدرين.'
               : 'Shown on your profile and the leaderboard.'}
@@ -73,7 +73,7 @@ const AvatarPicker: React.FC<AvatarPickerProps> = ({
           <button
             type="button"
             onClick={() => onChange('')}
-            className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-lg border border-[#263248] px-2.5 py-1.5 touch:min-h-tap text-xs font-semibold text-[#6e7a94] transition-colors hover:border-red-400/45 hover:text-red-400"
+            className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-lg border border-[#263248] px-2.5 py-1.5 touch:min-h-tap text-xs font-semibold text-[#8592ad] transition-colors hover:border-red-400/45 hover:text-red-400"
           >
             <Trash2 size={13} /> {ar ? 'إزالة' : 'Remove'}
           </button>

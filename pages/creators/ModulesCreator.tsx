@@ -172,7 +172,7 @@ const ModulesCreator: React.FC = () => {
         </div>
 
         <div className="space-y-3">
-          <h2 className="text-sm font-bold text-[#6e7a94] uppercase tracking-wider">
+          <h2 className="text-sm font-bold text-[#8592ad] uppercase tracking-wider">
             {t('studio.yourModules')} {modules.length > 0 && `(${modules.length})`}
           </h2>
 
@@ -181,7 +181,7 @@ const ModulesCreator: React.FC = () => {
               <div className="w-14 h-14 rounded-2xl bg-[#121a2a] border border-[#263248] flex items-center justify-center mx-auto mb-4">
                 <Box size={24} className="text-[#34d399]" />
               </div>
-              <p className="text-sm text-[#6e7a94] mb-4 max-w-sm mx-auto">
+              <p className="text-sm text-[#8592ad] mb-4 max-w-sm mx-auto">
                 {lang === 'ar'
                   ? 'لا توجد وحدات بعد. ابنِ أول وحدة مقسّمة إلى أقسام.'
                   : 'No modules yet. Build your first section-divided module.'}
@@ -202,22 +202,22 @@ const ModulesCreator: React.FC = () => {
                       mod.isPublished ? 'bg-[#34d399]/10 border border-[#34d399]/20' : 'bg-[#1a2332] border border-[#263248]'
                     }`}
                   >
-                    {mod.isPublished ? <Eye size={16} className="text-[#34d399]" /> : <EyeOff size={16} className="text-[#6e7a94]" />}
+                    {mod.isPublished ? <Eye size={16} className="text-[#34d399]" /> : <EyeOff size={16} className="text-[#8592ad]" />}
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <h3 className="text-sm font-bold text-[#f3f6ff] truncate">{mod.title.en || t('studio.untitled')}</h3>
-                    <p className="text-xs text-[#6e7a94] truncate mt-0.5">{mod.description.en || t('studio.noDescription')}</p>
+                    <p className="text-xs text-[#8592ad] truncate mt-0.5">{mod.description.en || t('studio.noDescription')}</p>
                   </div>
 
                   <div className="flex items-center gap-2 flex-shrink-0" dir="ltr">
-                    <span className="hidden md:flex text-[10px] font-medium text-[#4d5a73] items-center gap-1">
+                    <span className="hidden md:flex text-[10px] font-medium text-[#7c8aa6] items-center gap-1">
                       <User size={10} /> {authorOf(mod)}
                     </span>
-                    <span className="hidden sm:flex text-[10px] text-[#4d5a73] items-center gap-1">
+                    <span className="hidden sm:flex text-[10px] text-[#7c8aa6] items-center gap-1">
                       <Layers size={10} /> {mod.totalLessons} {t('studio.sectionsLabel')}
                     </span>
-                    <span className="hidden sm:flex text-[10px] text-[#4d5a73] items-center gap-1">
+                    <span className="hidden sm:flex text-[10px] text-[#7c8aa6] items-center gap-1">
                       <Clock size={10} /> {mod.estimatedHours}h
                     </span>
                     <DifficultyBadge difficulty={mod.difficulty} />
@@ -226,19 +226,19 @@ const ModulesCreator: React.FC = () => {
                     <button
                       onClick={() => handleTogglePublish(mod)}
                       title={statusOf(mod) === 'published' ? t('studio.unpublish') : t('studio.publish')}
-                      className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#00a859] hover:bg-[#00a859]/10 transition-all"
+                      className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#8592ad] hover:text-[#00a859] hover:bg-[#00a859]/10 transition-all"
                     >
                       {statusOf(mod) === 'published' ? <EyeOff size={13} /> : <Eye size={13} />}
                     </button>
                     <button
                       onClick={() => navigate(`/creators/modules/edit/${mod.id}`)}
-                      className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#60a5fa] hover:bg-[#60a5fa]/10 transition-all"
+                      className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#8592ad] hover:text-[#60a5fa] hover:bg-[#60a5fa]/10 transition-all"
                     >
                       <Edit3 size={13} />
                     </button>
                     <button
                       onClick={() => handleDelete(mod.id)}
-                      className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-red-400 hover:bg-red-500/10 transition-all"
+                      className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#8592ad] hover:text-red-400 hover:bg-red-500/10 transition-all"
                     >
                       <Trash2 size={13} />
                     </button>
@@ -267,11 +267,11 @@ const ModulesCreator: React.FC = () => {
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <ShieldCheck size={14} className="text-[#f3a43a]" />
-              <h2 className="text-sm font-bold text-[#6e7a94] uppercase tracking-wider">
+              <h2 className="text-sm font-bold text-[#8592ad] uppercase tracking-wider">
                 {lang === 'ar' ? 'الوحدات المنشورة وقيد المراجعة' : 'Published & in-review modules'} ({allPublished.length})
               </h2>
             </div>
-            <p className="text-xs text-[#6e7a94] -mt-1">
+            <p className="text-xs text-[#8592ad] -mt-1">
               {lang === 'ar'
                 ? 'كمشرف، يمكنك تعديل أي وحدة منشورة. تبقى ملكية المؤلف كما هي.'
                 : 'As an admin you can edit any published module. The original author is kept.'}
@@ -293,11 +293,11 @@ const ModulesCreator: React.FC = () => {
 
                   <div className="flex-1 min-w-0">
                     <h3 className="text-sm font-bold text-[#f3f6ff] truncate">{mod.title.en || t('studio.untitled')}</h3>
-                    <p className="text-xs text-[#6e7a94] truncate mt-0.5">{mod.description.en || t('studio.noDescription')}</p>
+                    <p className="text-xs text-[#8592ad] truncate mt-0.5">{mod.description.en || t('studio.noDescription')}</p>
                   </div>
 
                   <div className="flex items-center gap-2 flex-shrink-0" dir="ltr">
-                    <span className="hidden md:flex text-[10px] font-medium text-[#4d5a73] items-center gap-1">
+                    <span className="hidden md:flex text-[10px] font-medium text-[#7c8aa6] items-center gap-1">
                       <User size={10} /> {ownerLabel(mod._ownerId, mod._ownerName, user?._id, lang)}
                     </span>
                     <DifficultyBadge difficulty={mod.difficulty} />
@@ -306,7 +306,7 @@ const ModulesCreator: React.FC = () => {
                     <button
                       onClick={() => editPublished(mod)}
                       title={isMine(mod) ? t('studio.edit') : lang === 'ar' ? 'تعديل (مشرف)' : 'Edit as admin'}
-                      className={`w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] transition-all ${
+                      className={`w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#8592ad] transition-all ${
                         isMine(mod)
                           ? 'hover:text-[#60a5fa] hover:bg-[#60a5fa]/10'
                           : 'hover:text-[#f3a43a] hover:bg-[#f3a43a]/10'

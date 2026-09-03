@@ -52,7 +52,7 @@ interface ModuleEditorProps {
 const DIFFICULTIES: Difficulty[] = ['Beginner', 'Easy', 'Medium', 'Hard', 'Expert'];
 
 const inputCls =
-  'w-full bg-[#0a0f18] border border-[#263248] rounded-lg px-3 py-2 text-sm text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#3d4a63]';
+  'w-full bg-[#0a0f18] border border-[#263248] rounded-lg px-3 py-2 text-sm text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#7c8aa6]';
 
 /** Where the module list stashes the foreign module an admin chose to edit. */
 const ADMIN_EDIT_STASH = 'academy-admin-module-edit';
@@ -476,7 +476,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
           className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
             tab === 'details'
               ? 'bg-[#00a859]/12 text-[#00a859] border border-[#00a859]/30'
-              : 'text-[#6e7a94] hover:text-[#d2d7e3] border border-transparent'
+              : 'text-[#8592ad] hover:text-[#d2d7e3] border border-transparent'
           }`}
         >
           <FileText size={15} />
@@ -488,7 +488,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
           className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
             tab === 'content'
               ? 'bg-[#00a859]/12 text-[#00a859] border border-[#00a859]/30'
-              : 'text-[#6e7a94] hover:text-[#d2d7e3] border border-transparent'
+              : 'text-[#8592ad] hover:text-[#d2d7e3] border border-transparent'
           }`}
         >
           <Layers size={15} />
@@ -560,7 +560,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
                   <option key={d} value={d}>{MODULE_DOMAIN_META[d].label.en}</option>
                 ))}
               </select>
-              <p className="mt-1 text-[11px] text-[#6e7a94]">Offensive, Defensive, or General, shown as the module's tag.</p>
+              <p className="mt-1 text-[11px] text-[#8592ad]">Offensive, Defensive, or General, shown as the module's tag.</p>
             </div>
           </div>
 
@@ -572,7 +572,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
             <div className="flex items-center justify-between py-1">
               <div>
                 <p className="text-sm font-medium text-[#d2d7e3]">Also show on Modules page</p>
-                <p className="text-xs text-[#6e7a94]">Surface this OS module in the standalone Modules hub too</p>
+                <p className="text-xs text-[#8592ad]">Surface this OS module in the standalone Modules hub too</p>
               </div>
               <button
                 type="button"
@@ -596,7 +596,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
             <span className="text-sm font-bold text-[#f3f6ff] flex items-center gap-2">
               <Layers size={15} className="text-[#f3a43a]" /> Structure
             </span>
-            <span className="text-xs text-[#6e7a94]" dir="ltr">
+            <span className="text-xs text-[#8592ad]" dir="ltr">
               {chapters.length} ch · {totalSections} sec
             </span>
           </div>
@@ -606,20 +606,20 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
               <div key={ch.id} className="rounded-lg border border-[#263248] bg-[#0d1117]">
                 {/* Chapter header */}
                 <div className="flex items-center gap-2 px-2.5 py-2 border-b border-[#263248]">
-                  <span className="text-[10px] font-bold text-[#6e7a94] w-4 text-center flex-shrink-0">{ci + 1}</span>
+                  <span className="text-[10px] font-bold text-[#8592ad] w-4 text-center flex-shrink-0">{ci + 1}</span>
                   <input
                     value={ch.title}
                     onChange={(e) => setChapterTitle(ci, e.target.value)}
                     className="flex-1 min-w-0 bg-transparent text-xs font-bold text-[#f3f6ff] focus:outline-none"
                     dir="ltr"
                   />
-                  <button onClick={() => moveChapter(ci, -1)} disabled={ci === 0} className="w-6 h-6 flex items-center justify-center rounded text-[#4d5a73] hover:text-[#d2d7e3] disabled:opacity-20">
+                  <button onClick={() => moveChapter(ci, -1)} disabled={ci === 0} className="w-6 h-6 flex items-center justify-center rounded text-[#7c8aa6] hover:text-[#d2d7e3] disabled:opacity-20">
                     <ArrowUp size={12} />
                   </button>
-                  <button onClick={() => moveChapter(ci, 1)} disabled={ci === chapters.length - 1} className="w-6 h-6 flex items-center justify-center rounded text-[#4d5a73] hover:text-[#d2d7e3] disabled:opacity-20">
+                  <button onClick={() => moveChapter(ci, 1)} disabled={ci === chapters.length - 1} className="w-6 h-6 flex items-center justify-center rounded text-[#7c8aa6] hover:text-[#d2d7e3] disabled:opacity-20">
                     <ArrowDown size={12} />
                   </button>
-                  <button onClick={() => removeChapter(ci)} className="w-6 h-6 flex items-center justify-center rounded text-[#4d5a73] hover:text-red-400">
+                  <button onClick={() => removeChapter(ci)} className="w-6 h-6 flex items-center justify-center rounded text-[#7c8aa6] hover:text-red-400">
                     <Trash2 size={12} />
                   </button>
                 </div>
@@ -639,18 +639,18 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
                         {s.videoId ? (
                           <Film size={12} className="text-[#60a5fa] flex-shrink-0" />
                         ) : (
-                          <FileText size={12} className="text-[#6e7a94] flex-shrink-0" />
+                          <FileText size={12} className="text-[#8592ad] flex-shrink-0" />
                         )}
                         <span className={`flex-1 min-w-0 truncate text-xs ${isActive ? 'text-[#f3f6ff] font-semibold' : 'text-[#c4cad6]'}`}>
                           {s.title || 'Untitled section'}
                         </span>
-                        <button onClick={(e) => { e.stopPropagation(); moveSection(ci, si, -1); }} disabled={si === 0} className="w-5 h-5 flex items-center justify-center rounded text-[#4d5a73] hover:text-[#d2d7e3] disabled:opacity-20">
+                        <button onClick={(e) => { e.stopPropagation(); moveSection(ci, si, -1); }} disabled={si === 0} className="w-5 h-5 flex items-center justify-center rounded text-[#7c8aa6] hover:text-[#d2d7e3] disabled:opacity-20">
                           <ArrowUp size={11} />
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); moveSection(ci, si, 1); }} disabled={si === ch.sections.length - 1} className="w-5 h-5 flex items-center justify-center rounded text-[#4d5a73] hover:text-[#d2d7e3] disabled:opacity-20">
+                        <button onClick={(e) => { e.stopPropagation(); moveSection(ci, si, 1); }} disabled={si === ch.sections.length - 1} className="w-5 h-5 flex items-center justify-center rounded text-[#7c8aa6] hover:text-[#d2d7e3] disabled:opacity-20">
                           <ArrowDown size={11} />
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); removeSection(ci, si); }} className="w-5 h-5 flex items-center justify-center rounded text-[#4d5a73] hover:text-red-400">
+                        <button onClick={(e) => { e.stopPropagation(); removeSection(ci, si); }} className="w-5 h-5 flex items-center justify-center rounded text-[#7c8aa6] hover:text-red-400">
                           <Trash2 size={11} />
                         </button>
                       </div>
@@ -658,7 +658,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
                   })}
                   <button
                     onClick={() => addSection(ci)}
-                    className="w-full flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[11px] font-medium text-[#6e7a94] hover:text-[#00a859] transition-colors"
+                    className="w-full flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[11px] font-medium text-[#8592ad] hover:text-[#00a859] transition-colors"
                   >
                     <Plus size={12} /> Add Section
                   </button>
@@ -668,7 +668,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
 
             <button
               onClick={addChapter}
-              className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-[#6e7a94] bg-[#0d1420] border border-dashed border-[#263248] hover:border-[#f3a43a]/40 hover:text-[#f3a43a] transition-all"
+              className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-[#8592ad] bg-[#0d1420] border border-dashed border-[#263248] hover:border-[#f3a43a]/40 hover:text-[#f3a43a] transition-all"
             >
               <Plus size={13} /> Add Chapter
             </button>
@@ -732,10 +732,10 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
                 <div className="flex items-center gap-2 mb-1">
                   <HelpCircle size={15} className="text-[#9fef00]" />
                   <h3 className="text-sm font-bold text-[#f3f6ff]">
-                    Section Quiz <span className="text-[#6e7a94] font-normal">(optional)</span>
+                    Section Quiz <span className="text-[#8592ad] font-normal">(optional)</span>
                   </h3>
                 </div>
-                <p className="text-xs text-[#6e7a94] mb-4">
+                <p className="text-xs text-[#8592ad] mb-4">
                   Add multiple-choice questions students answer after this section. Options are
                   shuffled for each attempt.
                 </p>
@@ -747,8 +747,8 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
 
               <EnhancedCard padding="none" className="overflow-hidden">
                 <div className="px-4 py-3 border-b border-[#263248] bg-[#0b1019] flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#6e7a94]">Section Preview</span>
-                  <span className="text-[10px] font-semibold text-[#6e7a94]">{mdLang === 'ar' ? 'العربية' : 'English'}</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#8592ad]">Section Preview</span>
+                  <span className="text-[10px] font-semibold text-[#8592ad]">{mdLang === 'ar' ? 'العربية' : 'English'}</span>
                 </div>
                 {activeSection.videoId && (
                   <div className="aspect-video border-b border-[#263248]">
@@ -769,9 +769,9 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
           ) : (
             <EnhancedCard padding="xl" className="text-center">
               <div className="w-12 h-12 rounded-xl bg-[#121a2a] border border-[#263248] flex items-center justify-center mx-auto mb-3">
-                <ChevronRight size={20} className="text-[#4d5a73]" />
+                <ChevronRight size={20} className="text-[#7c8aa6]" />
               </div>
-              <p className="text-sm text-[#6e7a94]">Select a section to edit its content.</p>
+              <p className="text-sm text-[#8592ad]">Select a section to edit its content.</p>
             </EnhancedCard>
           )}
         </div>

@@ -128,7 +128,7 @@ const ReauthDialog: React.FC<ReauthDialogProps> = ({
           <button
             onClick={onCancel}
             aria-label={ar ? 'إلغاء' : 'Cancel'}
-            className="text-[#6e7a94] hover:text-[#d2d7e3] transition-colors flex-shrink-0"
+            className="text-[#8592ad] hover:text-[#d2d7e3] transition-colors flex-shrink-0"
           >
             <X size={18} />
           </button>
@@ -136,7 +136,7 @@ const ReauthDialog: React.FC<ReauthDialogProps> = ({
 
         <div className="p-6">
           <div className="rounded-xl border border-[#263248] bg-[#0a0f18] px-4 py-3 mb-5">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-[#6e7a94] mb-1">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-[#8592ad] mb-1">
               {ar ? 'الإجراء' : 'Action'}
             </p>
             <p className="text-sm text-[#d2d7e3]">{actionLabel}</p>
@@ -152,7 +152,7 @@ const ReauthDialog: React.FC<ReauthDialogProps> = ({
             <>
               <div className="flex justify-center min-h-[44px]" ref={btnRef} />
               {!ready && (
-                <p className="text-center text-xs text-[#6e7a94] mt-2">
+                <p className="text-center text-xs text-[#8592ad] mt-2">
                   {ar ? 'جارٍ تحميل Google...' : 'Loading Google...'}
                 </p>
               )}
@@ -165,7 +165,7 @@ const ReauthDialog: React.FC<ReauthDialogProps> = ({
           )}
 
           {error && (
-            <p className="mt-4 rounded-lg border border-red-500/25 bg-red-950/25 px-3 py-2 text-xs text-red-400">
+            <p role="alert" className="mt-4 rounded-lg border border-red-500/25 bg-red-950/25 px-3 py-2 text-xs text-red-400">
               {error}
             </p>
           )}

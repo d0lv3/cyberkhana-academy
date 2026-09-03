@@ -51,7 +51,7 @@ function generateId(): string {
 
 const DIFFICULTIES: Difficulty[] = ['Beginner', 'Easy', 'Medium', 'Hard', 'Expert'];
 const inputCls =
-  'w-full bg-[#0a0f18] border border-[#263248] rounded-lg px-3 py-2 text-sm text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#3d4a63]';
+  'w-full bg-[#0a0f18] border border-[#263248] rounded-lg px-3 py-2 text-sm text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#7c8aa6]';
 
 const PathEditor: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -319,23 +319,23 @@ const PathEditor: React.FC = () => {
           <div className="px-5 py-3.5 border-b border-[#263248] bg-[#0b1019] flex items-center justify-between gap-3">
             <span className="text-sm font-bold text-[#f3f6ff]">Available Content</span>
             <div className="relative">
-              <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#4d5a73]" />
+              <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#7c8aa6]" />
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search..."
-                className="w-40 bg-[#0a0f18] border border-[#263248] rounded-lg pl-8 pr-3 py-1.5 text-xs text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 placeholder:text-[#3d4a63]"
+                className="w-40 bg-[#0a0f18] border border-[#263248] rounded-lg pl-8 pr-3 py-1.5 text-xs text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 placeholder:text-[#7c8aa6]"
                 dir="ltr"
               />
             </div>
           </div>
           <div className="max-h-[460px] overflow-y-auto custom-scrollbar p-3 space-y-4">
             {filteredCatalog.every((g) => g.items.length === 0) ? (
-              <p className="text-sm text-[#6e7a94] text-center py-8">No matching content.</p>
+              <p className="text-sm text-[#8592ad] text-center py-8">No matching content.</p>
             ) : (
               filteredCatalog.map((group) => (
                 <div key={group.kind}>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#6e7a94] px-1 mb-2">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#8592ad] px-1 mb-2">
                     {group.label}
                   </p>
                   <div className="space-y-1.5">
@@ -360,13 +360,13 @@ const PathEditor: React.FC = () => {
                           <span className="flex-1 min-w-0">
                             <span className="block text-xs font-semibold text-[#d2d7e3] truncate">{item.title}</span>
                             {item.subtitle && (
-                              <span className="block text-[10px] text-[#6e7a94] truncate" dir="ltr">{item.subtitle}</span>
+                              <span className="block text-[10px] text-[#8592ad] truncate" dir="ltr">{item.subtitle}</span>
                             )}
                           </span>
                           {added ? (
                             <Check size={14} className="text-[#00a859] flex-shrink-0" />
                           ) : (
-                            <Plus size={14} className="text-[#6e7a94] flex-shrink-0" />
+                            <Plus size={14} className="text-[#8592ad] flex-shrink-0" />
                           )}
                         </button>
                       );
@@ -384,15 +384,15 @@ const PathEditor: React.FC = () => {
             <span className="text-sm font-bold text-[#f3f6ff] flex items-center gap-2">
               <ListChecks size={15} className="text-[#a78bfa]" /> Path Steps
             </span>
-            <span className="text-xs text-[#6e7a94]" dir="ltr">{steps.length} steps</span>
+            <span className="text-xs text-[#8592ad]" dir="ltr">{steps.length} steps</span>
           </div>
           <div className="max-h-[460px] overflow-y-auto custom-scrollbar p-3">
             {steps.length === 0 ? (
               <div className="text-center py-12 px-4">
                 <div className="w-12 h-12 rounded-xl bg-[#0d1117] border border-[#263248] flex items-center justify-center mx-auto mb-3">
-                  <Route size={20} className="text-[#4d5a73]" />
+                  <Route size={20} className="text-[#7c8aa6]" />
                 </div>
-                <p className="text-sm text-[#6e7a94]">
+                <p className="text-sm text-[#8592ad]">
                   Pick content from the left to build your path.
                 </p>
               </div>
@@ -403,7 +403,7 @@ const PathEditor: React.FC = () => {
                     key={stepKey(step)}
                     className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-[#263248] bg-[#0d1117]"
                   >
-                    <GripVertical size={14} className="text-[#3d4a63] flex-shrink-0" />
+                    <GripVertical size={14} className="text-[#7c8aa6] flex-shrink-0" />
                     <span
                       className="w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-bold flex-shrink-0"
                       style={{ backgroundColor: `${step.accent}15`, color: step.accent, border: `1px solid ${step.accent}30` }}
@@ -414,7 +414,7 @@ const PathEditor: React.FC = () => {
                     <span className="flex-1 min-w-0">
                       <span className="block text-xs font-semibold text-[#d2d7e3] truncate">{step.title}</span>
                       {step.subtitle && (
-                        <span className="block text-[10px] text-[#6e7a94] truncate" dir="ltr">{step.subtitle}</span>
+                        <span className="block text-[10px] text-[#8592ad] truncate" dir="ltr">{step.subtitle}</span>
                       )}
                     </span>
                     <div className="flex items-center gap-0.5 flex-shrink-0">
@@ -422,7 +422,7 @@ const PathEditor: React.FC = () => {
                         type="button"
                         onClick={() => moveStep(idx, -1)}
                         disabled={idx === 0}
-                        className="w-6 h-6 flex items-center justify-center rounded text-[#6e7a94] hover:text-[#d2d7e3] hover:bg-[#182235] transition-all disabled:opacity-20"
+                        className="w-6 h-6 flex items-center justify-center rounded text-[#8592ad] hover:text-[#d2d7e3] hover:bg-[#182235] transition-all disabled:opacity-20"
                       >
                         <ArrowUp size={13} />
                       </button>
@@ -430,14 +430,14 @@ const PathEditor: React.FC = () => {
                         type="button"
                         onClick={() => moveStep(idx, 1)}
                         disabled={idx === steps.length - 1}
-                        className="w-6 h-6 flex items-center justify-center rounded text-[#6e7a94] hover:text-[#d2d7e3] hover:bg-[#182235] transition-all disabled:opacity-20"
+                        className="w-6 h-6 flex items-center justify-center rounded text-[#8592ad] hover:text-[#d2d7e3] hover:bg-[#182235] transition-all disabled:opacity-20"
                       >
                         <ArrowDown size={13} />
                       </button>
                       <button
                         type="button"
                         onClick={() => removeStep(idx)}
-                        className="w-6 h-6 flex items-center justify-center rounded text-[#6e7a94] hover:text-red-400 hover:bg-red-500/10 transition-all"
+                        className="w-6 h-6 flex items-center justify-center rounded text-[#8592ad] hover:text-red-400 hover:bg-red-500/10 transition-all"
                       >
                         <Trash2 size={13} />
                       </button>
@@ -479,10 +479,10 @@ const PathEditor: React.FC = () => {
             {descEn && <p className="text-sm text-[#9aa5bf] mt-1">{descEn}</p>}
             <div className="flex items-center gap-3 mt-3" dir="ltr">
               <DifficultyBadge difficulty={difficulty} />
-              <span className="flex items-center gap-1 text-xs text-[#6e7a94]">
+              <span className="flex items-center gap-1 text-xs text-[#8592ad]">
                 <ListChecks size={12} /> {steps.length} steps
               </span>
-              <span className="flex items-center gap-1 text-xs text-[#6e7a94]">
+              <span className="flex items-center gap-1 text-xs text-[#8592ad]">
                 <Clock size={12} /> {estimatedHours}h
               </span>
             </div>
@@ -491,7 +491,7 @@ const PathEditor: React.FC = () => {
 
         {/* timeline */}
         {steps.length === 0 ? (
-          <p className="text-sm text-[#6e7a94] text-center py-6">
+          <p className="text-sm text-[#8592ad] text-center py-6">
             Add steps to preview the curriculum students will follow.
           </p>
         ) : (
@@ -513,7 +513,7 @@ const PathEditor: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <h4 className="text-sm font-bold text-[#f3f6ff] truncate">{step.title}</h4>
                     {step.subtitle && (
-                      <p className="text-xs text-[#6e7a94] truncate" dir="ltr">
+                      <p className="text-xs text-[#8592ad] truncate" dir="ltr">
                         {step.subtitle}
                       </p>
                     )}

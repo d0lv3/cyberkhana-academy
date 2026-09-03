@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useId } from 'react';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -10,9 +10,18 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ label, error, helperText, leftIcon, rightIcon, className = '', ...props }, ref) => {
+    /* The label was rendered next to the input but never tied to it, so
+       clicking it did nothing and assistive tech read the field unlabelled.
+       An id is generated when the caller does not supply one. */
+    const generatedId = useId();
+    const inputId = props.id ?? generatedId;
+    const errorId = `${inputId}-error`;
+    const helperId = `${inputId}-helper`;
+    const describedBy = error ? errorId : helperText ? helperId : undefined;
+
     const inputClasses = [
       'w-full bg-[#1a2332] border border-[#263248] rounded-lg',
-      'text-[#f3f6ff] placeholder-[#6e7a94]',
+      'text-[#f3f6ff] placeholder-[#8592ad]',
       'focus:outline-none focus:ring-2 focus:ring-[#00a859] focus:border-[#00a859]',
       'transition-all duration-200 py-2.5',
       'disabled:opacity-50 disabled:cursor-not-allowed',
@@ -27,7 +36,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium text-[#d2d7e3] mb-2">
+          <label htmlFor={inputId} className="block text-sm font-medium text-[#d2d7e3] mb-2">
             {label}
           </label>
         )}
@@ -37,15 +46,31 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               {leftIcon}
             </div>
           )}
-          <input ref={ref} className={inputClasses} {...props} />
+          <input
+            ref={ref}
+            id={inputId}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={describedBy}
+            className={inputClasses}
+            {...props}
+          />
           {rightIcon && (
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
               {rightIcon}
             </div>
           )}
         </div>
-        {error && <p className="mt-1 text-sm text-red-400">{error}</p>}
-        {helperText && !error && <p className="mt-1 text-sm text-[#6e7a94]">{helperText}</p>}
+        {/* role="alert" so the failure is announced, not just reddened. */}
+        {error && (
+          <p id={errorId} role="alert" className="mt-1 text-sm text-red-400">
+            {error}
+          </p>
+        )}
+        {helperText && !error && (
+          <p id={helperId} className="mt-1 text-sm text-[#8592ad]">
+            {helperText}
+          </p>
+        )}
       </div>
     );
   }

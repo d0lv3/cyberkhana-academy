@@ -1,5 +1,6 @@
 import React, { Suspense, lazy } from 'react';
 import { HashRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { MotionConfig } from 'framer-motion';
 import { LangProvider } from './contexts/LangContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ConfirmHost from './components/ui/ConfirmHost';
@@ -220,16 +221,23 @@ function AppRoutes() {
 
 const App: React.FC = () => {
   return (
-    <HashRouter>
-      <AuthProvider>
-        <LangProvider>
-          <ErrorBoundary>
-            <AppRoutes />
-          </ErrorBoundary>
-          <ConfirmHost />
-        </LangProvider>
-      </AuthProvider>
-    </HashRouter>
+    /* 31 files animate with framer-motion and none of them checked the user's
+       motion preference. reducedMotion="user" makes every motion component in
+       the tree honour prefers-reduced-motion: transform and layout animations
+       are dropped, opacity fades are kept. The CSS keyframe animations already
+       have their own reduced-motion blocks in index.css. */
+    <MotionConfig reducedMotion="user">
+      <HashRouter>
+        <AuthProvider>
+          <LangProvider>
+            <ErrorBoundary>
+              <AppRoutes />
+            </ErrorBoundary>
+            <ConfirmHost />
+          </LangProvider>
+        </AuthProvider>
+      </HashRouter>
+    </MotionConfig>
   );
 };
 

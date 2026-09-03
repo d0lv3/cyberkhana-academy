@@ -17,7 +17,7 @@ interface TerminalSplitProps {
 
 /** A thin label above a split pane showing that box's LAN IP for the nc demo. */
 const PaneLabel: React.FC<{ name: string; ip: string }> = ({ name, ip }) => (
-  <div className="flex flex-shrink-0 items-center gap-2 border-b border-[#1c2534] bg-[#0d1117] px-3 py-1 text-[11px] text-[#6e7a94]" dir="ltr">
+  <div className="flex flex-shrink-0 items-center gap-2 border-b border-[#1c2534] bg-[#0d1117] px-3 py-1 text-[11px] text-[#8592ad]" dir="ltr">
     <Monitor size={12} className="text-[#00c766]" />
     <span className="font-semibold text-[#9aa5bf]">{name}</span>
     <span className="text-[#4b5a72]">·</span>

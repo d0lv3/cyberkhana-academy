@@ -85,7 +85,7 @@ const ModulesPage: React.FC = () => {
             <div className="relative flex-1">
               <Search
                 size={15}
-                className="absolute start-3.5 top-1/2 -translate-y-1/2 text-[#4d5a73] pointer-events-none"
+                className="absolute start-3.5 top-1/2 -translate-y-1/2 text-[#7c8aa6] pointer-events-none"
               />
               <input
                 type="text"
@@ -94,7 +94,7 @@ const ModulesPage: React.FC = () => {
                 placeholder={
                   lang === 'ar' ? 'ابحث في الوحدات، الوسوم...' : 'Search modules, tags...'
                 }
-                className="w-full bg-[#121a2a] border border-[#263248] rounded-lg ps-10 pe-4 py-2.5 text-sm text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#3d4a63]"
+                className="w-full bg-[#121a2a] border border-[#263248] rounded-lg ps-10 pe-4 py-2.5 text-sm text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#7c8aa6]"
               />
             </div>
 
@@ -141,7 +141,7 @@ const ModulesPage: React.FC = () => {
           </div>
 
           {/* result count */}
-          <p className="text-xs text-[#6e7a94]" dir="ltr">
+          <p className="text-xs text-[#8592ad]" dir="ltr">
             {filtered.length} / {modules.length}{' '}
             {lang === 'ar' ? 'وحدة' : filtered.length === 1 ? 'module' : 'modules'}
           </p>
@@ -150,12 +150,12 @@ const ModulesPage: React.FC = () => {
           {filtered.length === 0 ? (
             <div className="text-center py-16">
               <div className="w-14 h-14 rounded-2xl bg-[#121a2a] border border-[#263248] flex items-center justify-center mx-auto mb-4">
-                <SearchX size={24} className="text-[#6e7a94]" />
+                <SearchX size={24} className="text-[#8592ad]" />
               </div>
               <h3 className="text-base font-bold text-[#f3f6ff] mb-1.5">
                 {lang === 'ar' ? 'لا توجد نتائج' : 'No modules match'}
               </h3>
-              <p className="text-sm text-[#6e7a94] mb-5">
+              <p className="text-sm text-[#8592ad] mb-5">
                 {lang === 'ar'
                   ? 'جرّب كلمة بحث أو فلاتر مختلفة.'
                   : 'Try a different search term or filters.'}

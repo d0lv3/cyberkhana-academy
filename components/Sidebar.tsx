@@ -85,7 +85,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, mobileOpen, onMo
               onAnimationEnd={() => setShaking(null)}
               className={`flex-shrink-0 transition-colors ${
                 shaking === to ? 'nav-shake' : ''
-              } ${isActive ? 'text-[#00a859]' : 'text-[#6e7a94] group-hover:text-[#9aa5bf]'}`}
+              } ${isActive ? 'text-[#00a859]' : 'text-[#8592ad] group-hover:text-[#9aa5bf]'}`}
               size={collapsed ? 20 : 17}
             />
             {!collapsed && <span className="flex-1">{label}</span>}
@@ -115,7 +115,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, mobileOpen, onMo
         {/* Mobile close button */}
         <button
           onClick={onMobileClose}
-          className="md:hidden w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#6e7a94] hover:text-[#d2d7e3] hover:bg-[#182235] transition-all"
+          className="md:hidden w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#8592ad] hover:text-[#d2d7e3] hover:bg-[#182235] transition-all"
           aria-label="Close menu"
         >
           <X size={18} />
@@ -125,14 +125,14 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, mobileOpen, onMo
       {/* Nav */}
       <nav className="flex-1 px-2 py-5 space-y-0.5 overflow-y-auto">
         {!collapsed && (
-          <p className="px-3 mb-3 text-[10px] font-bold tracking-[0.15em] text-[#6e7a94] uppercase">
+          <p className="px-3 mb-3 text-[10px] font-bold tracking-[0.15em] text-[#8592ad] uppercase">
             {t('sidebar.learn')}
           </p>
         )}
         {renderNavItems(learnItems)}
 
         {!collapsed && (
-          <p className="px-3 mb-3 mt-6 text-[10px] font-bold tracking-[0.15em] text-[#6e7a94] uppercase">
+          <p className="px-3 mb-3 mt-6 text-[10px] font-bold tracking-[0.15em] text-[#8592ad] uppercase">
             {t('sidebar.account')}
           </p>
         )}
@@ -210,7 +210,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, mobileOpen, onMo
           onClick={onToggle}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          className="absolute top-[68px] -end-3 z-40 flex h-6 w-6 items-center justify-center rounded-full border border-[#263248] bg-[#121a2a] text-[#6e7a94] shadow-md shadow-black/40 transition-all duration-200 hover:scale-110 hover:border-[#00a859]/60 hover:bg-[#0e1626] hover:text-[#00a859] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00a859]/50"
+          className="absolute top-[68px] -end-3 z-40 flex h-6 w-6 items-center justify-center rounded-full border border-[#263248] bg-[#121a2a] text-[#8592ad] shadow-md shadow-black/40 transition-all duration-200 hover:scale-110 hover:border-[#00a859]/60 hover:bg-[#0e1626] hover:text-[#00a859] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00a859]/50"
         >
           {collapsed ? <ChevronRight size={14} className="rtl-flip" /> : <ChevronLeft size={14} className="rtl-flip" />}
         </button>

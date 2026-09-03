@@ -70,7 +70,7 @@ const HeroShowcase: React.FC = () => {
           <span className="w-2.5 h-2.5 rounded-full bg-[#2c3a54]" />
           <span className="w-2.5 h-2.5 rounded-full bg-[#2c3a54]" />
           <span className="w-2.5 h-2.5 rounded-full bg-[#2c3a54]" />
-          <span className="ml-2 text-[10px] font-semibold text-[#4d5a73]" style={{ fontFamily: MONO }}>
+          <span className="ml-2 text-[10px] font-semibold text-[#7c8aa6]" style={{ fontFamily: MONO }}>
             ip-addressing.sim
           </span>
         </div>
@@ -134,7 +134,7 @@ const HeroShowcase: React.FC = () => {
               left: { duration: CYCLE, times: [0.55, 0.73, 0.92], repeat: Infinity, ease: 'easeInOut' },
               opacity: { duration: CYCLE, times: [0, 0.54, 0.59, 0.88, 0.94, 1], repeat: Infinity },
             }}
-            className="absolute top-[34%] -translate-x-1/2 px-2 py-0.5 rounded-full bg-[#00a859] text-white text-[9px] font-black shadow-lg shadow-[#00a859]/30"
+            className="absolute top-[34%] -translate-x-1/2 px-2 py-0.5 rounded-full bg-[#007a42] text-white text-[9px] font-black shadow-lg shadow-[#00a859]/30"
             style={{ fontFamily: MONO }}
           >
             200 OK
@@ -163,10 +163,10 @@ const HeroShowcase: React.FC = () => {
         <div className="flex items-center gap-1.5 px-3 py-2 border-b border-[#151d2e] bg-[#0b1019]">
           <span className="w-2 h-2 rounded-full bg-[#2c3a54]" />
           <span className="w-2 h-2 rounded-full bg-[#2c3a54]" />
-          <span className="ml-1.5 text-[9px] font-semibold text-[#4d5a73]" style={{ fontFamily: MONO }}>
+          <span className="ml-1.5 text-[9px] font-semibold text-[#7c8aa6]" style={{ fontFamily: MONO }}>
             terminal
           </span>
-          <span className="ml-auto inline-flex items-center gap-1 text-[8.5px] font-medium text-[#6e7a94] group-hover:text-[#9fef00] transition-colors">
+          <span className="ml-auto inline-flex items-center gap-1 text-[8.5px] font-medium text-[#8592ad] group-hover:text-[#9fef00] transition-colors">
             <Maximize2 size={9} /> # click me
           </span>
         </div>

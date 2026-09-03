@@ -45,7 +45,7 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
           under it is not. */}
       <div className="px-1" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
         <div className="flex items-center gap-2 mb-1.5">
-          <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#6e7a94]">
+          <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#8592ad]">
             {lang === 'ar'
               ? `الخطوة ${currentStep + 1} من ${totalSteps}`
               : `Step ${currentStep + 1} of ${totalSteps}`}
@@ -80,7 +80,7 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
         <button
           onClick={onReset}
           disabled={isFirst && !isPlaying}
-          className="p-2 rounded-lg text-[#6e7a94] hover:text-[#d2d7e3] hover:bg-[#1a2332] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          className="p-2 rounded-lg text-[#8592ad] hover:text-[#d2d7e3] hover:bg-[#1a2332] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           title="Reset"
         >
           <RotateCcw size={16} />
@@ -89,7 +89,7 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
         <button
           onClick={onPrevious}
           disabled={isFirst || isAnimating}
-          className="p-2 rounded-lg text-[#6e7a94] hover:text-[#d2d7e3] hover:bg-[#1a2332] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          className="p-2 rounded-lg text-[#8592ad] hover:text-[#d2d7e3] hover:bg-[#1a2332] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           title="Previous step"
         >
           <SkipBack size={16} />
@@ -111,7 +111,7 @@ const SimulationControls: React.FC<SimulationControlsProps> = ({
         <button
           onClick={onNext}
           disabled={isLast || isAnimating}
-          className="p-2 rounded-lg text-[#6e7a94] hover:text-[#d2d7e3] hover:bg-[#1a2332] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          className="p-2 rounded-lg text-[#8592ad] hover:text-[#d2d7e3] hover:bg-[#1a2332] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           title="Next step"
         >
           <SkipForward size={16} />

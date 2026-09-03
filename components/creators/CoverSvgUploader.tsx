@@ -78,7 +78,7 @@ const CoverSvgUploader: React.FC<CoverSvgUploaderProps> = ({
   return (
     <div>
       <label className="block text-xs font-semibold text-[#9aa5bf] mb-1.5">
-        Cover Art <span className="text-[#6e7a94] font-normal">(SVG, optional)</span>
+        Cover Art <span className="text-[#8592ad] font-normal">(SVG, optional)</span>
       </label>
       <div className="flex items-stretch gap-3">
         {/* Square preview — matches the card tile */}
@@ -113,11 +113,11 @@ const CoverSvgUploader: React.FC<CoverSvgUploaderProps> = ({
               </button>
             )}
           </div>
-          <p className="text-[11px] text-[#6e7a94]">
+          <p className="text-[11px] text-[#8592ad]">
             Leave empty to use the built-in generated art. SVG only · max ~200 KB.
           </p>
           {error && (
-            <p className="flex items-center gap-1.5 text-[11px] text-red-400">
+            <p role="alert" className="flex items-center gap-1.5 text-[11px] text-red-400">
               <AlertTriangle size={11} /> {error}
             </p>
           )}

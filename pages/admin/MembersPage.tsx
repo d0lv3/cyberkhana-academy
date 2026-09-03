@@ -224,7 +224,7 @@ const MembersPage: React.FC = () => {
         <div className="relative flex-1 max-w-sm">
           <Search
             size={15}
-            className="absolute start-3.5 top-1/2 -translate-y-1/2 text-[#4d5a73] pointer-events-none"
+            className="absolute start-3.5 top-1/2 -translate-y-1/2 text-[#7c8aa6] pointer-events-none"
           />
           <input
             type="text"
@@ -233,7 +233,7 @@ const MembersPage: React.FC = () => {
             placeholder={
               ar ? 'ابحث بالاسم أو المعرّف أو البريد...' : 'Search by name, username or email...'
             }
-            className="w-full bg-[#121a2a] border border-[#263248] rounded-lg ps-10 pe-4 py-2.5 text-sm text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#3d4a63]"
+            className="w-full bg-[#121a2a] border border-[#263248] rounded-lg ps-10 pe-4 py-2.5 text-sm text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#7c8aa6]"
           />
         </div>
         <button
@@ -243,7 +243,7 @@ const MembersPage: React.FC = () => {
         >
           <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
         </button>
-        <span className="text-xs text-[#6e7a94] flex-shrink-0" dir="ltr">
+        <span className="text-xs text-[#8592ad] flex-shrink-0" dir="ltr">
           {filtered.length} / {users.length}
         </span>
       </div>
@@ -251,11 +251,11 @@ const MembersPage: React.FC = () => {
       {/* list */}
       {loading ? (
         <EnhancedCard padding="xl" className="text-center">
-          <p className="text-sm text-[#6e7a94]">{ar ? 'جارٍ التحميل...' : 'Loading members...'}</p>
+          <p className="text-sm text-[#8592ad]">{ar ? 'جارٍ التحميل...' : 'Loading members...'}</p>
         </EnhancedCard>
       ) : filtered.length === 0 ? (
         <EnhancedCard padding="xl" className="text-center">
-          <p className="text-sm text-[#6e7a94]">
+          <p className="text-sm text-[#8592ad]">
             {ar ? 'لا يوجد أعضاء مطابقون.' : 'No members match.'}
           </p>
         </EnhancedCard>
@@ -286,7 +286,7 @@ const MembersPage: React.FC = () => {
                     <p className="text-sm font-semibold text-[#f3f6ff] truncate">
                       {u.displayName}
                       {isSelf && (
-                        <span className="text-[#6e7a94] font-normal"> {ar ? '(أنت)' : '(you)'}</span>
+                        <span className="text-[#8592ad] font-normal"> {ar ? '(أنت)' : '(you)'}</span>
                       )}
                       {u.isBanned && (
                         <span className="ms-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide bg-red-500/10 border border-red-500/30 text-red-400">
@@ -294,14 +294,14 @@ const MembersPage: React.FC = () => {
                         </span>
                       )}
                     </p>
-                    <p className="text-[11px] text-[#6e7a94] truncate" dir="ltr">
+                    <p className="text-[11px] text-[#8592ad] truncate" dir="ltr">
                       {u.username ? (
                         <span className="font-mono text-[#9aa5bf]">@{u.username}</span>
                       ) : (
                         /* Worth surfacing rather than hiding: a member with no
                            handle cannot be found by one, so sharing a studio
                            tab with them will fail until they claim it. */
-                        <span className="italic text-[#4d5a73]" dir="auto">
+                        <span className="italic text-[#7c8aa6]" dir="auto">
                           {ar ? 'بلا معرّف' : 'no username'}
                         </span>
                       )}
@@ -312,10 +312,10 @@ const MembersPage: React.FC = () => {
 
                   {/* dates */}
                   <div className="hidden md:block text-end flex-shrink-0">
-                    <p className="text-[10px] text-[#4d5a73]">
+                    <p className="text-[10px] text-[#7c8aa6]">
                       {ar ? 'انضم' : 'Joined'} {fmtDate(u.createdAt)}
                     </p>
-                    <p className="text-[10px] text-[#4d5a73]">
+                    <p className="text-[10px] text-[#7c8aa6]">
                       {ar ? 'آخر دخول' : 'Last login'} {fmtDate(u.lastLoginAt)}
                     </p>
                   </div>
@@ -357,7 +357,7 @@ const MembersPage: React.FC = () => {
                       className={`w-8 h-8 touch:w-11 touch:h-11 rounded-lg border flex items-center justify-center flex-shrink-0 transition-all disabled:opacity-30 ${
                         permsOpenId === u.id
                           ? 'border-[#f3a43a]/50 text-[#f3a43a] bg-[#f3a43a]/10'
-                          : 'border-[#263248] text-[#6e7a94] hover:text-[#f3a43a] hover:border-[#f3a43a]/40 hover:bg-[#f3a43a]/10'
+                          : 'border-[#263248] text-[#8592ad] hover:text-[#f3a43a] hover:border-[#f3a43a]/40 hover:bg-[#f3a43a]/10'
                       }`}
                     >
                       <KeyRound size={13} />
@@ -388,7 +388,7 @@ const MembersPage: React.FC = () => {
                     className={`w-8 h-8 touch:w-11 touch:h-11 rounded-lg border flex items-center justify-center flex-shrink-0 transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
                       u.isBanned
                         ? 'border-[#00a859]/30 text-[#00a859] hover:bg-[#00a859]/10'
-                        : 'border-[#263248] text-[#6e7a94] hover:text-red-400 hover:border-red-500/40 hover:bg-red-500/10'
+                        : 'border-[#263248] text-[#8592ad] hover:text-red-400 hover:border-red-500/40 hover:bg-red-500/10'
                     }`}
                   >
                     {u.isBanned ? <RotateCcw size={13} /> : <Ban size={13} />}
@@ -398,7 +398,7 @@ const MembersPage: React.FC = () => {
                 {/* Creator permissions panel */}
                 {permsOpenId === u.id && u.role === 'creator' && (
                   <div className="px-5 pb-4 pt-1 bg-[#0b1019]">
-                    <p className="text-[11px] text-[#6e7a94] mb-3">
+                    <p className="text-[11px] text-[#8592ad] mb-3">
                       {ar
                         ? 'حدد ما يمكن لهذا المنشئ إنشاؤه. تُطبَّق الصلاحيات فورًا على الاستوديو والخادم.'
                         : 'Choose what this creator can author. Applies immediately in the studio and on the server.'}
@@ -433,7 +433,7 @@ const MembersPage: React.FC = () => {
                               <span className={`block text-xs font-bold ${on ? 'text-[#00a859]' : 'text-[#d2d7e3]'}`}>
                                 {meta.label[lang]}
                               </span>
-                              <span className="block text-[10px] text-[#6e7a94] leading-snug">
+                              <span className="block text-[10px] text-[#8592ad] leading-snug">
                                 {meta.hint[lang]}
                               </span>
                             </span>

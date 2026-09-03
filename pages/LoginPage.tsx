@@ -328,7 +328,7 @@ const LoginPage: React.FC = () => {
                     </button>
                   )}
 
-                  <p className="text-center text-[11px] text-[#4d5a73] mt-6 leading-relaxed">
+                  <p className="text-center text-[11px] text-[#7c8aa6] mt-6 leading-relaxed">
                     {ar
                       ? 'بالمتابعة، أنت توافق على شروط الاستخدام وسياسة الخصوصية.'
                       : 'By continuing, you agree to the Terms of Use and Privacy Policy.'}
@@ -343,7 +343,7 @@ const LoginPage: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.7, duration: 0.5 }}
-            className="text-center text-xs text-[#6e7a94] mt-6"
+            className="text-center text-xs text-[#8592ad] mt-6"
           >
             {ar
               ? 'جديد هنا؟ يُنشأ حسابك تلقائيًا عند أول تسجيل دخول.'
@@ -353,7 +353,7 @@ const LoginPage: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 py-6 text-center text-xs text-[#4d5a73]">
+      <footer className="relative z-10 py-6 text-center text-xs text-[#7c8aa6]">
         © 2026 CyberKhana Academy · {ar ? 'صُنعت في العراق' : 'Built in Iraq'}
       </footer>
     </div>

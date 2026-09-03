@@ -123,7 +123,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted, onLogin }) => {
             variants={fadeUp}
             initial="hidden"
             animate="visible"
-            className="flex items-center gap-2 text-base md:text-lg text-[#6e7a94] h-8 mb-9"
+            className="flex items-center gap-2 text-base md:text-lg text-[#8592ad] h-8 mb-9"
           >
             <span className="font-mono text-[#00a859]" dir="ltr">$</span>
             <span>{t('hero.learn')} </span>

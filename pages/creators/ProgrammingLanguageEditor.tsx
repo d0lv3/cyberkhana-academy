@@ -21,7 +21,7 @@ import {
 import { ADMIN_PROGRAMMING_STASH, type AdminProgrammingStash } from './programmingEditStash';
 
 const inputCls =
-  'w-full bg-[#0a0f18] border border-[#263248] rounded-lg px-3 py-2 text-sm text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#3d4a63]';
+  'w-full bg-[#0a0f18] border border-[#263248] rounded-lg px-3 py-2 text-sm text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#7c8aa6]';
 
 const generateSlug = (name: string) =>
   name.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').slice(0, 40);
@@ -228,7 +228,7 @@ const ProgrammingLanguageEditor: React.FC = () => {
                 dir="ltr"
               />
               {isEditing && (
-                <p className="mt-1 text-[11px] text-[#6e7a94]">The slug can't change after creation.</p>
+                <p className="mt-1 text-[11px] text-[#8592ad]">The slug can't change after creation.</p>
               )}
             </div>
             <div>
@@ -261,7 +261,7 @@ const ProgrammingLanguageEditor: React.FC = () => {
             multiline
           />
 
-          <p className="text-[11px] text-[#6e7a94]">
+          <p className="text-[11px] text-[#8592ad]">
             After saving, add modules and lessons to this language from the Programming studio, 
             same as the built-in languages. The cover image is set there too.
           </p>

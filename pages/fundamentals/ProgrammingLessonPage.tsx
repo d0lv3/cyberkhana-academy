@@ -150,7 +150,7 @@ const ProgrammingLessonPage: React.FC = () => {
           </button>
 
           {/* Breadcrumb */}
-          <div className="hidden md:flex items-center gap-1.5 text-xs text-[#6e7a94]" dir="ltr">
+          <div className="hidden md:flex items-center gap-1.5 text-xs text-[#8592ad]" dir="ltr">
             <span className="font-medium" style={{ color: language.color }}>
               {language.name}
             </span>
@@ -231,7 +231,7 @@ const ProgrammingLessonPage: React.FC = () => {
           className={`flex-1 flex items-center justify-center gap-2 py-3 text-xs font-semibold uppercase tracking-wider transition-colors ${
             mobileTab === 'content'
               ? 'text-[#00a859] border-b-2 border-[#00a859]'
-              : 'text-[#6e7a94]'
+              : 'text-[#8592ad]'
           }`}
         >
           <BookOpen size={14} /> Content
@@ -241,7 +241,7 @@ const ProgrammingLessonPage: React.FC = () => {
           className={`flex-1 flex items-center justify-center gap-2 py-3 text-xs font-semibold uppercase tracking-wider transition-colors ${
             mobileTab === 'code'
               ? 'text-[#00a859] border-b-2 border-[#00a859]'
-              : 'text-[#6e7a94]'
+              : 'text-[#8592ad]'
           }`}
         >
           <Code size={14} /> Editor
@@ -351,7 +351,7 @@ const ProgrammingLessonPage: React.FC = () => {
               <div />
             )}
 
-            <span className="text-[10px] text-[#4d5a73]">
+            <span className="text-[10px] text-[#7c8aa6]">
               {currentIdx + 1} / {concepts.length}
             </span>
 

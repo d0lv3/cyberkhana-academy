@@ -50,7 +50,7 @@ const PathDetailPage: React.FC = () => {
       {/* Back link */}
       <button
         onClick={() => navigate('/paths')}
-        className="inline-flex items-center gap-2 touch:min-h-tap text-sm text-[#6e7a94] hover:text-[#d2d7e3] transition-colors select-none"
+        className="inline-flex items-center gap-2 touch:min-h-tap text-sm text-[#8592ad] hover:text-[#d2d7e3] transition-colors select-none"
       >
         <ArrowLeft size={16} className="rtl-flip" />
         <span>{t('sidebar.paths')}</span>
@@ -131,10 +131,10 @@ const PathDetailPage: React.FC = () => {
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-[#9aa5bf]" dir="ltr">
               <span className="inline-flex items-center gap-1.5">
-                <ListChecks size={15} className="text-[#6e7a94]" /> {progress.total} {t('paths.stepsLabel')}
+                <ListChecks size={15} className="text-[#8592ad]" /> {progress.total} {t('paths.stepsLabel')}
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <Clock size={15} className="text-[#6e7a94]" /> {path.estimatedHours}h
+                <Clock size={15} className="text-[#8592ad]" /> {path.estimatedHours}h
               </span>
             </div>
 
@@ -219,17 +219,17 @@ const PathDetailPage: React.FC = () => {
                       className={`text-sm font-bold truncate transition-colors ${
                         st.available
                           ? 'text-[#f3f6ff] group-hover:text-[#00a859]'
-                          : 'text-[#6e7a94]'
+                          : 'text-[#8592ad]'
                       }`}
                     >
                       {step.title}
                     </h3>
                     <div className="flex items-center gap-2 mt-0.5" dir="ltr">
                       {step.subtitle && (
-                        <p className="text-xs text-[#6e7a94] truncate">{step.subtitle}</p>
+                        <p className="text-xs text-[#8592ad] truncate">{step.subtitle}</p>
                       )}
                       {!st.available && (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide bg-[#1a2332] border border-[#263248] text-[#6e7a94]">
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide bg-[#1a2332] border border-[#263248] text-[#8592ad]">
                           <Lock size={8} /> {t('paths.unavailable')}
                         </span>
                       )}
@@ -238,7 +238,7 @@ const PathDetailPage: React.FC = () => {
                   {st.available && (
                     <ChevronRight
                       size={18}
-                      className="text-[#3d4a63] group-hover:text-[#00a859] transition-colors flex-shrink-0 rtl-flip"
+                      className="text-[#7c8aa6] group-hover:text-[#00a859] transition-colors flex-shrink-0 rtl-flip"
                     />
                   )}
                 </motion.button>

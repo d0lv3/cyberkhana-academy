@@ -106,7 +106,7 @@ const LeaderboardPage: React.FC = () => {
               key={s}
               onClick={() => setScope(s)}
               className={`px-3.5 py-2 touch:min-h-tap touch:px-4 rounded-md text-xs font-bold transition-colors select-none ${
-                scope === s ? 'bg-[#1a2332] text-[#f3f6ff]' : 'text-[#6e7a94] hover:text-[#d2d7e3]'
+                scope === s ? 'bg-[#1a2332] text-[#f3f6ff]' : 'text-[#8592ad] hover:text-[#d2d7e3]'
               }`}
             >
               {t(s === 'overall' ? 'leaderboard.overall' : 'leaderboard.monthly')}
@@ -125,7 +125,7 @@ const LeaderboardPage: React.FC = () => {
         </select>
 
         {scope === 'monthly' && (
-          <span className="text-[11px] text-[#6e7a94] sm:ms-auto">
+          <span className="text-[11px] text-[#8592ad] sm:ms-auto">
             {monthLabel ? `${monthLabel} · ` : ''}
             {t('leaderboard.monthlyReset')}
           </span>
@@ -140,10 +140,10 @@ const LeaderboardPage: React.FC = () => {
       ) : entries.length === 0 ? (
         <div className="text-center py-16">
           <div className="w-14 h-14 rounded-2xl bg-[#121a2a] border border-[#263248] flex items-center justify-center mx-auto mb-4">
-            <Trophy size={24} className="text-[#6e7a94]" />
+            <Trophy size={24} className="text-[#8592ad]" />
           </div>
           <h3 className="text-base font-bold text-[#f3f6ff] mb-1.5">{t('leaderboard.empty')}</h3>
-          <p className="text-sm text-[#6e7a94] max-w-sm mx-auto">{t('leaderboard.emptyDesc')}</p>
+          <p className="text-sm text-[#8592ad] max-w-sm mx-auto">{t('leaderboard.emptyDesc')}</p>
         </div>
       ) : (
         <div className="space-y-6">
@@ -155,7 +155,7 @@ const LeaderboardPage: React.FC = () => {
             <div className="rounded-2xl border border-[#263248] bg-[#121a2a] overflow-hidden">
               {/* Header row */}
               <div
-                className="grid grid-cols-[3rem_1fr_auto] sm:grid-cols-[4rem_1fr_10rem_auto] gap-3 px-4 sm:px-5 py-3 border-b border-[#263248] text-[10px] font-bold uppercase tracking-wider text-[#6e7a94]"
+                className="grid grid-cols-[3rem_1fr_auto] sm:grid-cols-[4rem_1fr_10rem_auto] gap-3 px-4 sm:px-5 py-3 border-b border-[#263248] text-[10px] font-bold uppercase tracking-wider text-[#8592ad]"
                 dir={lang === 'ar' ? 'rtl' : 'ltr'}
               >
                 <span>{t('leaderboard.rank')}</span>
@@ -203,7 +203,7 @@ const LeaderboardPage: React.FC = () => {
                             )}
                           </p>
                           {/* University on mobile (hidden column) */}
-                          <p className="sm:hidden text-[11px] text-[#6e7a94] truncate inline-flex items-center gap-1">
+                          <p className="sm:hidden text-[11px] text-[#8592ad] truncate inline-flex items-center gap-1">
                             <GraduationCap size={11} /> {(() => { const u = universityLabel(e.university, lang); return u.isSet && !u.isNotEnrolled ? u.text : '-'; })()}
                           </p>
                         </div>
@@ -211,7 +211,7 @@ const LeaderboardPage: React.FC = () => {
 
                       {/* University (desktop) */}
                       <div className="hidden sm:flex items-center gap-1.5 text-xs text-[#9aa5bf] min-w-0">
-                        <GraduationCap size={13} className="text-[#6e7a94] flex-shrink-0" />
+                        <GraduationCap size={13} className="text-[#8592ad] flex-shrink-0" />
                         <span className="truncate">{(() => { const u = universityLabel(e.university, lang); return u.isSet && !u.isNotEnrolled ? u.text : '-'; })()}</span>
                       </div>
 
@@ -220,7 +220,7 @@ const LeaderboardPage: React.FC = () => {
                         <span className="text-sm font-black text-[#f3f6ff]" dir="ltr">
                           {e.points.toLocaleString('en-US')}
                         </span>
-                        <span className="text-[10px] text-[#6e7a94] ms-1">{t('leaderboard.pts')}</span>
+                        <span className="text-[10px] text-[#8592ad] ms-1">{t('leaderboard.pts')}</span>
                       </div>
                     </motion.div>
                   );
@@ -255,7 +255,7 @@ const LeaderboardPage: React.FC = () => {
                 <span className="text-sm font-black text-[#f3f6ff]" dir="ltr">
                   {data.me.points.toLocaleString('en-US')}
                 </span>
-                <span className="text-[10px] text-[#6e7a94] ms-1">{t('leaderboard.pts')}</span>
+                <span className="text-[10px] text-[#8592ad] ms-1">{t('leaderboard.pts')}</span>
               </div>
             </div>
           )}
@@ -264,7 +264,7 @@ const LeaderboardPage: React.FC = () => {
 
       {/* Not yet ranked hint */}
       {!loading && data && !data.me && (
-        <p className="text-xs text-[#6e7a94] text-center">{t('leaderboard.notRanked')}</p>
+        <p className="text-xs text-[#8592ad] text-center">{t('leaderboard.notRanked')}</p>
       )}
     </div>
   );

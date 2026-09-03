@@ -8,7 +8,7 @@ interface QuizEditorProps {
 }
 
 const inputCls =
-  'w-full bg-[#0a0f18] border border-[#263248] rounded-lg px-3 py-2 text-sm text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#3d4a63]';
+  'w-full bg-[#0a0f18] border border-[#263248] rounded-lg px-3 py-2 text-sm text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#7c8aa6]';
 
 const MAX_OPTIONS = 6;
 
@@ -78,14 +78,14 @@ const QuizEditor: React.FC<QuizEditorProps> = ({ value, onChange }) => {
     <div className="space-y-4">
       {quiz.length === 0 ? (
         <div className="rounded-lg border border-dashed border-[#263248] bg-[#0d1420] py-6 text-center">
-          <HelpCircle size={20} className="mx-auto text-[#4d5a73] mb-2" />
-          <p className="text-xs text-[#6e7a94]">No quiz on this section yet.</p>
+          <HelpCircle size={20} className="mx-auto text-[#7c8aa6] mb-2" />
+          <p className="text-xs text-[#8592ad]">No quiz on this section yet.</p>
         </div>
       ) : (
         quiz.map((q, qi) => (
           <div key={qi} className="rounded-lg border border-[#263248] bg-[#0d1117] p-3.5" dir="ltr">
             <div className="flex items-start gap-2 mb-3">
-              <span className="mt-2 text-[11px] font-bold text-[#6e7a94] w-5 flex-shrink-0">
+              <span className="mt-2 text-[11px] font-bold text-[#8592ad] w-5 flex-shrink-0">
                 Q{qi + 1}
               </span>
               <input
@@ -97,7 +97,7 @@ const QuizEditor: React.FC<QuizEditorProps> = ({ value, onChange }) => {
               <button
                 type="button"
                 onClick={() => removeQuestion(qi)}
-                className="mt-1 w-7 h-7 flex items-center justify-center rounded text-[#4d5a73] hover:text-red-400 hover:bg-red-500/10 transition-all flex-shrink-0"
+                className="mt-1 w-7 h-7 flex items-center justify-center rounded text-[#7c8aa6] hover:text-red-400 hover:bg-red-500/10 transition-all flex-shrink-0"
                 title="Remove question"
               >
                 <Trash2 size={14} />
@@ -114,7 +114,7 @@ const QuizEditor: React.FC<QuizEditorProps> = ({ value, onChange }) => {
                       onClick={() => setCorrect(qi, oi)}
                       title={correct ? 'Correct answer' : 'Mark as correct'}
                       className={`flex-shrink-0 transition-colors ${
-                        correct ? 'text-[#00a859]' : 'text-[#4d5a73] hover:text-[#9aa5bf]'
+                        correct ? 'text-[#00a859]' : 'text-[#7c8aa6] hover:text-[#9aa5bf]'
                       }`}
                     >
                       {correct ? <CheckCircle2 size={18} /> : <Circle size={18} />}
@@ -129,7 +129,7 @@ const QuizEditor: React.FC<QuizEditorProps> = ({ value, onChange }) => {
                       type="button"
                       onClick={() => removeOption(qi, oi)}
                       disabled={q.options.length <= 2}
-                      className="w-7 h-7 flex items-center justify-center rounded text-[#4d5a73] hover:text-red-400 hover:bg-red-500/10 transition-all flex-shrink-0 disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-[#4d5a73]"
+                      className="w-7 h-7 flex items-center justify-center rounded text-[#7c8aa6] hover:text-red-400 hover:bg-red-500/10 transition-all flex-shrink-0 disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-[#7c8aa6]"
                       title="Remove option"
                     >
                       <Trash2 size={13} />
@@ -142,7 +142,7 @@ const QuizEditor: React.FC<QuizEditorProps> = ({ value, onChange }) => {
                 <button
                   type="button"
                   onClick={() => addOption(qi)}
-                  className="flex items-center gap-1.5 px-2 py-1 text-[11px] font-medium text-[#6e7a94] hover:text-[#00a859] transition-colors"
+                  className="flex items-center gap-1.5 px-2 py-1 text-[11px] font-medium text-[#8592ad] hover:text-[#00a859] transition-colors"
                 >
                   <Plus size={12} /> Add option
                 </button>
@@ -155,7 +155,7 @@ const QuizEditor: React.FC<QuizEditorProps> = ({ value, onChange }) => {
       <button
         type="button"
         onClick={addQuestion}
-        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-[#6e7a94] bg-[#0d1420] border border-dashed border-[#263248] hover:border-[#00a859]/40 hover:text-[#00a859] transition-all"
+        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-[#8592ad] bg-[#0d1420] border border-dashed border-[#263248] hover:border-[#00a859]/40 hover:text-[#00a859] transition-all"
       >
         <Plus size={13} /> Add Question
       </button>

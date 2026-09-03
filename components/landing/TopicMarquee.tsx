@@ -30,7 +30,7 @@ const TopicMarquee: React.FC = () => (
       {[...TOPICS, ...TOPICS].map((topic, i) => (
         <span
           key={i}
-          className="flex items-center gap-6 px-3 text-[11px] font-semibold tracking-[0.18em] uppercase text-[#4d5a73] whitespace-nowrap"
+          className="flex items-center gap-6 px-3 text-[11px] font-semibold tracking-[0.18em] uppercase text-[#7c8aa6] whitespace-nowrap"
           style={{ fontFamily: MONO }}
         >
           {topic}

@@ -311,7 +311,7 @@ const NetworkingEditor: React.FC = () => {
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
               tab === t.key
                 ? 'bg-[#1a2332] text-[#f3f6ff] border border-[#263248]'
-                : 'text-[#6e7a94] hover:text-[#d2d7e3]'
+                : 'text-[#8592ad] hover:text-[#d2d7e3]'
             }`}
           >
             <t.icon size={15} /> {t.label}
@@ -412,10 +412,10 @@ const NetworkingEditor: React.FC = () => {
               <div className="flex items-center gap-2 mb-1">
                 <HelpCircle size={15} className="text-[#9fef00]" />
                 <h3 className="text-sm font-bold text-[#f3f6ff]">
-                  Lesson Quiz <span className="text-[#6e7a94] font-normal">(optional)</span>
+                  Lesson Quiz <span className="text-[#8592ad] font-normal">(optional)</span>
                 </h3>
               </div>
-              <p className="text-xs text-[#6e7a94] mb-4">
+              <p className="text-xs text-[#8592ad] mb-4">
                 With a quiz, students must pass it (≥70%) to complete the lesson. Without one,
                 they get a manual "Mark as complete" button.
               </p>
@@ -427,11 +427,11 @@ const NetworkingEditor: React.FC = () => {
           <div className="space-y-4">
             <EnhancedCard padding="none" className="overflow-hidden sticky top-4">
               <div className="px-4 py-3 border-b border-[#263248] bg-[#0b1019] flex items-center gap-2">
-                <Eye size={13} className="text-[#6e7a94]" />
-                <span className="text-xs font-bold uppercase tracking-wider text-[#6e7a94]">
+                <Eye size={13} className="text-[#8592ad]" />
+                <span className="text-xs font-bold uppercase tracking-wider text-[#8592ad]">
                   Live Preview
                 </span>
-                <span className="ms-auto text-[10px] font-bold text-[#6e7a94]">
+                <span className="ms-auto text-[10px] font-bold text-[#8592ad]">
                   {mdLang === 'ar' ? 'العربية' : 'English'}
                 </span>
               </div>
@@ -451,7 +451,7 @@ const NetworkingEditor: React.FC = () => {
             <Network size={20} className="text-[#60a5fa]" />
           </div>
           <h3 className="text-sm font-bold text-[#f3f6ff] mb-2">No simulation on this lesson</h3>
-          <p className="mx-auto mb-5 max-w-md text-xs leading-relaxed text-[#6e7a94]">
+          <p className="mx-auto mb-5 max-w-md text-xs leading-relaxed text-[#8592ad]">
             Students will read this lesson full width, with no side panel. Add a simulation if the
             topic is better shown than described, packets moving through a topology, a handshake
             step by step.
@@ -460,7 +460,7 @@ const NetworkingEditor: React.FC = () => {
             Add a simulation
           </Button>
           {simulation.nodes.length > 0 && (
-            <p className="mt-4 text-[11px] text-[#4d5a73]">
+            <p className="mt-4 text-[11px] text-[#7c8aa6]">
               The {simulation.nodes.length} device{simulation.nodes.length === 1 ? '' : 's'} you
               already built are kept until you save.
             </p>
@@ -474,7 +474,7 @@ const NetworkingEditor: React.FC = () => {
               <Network size={15} className="mt-0.5 flex-shrink-0 text-[#60a5fa]" />
               <div>
                 <p className="text-xs font-bold text-[#f3f6ff]">This lesson has a simulation</p>
-                <p className="text-[11px] text-[#6e7a94]">
+                <p className="text-[11px] text-[#8592ad]">
                   It sits beside the reading pane, and students can resize or minimise it.
                 </p>
               </div>
@@ -503,17 +503,17 @@ const NetworkingEditor: React.FC = () => {
             <div>
               <EnhancedCard padding="none" className="overflow-hidden sticky top-4">
                 <div className="px-4 py-3 border-b border-[#263248] bg-[#0b1019] flex items-center gap-2">
-                  <Eye size={13} className="text-[#6e7a94]" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#6e7a94]">
+                  <Eye size={13} className="text-[#8592ad]" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#8592ad]">
                     Simulation Preview
                   </span>
-                  <span className="ms-auto text-[10px] font-bold text-[#6e7a94]">
+                  <span className="ms-auto text-[10px] font-bold text-[#8592ad]">
                     {simLang === 'ar' ? 'العربية' : 'English'}
                   </span>
                 </div>
                 <div className="p-4">
                   {simulation.nodes.length === 0 ? (
-                    <div className="h-[420px] flex items-center justify-center text-center text-sm text-[#4d5a73]">
+                    <div className="h-[420px] flex items-center justify-center text-center text-sm text-[#7c8aa6]">
                       Add devices and steps to preview the simulation.
                     </div>
                   ) : (
