@@ -4,9 +4,30 @@ import { Instagram, Send, Linkedin, Globe, ExternalLink } from 'lucide-react';
 import { useLang } from '../../contexts/LangContext';
 import BrandLogo from '../ui/BrandLogo';
 
-const SOCIALS = [
-  { label: 'Instagram', icon: Instagram, href: 'https://www.instagram.com/cyberkhana' },
+interface Social {
+  label: string;
+  icon: typeof Send;
+  href: string;
+  /** Only where the visible label cannot stand on its own. */
+  aria?: string;
+}
+
+/**
+ * Two Telegram destinations now, and they sit next to each other so the pair
+ * reads as one platform. The channel keeps the plain "Telegram" it has always
+ * had and the group takes "Group", which is only unambiguous beside it — a chip
+ * is too narrow for "Telegram Group" at a phone's width, so what the label
+ * cannot say the accessible name does.
+ */
+const SOCIALS: Social[] = [
   { label: 'Telegram', icon: Send, href: 'https://t.me/cyberkhana' },
+  {
+    label: 'Group',
+    icon: Send,
+    href: 'https://t.me/cyberkhana_chat',
+    aria: 'CyberKhana Telegram group',
+  },
+  { label: 'Instagram', icon: Instagram, href: 'https://www.instagram.com/cyberkhana' },
   { label: 'LinkedIn', icon: Linkedin, href: 'https://www.linkedin.com/company/cyberkhana/' },
 ];
 
@@ -62,7 +83,12 @@ const LandingFooter: React.FC = () => {
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row sm:flex-wrap items-center justify-center md:justify-end gap-2 w-full md:w-auto">
+          {/* The product button and the social set stack as two rows that each
+              wrap as a unit, which is the shape the other two sites use. The
+              set used to rejoin the button's row at sm+ with `contents`; a
+              fourth chip is what tips that row over, and a stranded chip on a
+              line of its own reads as a mistake rather than as a layout. */}
+          <div className="flex flex-col items-stretch gap-2 w-full md:w-auto">
             {/* Main platform */}
             <a
               // app, not the apex: this button says "CyberKhana Platform", and the
@@ -71,19 +97,20 @@ const LandingFooter: React.FC = () => {
               href="https://app.cyberkhana.tech"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-1.5 w-full sm:w-auto px-3.5 py-2 touch:min-h-tap rounded-lg border border-[#00a859]/40 bg-[#00a859]/10 text-xs font-bold text-[#00a859] hover:bg-[#00a859]/20 hover:shadow-[0_0_16px_rgba(0,168,89,0.25)] transition-all"
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 touch:min-h-tap rounded-lg border border-[#00a859]/40 bg-[#00a859]/10 text-xs font-bold text-[#00a859] hover:bg-[#00a859]/20 hover:shadow-[0_0_16px_rgba(0,168,89,0.25)] transition-all"
             >
               <Globe size={13} />
               {lang === 'ar' ? 'منصة CyberKhana' : 'CyberKhana Platform'}
               <ExternalLink size={11} />
             </a>
 
-            {/* Socials — an even three-up on phones, back in the row at sm+ */}
-            <div className="grid grid-cols-3 gap-2 w-full sm:contents">
+            {/* An even two-up on phones, four-up from sm */}
+            <div className="grid grid-cols-2 gap-2 w-full sm:grid-cols-4">
               {SOCIALS.map((s) => (
                 <a
                   key={s.label}
                   href={s.href}
+                  aria-label={s.aria}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={socialBtn}
