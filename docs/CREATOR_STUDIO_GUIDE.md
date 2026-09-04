@@ -16,9 +16,10 @@ is made of, and exactly what each field needs before the content is ready to pub
 3. [Networking Lesson](#3-networking-lesson)
 4. [Programming Content (modules & concepts)](#4-programming-content)
 5. [Module (standalone) & OS Module](#5-module-standalone--os-module)
-6. [Learning Path](#6-learning-path)
-7. [Markdown reference](#7-markdown-reference)
-8. [Where published content appears](#8-where-published-content-appears)
+6. [Labs](#6-labs)
+7. [Learning Path](#7-learning-path)
+8. [Markdown reference](#8-markdown-reference)
+9. [Where published content appears](#9-where-published-content-appears)
 
 ---
 
@@ -34,7 +35,7 @@ The Studio dashboard (`/creators`) shows:
 |---|---|---|
 | Networking Lesson | `/creators/networking/new` | Markdown explainer, with an optional interactive packet-flow simulation (+ optional quiz) |
 | Programming Content | `/creators/programming` | Modules and lesson/challenge concepts inside a language (Python) |
-| Module | `/creators/modules/new` | Standalone chapter/section module for the Modules hub |
+| Module | `/creators/modules/new` | Standalone chapter/section module for the Modules hub, with optional hands-on labs |
 | OS Module | `/creators/os-modules/new` | Same structure, surfaced in OS Fundamentals |
 | Learning Path | `/creators/paths/new` | An ordered curriculum built from existing published content |
 
@@ -199,7 +200,7 @@ challenges complete when the student's code **passes all test cases**.
 
 Both use the same editor and the same structure: **Chapters → Sections**
 (mirroring the Linux course's course → modules → lectures division).
-The difference is only *where they surface* (see §8).
+The difference is only *where they surface* (see §9).
 
 ### Module details
 
@@ -247,7 +248,91 @@ the sections contain.
 
 ---
 
-## 6. Learning Path
+## 6. Labs
+
+A lab is the part of a module students **do** rather than read. Almost none of it
+runs on this platform: the work happens on a room somewhere else, a VM, a CTF box.
+What the Studio owns is the brief, the way in, the files students need, and the
+record that they finished. A network simulation is the one exception, and runs
+inside the page.
+
+Labs live on the **Lab** tab of the module editor, next to Details and Structure.
+A module without one is a normal module; the tab shows a count when it has any.
+
+### Where a lab appears
+
+A lab is a **stop in the course sidebar**, not a separate screen, so students reach
+one by working through the module. Two placements:
+
+- **At the end of the module** — the lab gets its own "Lab" group after the last chapter.
+- **After a section** — the lab sits inline, right below that section.
+
+Delete the section a lab was pinned to and the lab moves to the end rather than
+disappearing with it.
+
+### Lab fields
+
+| Field | Required | Notes |
+|---|---|---|
+| Lab title | ✅ | Shows in the course sidebar, like a section title |
+| Minutes | ✅ | The estimate students see, and the sidebar duration |
+| Where it appears | ✅ | End of the module, or after a chosen section |
+| Before you start | optional | What to have ready, e.g. "Wireshark and a free TryHackMe account" |
+| What they'll do | recommended | Objectives students tick off while working. On a link-out lab this is the only thing in the page they touch |
+| The brief (EN/AR) | recommended | The task, in markdown. Bilingual like every lesson body |
+| Where the lab runs | optional | Links out. The **first becomes the main button** |
+| Files students download | optional | Attachments, max **25 MB** each |
+| How it gets marked done | ✅ | A finish button, or flags |
+
+### Links
+
+`https://` addresses only. Students always see the **host** a link leads to
+(`tryhackme.com`) under the button before they click, and the link opens in a new
+tab. Anything that is not http or https is dropped when the module is saved.
+
+### Files
+
+Accepted: `pdf, zip, gz, tar, txt, md, csv, json, log, pcap, pcapng, cap, yaml,
+yml, conf, sh, py, sql`. Everything is served as a forced download and never opens
+in the page. Host a VM image somewhere else and add it as a link instead: a
+multi-gigabyte `.ova` does not belong on the app server.
+
+### Completion
+
+- **A finish button** — students say when they are done. Nothing is verified, and
+  the page does not pretend otherwise.
+- **Flags** — one or more values students extract from the lab environment. Add as
+  many as the lab needs; each has a prompt, the expected answer, an optional hint,
+  and an optional case-sensitivity toggle. Getting **all** of them right finishes
+  the lab, with no second button to press.
+
+> Flags are checked in the student's browser, which means a determined one can read
+> the answers from the page. That is fine for a self-check and wrong for a graded
+> exam. Do not use a flag as the only thing standing between a student and a
+> certificate.
+
+### Network simulation
+
+The same builder the networking lessons use, on the lab. Use it when a topic is
+better shown than described: packets moving through a topology, a handshake step
+by step. It renders in the lab page with a full-screen toggle.
+
+### The preview beside the form
+
+The right-hand column of the Lab tab is not a mock-up, it is the same lab page
+students get, rendering live as you type. What you see there is what they see.
+
+### Publish checklist
+
+- [ ] A brief, or objectives, or both. A lab with only a title is dropped on save
+- [ ] Every link tested and reachable
+- [ ] "Before you start" mentions any account or tool the lab assumes
+- [ ] Flag answers match exactly what the environment produces
+- [ ] Placement makes sense: after the section that teaches what the lab practises
+
+---
+
+## 7. Learning Path
 
 A path sequences **existing published content** into a guided curriculum. It contains no
 content of its own — only ordered references.
@@ -279,7 +364,7 @@ step shows as *Unavailable* instead of breaking.
 
 ---
 
-## 7. Markdown reference
+## 8. Markdown reference
 
 All markdown fields support GitHub-Flavored Markdown, rendered identically everywhere:
 
@@ -317,7 +402,7 @@ Conventions that keep lessons consistent:
 
 ---
 
-## 8. Where published content appears
+## 9. Where published content appears
 
 | Type | Student surfaces |
 |---|---|
@@ -325,6 +410,7 @@ Conventions that keep lessons consistent:
 | Programming Module/Concept | Fundamentals → Programming → Python · "Jump back in" · path catalog |
 | OS Module | Fundamentals → Operating Systems (+ Modules hub if toggled) · path catalog |
 | Standalone Module | Modules hub · path catalog |
+| Lab | Inside its module, as a stop in the course sidebar. Modules with one carry a **Lab** badge on their tile and answer the Modules hub's "Has a lab" filter |
 | Learning Path | Paths page → path detail with enrollment & progress |
 
 Everything published also feeds the dashboard's totals, XP, and progress bars.

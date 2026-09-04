@@ -33,6 +33,8 @@ import { useLang } from '../../contexts/LangContext';
 import { useScrollToTop } from '../../hooks/useScrollToTop';
 import { useAuth } from '../../contexts/AuthContext';
 import CourseTerminalLauncher from '../../components/terminal/CourseTerminalLauncher';
+import LabView from '../../components/labs/LabView';
+import type { ModuleLab } from '../../services/labTypes';
 import { mdFor, type LocalizedMarkdown } from '../../services/creatorTypes';
 import { emitProgressChange, recordActivity } from '../../services/progressService';
 import { requestFeedback } from '../../components/feedback/FeedbackHost';
@@ -44,6 +46,10 @@ type Lecture = {
   videoId: string;
   duration: string;
   quiz: string | null;
+  /** 'lab' swaps the lesson body for the lab one. Absent means a lesson. */
+  kind?: 'lesson' | 'lab';
+  /** The lab itself, present exactly when kind is 'lab'. */
+  lab?: ModuleLab;
   /** Creator-authored quiz embedded on the lecture (static Linux uses quizBank). */
   quizQuestions?: QuizQuestion[];
   notes?: string[];
@@ -234,6 +240,7 @@ const ModuleViewerPage: React.FC = () => {
           title: l.title,
           duration: l.duration,
           hasQuiz: !!l.quiz || !!(l.quizQuestions && l.quizQuestions.length),
+          kind: l.kind === 'lab' ? ('lab' as const) : ('lesson' as const),
         })),
       })) ?? [],
     [course]
@@ -457,6 +464,42 @@ const ModuleViewerPage: React.FC = () => {
               transition={{ duration: 0.2 }}
               className="max-w-5xl mx-auto p-4 md:p-8 space-y-6"
             >
+              {activeLecture.kind === 'lab' && activeLecture.lab ? (
+                /* ── A lab stop ──
+                   Same course, same sidebar, same progress. The body is the
+                   only thing that changes, and it is the very component the
+                   studio previews when the lab is written. */
+                <>
+                  {/* The chapter this lab belongs to. A group that holds only
+                      labs would just repeat the badge below it, so it is left
+                      out rather than said twice. */}
+                  {activeModule.lectures.some((l) => l.kind !== 'lab') && (
+                    <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[#f3a43a]">
+                      {activeModule.title}
+                    </p>
+                  )}
+                  <LabView
+                    lab={activeLecture.lab}
+                    lang={lang}
+                    moduleSlug={isPreview ? undefined : slug}
+                    preview={isPreview}
+                    isComplete={isCompleted(activeLecture.id)}
+                    onComplete={() => markComplete(activeLecture.id)}
+                  />
+                  {!isLastLecture && (
+                    <div className="pt-2">
+                      <Button
+                        variant="secondary"
+                        onClick={goToNext}
+                        leftIcon={<PlayCircle size={16} />}
+                      >
+                        Next Lesson
+                      </Button>
+                    </div>
+                  )}
+                </>
+              ) : (
+              <>
               {/* Lesson header */}
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[#00a859] mb-1.5">
@@ -747,6 +790,8 @@ const ModuleViewerPage: React.FC = () => {
 
               {/* Mark complete (for quiz lessons, shown below quiz when already done) */}
               {getQuestions(activeLecture).length > 0 && !isCompleted(activeLecture.id) && !getQuizState(activeLecture.id).started && !getQuizState(activeLecture.id).completed && null}
+              </>
+              )}
 
             </motion.div>
           ) : null}

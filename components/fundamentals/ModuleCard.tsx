@@ -1,10 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Clock, Layers, FileText, Video } from 'lucide-react';
+import { Clock, Layers, FileText, Video, FlaskConical } from 'lucide-react';
 import DifficultyBadge from '../ui/DifficultyBadge';
 import { useLang } from '../../contexts/LangContext';
-import { MODULE_DOMAIN_META, moduleDomain, coverImageSrc, moduleViewerPath, type FundamentalModule } from '../../data/fundamentalsData';
+import { MODULE_DOMAIN_META, moduleDomain, coverImageSrc, moduleViewerPath, hasLabs, type FundamentalModule } from '../../data/fundamentalsData';
 
 const contentTypeIcons = {
   video: Video,
@@ -97,6 +97,18 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ module: mod, index = 0 }) => {
         </h3>
         <div className="flex flex-wrap items-center gap-2 text-[11px] font-medium text-[#aab3c7]" dir="ltr">
           <DifficultyBadge difficulty={mod.difficulty} className="backdrop-blur-sm" />
+          {/* Hands-on work is the thing students go looking for, so it earns a
+              place on the tile rather than only inside the module. */}
+          {hasLabs(mod) && (
+            <span className="inline-flex items-center gap-1 rounded-md border border-[#f3a43a]/30 bg-[#f3a43a]/15 px-1.5 py-0.5 font-semibold text-[#f3a43a] backdrop-blur-sm">
+              <FlaskConical size={11} />
+              {mod.totalLabs! > 1
+                ? `${mod.totalLabs} ${lang === 'ar' ? 'مختبرات' : 'labs'}`
+                : lang === 'ar'
+                ? 'مختبر'
+                : 'Lab'}
+            </span>
+          )}
           <span className="inline-flex items-center gap-1">
             <Clock size={11} /> {mod.estimatedHours}h
           </span>

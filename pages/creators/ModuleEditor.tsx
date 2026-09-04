@@ -11,6 +11,7 @@ import {
   Layers,
   BookOpen,
   HelpCircle,
+  FlaskConical,
 } from 'lucide-react';
 import CreatorLayout from '../../components/creators/CreatorLayout';
 import BilingualInput from '../../components/creators/BilingualInput';
@@ -19,6 +20,7 @@ import BilingualMarkdown from '../../components/creators/BilingualMarkdown';
 import MarkdownPreview from '../../components/creators/MarkdownPreview';
 import CoverImageUploader from '../../components/creators/CoverImageUploader';
 import QuizEditor, { cleanQuiz } from '../../components/creators/QuizEditor';
+import LabEditor from '../../components/creators/LabEditor';
 import EnhancedCard from '../../components/ui/EnhancedCard';
 import { useToast } from '../../hooks/useToast';
 import { useAuth } from '../../contexts/AuthContext';
@@ -41,6 +43,7 @@ import {
   type LocalizedMarkdown,
   type QuizQuestion,
 } from '../../services/creatorTypes';
+import { cleanLabs, type ModuleLab } from '../../services/labTypes';
 import { MODULE_DOMAINS, MODULE_DOMAIN_META, type ModuleDomain } from '../../data/fundamentalsData';
 import type { Difficulty } from '../../types';
 
@@ -125,11 +128,12 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
   const [showInModules, setShowInModules] = useState(true);
   const [status, setStatus] = useState<ContentStatus>('draft');
   const [chapters, setChapters] = useState<CreatorModuleChapter[]>([]);
+  const [labs, setLabs] = useState<ModuleLab[]>([]);
   const [selected, setSelected] = useState<{ ci: number; si: number } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [existing, setExisting] = useState<CreatorFundamentalModule | null>(null);
   const [mdLang, setMdLang] = useState<'en' | 'ar'>('en');
-  const [tab, setTab] = useState<'details' | 'content'>('details');
+  const [tab, setTab] = useState<'details' | 'content' | 'lab'>('details');
   const [adminCtx, setAdminCtx] = useState<{
     ownerId: string;
     ownerName: string;
@@ -191,6 +195,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
         setDomain(mod.domain ?? 'general');
         setShowInModules(mod.showInModules);
         setStatus(statusOf(mod));
+        setLabs(mod.labs ?? []);
         // chapters: prefer structured, fall back to legacy single markdown
         if (mod.chapters && mod.chapters.length) {
           setChapters(
@@ -223,6 +228,19 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
   }, [chapters, selected]);
 
   const totalSections = useMemo(() => chapters.reduce((s, c) => s + c.sections.length, 0), [chapters]);
+
+  /* Every section, flattened and labelled by its chapter, so a lab can be
+   * placed after one of them by name rather than by id. */
+  const sectionOptions = useMemo(
+    () =>
+      chapters.flatMap((ch) =>
+        ch.sections.map((s) => ({
+          id: s.id,
+          label: `${ch.title || 'Chapter'} / ${s.title || 'Untitled section'}`,
+        }))
+      ),
+    [chapters]
+  );
 
   /* ── Structure ops ── */
   const addChapter = () => {
@@ -288,29 +306,73 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
     const contentType: CreatorFundamentalModule['contentType'] =
       hasVideo && hasText ? 'mixed' : hasVideo ? 'video' : 'text';
 
+    /* ── Labs ──
+     * A lab is a stop in the course, not a separate screen, so it is flattened
+     * into courseData as a lecture like everything else. That is what puts it
+     * in the sidebar, in the progress count and in "next lesson" for free: the
+     * viewer's only special case is rendering a lab body instead of a lesson
+     * one. Stubs are dropped by cleanLabs, since a lab with nothing in it is
+     * worse in the sidebar than no lab at all. */
+    const readyLabs = cleanLabs(labs);
+    const labLecture = (lab: ModuleLab) => ({
+      id: lab.id,
+      title: lab.title,
+      subtitle: '',
+      videoId: '',
+      duration: `${lab.estimatedMinutes}:00`,
+      quiz: null,
+      kind: 'lab' as const,
+      lab,
+    });
+
     // Flatten to courseData so the existing viewer can render it
+    const courseModules = chapters.map((ch) => ({
+      id: ch.id,
+      title: ch.title,
+      lectures: ch.sections.flatMap((s) => {
+        const quiz = cleanQuiz(s.quiz);
+        const lecture = {
+          id: s.id,
+          title: s.title,
+          subtitle: s.subtitle || '',
+          videoId: s.videoId || '',
+          duration: estimateDuration(s),
+          // 'embedded' marker keeps the viewer's hasQuiz/gating checks working
+          quiz: quiz.length ? 'embedded' : null,
+          quizQuestions: quiz.length ? quiz : undefined,
+          markdownContent: s.markdownContent,
+        };
+        const pinned = readyLabs.filter(
+          (lab) => lab.placement.at === 'after-section' && lab.placement.sectionId === s.id
+        );
+        return [lecture, ...pinned.map(labLecture)];
+      }),
+    }));
+
+    /* Labs placed at the end, plus any that were pinned to a section the author
+     * has since deleted. An orphaned lab moves to the end rather than vanishing
+     * with the section it was attached to. */
+    const sectionIds = new Set(chapters.flatMap((c) => c.sections.map((s) => s.id)));
+    const trailingLabs = readyLabs.filter(
+      (lab) => lab.placement.at === 'end' || !sectionIds.has(lab.placement.sectionId)
+    );
+
     const courseData = {
       id: slug || generateSlug(titleEn),
       title: titleEn,
       description: descEn,
-      modules: chapters.map((ch) => ({
-        id: ch.id,
-        title: ch.title,
-        lectures: ch.sections.map((s) => {
-          const quiz = cleanQuiz(s.quiz);
-          return {
-            id: s.id,
-            title: s.title,
-            subtitle: s.subtitle || '',
-            videoId: s.videoId || '',
-            duration: estimateDuration(s),
-            // 'embedded' marker keeps the viewer's hasQuiz/gating checks working
-            quiz: quiz.length ? 'embedded' : null,
-            quizQuestions: quiz.length ? quiz : undefined,
-            markdownContent: s.markdownContent,
-          };
-        }),
-      })),
+      modules: [
+        ...courseModules,
+        ...(trailingLabs.length
+          ? [
+              {
+                id: `${slug || 'module'}-labs`,
+                title: trailingLabs.length === 1 ? 'Lab' : 'Labs',
+                lectures: trailingLabs.map(labLecture),
+              },
+            ]
+          : []),
+      ],
     };
 
     const totalQuizzes = chapters.reduce(
@@ -331,12 +393,15 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
       estimatedHours,
       coverImage: coverImage || undefined,
       domain,
-      totalLessons: totalSections,
+      // Labs are stops too, so the header count matches what the sidebar lists.
+      totalLessons: totalSections + readyLabs.length,
       totalModules: chapters.length,
       totalQuizzes,
+      totalLabs: readyLabs.length,
       iconColor,
       courseData,
       chapters,
+      labs: readyLabs,
       showInModules: isOS ? showInModules : true,
       ...(existing
         ? {
@@ -493,6 +558,27 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
         >
           <Layers size={15} />
           <span>Structure &amp; Content</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab('lab')}
+          className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+            tab === 'lab'
+              ? 'bg-[#f3a43a]/12 text-[#f3a43a] border border-[#f3a43a]/30'
+              : 'text-[#8592ad] hover:text-[#d2d7e3] border border-transparent'
+          }`}
+        >
+          <FlaskConical size={15} />
+          <span>Lab</span>
+          {labs.length > 0 && (
+            <span
+              className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
+                tab === 'lab' ? 'bg-[#f3a43a]/20 text-[#f3a43a]' : 'bg-[#1a2332] text-[#8592ad]'
+              }`}
+            >
+              {labs.length}
+            </span>
+          )}
         </button>
       </div>
 
@@ -776,6 +862,17 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
           )}
         </div>
       </div>
+      )}
+
+      {/* ── Lab ── */}
+      {tab === 'lab' && (
+        <LabEditor
+          labs={labs}
+          onChange={setLabs}
+          sections={sectionOptions}
+          lang={mdLang}
+          onLangChange={setMdLang}
+        />
       )}
     </CreatorLayout>
   );

@@ -8,6 +8,7 @@ import {
   ClipboardCheck,
   Clock,
   BookOpen,
+  FlaskConical,
 } from 'lucide-react';
 import ProgressBar from './ui/ProgressBar';
 import { useLang } from '../contexts/LangContext';
@@ -19,6 +20,8 @@ export type SidebarLecture = {
   title: string;
   duration: string;
   hasQuiz: boolean;
+  /** A lab is a stop like any other, marked so it reads as hands-on work. */
+  kind?: 'lesson' | 'lab';
 };
 
 export type SidebarModule = {
@@ -213,10 +216,13 @@ const CourseViewerSidebar: React.FC<CourseViewerSidebarProps> = ({
                           <span className="absolute left-1 top-2 bottom-2 w-[3px] rounded-full bg-[#00a859]" />
                         )}
 
-                        {/* Status icon */}
+                        {/* Status icon. A lab keeps its own mark until it is
+                            done, so hands-on stops are findable at a glance. */}
                         <span className="flex-shrink-0">
                           {done ? (
                             <CheckCircle2 className="w-[15px] h-[15px] text-[#00a859]" />
+                          ) : lecture.kind === 'lab' ? (
+                            <FlaskConical className="w-[15px] h-[15px] text-[#f3a43a]" />
                           ) : (
                             <Circle className={`w-[15px] h-[15px] ${
                               active ? 'text-[#00a859]' : 'text-[#7c8aa6]'
@@ -244,8 +250,14 @@ const CourseViewerSidebar: React.FC<CourseViewerSidebarProps> = ({
                           </p>
                         </div>
 
-                        {/* Right side: duration + quiz badge */}
+                        {/* Right side: duration + quiz / lab badge */}
                         <div className="flex items-center gap-1.5 flex-shrink-0">
+                          {lecture.kind === 'lab' && (
+                            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-[#f3a43a]/10 border border-[#f3a43a]/25">
+                              <FlaskConical className="w-2.5 h-2.5 text-[#f3a43a]" />
+                              <span className="text-[9px] font-bold text-[#f3a43a]">Lab</span>
+                            </span>
+                          )}
                           {lecture.hasQuiz && (
                             <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-[#00a859]/10 border border-[#00a859]/20">
                               <ClipboardCheck className="w-2.5 h-2.5 text-[#00a859]" />

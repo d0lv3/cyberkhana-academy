@@ -53,9 +53,16 @@ export type FundamentalModule = {
   totalLessons: number;
   totalModules: number;
   totalQuizzes: number;
+  /** Hands-on labs in the module. Absent on modules authored before labs existed. */
+  totalLabs?: number;
   iconColor: string;
   courseData: any;
 };
+
+/** Does this module have hands-on work? Drives the tile badge and the hub filter. */
+export function hasLabs(mod: Pick<FundamentalModule, 'totalLabs'>): boolean {
+  return (mod.totalLabs ?? 0) > 0;
+}
 
 /** True when a cover value is raw SVG markup rather than an uploaded URL. */
 export function isSvgCover(coverImage?: string): boolean {

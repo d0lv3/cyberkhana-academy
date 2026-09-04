@@ -14,7 +14,7 @@ import progressRoutes from './routes/progress';
 import leaderboardRoutes from './routes/leaderboard';
 import feedbackRoutes from './routes/feedback';
 import adminRoutes from './routes/admin';
-import uploadRoutes, { UPLOADS_DIR } from './routes/uploads';
+import uploadRoutes, { UPLOADS_DIR, LAB_RESOURCES_DIR } from './routes/uploads';
 
 const app = express();
 
@@ -48,6 +48,29 @@ app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/uploads', uploadRoutes);
+
+/* Lab resources — creator-uploaded files students download to do the work.
+ *
+ * Registered before the image handler below so it wins on the shared prefix.
+ * Everything here is forced to download as an opaque octet-stream: these files
+ * come from creators rather than from us, and a document served inline from our
+ * own origin can script against it. `attachment` plus `nosniff` means the
+ * browser saves the bytes and never interprets them, whatever the extension. */
+app.use(
+  '/uploads/lab-resources',
+  express.static(LAB_RESOURCES_DIR, {
+    immutable: true,
+    maxAge: '365d',
+    index: false,
+    dotfiles: 'deny',
+    setHeaders: (res) => {
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+      res.setHeader('Content-Type', 'application/octet-stream');
+      res.setHeader('Content-Disposition', 'attachment');
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+    },
+  })
+);
 
 // Uploaded images — immutable random filenames, cache hard. CORP is relaxed
 // here (and only here) so the frontend origin can embed the images.

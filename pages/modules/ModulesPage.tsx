@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Layers, Search, SearchX } from 'lucide-react';
+import { Layers, Search, SearchX, FlaskConical } from 'lucide-react';
 import EmptyState from '../../components/ui/EmptyState';
 import PageHeader from '../../components/ui/PageHeader';
 import ModuleCard from '../../components/fundamentals/ModuleCard';
@@ -9,6 +9,7 @@ import {
   MODULE_DOMAINS,
   MODULE_DOMAIN_META,
   moduleDomain,
+  hasLabs,
   type FundamentalModule,
   type ModuleDomain,
 } from '../../data/fundamentalsData';
@@ -34,9 +35,16 @@ const ModulesPage: React.FC = () => {
   const [domain, setDomain] = useState<'all' | ModuleDomain>('all');
   const [difficulty, setDifficulty] = useState<'all' | Difficulty>('all');
   const [contentType, setContentType] = useState<'all' | FundamentalModule['contentType']>('all');
+  /* Hands-on is a mode of learning rather than a category, so it gets its own
+     toggle instead of a fourth value in one of the dropdowns. */
+  const [labsOnly, setLabsOnly] = useState(false);
 
   const hasActiveFilters =
-    query.trim() !== '' || domain !== 'all' || difficulty !== 'all' || contentType !== 'all';
+    query.trim() !== '' ||
+    domain !== 'all' ||
+    difficulty !== 'all' ||
+    contentType !== 'all' ||
+    labsOnly;
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -44,6 +52,7 @@ const ModulesPage: React.FC = () => {
       if (domain !== 'all' && moduleDomain(mod) !== domain) return false;
       if (difficulty !== 'all' && mod.difficulty !== difficulty) return false;
       if (contentType !== 'all' && mod.contentType !== contentType) return false;
+      if (labsOnly && !hasLabs(mod)) return false;
       if (q) {
         const haystack = [
           mod.title.en,
@@ -59,13 +68,14 @@ const ModulesPage: React.FC = () => {
       }
       return true;
     });
-  }, [modules, query, domain, difficulty, contentType]);
+  }, [modules, query, domain, difficulty, contentType, labsOnly]);
 
   const clearFilters = () => {
     setQuery('');
     setDomain('all');
     setDifficulty('all');
     setContentType('all');
+    setLabsOnly(false);
   };
 
   return (
@@ -137,6 +147,20 @@ const ModulesPage: React.FC = () => {
                   </option>
                 ))}
               </select>
+
+              <button
+                type="button"
+                onClick={() => setLabsOnly((v) => !v)}
+                aria-pressed={labsOnly}
+                className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2.5 text-xs font-semibold transition-colors ${
+                  labsOnly
+                    ? 'border-[#f3a43a]/40 bg-[#f3a43a]/12 text-[#f3a43a]'
+                    : 'border-[#263248] bg-[#121a2a] text-[#d2d7e3] hover:border-[#f3a43a]/30'
+                }`}
+              >
+                <FlaskConical size={13} />
+                {lang === 'ar' ? 'بها مختبر' : 'Has a lab'}
+              </button>
             </div>
           </div>
 

@@ -4,6 +4,7 @@ import type { NetworkingLesson } from '../components/network-sim/types';
 import type { ProgrammingLanguage, ProgrammingModule, ProgrammingConcept, TestCase } from '../data/programming/types';
 import type { FundamentalModule } from '../data/fundamentalsData';
 import type { QuizQuestion } from '../data/linuxQuizData';
+import type { ModuleLab } from './labTypes';
 import type { Difficulty } from '../types';
 
 /* ── Localized markdown ──
@@ -94,6 +95,12 @@ export type CreatorFundamentalModule = FundamentalModule & CreatorMeta & {
   showInModules: boolean;
   /** Structured, section-divided content (source of truth for editing) */
   chapters?: CreatorModuleChapter[];
+  /**
+   * The module's hands-on work. Source of truth for editing, the same way
+   * chapters are: on save each lab is also flattened into `courseData` as a
+   * stop in the course so the viewer needs no separate route for it.
+   */
+  labs?: ModuleLab[];
   /** Legacy single-blob markdown (pre-sections modules) */
   markdownContent?: LocalizedMarkdown;
   /** Legacy single video id */
