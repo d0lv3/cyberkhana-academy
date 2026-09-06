@@ -1,6 +1,7 @@
 import React from 'react';
-import { Plus, Trash2, HelpCircle, CheckCircle2, Circle } from 'lucide-react';
-import type { QuizQuestion } from '../../services/creatorTypes';
+import { Plus, Trash2, HelpCircle, CheckCircle2, Circle, Keyboard, ListChecks } from 'lucide-react';
+import type { QuizQuestion, QuizKind } from '../../services/creatorTypes';
+import { answerMask } from '../../data/linuxQuizData';
 
 interface QuizEditorProps {
   value: QuizQuestion[];
@@ -12,33 +13,58 @@ const inputCls =
 
 const MAX_OPTIONS = 6;
 
-/** Drop blank questions/options and re-anchor the correct answer by its text. */
+const KINDS: { value: QuizKind; label: string; icon: React.ElementType }[] = [
+  { value: 'mcq', label: 'MCQ', icon: ListChecks },
+  { value: 'text', label: 'Written answer', icon: Keyboard },
+];
+
+/** Drop blank questions/options and re-anchor the correct answer by its text.
+ *  A written-answer question is kept on its answer alone — options it may have
+ *  carried before the author switched its kind are dropped with it. */
 export function cleanQuiz(quiz?: QuizQuestion[]): QuizQuestion[] {
   if (!quiz) return [];
   const cleaned: QuizQuestion[] = [];
   for (const q of quiz) {
     const question = q.question.trim();
     if (!question) continue;
+
+    if (q.kind === 'text') {
+      const answer = (q.answer ?? '').trim();
+      if (!answer) continue;
+      cleaned.push({ question, kind: 'text', answer, options: [], correctIndex: 0 });
+      continue;
+    }
+
     const correctText = q.options[q.correctIndex];
     const options = q.options.map((o) => o.trim()).filter(Boolean);
     if (options.length < 2) continue;
     let correctIndex = correctText !== undefined ? options.indexOf(correctText.trim()) : 0;
     if (correctIndex < 0) correctIndex = 0;
-    cleaned.push({ question, options, correctIndex });
+    cleaned.push({ question, kind: 'mcq', options, correctIndex });
   }
   return cleaned;
 }
 
 /**
- * Authoring UI for an end-of-section multiple-choice quiz.
- * Each question has a prompt, 2–6 options, and exactly one correct answer.
- * The student-side runner shuffles options per attempt, so order here is free.
+ * Authoring UI for an end-of-section quiz.
+ *
+ * A question is asked one of two ways, chosen per question:
+ *   MCQ            — a prompt, 2–6 options and exactly one correct answer. The
+ *                    student-side runner shuffles options per attempt, so the
+ *                    order they are written in here is free.
+ *   Written answer — a prompt and the answer itself, typed out by the student
+ *                    and marked case-insensitively.
  */
 const QuizEditor: React.FC<QuizEditorProps> = ({ value, onChange }) => {
   const quiz = value ?? [];
 
   const addQuestion = () =>
-    onChange([...quiz, { question: '', options: ['', ''], correctIndex: 0 }]);
+    onChange([...quiz, { question: '', kind: 'mcq', options: ['', ''], correctIndex: 0 }]);
+
+  /* Switching kind keeps whatever the other kind had written, so flipping to
+     see the alternative and back does not cost the author their work. */
+  const setKind = (qi: number, kind: QuizKind) =>
+    onChange(quiz.map((q, i) => (i === qi ? { ...q, kind } : q)));
 
   const updateQuestion = (qi: number, patch: Partial<QuizQuestion>) =>
     onChange(quiz.map((q, i) => (i === qi ? { ...q, ...patch } : q)));
@@ -82,7 +108,10 @@ const QuizEditor: React.FC<QuizEditorProps> = ({ value, onChange }) => {
           <p className="text-xs text-[#8592ad]">No quiz on this section yet.</p>
         </div>
       ) : (
-        quiz.map((q, qi) => (
+        quiz.map((q, qi) => {
+          const kind: QuizKind = q.kind === 'text' ? 'text' : 'mcq';
+          const mask = answerMask(q);
+          return (
           <div key={qi} className="rounded-lg border border-[#263248] bg-[#0d1117] p-3.5" dir="ltr">
             <div className="flex items-start gap-2 mb-3">
               <span className="mt-2 text-[11px] font-bold text-[#8592ad] w-5 flex-shrink-0">
@@ -104,6 +133,47 @@ const QuizEditor: React.FC<QuizEditorProps> = ({ value, onChange }) => {
               </button>
             </div>
 
+            {/* How this one is asked. Per question, not per quiz: a section can
+                mix a couple of recall questions in among the options. */}
+            <div className="mb-3 flex items-center gap-1 pl-7">
+              {KINDS.map(({ value, label, icon: KindIcon }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setKind(qi, value)}
+                  aria-pressed={kind === value}
+                  className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[11px] font-semibold transition-colors ${
+                    kind === value
+                      ? 'border-[#00a859]/45 bg-[#00a859]/10 text-[#00a859]'
+                      : 'border-[#263248] bg-[#0a0f18] text-[#7c8aa6] hover:text-[#9aa5bf]'
+                  }`}
+                >
+                  <KindIcon size={12} /> {label}
+                </button>
+              ))}
+            </div>
+
+            {kind === 'text' ? (
+              <div className="space-y-1.5 pl-7">
+                <input
+                  value={q.answer ?? ''}
+                  onChange={(e) => updateQuestion(qi, { answer: e.target.value })}
+                  placeholder="The answer, e.g. Hello World"
+                  className={`${inputCls} ${q.answer?.trim() ? 'border-[#00a859]/40' : ''}`}
+                />
+                <p className="text-[11px] leading-relaxed text-[#7c8aa6]">
+                  Marked case-insensitively, and extra spaces are ignored, so “hello world”
+                  passes for “Hello World”.
+                  {mask && (
+                    <>
+                      {' '}The student sees{' '}
+                      <span className="font-mono text-[#9aa5bf]">{mask}</span> in the empty
+                      box as a hint.
+                    </>
+                  )}
+                </p>
+              </div>
+            ) : (
             <div className="space-y-1.5 pl-7">
               {q.options.map((opt, oi) => {
                 const correct = oi === q.correctIndex;
@@ -148,8 +218,10 @@ const QuizEditor: React.FC<QuizEditorProps> = ({ value, onChange }) => {
                 </button>
               )}
             </div>
+            )}
           </div>
-        ))
+          );
+        })
       )}
 
       <button

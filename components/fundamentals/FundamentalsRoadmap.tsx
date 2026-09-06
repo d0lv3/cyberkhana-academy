@@ -6,10 +6,14 @@ import { useLang } from '../../contexts/LangContext';
 import { getTrackProgress, type TrackKey } from '../../services/progressService';
 
 /* ─── Fundamentals Roadmap ───
- * The Fundamentals hub as a journey: three floating land cubes (Programming →
- * Operating Systems → Networking) climbing toward the summit island —
+ * The Fundamentals hub as a journey: three floating land cubes (Programming,
+ * Operating Systems, Networking) leading down to the goal island,
  * Cybersecurity 101. Hand-drawn isometric SVG, no chart library. Each cube
  * carries a chunky, extruded 3D emblem seated on its top face.
+ *
+ * The road runs top to bottom down one centre line: step one at the head of
+ * the column, the goal at its foot, read in the same order as everything else
+ * on the page. Being centred also means it needs no mirroring in Arabic.
  */
 
 interface IslandDef {
@@ -27,6 +31,13 @@ interface IslandDef {
   isGoal?: boolean;
 }
 
+/* The centre line every stop is threaded onto, and the scene it lives in.
+ * The column is only as wide as an island's widest label, so the whole thing
+ * renders near 1:1 instead of being scaled down to fit a viewport. */
+const COLUMN_X = 280;
+const SCENE_W = 560;
+const SCENE_H = 1190;
+
 const ISLANDS: IslandDef[] = [
   {
     key: 'programming',
@@ -35,9 +46,9 @@ const ISLANDS: IslandDef[] = [
     icon: Code,
     color: '#9fef00',
     route: '/fundamentals/programming',
-    cx: 200,
-    cy: 660,
-    scale: 1,
+    cx: COLUMN_X,
+    cy: 80,
+    scale: 0.68,
     title: { en: 'Programming', ar: 'البرمجة' },
     meta: { en: 'Python · scripting · logic', ar: 'بايثون · السكربتات · المنطق' },
   },
@@ -48,9 +59,9 @@ const ISLANDS: IslandDef[] = [
     icon: Monitor,
     color: '#f3a43a',
     route: '/fundamentals/operating-systems',
-    cx: 740,
-    cy: 515,
-    scale: 1,
+    cx: COLUMN_X,
+    cy: 370,
+    scale: 0.68,
     title: { en: 'Operating Systems', ar: 'أنظمة التشغيل' },
     meta: { en: 'Linux · terminal · hardening', ar: 'لينكس · الطرفية · التقوية' },
   },
@@ -61,9 +72,9 @@ const ISLANDS: IslandDef[] = [
     icon: Wifi,
     color: '#60a5fa',
     route: '/fundamentals/networking',
-    cx: 255,
-    cy: 350,
-    scale: 1,
+    cx: COLUMN_X,
+    cy: 660,
+    scale: 0.68,
     title: { en: 'Networking', ar: 'الشبكات' },
     meta: { en: 'TCP/IP · packets · protocols', ar: 'TCP/IP · الحزم · البروتوكولات' },
   },
@@ -74,21 +85,24 @@ const ISLANDS: IslandDef[] = [
     icon: ShieldCheck,
     color: '#00a859',
     route: '/fundamentals/cybersecurity-101',
-    cx: 610,
-    cy: 165,
-    scale: 1.16,
+    cx: COLUMN_X,
+    cy: 958,
+    scale: 0.8,
     title: { en: 'Cybersecurity', ar: 'الأمن السيبراني' },
     meta: { en: 'Security+ foundations', ar: 'أساسيات +Security' },
     isGoal: true,
   },
 ];
 
-/* Climbing trails between islands, in journey order. */
-const TRAILS: { from: string; d: string }[] = [
-  { from: 'programming', d: 'M 300 672 C 450 712, 555 622, 648 555' },
-  { from: 'operating-systems', d: 'M 652 472 C 525 418, 470 400, 363 368' },
-  { from: 'networking', d: 'M 348 312 C 440 266, 480 238, 518 202' },
-];
+/* Trails between consecutive stops, derived from the positions above rather
+ * than hand-drawn, so moving an island can never leave its road behind. Each
+ * runs from just below one label stack to just above the next emblem. */
+const TRAILS: { from: string; d: string }[] = ISLANDS.slice(0, -1).map((island, i) => {
+  const next = ISLANDS[i + 1];
+  const start = island.cy + 107 * island.scale + 36 + 66;
+  const end = next.cy - 80 * next.scale;
+  return { from: island.key, d: `M ${COLUMN_X} ${start} L ${COLUMN_X} ${end}` };
+});
 
 /* Isometric cube geometry (top-face half-width / half-height, side depth). */
 const W = 96;
@@ -377,7 +391,6 @@ const Island: React.FC<{
           </g>
         ) : (
           <g transform={`translate(0, ${labelBase + 54})`}>
-            <rect x={-58} y={0} width={116} height={22} rx={11} fill={c} opacity={0.12} />
             <rect x={-58} y={0} width={116} height={22} rx={11} fill="none" stroke={c} strokeOpacity={0.5} strokeWidth={1} />
             <text
               x={0}
@@ -394,8 +407,16 @@ const Island: React.FC<{
           </g>
         )}
 
-        {/* Generous invisible hit area */}
-        <rect x={-w - 14} y={-h - 86} width={(w + 14) * 2} height={h + 86 + labelBase + 70} fill="transparent" />
+        {/* Generous invisible hit area. Its reach above the cube scales with
+            the island, so two stops stacked in the column never overlap and
+            steal each other's clicks. */}
+        <rect
+          x={-w - 14}
+          y={-h - 92 * island.scale}
+          width={(w + 14) * 2}
+          height={h + 92 * island.scale + labelBase + 70}
+          fill="transparent"
+        />
       </motion.g>
     </g>
   );
@@ -416,7 +437,7 @@ const FundamentalsRoadmap: React.FC = () => {
   return (
     <>
       {/* ── Desktop / tablet: the floating-islands scene ── */}
-      <div className="hidden md:block relative overflow-hidden rounded-2xl border border-[#263248] bg-[#0a0f18]">
+      <div className="hidden md:block relative mx-auto max-w-4xl overflow-hidden rounded-2xl border border-[#263248] bg-[#0a0f18]">
         {/* Faint sky gradient toward the summit */}
         <div
           className="pointer-events-none absolute inset-0"
@@ -435,21 +456,20 @@ const FundamentalsRoadmap: React.FC = () => {
           </p>
           <p className="mt-1 text-sm leading-snug text-[#9aa5bf]">
             {lang === 'ar'
-              ? 'رحلة من ثلاث مراحل نحو القمة: الأمن السيبراني.'
-              : 'A three-stage journey to the summit: Cybersecurity.'}
+              ? 'ثلاث مراحل، ثم الهدف: الأمن السيبراني.'
+              : 'Three stages, then the goal: Cybersecurity.'}
           </p>
         </div>
 
-        {/* The scene is 1000x880, so at full width it would stand ~1100px tall
-            and run off the screen. Cap it to the viewport (minus the app header,
-            page padding and title) and let preserveAspectRatio scale the whole
-            diagram down to fit — nothing is ever cropped. The content itself is
-            already tight (only ~22px of vertical slack in the viewBox), so this
-            cap is the only thing deciding how large the scene renders. */}
+        {/* A column this tall cannot also fit a viewport, and shrinking it to
+            try would take the labels down with it — a 12px meta line is not
+            worth a diagram nobody has to scroll. So the scene renders at its
+            own size instead, capped to the column's width, and the page scrolls
+            the road the way you would walk it. */}
         <svg
-          viewBox="0 0 1000 880"
+          viewBox={`0 0 ${SCENE_W} ${SCENE_H}`}
           preserveAspectRatio="xMidYMid meet"
-          className="relative mx-auto block h-auto w-full max-h-[calc(100vh-12rem)]"
+          className="relative mx-auto block h-auto w-full max-w-[540px]"
         >
           <defs>
             <filter id="island-blur" x="-60%" y="-60%" width="220%" height="220%">
@@ -465,10 +485,12 @@ const FundamentalsRoadmap: React.FC = () => {
             </filter>
           </defs>
 
-          {/* Ambient stars */}
+          {/* Ambient stars, kept off the centre line so they never read as
+              part of the road itself */}
           {[
-            [85, 120, 1.4], [320, 70, 1], [520, 300, 1.2], [880, 130, 1.5], [930, 420, 1],
-            [120, 460, 1.2], [820, 690, 1.3], [480, 760, 1], [680, 330, 1], [60, 730, 1.4],
+            [46, 70, 1.2], [508, 150, 1], [96, 260, 1.4], [524, 355, 1.2], [30, 470, 1],
+            [498, 560, 1.3], [72, 680, 1.2], [520, 790, 1], [40, 900, 1.4], [486, 1010, 1.2],
+            [110, 1090, 1], [530, 1140, 1.3],
           ].map(([x, y, r], i) => (
             <circle key={i} cx={x} cy={y} r={r} fill="#3d4f73" opacity={0.5} />
           ))}
@@ -507,8 +529,8 @@ const FundamentalsRoadmap: React.FC = () => {
             so it leads the list instead. */}
         <p className="mb-4 text-sm leading-snug text-[#9aa5bf]">
           {lang === 'ar'
-            ? 'رحلة من ثلاث مراحل نحو القمة: الأمن السيبراني.'
-            : 'A three-stage journey to the summit: Cybersecurity.'}
+            ? 'ثلاث مراحل، ثم الهدف: الأمن السيبراني.'
+            : 'Three stages, then the goal: Cybersecurity.'}
         </p>
 
         {ISLANDS.map((island, i) => {

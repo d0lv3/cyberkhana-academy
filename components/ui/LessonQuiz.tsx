@@ -2,13 +2,20 @@ import React, { useState } from 'react';
 import { HelpCircle, CheckCircle2, XCircle, RotateCcw, ChevronRight, Trophy } from 'lucide-react';
 import Button from './EnhancedButton';
 import { useLang } from '../../contexts/LangContext';
-import type { QuizQuestion } from '../../data/linuxQuizData';
+import {
+  answerMask,
+  isAnswerCorrect,
+  isTextQuestion,
+  type QuizQuestion,
+} from '../../data/linuxQuizData';
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
 const PASS_RATIO = 0.7;
 
-/** Return a copy of a question with its answer options shuffled (Fisher–Yates). */
+/** Return a copy of a question with its answer options shuffled (Fisher–Yates).
+ *  A written-answer question has nothing to shuffle and is passed through. */
 const shuffleOptions = (q: QuizQuestion): QuizQuestion => {
+  if (isTextQuestion(q)) return q;
   const order = q.options.map((_, i) => i);
   for (let i = order.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -41,6 +48,8 @@ const LessonQuiz: React.FC<LessonQuizProps> = ({ questions, onPass, passed = fal
   const [qs, setQs] = useState<QuizQuestion[]>([]);
   const [idx, setIdx] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
+  /** What the learner typed, for a written-answer question. */
+  const [typed, setTyped] = useState('');
   const [revealed, setRevealed] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const [finished, setFinished] = useState(false);
@@ -51,15 +60,25 @@ const LessonQuiz: React.FC<LessonQuizProps> = ({ questions, onPass, passed = fal
     setQs(questions.map(shuffleOptions));
     setIdx(0);
     setSelected(null);
+    setTyped('');
     setRevealed(false);
     setCorrectCount(0);
     setFinished(false);
     setStarted(true);
   };
 
+  /** Whether the answer standing in the box (or picked in the list) is right.
+   *  Derived rather than stored, so the reveal and the score cannot disagree. */
+  const marks = (q: QuizQuestion): boolean =>
+    isTextQuestion(q) ? isAnswerCorrect(q, typed) : selected === q.correctIndex;
+
+  const answered = (q: QuizQuestion): boolean =>
+    isTextQuestion(q) ? typed.trim() !== '' : selected !== null;
+
   const submit = () => {
-    if (selected === null || revealed) return;
-    if (selected === qs[idx].correctIndex) setCorrectCount((c) => c + 1);
+    const q = qs[idx];
+    if (revealed || !q || !answered(q)) return;
+    if (marks(q)) setCorrectCount((c) => c + 1);
     setRevealed(true);
   };
 
@@ -70,6 +89,7 @@ const LessonQuiz: React.FC<LessonQuizProps> = ({ questions, onPass, passed = fal
     } else {
       setIdx((i) => i + 1);
       setSelected(null);
+      setTyped('');
       setRevealed(false);
     }
   };
@@ -187,6 +207,54 @@ const LessonQuiz: React.FC<LessonQuizProps> = ({ questions, onPass, passed = fal
       <div className="p-5" dir="ltr">
         <p className="text-sm font-semibold text-[#f3f6ff] mb-4">{q.question}</p>
 
+        {isTextQuestion(q) ? (
+          /* ── Written answer ──
+             The box starts out holding the shape of the answer in asterisks:
+             enough of a nudge to recall a term, not enough to guess one. */
+          <div className="mb-5">
+            <input
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  revealed ? next() : submit();
+                }
+              }}
+              disabled={revealed}
+              placeholder={answerMask(q)}
+              spellCheck={false}
+              autoComplete="off"
+              aria-label={ar ? 'إجابتك' : 'Your answer'}
+              className={`w-full rounded-lg border bg-[#0d1117] px-4 py-3 font-mono text-sm tracking-wide outline-none transition-colors placeholder:tracking-[0.2em] placeholder:text-[#3d4a63] disabled:cursor-default ${
+                !revealed
+                  ? 'border-[#263248] text-[#f3f6ff] focus:border-[#9fef00]/60'
+                  : marks(q)
+                  ? 'border-[#00a859] bg-[#00a859]/10 text-[#f3f6ff]'
+                  : 'border-red-500/60 bg-red-500/10 text-[#f3f6ff]'
+              }`}
+            />
+            {revealed && (
+              <p className="mt-2.5 flex flex-wrap items-center gap-2 text-xs">
+                {marks(q) ? (
+                  <span className="flex items-center gap-1.5 font-semibold text-[#00a859]">
+                    <CheckCircle2 size={14} /> {ar ? 'إجابة صحيحة' : 'Correct'}
+                  </span>
+                ) : (
+                  <>
+                    <span className="flex items-center gap-1.5 font-semibold text-red-400">
+                      <XCircle size={14} /> {ar ? 'إجابة خاطئة' : 'Not quite'}
+                    </span>
+                    <span className="text-[#8592ad]">
+                      {ar ? 'الإجابة الصحيحة:' : 'The answer was'}{' '}
+                      <span className="font-mono text-[#00a859]">{q.answer}</span>
+                    </span>
+                  </>
+                )}
+              </p>
+            )}
+          </div>
+        ) : (
         <div className="space-y-2 mb-5">
           {q.options.map((opt, oi) => {
             const isSelected = selected === oi;
@@ -223,13 +291,14 @@ const LessonQuiz: React.FC<LessonQuizProps> = ({ questions, onPass, passed = fal
             );
           })}
         </div>
+        )}
 
         {revealed ? (
           <Button variant="primary" size="sm" onClick={next} rightIcon={<ChevronRight size={14} />}>
             {idx + 1 >= qs.length ? (ar ? 'النتيجة' : 'See results') : ar ? 'التالي' : 'Next'}
           </Button>
         ) : (
-          <Button variant="primary" size="sm" onClick={submit} disabled={selected === null}>
+          <Button variant="primary" size="sm" onClick={submit} disabled={!answered(q)}>
             {ar ? 'تحقق' : 'Check answer'}
           </Button>
         )}

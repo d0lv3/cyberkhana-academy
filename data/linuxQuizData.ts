@@ -1,10 +1,42 @@
+/* A question is asked one of two ways. 'mcq' offers options to pick from;
+ * 'text' asks for the answer to be typed out. `kind` is optional because the
+ * several hundred literals below — and every quiz a creator has already saved
+ * — predate it: absent means 'mcq', so nothing needs migrating. */
+export type QuizKind = 'mcq' | 'text';
+
 export type QuizQuestion = {
   question: string;
+  kind?: QuizKind;
+  /** Multiple choice only. A typed question carries an empty list. */
   options: string[];
+  /** Multiple choice only: index into `options`. */
   correctIndex: number;
+  /** Typed questions only: the answer the learner writes out. */
+  answer?: string;
 };
 
 export type LessonQuiz = QuizQuestion[];
+
+export const isTextQuestion = (q: QuizQuestion): boolean => q.kind === 'text';
+
+/* ── Marking a typed answer ──
+ * The learner is being asked whether they know the answer, not whether they
+ * can reproduce its typography, so case, surrounding space and doubled inner
+ * spaces are all noise: "hello world" answers "Hello World".
+ */
+export const normalizeAnswer = (value: string): string =>
+  value.trim().replace(/\s+/g, ' ').toLowerCase();
+
+export const isAnswerCorrect = (q: QuizQuestion, typed: string): boolean => {
+  const expected = normalizeAnswer(q.answer ?? '');
+  return expected !== '' && normalizeAnswer(typed) === expected;
+};
+
+/** The shape of the answer — one asterisk per character, spaces left standing —
+ *  shown in the empty answer box so a stuck learner can still see how long the
+ *  answer runs and how many words it is. */
+export const answerMask = (q: QuizQuestion): string =>
+  (q.answer ?? '').trim().replace(/\s+/g, ' ').replace(/\S/g, '*');
 
 // Quizzes keyed by lecture ID
 const quizzes: Record<string, LessonQuiz> = {

@@ -77,19 +77,31 @@
     transform: scaleX(-1);
   }
 
-  /* Sidebar tab icon: a short wobble acknowledging the click */
-  @keyframes nav-shake {
-    0%, 100% { transform: translateX(0) rotate(0deg); }
-    20%      { transform: translateX(-1.5px) rotate(-6deg); }
-    40%      { transform: translateX(1.5px) rotate(5deg); }
-    60%      { transform: translateX(-1px) rotate(-3deg); }
-    80%      { transform: translateX(1px) rotate(2deg); }
+  /* Sidebar tab icon: a quick nudge acknowledging the click. It travels one
+     way only — toward the edge the sidebar is anchored to, so the motion reads
+     as leaning out of the content: left in English, right in Arabic. */
+  @keyframes nav-nudge {
+    0%   { transform: translateX(0); }
+    30%  { transform: translateX(-4px); }
+    58%  { transform: translateX(-1px); }
+    78%  { transform: translateX(-2.5px); }
+    100% { transform: translateX(0); }
   }
-  .nav-shake {
-    animation: nav-shake 0.4s ease-in-out;
+  @keyframes nav-nudge-rtl {
+    0%   { transform: translateX(0); }
+    30%  { transform: translateX(4px); }
+    58%  { transform: translateX(1px); }
+    78%  { transform: translateX(2.5px); }
+    100% { transform: translateX(0); }
+  }
+  .nav-nudge {
+    animation: nav-nudge 0.4s ease-out;
+  }
+  [dir='rtl'] .nav-nudge {
+    animation-name: nav-nudge-rtl;
   }
   @media (prefers-reduced-motion: reduce) {
-    .nav-shake { animation: none; }
+    .nav-nudge { animation: none; }
   }
 
   /* Infinite horizontal ticker (content must be duplicated once) */
@@ -402,6 +414,34 @@
    Arabic lessons pair IBM Plex Sans Arabic for the prose with IBM Plex
    Mono for the Latin runs, so an English term sitting inside an Arabic
    sentence reads as terminology instead of dissolving into it. */
+
+/* ── Body copy ──
+   Lesson prose is long-form reading, not UI chrome, so its scale is set once
+   here rather than per element in the renderer: one place to tune, and it
+   outranks the utility classes on specificity. Everything nested (inline code,
+   Latin runs, KaTeX) sizes in `em`, so it all follows this number. */
+.lesson-prose {
+  font-size: 1.15rem;
+  line-height: 1.7;
+}
+
+.lesson-prose :is(p, li, blockquote, dd) {
+  font-size: 1.15rem;
+  line-height: 1.7;
+}
+
+/* Tables carry more per line than a paragraph does, so they sit a step below
+   the body rather than forcing a horizontal scroll on every one of them. */
+.lesson-prose :is(td, th) {
+  font-size: 1rem;
+}
+
+@media (min-width: 768px) {
+  .lesson-prose,
+  .lesson-prose :is(p, li, blockquote, dd) {
+    font-size: 1.2rem;
+  }
+}
 
 .lesson-prose[dir='rtl'] {
   font-family: var(--font-ar);

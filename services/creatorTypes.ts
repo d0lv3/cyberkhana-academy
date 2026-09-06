@@ -3,7 +3,7 @@
 import type { NetworkingLesson } from '../components/network-sim/types';
 import type { ProgrammingLanguage, ProgrammingModule, ProgrammingConcept, TestCase } from '../data/programming/types';
 import type { FundamentalModule } from '../data/fundamentalsData';
-import type { QuizQuestion } from '../data/linuxQuizData';
+import type { QuizQuestion, QuizKind } from '../data/linuxQuizData';
 import type { ModuleLab } from './labTypes';
 import type { Difficulty } from '../types';
 
@@ -78,11 +78,11 @@ export interface CreatorModuleSection {
   videoId?: string;
   /** The section's markdown body (bilingual) */
   markdownContent: LocalizedMarkdown;
-  /** Optional end-of-section quiz (multiple choice). */
+  /** Optional end-of-section quiz (MCQ and/or written-answer questions). */
   quiz?: QuizQuestion[];
 }
 
-export type { QuizQuestion };
+export type { QuizQuestion, QuizKind };
 
 export interface CreatorModuleChapter {
   id: string;

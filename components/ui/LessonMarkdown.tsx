@@ -57,7 +57,7 @@ function normalizeMath(markdown: string): string {
 /** A word may carry inner punctuation (TCP/IP, IPv4, 255.255.255.0, e-mail)
  *  but must start and end on an alphanumeric, so a sentence-ending period
  *  stays with the Arabic sentence rather than being pulled into the run. */
-const LATIN_WORD = '[A-Za-z0-9]+(?:[._+\\-/][A-Za-z0-9]+)*';
+const LATIN_WORD = '[A-Za-z0-9]+(?:[._+\\-/][A-Za-z0-9]+)*(?:\\(\\)|\\[\\])?';
 const LATIN_RUN = new RegExp(`${LATIN_WORD}(?:[ \\t]+${LATIN_WORD})*`, 'g');
 
 /* ── Raw HTML in authored lessons ──
@@ -159,7 +159,7 @@ const CodeBlock: React.FC<{ text: string; isRtl: boolean }> = ({ text, isRtl }) 
         <span>{copied ? (isRtl ? 'تم النسخ' : 'Copied') : isRtl ? 'نسخ' : 'Copy'}</span>
       </button>
       <code
-        className="block bg-[#0a0f18] rounded-lg p-4 pe-24 text-[13px] text-[#c4cad6] font-mono overflow-x-auto border border-[#263248] whitespace-pre"
+        className="block bg-[#0a0f18] rounded-lg p-4 pe-24 text-[0.85em] text-[#c4cad6] font-mono overflow-x-auto border border-[#263248] whitespace-pre"
         dir="ltr"
       >
         {text}
@@ -301,23 +301,23 @@ const LessonMarkdown: React.FC<LessonMarkdownProps> = ({ content, dir }) => {
         components={{
           h1: ({ children }) => (
             <h1
-              className="text-2xl md:text-3xl font-bold text-[#f3f6ff] mb-6 pb-4 border-b border-[#263248]"
+              className="text-[1.75rem] md:text-[2rem] leading-tight font-bold text-[#f3f6ff] mb-6 pb-4 border-b border-[#263248]"
             >
               {children}
             </h1>
           ),
           h2: ({ children }) => (
-            <h2 className="text-xl font-bold text-[#f3f6ff] mt-10 mb-4">
+            <h2 className="text-2xl font-bold text-[#f3f6ff] mt-10 mb-4">
               {children}
             </h2>
           ),
           h3: ({ children }) => (
-            <h3 className="text-base font-semibold text-[#f3f6ff] mt-6 mb-3">
+            <h3 className="text-xl font-semibold text-[#f3f6ff] mt-6 mb-3">
               {children}
             </h3>
           ),
           p: ({ children }) => (
-            <p className="text-sm text-[#c4cad6] leading-relaxed mb-4">
+            <p className="text-[#c4cad6] mb-4">
               {children}
             </p>
           ),
@@ -331,15 +331,15 @@ const LessonMarkdown: React.FC<LessonMarkdownProps> = ({ content, dir }) => {
           ),
           li: ({ children }) => (
             <li
-              className="text-sm text-[#c4cad6] leading-relaxed flex items-start gap-2"
+              className="text-[#c4cad6] flex items-start gap-2"
             >
-              <span className="mt-2 h-1.5 w-1.5 rounded-full bg-[#00a859] flex-shrink-0" />
+              <span className="mt-2.5 h-1.5 w-1.5 rounded-full bg-[#00a859] flex-shrink-0" />
               <span className="min-w-0">{children}</span>
             </li>
           ),
           blockquote: ({ children }) => (
             <blockquote
-              className="border-s-2 border-[#00a859]/40 bg-[#121a2a] rounded-e-lg px-4 py-3 my-4 text-sm text-[#9aa5bf] italic"
+              className="border-s-2 border-[#00a859]/40 bg-[#121a2a] rounded-e-lg px-4 py-3 my-4 text-[#9aa5bf] italic"
             >
               {children}
             </blockquote>
@@ -350,7 +350,7 @@ const LessonMarkdown: React.FC<LessonMarkdownProps> = ({ content, dir }) => {
              rendering an expected-output block as a little pill. */
           code: ({ children }) => (
             <code
-              className="px-1.5 py-0.5 rounded bg-[#1a2332] border border-[#263248] text-[#9fef00] text-[13px] font-mono"
+              className="px-1.5 py-0.5 rounded bg-[#1a2332] border border-[#263248] text-[#9fef00] text-[0.9em] font-mono"
               dir="ltr"
             >
               {children}
@@ -371,7 +371,7 @@ const LessonMarkdown: React.FC<LessonMarkdownProps> = ({ content, dir }) => {
           ),
           table: ({ children }) => (
             <div className="overflow-x-auto mb-5 rounded-lg border border-[#263248]">
-              <table className="w-full text-sm">{children}</table>
+              <table className="w-full">{children}</table>
             </div>
           ),
           thead: ({ children }) => (
@@ -386,7 +386,7 @@ const LessonMarkdown: React.FC<LessonMarkdownProps> = ({ content, dir }) => {
           ),
           td: ({ children }) => (
             <td
-              className="px-4 py-2.5 text-sm text-[#c4cad6] border-t border-[#263248]/50"
+              className="px-4 py-2.5 text-[#c4cad6] border-t border-[#263248]/50"
             >
               {children}
             </td>
@@ -400,7 +400,7 @@ const LessonMarkdown: React.FC<LessonMarkdownProps> = ({ content, dir }) => {
             </details>
           ),
           summary: ({ children }) => (
-            <summary className="cursor-pointer list-none text-sm font-semibold text-[#f3f6ff] hover:text-[#9fef00] transition-colors touch:min-h-tap flex items-center gap-2 select-none">
+            <summary className="cursor-pointer list-none text-[1.05rem] font-semibold text-[#f3f6ff] hover:text-[#9fef00] transition-colors touch:min-h-tap flex items-center gap-2 select-none">
               {children}
             </summary>
           ),

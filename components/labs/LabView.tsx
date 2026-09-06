@@ -450,12 +450,11 @@ const LabView: React.FC<LabViewProps> = ({
         </div>
       )}
 
-      {/* ── The brief ── */}
-      {brief.trim() && (
-        <div className="rounded-xl border border-[#263248] bg-[#121a2a] p-6 md:p-8">
-          <LessonMarkdown content={brief} />
-        </div>
-      )}
+      {/* ── The brief ──
+          Unframed, like every other lesson body in the Academy: the prose reads
+          on the page's own ground, and the cards around it stay the things you
+          actually touch. */}
+      {brief.trim() && <LessonMarkdown content={brief} />}
 
       {/* ── Where the work happens ── */}
       {lab.links.length > 0 && (

@@ -24,7 +24,12 @@ import {
 import { getViewableModuleBySlug } from '../../data/modulesData';
 import { moduleViewerPath } from '../../data/fundamentalsData';
 import LessonMarkdown from '../../components/ui/LessonMarkdown';
-import quizBank, { QuizQuestion } from '../../data/linuxQuizData';
+import quizBank, {
+  answerMask,
+  isAnswerCorrect,
+  isTextQuestion,
+  type QuizQuestion,
+} from '../../data/linuxQuizData';
 import ProgressBar from '../../components/ui/ProgressBar';
 import Button from '../../components/ui/EnhancedButton';
 import DifficultyBadge from '../../components/ui/DifficultyBadge';
@@ -69,6 +74,8 @@ type QuizState = {
   completed: boolean;
   currentIndex: number;
   selectedOption: number | null;
+  /** What the learner typed, for a written-answer question. */
+  typedAnswer: string;
   answers: Record<number, { selected: number; correct: boolean }>;
   showExplanation: boolean;
   /** Per-attempt question set with options shuffled. */
@@ -82,13 +89,16 @@ const emptyQuizState = (): QuizState => ({
   completed: false,
   currentIndex: 0,
   selectedOption: null,
+  typedAnswer: '',
   answers: {},
   showExplanation: false,
   questions: [],
 });
 
-/** Return a copy of a question with its answer options shuffled (Fisher–Yates). */
+/** Return a copy of a question with its answer options shuffled (Fisher–Yates).
+ *  A written-answer question has nothing to shuffle and is passed through. */
 const shuffleOptions = (q: QuizQuestion): QuizQuestion => {
+  if (isTextQuestion(q)) return q;
   const order = q.options.map((_, i) => i);
   for (let i = order.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -335,10 +345,20 @@ const ModuleViewerPage: React.FC = () => {
     const qs = getQuizState(lecture.id);
     const questions = qs.questions.length ? qs.questions : getQuestions(lecture);
     const question = questions[qs.currentIndex];
-    if (qs.selectedOption === null || !question) return;
+    if (!question) return;
 
-    const correct = qs.selectedOption === question.correctIndex;
-    const nextAnswers = { ...qs.answers, [qs.currentIndex]: { selected: qs.selectedOption, correct } };
+    /* A written answer has no option index, so it records -1: the breakdown
+       below only ever asks whether the answer was right. */
+    const typedOne = isTextQuestion(question);
+    if (typedOne ? !qs.typedAnswer.trim() : qs.selectedOption === null) return;
+
+    const correct = typedOne
+      ? isAnswerCorrect(question, qs.typedAnswer)
+      : qs.selectedOption === question.correctIndex;
+    const nextAnswers = {
+      ...qs.answers,
+      [qs.currentIndex]: { selected: typedOne ? -1 : qs.selectedOption!, correct },
+    };
 
     updateQuiz(lecture.id, { answers: nextAnswers, showExplanation: true });
   };
@@ -357,6 +377,7 @@ const ModuleViewerPage: React.FC = () => {
       updateQuiz(lecture.id, {
         currentIndex: qs.currentIndex + 1,
         selectedOption: null,
+        typedAnswer: '',
         showExplanation: false,
       });
     }
@@ -526,11 +547,11 @@ const ModuleViewerPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Section markdown (creator modules) */}
+              {/* Section markdown (creator modules).
+                  Deliberately unframed: the body is the page, not a card sitting
+                  on it, so it reads on the same ground as the lesson title. */}
               {mdFor(activeLecture.markdownContent, lang) && (
-                <div className="rounded-xl border border-[#263248] bg-[#121a2a] p-6 md:p-8">
-                  <LessonMarkdown content={mdFor(activeLecture.markdownContent, lang)} />
-                </div>
+                <LessonMarkdown content={mdFor(activeLecture.markdownContent, lang)} />
               )}
 
               {/* Notes */}
@@ -631,7 +652,37 @@ const ModuleViewerPage: React.FC = () => {
                             {currentQuestion.question}
                           </p>
 
-                          {/* Options */}
+                          {/* Written answer, or options to pick from */}
+                          {isTextQuestion(currentQuestion) ? (
+                            /* The box starts out holding the shape of the
+                               answer in asterisks: enough of a nudge to recall
+                               a term, not enough to guess one. */
+                            <input
+                              value={qs.typedAnswer}
+                              onChange={(e) =>
+                                updateQuiz(activeLecture.id, { typedAnswer: e.target.value })
+                              }
+                              onKeyDown={(e) => {
+                                if (e.key !== 'Enter') return;
+                                e.preventDefault();
+                                if (qs.showExplanation) nextQuestion(activeLecture);
+                                else submitAnswer(activeLecture);
+                              }}
+                              disabled={qs.showExplanation}
+                              placeholder={answerMask(currentQuestion)}
+                              spellCheck={false}
+                              autoComplete="off"
+                              aria-label="Your answer"
+                              dir="ltr"
+                              className={`w-full rounded-lg border bg-[#0d1117] px-4 py-3 font-mono text-sm tracking-wide outline-none transition-colors placeholder:tracking-[0.2em] placeholder:text-[#3d4a63] disabled:cursor-default ${
+                                !qs.showExplanation
+                                  ? 'border-[#263248] text-[#f3f6ff] focus:border-[#00a859]/50'
+                                  : qs.answers[qs.currentIndex]?.correct
+                                  ? 'border-[#00a859]/50 bg-[#0f1f15] text-[#f3f6ff]'
+                                  : 'border-red-500/40 bg-red-950/30 text-[#f3f6ff]'
+                              }`}
+                            />
+                          ) : (
                           <div className="space-y-2">
                             {currentQuestion.options.map((option, idx) => {
                               const isSelected = qs.selectedOption === idx;
@@ -679,12 +730,17 @@ const ModuleViewerPage: React.FC = () => {
                               );
                             })}
                           </div>
+                          )}
 
                           {/* Submit / Next */}
                           {!qs.showExplanation ? (
                             <Button
                               onClick={() => submitAnswer(activeLecture)}
-                              disabled={qs.selectedOption === null}
+                              disabled={
+                                isTextQuestion(currentQuestion)
+                                  ? !qs.typedAnswer.trim()
+                                  : qs.selectedOption === null
+                              }
                               fullWidth
                             >
                               Submit Answer
@@ -700,7 +756,14 @@ const ModuleViewerPage: React.FC = () => {
                                 <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-red-950/20 border border-red-500/20 text-red-400">
                                   <X size={16} />
                                   <span className="text-sm font-medium">
-                                    Incorrect, the correct answer is {LETTERS[currentQuestion.correctIndex]}
+                                    {isTextQuestion(currentQuestion) ? (
+                                      <>
+                                        Incorrect, the answer was{' '}
+                                        <span className="font-mono">{currentQuestion.answer}</span>
+                                      </>
+                                    ) : (
+                                      <>Incorrect, the correct answer is {LETTERS[currentQuestion.correctIndex]}</>
+                                    )}
                                   </span>
                                 </div>
                               )}

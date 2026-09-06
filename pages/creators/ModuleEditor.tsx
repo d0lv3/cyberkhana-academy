@@ -822,8 +822,8 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
                   </h3>
                 </div>
                 <p className="text-xs text-[#8592ad] mb-4">
-                  Add multiple-choice questions students answer after this section. Options are
-                  shuffled for each attempt.
+                  Questions students answer after this section. Each one is either MCQ, whose
+                  options are shuffled for every attempt, or a written answer they type out.
                 </p>
                 <QuizEditor
                   value={activeSection.quiz ?? []}

@@ -29,8 +29,8 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, mobileOpen, onMo
   const { t, lang } = useLang();
   const { user } = useAuth();
   const progress = useOverallProgress();
-  /** Route whose icon is mid-shake, cleared when the animation ends. */
-  const [shaking, setShaking] = useState<string | null>(null);
+  /** Route whose icon is mid-nudge, cleared when the animation ends. */
+  const [nudging, setNudging] = useState<string | null>(null);
 
   const isCreator = user?.role === 'creator' || user?.role === 'admin';
 
@@ -58,7 +58,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, mobileOpen, onMo
         key={to}
         to={to}
         onClick={() => {
-          setShaking(to);
+          setNudging(to);
           onMobileClose();
         }}
         title={collapsed ? label : undefined}
@@ -78,13 +78,14 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, mobileOpen, onMo
               <span className="absolute start-0 w-0.5 h-6 bg-[#00a859] rounded-e" />
             )}
             <Icon
-              // Active tabs read as "filled": the glyph gets a translucent wash
-              // of the accent colour while the stroke keeps it legible.
-              fill={isActive ? 'currentColor' : 'none'}
-              fillOpacity={isActive ? 0.22 : 0}
-              onAnimationEnd={() => setShaking(null)}
+              // Line art only. A translucent wash used to fill the glyph on the
+              // active tab, which on a closed shape like UserCircle read as a
+              // disc sitting behind the person rather than as emphasis. The
+              // accent colour and the rail beside it already say which tab you
+              // are on, so every icon here is the bare symbol.
+              onAnimationEnd={() => setNudging(null)}
               className={`flex-shrink-0 transition-colors ${
-                shaking === to ? 'nav-shake' : ''
+                nudging === to ? 'nav-nudge' : ''
               } ${isActive ? 'text-[#00a859]' : 'text-[#8592ad] group-hover:text-[#9aa5bf]'}`}
               size={collapsed ? 20 : 17}
             />
