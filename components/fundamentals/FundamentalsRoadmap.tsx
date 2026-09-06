@@ -38,7 +38,6 @@ interface IslandDef {
   cy: number;
   scale: number;
   title: { en: string; ar: string };
-  meta: { en: string; ar: string };
   isGoal?: boolean;
 }
 
@@ -47,7 +46,7 @@ interface IslandDef {
 const SIDE_L = 190;
 const SIDE_R = 530;
 const SCENE_W = 720;
-const SCENE_H = 675;
+const SCENE_H = 615;
 
 const ISLANDS: IslandDef[] = [
   {
@@ -61,7 +60,6 @@ const ISLANDS: IslandDef[] = [
     cy: 68,
     scale: 0.6,
     title: { en: 'Programming', ar: 'البرمجة' },
-    meta: { en: 'Python · scripting · logic', ar: 'بايثون · السكربتات · المنطق' },
   },
   {
     key: 'operating-systems',
@@ -74,7 +72,6 @@ const ISLANDS: IslandDef[] = [
     cy: 198,
     scale: 0.6,
     title: { en: 'Operating Systems', ar: 'أنظمة التشغيل' },
-    meta: { en: 'Linux · terminal · hardening', ar: 'لينكس · الطرفية · التقوية' },
   },
   {
     key: 'networking',
@@ -87,7 +84,6 @@ const ISLANDS: IslandDef[] = [
     cy: 328,
     scale: 0.6,
     title: { en: 'Networking', ar: 'الشبكات' },
-    meta: { en: 'TCP/IP · packets · protocols', ar: 'TCP/IP · الحزم · البروتوكولات' },
   },
   {
     key: 'cybersecurity',
@@ -100,7 +96,6 @@ const ISLANDS: IslandDef[] = [
     cy: 462,
     scale: 0.7,
     title: { en: 'Cybersecurity', ar: 'الأمن السيبراني' },
-    meta: { en: 'Security+ foundations', ar: 'أساسيات +Security' },
     isGoal: true,
   },
 ];
@@ -401,40 +396,16 @@ const Island: React.FC<{
         >
           {island.title[lang]}
         </text>
-        <text
-          x={0}
-          y={labelBase + 44}
-          textAnchor="middle"
-          fill="#8b98ae"
-          fontSize={12}
-          fontFamily={displayFamily(lang === 'ar')}
-        >
-          {island.meta[lang]}
-        </text>
-
-        {/* Progress bar (pillars) or enter-chip (goal) */}
-        {pct !== null ? (
-          <g transform={`translate(0, ${labelBase + 56})`}>
+        {/* How far in you are. The goal has no track of its own, so it ends
+            at its title: its shield, its ring and the road arriving at it
+            already say it is the way out, and a chip repeating that in words
+            was the scene captioning its own picture. */}
+        {pct !== null && (
+          <g transform={`translate(0, ${labelBase + 40})`}>
             <rect x={-62} y={0} width={124} height={5} rx={2.5} fill="#1c2740" />
             <rect x={-62} y={0} width={Math.max(4, 1.24 * pct)} height={5} rx={2.5} fill={c} />
             <text x={72} y={5.5} fill="#6e7a94" fontSize={10.5} fontFamily="'JetBrains Mono', monospace">
               {pct}%
-            </text>
-          </g>
-        ) : (
-          <g transform={`translate(0, ${labelBase + 54})`}>
-            <rect x={-58} y={0} width={116} height={22} rx={11} fill="none" stroke={c} strokeOpacity={0.5} strokeWidth={1} />
-            <text
-              x={0}
-              y={14.5}
-              textAnchor="middle"
-              fill={c}
-              fontSize={10.5}
-              fontWeight={700}
-              letterSpacing={labelTracking(lang === 'ar', 1)}
-              fontFamily={labelFamily(lang === 'ar')}
-            >
-              {lang === 'ar' ? 'ادخل 101 ←' : 'ENTER 101 →'}
             </text>
           </g>
         )}
@@ -446,7 +417,7 @@ const Island: React.FC<{
           x={-w - 14}
           y={-h - 92 * island.scale}
           width={(w + 14) * 2}
-          height={h + 92 * island.scale + labelBase + 70}
+          height={h + 92 * island.scale + labelBase + 56}
           fill="transparent"
         />
       </motion.g>
@@ -519,7 +490,7 @@ const FundamentalsRoadmap: React.FC = () => {
           {[
             [34, 52, 1.2], [690, 88, 1], [360, 30, 1.3], [26, 210, 1], [700, 250, 1.2],
             [364, 176, 1], [44, 380, 1.1], [686, 400, 1.3], [356, 462, 1.4], [22, 540, 1],
-            [696, 560, 1.1], [368, 610, 1], [58, 648, 1.3], [672, 656, 1.2], [352, 300, 1],
+            [696, 560, 1.1], [368, 566, 1], [58, 596, 1.3], [672, 604, 1.2], [352, 300, 1],
           ].map(([x, y, r], i) => (
             <circle key={i} cx={x} cy={y} r={r} fill="#3d4f73" opacity={0.5} />
           ))}
@@ -600,7 +571,6 @@ const FundamentalsRoadmap: React.FC = () => {
                       : lang === 'ar' ? `المرحلة 0${island.step}` : `STEP 0${island.step}`}
                   </p>
                   <p className="text-base font-bold text-[#f3f6ff]">{island.title[lang]}</p>
-                  <p className="text-xs text-[#8b98ae] truncate">{island.meta[lang]}</p>
                   {pct !== null && (
                     <div className="mt-2 flex items-center gap-2" dir="ltr">
                       <div className="h-1.5 flex-1 max-w-[140px] rounded-full bg-[#1c2740] overflow-hidden">
