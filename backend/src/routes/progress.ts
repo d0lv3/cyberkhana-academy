@@ -85,14 +85,23 @@ router.put('/', authenticate, async (req: AuthRequest, res) => {
       { upsert: true, new: true }
     );
 
-    // Mirror the total onto the user and book any gain into the current month.
-    // The month key rolls over on the 1st, which "resets" everyone's monthly
-    // standing with no scheduled job.
+    /* Mirror the total onto the user and book any gain into the current month.
+       The month key rolls over on the 1st, which "resets" everyone's monthly
+       standing with no scheduled job.
+
+       The client sends what it derived from the learner's completions, which is
+       the whole history and not a running score — so it cannot be taken as the
+       board standing directly. An admin reset works by raising the baseline to
+       whatever had been earned; the board shows the distance travelled since,
+       and the next push, restating the same history, adds nothing. Without that
+       subtraction the first sync after a reset would undo it. */
     if (points !== undefined) {
       const user = req.user!;
       const month = currentMonthKey();
-      const delta = Math.max(0, points - (user.points ?? 0));
-      user.points = points;
+      const standing = Math.max(0, points - (user.pointsBaseline ?? 0));
+      const delta = Math.max(0, standing - (user.points ?? 0));
+      user.pointsRaw = points;
+      user.points = standing;
       if (user.monthlyPointsMonth !== month) {
         user.monthlyPointsMonth = month;
         user.monthlyPoints = 0;

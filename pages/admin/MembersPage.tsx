@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Search, ShieldCheck, PenTool, GraduationCap, RefreshCw, Ban, RotateCcw, KeyRound, Check } from 'lucide-react';
+import { Users, Search, ShieldCheck, PenTool, GraduationCap, RefreshCw, Ban, RotateCcw, KeyRound, Check, Trophy } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import EnhancedCard from '../../components/ui/EnhancedCard';
 import Avatar from '../../components/ui/Avatar';
@@ -37,10 +37,13 @@ const ROLE_META: Record<Role, { color: string; icon: React.ElementType; label: {
 
 const ROLES: Role[] = ['user', 'creator', 'admin'];
 
-/** A privilege change held back until the admin re-confirms with Google. */
+/** An action held back until the admin re-confirms with Google. */
 type PendingAction =
   | { kind: 'role'; target: AdminUser; role: Role }
-  | { kind: 'perms'; target: AdminUser };
+  | { kind: 'perms'; target: AdminUser }
+  /* The one action here that is aimed at everybody rather than at a member,
+     which is most of why it is confirmed the same way. */
+  | { kind: 'resetPoints' };
 
 const MembersPage: React.FC = () => {
   const { user: me } = useAuth();
@@ -60,6 +63,7 @@ const MembersPage: React.FC = () => {
    *  escalation of the two, so neither is allowed on the session alone. */
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [reauthError, setReauthError] = useState<string | null>(null);
+  const [resetting, setResetting] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -131,6 +135,23 @@ const MembersPage: React.FC = () => {
     }
   };
 
+  /* Clearing the board is not a privilege change, but it reaches every
+     account at once and the old standings are kept nowhere, so it goes through
+     the same door: warn plainly, then ask them to prove they are still there. */
+  const askResetPoints = async () => {
+    const ok = await confirmDialog({
+      title: ar ? 'تصفير نقاط الجميع؟' : "Reset everyone's points?",
+      message: ar
+        ? 'ستعود نقاط كل عضو إلى الصفر في لوحتي الصدارة الكلية والشهرية. لن يفقد أحد تقدّمه: الوحدات المكتملة تبقى مكتملة، وتُحتسب النقاط الجديدة من الآن. الترتيب الحالي لا يمكن استرجاعه.'
+        : "Every member drops to zero on both the all-time and the monthly board. Nobody loses progress: completed modules stay completed, and new points count from here. The current standings cannot be recovered.",
+      confirmLabel: ar ? 'تصفير النقاط' : 'Reset points',
+      tone: 'danger',
+    });
+    if (!ok) return;
+    setPending({ kind: 'resetPoints' });
+    setReauthError(null);
+  };
+
   const togglePermsPanel = (target: AdminUser) => {
     if (permsOpenId === target.id) {
       setPermsOpenId(null);
@@ -156,9 +177,32 @@ const MembersPage: React.FC = () => {
      that it is fresh, so it can't be replayed. */
   const commit = async (credential: string) => {
     if (!pending) return;
+    setReauthError(null);
+
+    if (pending.kind === 'resetPoints') {
+      setResetting(true);
+      try {
+        const { affected } = await api.post<{ affected: number }>('/admin/points/reset', {
+          credential,
+        });
+        setPending(null);
+        toast(
+          'success',
+          ar
+            ? `تم تصفير النقاط لـ ${affected} عضوًا.`
+            : `Points cleared for ${affected} members.`
+        );
+      } catch (err) {
+        // Keep the dialog open so they can retry the confirmation.
+        setReauthError(err instanceof Error ? err.message : 'Reset failed');
+      } finally {
+        setResetting(false);
+      }
+      return;
+    }
+
     const { target } = pending;
     setSavingId(target.id);
-    setReauthError(null);
     try {
       const { user: updated } =
         pending.kind === 'role'
@@ -465,14 +509,53 @@ const MembersPage: React.FC = () => {
         </EnhancedCard>
       )}
 
+      {/* ── Danger zone ──
+          Kept away from the row controls and from Refresh: it is the only
+          control on the page that acts on every account at once, and the only
+          one that cannot be walked back. */}
+      <div className="rounded-xl border border-red-500/25 bg-red-500/[0.04] p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="flex items-center gap-2 text-sm font-bold text-[#f3f6ff]">
+              <Trophy size={15} className="text-red-400" />
+              {ar ? 'تصفير لوحة الصدارة' : 'Reset the leaderboard'}
+            </p>
+            <p className="mt-1.5 max-w-xl text-[11px] leading-relaxed text-[#8592ad]">
+              {ar
+                ? 'يعيد نقاط كل الأعضاء إلى الصفر، الكلية والشهرية معًا. لا يفقد أحد تقدّمه: الوحدات المكتملة تبقى مكتملة، وتُحتسب النقاط الجديدة من الآن. لا يمكن التراجع.'
+                : 'Takes every member back to zero, on the all-time and the monthly board. Nobody loses progress: completed modules stay completed, and new points count from here. This cannot be undone.'}
+            </p>
+          </div>
+          <button
+            onClick={() => void askResetPoints()}
+            disabled={resetting}
+            className="flex-shrink-0 rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-2 text-xs font-bold text-red-400 transition-all hover:border-red-500/60 hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {resetting
+              ? ar
+                ? 'جارٍ التصفير...'
+                : 'Resetting...'
+              : ar
+              ? 'تصفير النقاط'
+              : 'Reset points'}
+          </button>
+        </div>
+      </div>
+
       {/* Step-up confirmation for any privilege change */}
       <ReauthDialog
         open={!!pending}
-        busy={savingId === pending?.target.id}
+        busy={
+          !pending ? false : pending.kind === 'resetPoints' ? resetting : savingId === pending.target.id
+        }
         error={reauthError}
         actionLabel={
           !pending
             ? ''
+            : pending.kind === 'resetPoints'
+            ? ar
+              ? 'تصفير نقاط جميع الأعضاء'
+              : "Reset every member's points"
             : pending.kind === 'role'
             ? ar
               ? `تغيير دور ${pending.target.displayName} إلى ${ROLE_META[pending.role].label.ar}`

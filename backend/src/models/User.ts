@@ -29,8 +29,19 @@ export interface IUser extends Document {
   completedModulesCount: number;
   completedLessonsCount: number;
   totalLearningTimeMinutes: number;
-  /** All-time leaderboard points (client-computed total, mirrored here on each progress push). */
+  /** All-time leaderboard standing: `pointsRaw` minus `pointsBaseline`, never below zero. */
   points: number;
+  /** The client's derived total, stored as pushed. Points are computed from the
+   *  learner's completions, so this is the one figure a push can be trusted to
+   *  restate; anything the board shows has to be derived from it. */
+  pointsRaw?: number;
+  /** Where the board counts from. An admin reset moves this up to whatever the
+   *  learner had earned, which zeroes the board without touching a single
+   *  completion — and, because every later push is measured against it, without
+   *  the next sync handing the old total straight back. */
+  pointsBaseline: number;
+  /** When the baseline was last moved. */
+  pointsResetAt?: Date;
   /** Points earned during `monthlyPointsMonth`; the monthly leaderboard reads these. */
   monthlyPoints: number;
   /** Month bucket for `monthlyPoints`, as 'YYYY-MM' (UTC). Stale months count as 0. */
@@ -83,6 +94,12 @@ const UserSchema = new Schema<IUser>(
     completedLessonsCount: { type: Number, default: 0 },
     totalLearningTimeMinutes: { type: Number, default: 0 },
     points: { type: Number, default: 0 },
+    // No default: an account that predates this field must read as "unknown"
+    // rather than as zero, or its first reset would take a baseline of nothing
+    // and clear nobody.
+    pointsRaw: { type: Number },
+    pointsBaseline: { type: Number, default: 0 },
+    pointsResetAt: { type: Date },
     monthlyPoints: { type: Number, default: 0 },
     monthlyPointsMonth: { type: String, default: '' },
     isBanned: { type: Boolean, default: false },
