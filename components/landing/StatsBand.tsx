@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useLang } from '../../contexts/LangContext';
+import { SHELL } from './shell';
 
 /** Count-up that starts when the element scrolls into view. */
 function useCountUp(target: number, duration = 1800) {
@@ -68,7 +69,7 @@ const StatsBand: React.FC = () => {
   return (
     <section className="relative py-16 md:py-20 bg-[#0d1117] overflow-hidden">
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[640px] h-[280px] bg-[#00a859]/[0.05] rounded-full blur-[110px]" />
-      <div className="relative z-10 max-w-5xl mx-auto px-6">
+      <div className={`relative z-10 ${SHELL} px-6`}>
         {/* hairline-framed stat row */}
         <div className="hairline" />
         <motion.div

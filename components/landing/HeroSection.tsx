@@ -5,6 +5,7 @@ import { useLang } from '../../contexts/LangContext';
 import Button from '../ui/EnhancedButton';
 import HeroShowcase from './HeroShowcase';
 import BrandLogo from '../ui/BrandLogo';
+import { SHELL } from './shell';
 
 interface HeroSectionProps {
   onGetStarted: () => void;
@@ -87,7 +88,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted, onLogin }) => {
         style={{ background: 'radial-gradient(ellipse at 50% 38%, transparent 55%, rgba(5,8,14,0.6) 100%)' }}
       />
 
-      <div className="relative z-10 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-14 lg:gap-10 items-center">
+      <div className={`relative z-10 ${SHELL} grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-14 lg:gap-10 items-center`}>
         {/* ── Copy ── */}
         <div className="flex flex-col items-center lg:items-start text-center lg:text-start">
           {/* Headline — Academy logo lockup */}

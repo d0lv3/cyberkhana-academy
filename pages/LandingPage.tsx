@@ -10,6 +10,7 @@ import LandingFooter from '../components/landing/LandingFooter';
 import BrandLogo from '../components/ui/BrandLogo';
 import Button from '../components/ui/EnhancedButton';
 import { useLang } from '../contexts/LangContext';
+import { SHELL } from '../components/landing/shell';
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -34,7 +35,7 @@ const LandingPage: React.FC = () => {
             : 'bg-transparent border-b border-transparent'
         }`}
       >
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className={`${SHELL} px-6 h-16 flex items-center justify-between`}>
           <BrandLogo
             variant="full"
             loading="eager"

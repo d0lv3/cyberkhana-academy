@@ -4,6 +4,7 @@ import { useLang } from '../../contexts/LangContext';
 import SectionHeading from './SectionHeading';
 import SpotlightCard from './SpotlightCard';
 import { FundamentalsIcon, ModulesIcon, PathsIcon } from './Feature3DIcons';
+import { SHELL } from './shell';
 
 const hexToRgb = (hex: string): string => {
   const r = parseInt(hex.slice(1, 3), 16);
@@ -30,7 +31,7 @@ const FeaturesSection: React.FC = () => {
         <div className="absolute bottom-1/4 right-[12%] w-72 h-72 rounded-full bg-[#60a5fa]/15 blur-[120px]" />
       </div>
 
-      <div className="relative z-10 max-w-6xl mx-auto">
+      <div className={`relative z-10 ${SHELL}`}>
         <SectionHeading heading={t('features.heading')} subtitle={t('features.subtitle')} />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">

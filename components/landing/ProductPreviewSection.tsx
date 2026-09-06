@@ -4,6 +4,7 @@ import { Play, CheckCircle2, FlaskConical } from 'lucide-react';
 import { useLang } from '../../contexts/LangContext';
 import SectionHeading from './SectionHeading';
 import DeviceIcon from '../network-sim/DeviceIcon';
+import { SHELL } from './shell';
 
 const MONO = "'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace";
 
@@ -318,7 +319,7 @@ const ProductPreviewSection: React.FC = () => {
 
   return (
     <section className="relative px-6 py-24 md:py-32 bg-[#0a0f18] border-y border-[#1a2332] overflow-hidden">
-      <div className="relative z-10 max-w-6xl mx-auto">
+      <div className={`relative z-10 ${SHELL}`}>
         <SectionHeading heading={t('preview.heading')} subtitle={t('preview.subtitle')} />
 
         <div className="flex flex-col gap-20 md:gap-28 mt-16">

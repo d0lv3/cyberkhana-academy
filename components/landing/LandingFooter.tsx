@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Instagram, Send, Linkedin, Globe, ExternalLink } from 'lucide-react';
 import { useLang } from '../../contexts/LangContext';
 import BrandLogo from '../ui/BrandLogo';
+import { SHELL } from './shell';
 
 interface Social {
   label: string;
@@ -45,7 +46,7 @@ const LandingFooter: React.FC = () => {
 
   return (
     <footer className="border-t border-[#1e293b] bg-[#0a0f18] px-6 pt-14 pb-8">
-      <div className="max-w-6xl mx-auto">
+      <div className={SHELL}>
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-10">
           {/* Brand */}
           <div className="flex flex-col items-center md:items-start gap-3 max-w-xs mx-auto md:mx-0 text-center md:text-start">
