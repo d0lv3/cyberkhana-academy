@@ -109,18 +109,13 @@ const CourseViewerSidebar: React.FC<CourseViewerSidebarProps> = ({
     <>
       {/* ── Course progress summary ── */}
       <div className="p-4 border-b border-[#263248]">
-        <div className="flex items-center justify-between mb-2.5">
-          <div className="flex items-center gap-2">
-            <BookOpen className="w-3.5 h-3.5 text-[#00a859]" />
-            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8592ad]">
-              {ar ? 'تقدّمك' : 'Course progress'}
-            </span>
-          </div>
-          <span className="text-xs font-semibold text-[#f3f6ff]" dir="ltr">
-            {progressPct}%
+        <div className="mb-2.5 flex items-center gap-2">
+          <BookOpen className="w-3.5 h-3.5 text-[#00a859]" />
+          <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#8592ad]">
+            {ar ? 'تقدّمك' : 'Course progress'}
           </span>
         </div>
-        <ProgressBar value={progressPct} color="green" size="sm" />
+        <ProgressBar value={progressPct} color="neon" size="sm" showLabel />
         <p className="text-[11px] text-[#8592ad] mt-2">
           {ar
             ? `${completedCount} من ${totalLectures} دروس مكتملة`

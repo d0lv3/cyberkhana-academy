@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Route, Clock, ListChecks, ChevronRight, Check, Lock, ArrowLeft } from 'lucide-react';
 import DifficultyBadge from '../../components/ui/DifficultyBadge';
 import Button from '../../components/ui/EnhancedButton';
+import ProgressBar from '../../components/ui/ProgressBar';
 import { useLang } from '../../contexts/LangContext';
 import { coverImageSrc } from '../../data/fundamentalsData';
 import PathJourneyMap from '../../components/paths/PathJourneyMap';
@@ -116,15 +117,10 @@ const PathDetailPage: React.FC = () => {
                   <Check size={13} /> {isComplete ? t('paths.completed') : t('paths.enrolled')}
                 </span>
                 <span className="text-xs font-medium text-[#9aa5bf]">
-                  {progress.completed}/{progress.total} · {progress.pct}%
+                  {progress.completed}/{progress.total}
                 </span>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-[#0a0f18]">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-[#00a859] to-[#9fef00] transition-all duration-700"
-                  style={{ width: `${progress.pct}%` }}
-                />
-              </div>
+              <ProgressBar value={progress.pct} color="neon" size="md" showLabel />
             </div>
           )}
 

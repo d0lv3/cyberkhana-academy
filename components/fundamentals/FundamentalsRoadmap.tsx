@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Code, Monitor, Wifi, ShieldCheck, ChevronRight } from 'lucide-react';
 import { useLang } from '../../contexts/LangContext';
 import { getTrackProgress, type TrackKey } from '../../services/progressService';
+import ProgressBar, { progressShapes, PROGRESS_TRACK, PROGRESS_CUT } from '../ui/ProgressBar';
 
 /* ─── Fundamentals Roadmap ───
  * The Fundamentals hub as a journey: three floating land cubes (Programming,
@@ -405,15 +406,41 @@ const Island: React.FC<{
           {island.meta[lang]}
         </text>
 
-        {/* Progress bar (pillars) or enter-chip (goal) */}
+        {/* Progress bar (pillars) or enter-chip (goal). The bar is the same
+            shape the rest of the Academy uses, drawn from the same geometry
+            rather than approximated here, with the percentage beside it. */}
         {pct !== null ? (
-          <g transform={`translate(0, ${labelBase + 56})`}>
-            <rect x={-62} y={0} width={124} height={5} rx={2.5} fill="#1c2740" />
-            <rect x={-62} y={0} width={Math.max(4, 1.24 * pct)} height={5} rx={2.5} fill={c} />
-            <text x={72} y={5.5} fill="#6e7a94" fontSize={10.5} fontFamily="'JetBrains Mono', monospace">
-              {pct}%
-            </text>
-          </g>
+          (() => {
+            const barW = 124;
+            const barH = 9;
+            const shape = progressShapes(barW, barH, pct);
+            const clip = `isle-bar-${island.key}`;
+            return (
+              <g transform={`translate(${-barW / 2}, ${labelBase + 54})`}>
+                <defs>
+                  <clipPath id={clip}>
+                    <polygon points={shape.outline} />
+                  </clipPath>
+                </defs>
+                <g clipPath={`url(#${clip})`}>
+                  <polygon points={shape.outline} fill={PROGRESS_TRACK} />
+                  <polygon points={shape.fill} fill={c} />
+                  <polyline points={shape.zig} fill="none" stroke={PROGRESS_CUT} strokeWidth={1.4} strokeLinejoin="round" />
+                </g>
+                <polygon points={shape.outline} fill="none" stroke={PROGRESS_CUT} strokeWidth={2.8} strokeLinejoin="round" />
+                <text
+                  x={barW + 8}
+                  y={barH - 1}
+                  fill={c}
+                  fontSize={10.5}
+                  fontWeight={700}
+                  fontFamily="'JetBrains Mono', monospace"
+                >
+                  {pct}%
+                </text>
+              </g>
+            );
+          })()
         ) : (
           <g transform={`translate(0, ${labelBase + 54})`}>
             <rect x={-58} y={0} width={116} height={22} rx={11} fill="none" stroke={c} strokeOpacity={0.5} strokeWidth={1} />
@@ -595,11 +622,8 @@ const FundamentalsRoadmap: React.FC = () => {
                   <p className="text-base font-bold text-[#f3f6ff]">{island.title[lang]}</p>
                   <p className="text-xs text-[#8b98ae] truncate">{island.meta[lang]}</p>
                   {pct !== null && (
-                    <div className="mt-2 flex items-center gap-2" dir="ltr">
-                      <div className="h-1.5 flex-1 max-w-[140px] rounded-full bg-[#1c2740] overflow-hidden">
-                        <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: c }} />
-                      </div>
-                      <span className="text-[10px] font-semibold text-[#8592ad]">{pct}%</span>
+                    <div className="mt-2 max-w-[180px]">
+                      <ProgressBar value={pct} color="green" size="sm" showLabel />
                     </div>
                   )}
                 </div>

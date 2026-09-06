@@ -42,6 +42,10 @@ import {
  * takes. The lessons themselves are one level down, behind the call to action,
  * so this page can stay about the decision rather than the reading.
  *
+ * The cover takes the whole left side rather than sitting in a corner as an
+ * avatar. It is the only thing on the page a creator drew by hand, and a
+ * module is recognised by it long before its title is read.
+ *
  * The description renders as markdown. Creators were already writing lists and
  * emphasis into that field and getting them back as literal asterisks; running
  * it through the same renderer the lessons use means a description can be a
@@ -55,21 +59,25 @@ const contentTypeMeta = {
   mixed: { icon: Layers, label: { en: 'Mixed', ar: 'مختلط' } },
 } as const;
 
-/** One number and what it counts. The row of these is the module at a glance. */
+/** One number and what it counts. The row of these is the module at a glance,
+ *  so each one is a tile you read from across the room rather than a caption. */
 const Stat: React.FC<{
   icon: React.ElementType;
   value: React.ReactNode;
   label: string;
-  accent?: string;
-}> = ({ icon: Icon, value, label, accent = '#8592ad' }) => (
-  <div className="flex items-center gap-3 rounded-xl border border-[#263248] bg-[#121a2a] px-4 py-3">
-    <Icon size={17} style={{ color: accent }} className="flex-shrink-0" />
-    <div className="min-w-0">
-      <p className="text-sm font-bold leading-none text-[#f3f6ff]" dir="ltr">
-        {value}
-      </p>
-      <p className="mt-1 truncate text-[11px] font-medium text-[#8592ad]">{label}</p>
-    </div>
+  accent: string;
+}> = ({ icon: Icon, value, label, accent }) => (
+  <div className="rounded-2xl border border-[#263248] bg-[#121a2a] p-4 transition-colors hover:border-[#354562] sm:p-5">
+    <span
+      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border"
+      style={{ borderColor: `${accent}40`, backgroundColor: `${accent}14`, color: accent }}
+    >
+      <Icon size={19} />
+    </span>
+    <p className="mt-3 text-2xl font-black leading-none text-[#f3f6ff] sm:text-[1.75rem]" dir="ltr">
+      {value}
+    </p>
+    <p className="mt-1.5 text-xs font-medium text-[#8592ad]">{label}</p>
   </div>
 );
 
@@ -135,6 +143,24 @@ const ModuleOverviewPage: React.FC = () => {
   const backTo = mod.category === 'general' ? '/modules' : `/fundamentals/${mod.category}`;
   const backLabel = mod.category === 'general' ? t('sidebar.modules') : t('sidebar.fundamentals');
 
+  const ctaLabel = complete
+    ? ar
+      ? 'مراجعة الوحدة'
+      : 'Review module'
+    : started
+    ? ar
+      ? 'متابعة الوحدة'
+      : 'Continue module'
+    : enrolled
+    ? ar
+      ? 'ابدأ الوحدة'
+      : 'Start module'
+    : ar
+    ? 'التسجيل في الوحدة'
+    : 'Enroll in Module';
+
+  const goIn = enrolled || started;
+
   return (
     <div className="space-y-6">
       <button
@@ -146,52 +172,66 @@ const ModuleOverviewPage: React.FC = () => {
       </button>
 
       {/* ── Hero ──
-          The module's own art, its name, and the one thing to press. */}
+          Cover on one side, everything you decide with on the other. */}
       <motion.div
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
         className="overflow-hidden rounded-2xl border border-[#263248] bg-[#121a2a]"
       >
-        <div className="relative p-6 md:p-8">
-          {/* Accent wash behind the header, tinted by the module's own colour */}
+        <div className="relative flex flex-col md:flex-row">
+          {/* Accent wash behind the whole hero, tinted by the module's colour */}
           <div
             className="pointer-events-none absolute inset-0"
             style={{
-              background: `radial-gradient(120% 130% at 8% 0%, ${mod.iconColor}22 0%, transparent 58%)`,
+              background: `radial-gradient(90% 120% at 0% 0%, ${mod.iconColor}26 0%, transparent 62%)`,
             }}
           />
 
-          <div className="relative flex flex-col gap-5 sm:flex-row sm:items-start">
-            {/* Module icon: its cover when it has one, otherwise its accent */}
-            <div
-              className="flex h-20 w-20 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl border sm:h-24 sm:w-24"
-              style={{
-                borderColor: `${mod.iconColor}55`,
-                backgroundColor: `${mod.iconColor}14`,
-              }}
-            >
+          {/* ── The cover, taking the side ── */}
+          <div className="relative w-full flex-shrink-0 md:w-[38%] md:max-w-[400px]">
+            <div className="relative h-48 w-full sm:h-64 md:h-full md:min-h-[300px]">
               {mod.coverImage ? (
                 <img
                   src={coverImageSrc(mod.coverImage)}
                   alt=""
                   aria-hidden
-                  className="h-full w-full object-cover"
+                  className="absolute inset-0 h-full w-full object-cover"
                 />
               ) : (
-                <Layers size={38} style={{ color: mod.iconColor }} />
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background: `linear-gradient(150deg, ${mod.iconColor}33 0%, #0d1117 68%)`,
+                  }}
+                >
+                  <Layers
+                    size={200}
+                    className="absolute -bottom-8 -end-8 opacity-[0.09]"
+                    style={{ color: mod.iconColor }}
+                  />
+                </div>
               )}
-            </div>
 
-            <div className="min-w-0 flex-1">
-              <div className="mb-2.5 flex flex-wrap items-center gap-2">
+              {/* Scrims, the way the module tile does it: the cover has to hand
+                  over to the card rather than stop at a hard edge. Vertical on
+                  a phone where the cover sits above the text, horizontal from
+                  md up where it sits beside it. */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#121a2a] via-[#121a2a]/20 to-transparent md:bg-gradient-to-r md:from-transparent md:via-transparent md:to-[#121a2a]" />
+            </div>
+          </div>
+
+          {/* ── What you decide with ── */}
+          <div className="relative flex min-w-0 flex-1 flex-col justify-center gap-5 p-6 md:p-8">
+            <div className="min-w-0">
+              <div className="mb-3 flex flex-wrap items-center gap-2">
                 <span
-                  className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold ${domain.badgeCls}`}
+                  className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold backdrop-blur-sm ${domain.badgeCls}`}
                 >
                   {domain.label[lang]}
                 </span>
-                <DifficultyBadge difficulty={mod.difficulty} />
-                <span className="inline-flex items-center gap-1 rounded-md border border-[#263248] bg-[#1a2332] px-2 py-0.5 text-xs font-semibold text-[#9aa5bf]">
+                <DifficultyBadge difficulty={mod.difficulty} className="backdrop-blur-sm" />
+                <span className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-xs font-semibold text-[#9aa5bf] backdrop-blur-sm">
                   <ContentIcon size={12} /> {content.label[lang]}
                 </span>
                 {isPreview && (
@@ -201,90 +241,78 @@ const ModuleOverviewPage: React.FC = () => {
                 )}
               </div>
 
-              <h1 className="text-2xl font-black leading-tight text-[#f3f6ff] sm:text-3xl">
+              <h1 className="text-2xl font-black leading-tight text-[#f3f6ff] sm:text-3xl lg:text-4xl">
                 {mod.title[lang] || mod.title.en}
               </h1>
 
-              <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-[#8592ad]">
+              <p className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-medium text-[#8592ad]">
                 <User size={12} /> {mod.author}
               </p>
             </div>
-          </div>
 
-          {/* ── Progress, once there is any ── */}
-          {started && (
-            <div className="relative mt-6" dir="ltr">
-              <div className="mb-1.5 flex items-center justify-between">
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#00a859]">
-                  <Check size={13} />
-                  {complete
-                    ? ar
-                      ? 'اكتملت الوحدة'
-                      : 'Module complete'
-                    : ar
-                    ? 'قيد التقدم'
-                    : 'In progress'}
-                </span>
-                <span className="text-xs font-medium text-[#9aa5bf]">
-                  {done}/{totalLessons} · {pct}%
-                </span>
+            {/* ── The way in, and how far in you already are ──
+                One row: the thing to press on the reading side, the state of
+                play on the other. */}
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                {/* Glass, not a solid slab: the same translucent, blurred
+                    treatment the badges on a module tile use, so the primary
+                    action belongs to the cover it sits on rather than being
+                    stamped over it. */}
+                <button
+                  onClick={goIn ? enterModule : handleEnroll}
+                  disabled={isPreview && !goIn}
+                  className="group inline-flex items-center justify-center gap-2 rounded-xl border border-[#00a859]/45 bg-[#00a859]/12 px-6 py-3.5 text-sm font-bold text-[#00a859] shadow-lg shadow-[#00a859]/5 backdrop-blur-md transition-all hover:border-[#9fef00]/60 hover:bg-[#00a859]/20 hover:text-[#9fef00] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-[#00a859]/45 disabled:hover:bg-[#00a859]/12 disabled:hover:text-[#00a859]"
+                >
+                  {goIn ? <PlayCircle size={17} /> : <BookOpen size={17} />}
+                  {ctaLabel}
+                  <ChevronRight
+                    size={15}
+                    className="rtl-flip transition-transform group-hover:translate-x-0.5"
+                  />
+                </button>
+
+                {/* Browsing without committing is allowed: enrolling is a
+                    bookmark, not a gate, so there is always a way to just go
+                    and read. */}
+                {!goIn && (
+                  <button
+                    onClick={enterModule}
+                    className="inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-[#8592ad] transition-colors touch:min-h-tap hover:text-[#d2d7e3]"
+                  >
+                    {ar ? 'تصفح الدروس' : 'Browse the lessons'}
+                    <ChevronRight size={15} className="rtl-flip" />
+                  </button>
+                )}
               </div>
-              <ProgressBar value={pct} color="green" size="sm" />
+
+              {started ? (
+                <div className="w-full lg:w-[19rem] lg:flex-shrink-0">
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#00a859]">
+                      <Check size={13} />
+                      {complete
+                        ? ar
+                          ? 'اكتملت الوحدة'
+                          : 'Module complete'
+                        : ar
+                        ? 'قيد التقدم'
+                        : 'In progress'}
+                    </span>
+                    <span className="text-[11px] font-semibold text-[#8592ad]" dir="ltr">
+                      {done}/{totalLessons}
+                    </span>
+                  </div>
+                  <ProgressBar value={pct} color="neon" size="md" showLabel />
+                </div>
+              ) : (
+                enrolled && (
+                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#00a859]">
+                    <Check size={13} /> {ar ? 'مسجّل' : 'Enrolled'}
+                  </span>
+                )
+              )}
             </div>
-          )}
-
-          {/* ── The way in ── */}
-          <div className="relative mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-            {enrolled || started ? (
-              <Button
-                variant="primary"
-                onClick={enterModule}
-                leftIcon={<PlayCircle size={16} />}
-                className="sm:w-auto"
-                fullWidth
-              >
-                {complete
-                  ? ar
-                    ? 'مراجعة الوحدة'
-                    : 'Review module'
-                  : started
-                  ? ar
-                    ? 'متابعة الوحدة'
-                    : 'Continue module'
-                  : ar
-                  ? 'ابدأ الوحدة'
-                  : 'Start module'}
-              </Button>
-            ) : (
-              <Button
-                variant="primary"
-                onClick={handleEnroll}
-                disabled={isPreview}
-                leftIcon={<BookOpen size={16} />}
-                className="sm:w-auto"
-                fullWidth
-              >
-                {ar ? 'التسجيل في الوحدة' : 'Enroll in Module'}
-              </Button>
-            )}
-
-            {/* Browsing without committing is allowed: enrolling is a bookmark,
-                not a gate, so there is always a way to just go and read. */}
-            {!enrolled && !started && (
-              <button
-                onClick={enterModule}
-                className="inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-[#8592ad] transition-colors touch:min-h-tap hover:text-[#d2d7e3]"
-              >
-                {ar ? 'تصفح الدروس' : 'Browse the lessons'}
-                <ChevronRight size={15} className="rtl-flip" />
-              </button>
-            )}
-
-            {enrolled && !started && (
-              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#00a859]">
-                <Check size={13} /> {ar ? 'مسجّل' : 'Enrolled'}
-              </span>
-            )}
           </div>
         </div>
       </motion.div>
