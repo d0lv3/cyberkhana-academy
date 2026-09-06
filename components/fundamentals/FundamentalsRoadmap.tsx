@@ -445,22 +445,18 @@ const FundamentalsRoadmap: React.FC = () => {
 
   return (
     <>
-      {/* ── Desktop / tablet: the floating-islands scene ── */}
-      <div className="hidden md:block relative mx-auto max-w-4xl overflow-hidden rounded-2xl border border-[#263248] bg-[#0a0f18]">
-        {/* Faint sky gradient toward the summit */}
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              'radial-gradient(560px circle at 60% 8%, rgba(0,168,89,0.09), transparent 55%), radial-gradient(420px circle at 18% 85%, rgba(159,239,0,0.05), transparent 55%)',
-          }}
-        />
+      {/* ── Desktop / tablet: the floating-islands scene ──
+          No frame and no background of its own. A bordered panel made the
+          journey read as one more widget sitting on the page, when it is the
+          page: the sky it floats in belongs to FundamentalsPage and runs the
+          full width behind the heading as well as the road. */}
+      <div className="relative hidden md:block">
         {/* Strapline. It used to be overlaid to save vertical space, back when
             the scene was squeezed into the viewport; now that stops alternate
             lanes, whichever lane sits on the reading side would run straight
             through it, and which side that is flips in Arabic. Height is no
             longer scarce, so it simply leads the scene. */}
-        <div className="relative z-10 px-5 pt-5 sm:px-6 sm:pt-6">
+        <div className="relative z-10">
           <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#00a859]">
             {lang === 'ar' ? 'المسار' : 'The path'}
           </p>
@@ -479,7 +475,7 @@ const FundamentalsRoadmap: React.FC = () => {
         <svg
           viewBox={`0 0 ${SCENE_W} ${SCENE_H}`}
           preserveAspectRatio="xMidYMid meet"
-          className="relative mx-auto block h-auto w-full max-w-[760px]"
+          className="relative mx-auto block h-auto w-full max-w-[760px] pb-10"
         >
           <defs>
             <filter id="island-blur" x="-60%" y="-60%" width="220%" height="220%">

@@ -6,7 +6,7 @@ import {
   Layers,
   Route,
   Trophy,
-  UserCircle,
+  User,
   PenTool,
   Users,
   ChevronLeft,
@@ -46,7 +46,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, mobileOpen, onMo
   ];
 
   const accountItems = [
-    { to: '/profile', icon: UserCircle, label: t('sidebar.profile') },
+    { to: '/profile', icon: User, label: t('sidebar.profile') },
     ...(user?.role === 'admin'
       ? [{ to: '/admin/members', icon: Users, label: lang === 'ar' ? 'الأعضاء' : 'Members' }]
       : []),
@@ -78,11 +78,18 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, mobileOpen, onMo
               <span className="absolute start-0 w-0.5 h-6 bg-[#00a859] rounded-e" />
             )}
             <Icon
-              // Line art only. A translucent wash used to fill the glyph on the
-              // active tab, which on a closed shape like UserCircle read as a
-              // disc sitting behind the person rather than as emphasis. The
-              // accent colour and the rail beside it already say which tab you
-              // are on, so every icon here is the bare symbol.
+              /* The chosen tab's glyph fills in. Half opacity rather than
+                 solid: these are stroked outlines, and painting them opaque
+                 collapses the ones built from open paths into blobs (an open
+                 book becomes a lump, a route becomes a smear). At 0.5 every
+                 glyph reads as filled while its own shape survives.
+
+                 Profile is drawn with User rather than UserCircle for the
+                 related reason: filling a glyph that encloses itself in a
+                 circle produces a disc sitting behind the person, which is a
+                 background rather than emphasis. */
+              fill={isActive ? 'currentColor' : 'none'}
+              fillOpacity={isActive ? 0.5 : 0}
               onAnimationEnd={() => setNudging(null)}
               className={`flex-shrink-0 transition-colors ${
                 nudging === to ? 'nav-nudge' : ''
