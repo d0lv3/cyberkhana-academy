@@ -1,10 +1,12 @@
 import React, { useId, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { coverImageSrc } from '../../data/fundamentalsData';
+import { displayFamily } from '../ui/displayFont';
 import { buildCatalogIndex } from '../../data/pathCatalog';
 import ThrowableStars from './ThrowableStars';
 import type { PathStep } from '../../services/creatorTypes';
 import type { PathStepState } from '../../services/progressService';
+import { useLang } from '../../contexts/LangContext';
 
 interface PathJourneyMapProps {
   steps: PathStep[];
@@ -57,6 +59,7 @@ function truncate(s: string, n = 22): string {
  * side-edge trails link them and light up as steps complete. Desktop-only.
  */
 const PathJourneyMap: React.FC<PathJourneyMapProps> = ({ steps, states, nextIndex, color, onOpen }) => {
+  const { isArabic } = useLang();
   const uid = useId().replace(/:/g, '');
   const catalog = useMemo(() => buildCatalogIndex(), []);
   const n = steps.length;
@@ -152,7 +155,7 @@ const PathJourneyMap: React.FC<PathJourneyMapProps> = ({ steps, states, nextInde
                   <>
                     <rect x={TILE_X} y={TILE_Y} width={TS} height={TS} rx={TILE_R} fill="#0e1726" />
                     <rect x={TILE_X} y={TILE_Y} width={TS} height={TS} rx={TILE_R} fill={GREEN} opacity={0.13} />
-                    <text x={0} y={TILE_Y + TS / 2 + 10} textAnchor="middle" fill={GREEN} fontSize={32} fontWeight={800} fontFamily="'Poppins', sans-serif" opacity={0.9}>
+                    <text x={0} y={TILE_Y + TS / 2 + 10} textAnchor="middle" fill={GREEN} fontSize={32} fontWeight={800} fontFamily={displayFamily(isArabic)} opacity={0.9}>
                       {i + 1}
                     </text>
                   </>
@@ -198,12 +201,12 @@ const PathJourneyMap: React.FC<PathJourneyMapProps> = ({ steps, states, nextInde
                   fill={st.available ? (isCurrent ? '#f3f6ff' : '#e5e9f0') : '#6e7a94'}
                   fontSize={12}
                   fontWeight={700}
-                  fontFamily="'Poppins', sans-serif"
+                  fontFamily={displayFamily(isArabic)}
                 >
                   {truncate(step.title)}
                 </text>
                 {step.subtitle && (
-                  <text x={0} y={CH + CD + 41} textAnchor="middle" fill="#8b98ae" fontSize={10.5} fontFamily="'Poppins', sans-serif">
+                  <text x={0} y={CH + CD + 41} textAnchor="middle" fill="#8b98ae" fontSize={10.5} fontFamily={displayFamily(isArabic)}>
                     {truncate(step.subtitle, 30)}
                   </text>
                 )}

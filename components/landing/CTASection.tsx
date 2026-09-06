@@ -3,14 +3,14 @@ import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { useLang } from '../../contexts/LangContext';
 import Button from '../ui/EnhancedButton';
-import { DISPLAY_FONT_STYLE } from './displayFont';
+import { displayStyle } from '../ui/displayFont';
 
 interface CTASectionProps {
   onGetStarted: () => void;
 }
 
 const CTASection: React.FC<CTASectionProps> = ({ onGetStarted }) => {
-  const { t } = useLang();
+  const { t, isArabic } = useLang();
 
   return (
     <section className="relative px-6 py-24 md:py-28 bg-[#0d1117] overflow-hidden">
@@ -24,7 +24,7 @@ const CTASection: React.FC<CTASectionProps> = ({ onGetStarted }) => {
         transition={{ duration: 0.6 }}
         className="relative z-10 max-w-3xl mx-auto text-center"
       >
-        <h2 style={DISPLAY_FONT_STYLE} className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-[#f3f6ff] leading-tight">
+        <h2 style={displayStyle(isArabic)} className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-[#f3f6ff] leading-tight">
           {t('cta.heading')}
         </h2>
         <p className="text-[#9aa5bf] text-base sm:text-lg mt-5 max-w-xl mx-auto">

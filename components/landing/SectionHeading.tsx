@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { DISPLAY_FONT_STYLE } from './displayFont';
+import { displayStyle } from '../ui/displayFont';
+import { useLang } from '../../contexts/LangContext';
 
 interface SectionHeadingProps {
   heading: string;
@@ -10,6 +11,7 @@ interface SectionHeadingProps {
 
 /** Landing section header — display heading + subtitle with a consistent entrance. */
 const SectionHeading: React.FC<SectionHeadingProps> = ({ heading, subtitle, align = 'center' }) => {
+  const { isArabic } = useLang();
   const centered = align === 'center';
   return (
     <motion.div
@@ -20,7 +22,7 @@ const SectionHeading: React.FC<SectionHeadingProps> = ({ heading, subtitle, alig
       className={centered ? 'text-center' : 'text-start'}
     >
       <h2
-        style={DISPLAY_FONT_STYLE}
+        style={displayStyle(isArabic)}
         className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-[#f3f6ff]"
       >
         {heading}

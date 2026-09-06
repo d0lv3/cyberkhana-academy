@@ -4,7 +4,7 @@ import { Globe, ArrowLeft } from 'lucide-react';
 import { useLang } from '../../contexts/LangContext';
 import BrandLogo from '../../components/ui/BrandLogo';
 import LandingFooter from '../../components/landing/LandingFooter';
-import { DISPLAY_FONT_STYLE } from '../../components/landing/displayFont';
+import { displayStyle } from '../../components/ui/displayFont';
 
 const CONTACT = 'support@cyberkhana.tech';
 
@@ -324,7 +324,7 @@ const TERMS: Record<'en' | 'ar', LegalDoc> = {
 };
 
 const LegalPage: React.FC<{ kind: 'privacy' | 'terms' }> = ({ kind }) => {
-  const { lang, setLang } = useLang();
+  const { lang, setLang, isArabic } = useLang();
   const doc = (kind === 'privacy' ? PRIVACY : TERMS)[lang];
 
   useEffect(() => {
@@ -361,7 +361,7 @@ const LegalPage: React.FC<{ kind: 'privacy' | 'terms' }> = ({ kind }) => {
           </Link>
 
           <h1
-            style={DISPLAY_FONT_STYLE}
+            style={displayStyle(isArabic)}
             className="text-3xl md:text-4xl font-black tracking-tight text-[#f3f6ff]"
           >
             {doc.title}

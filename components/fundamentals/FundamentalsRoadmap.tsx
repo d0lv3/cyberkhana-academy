@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Code, Monitor, Wifi, ShieldCheck, ChevronRight } from 'lucide-react';
 import { useLang } from '../../contexts/LangContext';
 import { getTrackProgress, type TrackKey } from '../../services/progressService';
+import { displayFamily, labelFamily, labelTracking } from '../ui/displayFont';
 
 /* ─── Fundamentals Roadmap ───
  * The Fundamentals hub as a journey: three floating land cubes (Programming,
@@ -383,8 +384,8 @@ const Island: React.FC<{
             fill={c}
             fontSize={10.5}
             fontWeight={700}
-            letterSpacing={2.5}
-            fontFamily="'JetBrains Mono', 'Consolas', monospace"
+            letterSpacing={labelTracking(lang === 'ar', 2.5)}
+            fontFamily={labelFamily(lang === 'ar')}
           >
             {lang === 'ar' ? `المرحلة 0${island.step}` : `STEP 0${island.step}`}
           </text>
@@ -396,11 +397,18 @@ const Island: React.FC<{
           fill="#f3f6ff"
           fontSize={island.isGoal ? 22 : 19}
           fontWeight={800}
-          fontFamily="'Poppins', sans-serif"
+          fontFamily={displayFamily(lang === 'ar')}
         >
           {island.title[lang]}
         </text>
-        <text x={0} y={labelBase + 44} textAnchor="middle" fill="#8b98ae" fontSize={12} fontFamily="'Poppins', sans-serif">
+        <text
+          x={0}
+          y={labelBase + 44}
+          textAnchor="middle"
+          fill="#8b98ae"
+          fontSize={12}
+          fontFamily={displayFamily(lang === 'ar')}
+        >
           {island.meta[lang]}
         </text>
 
@@ -423,8 +431,8 @@ const Island: React.FC<{
               fill={c}
               fontSize={10.5}
               fontWeight={700}
-              letterSpacing={1}
-              fontFamily="'JetBrains Mono', monospace"
+              letterSpacing={labelTracking(lang === 'ar', 1)}
+              fontFamily={labelFamily(lang === 'ar')}
             >
               {lang === 'ar' ? 'ادخل 101 ←' : 'ENTER 101 →'}
             </text>
