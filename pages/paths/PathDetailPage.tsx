@@ -7,6 +7,7 @@ import Button from '../../components/ui/EnhancedButton';
 import { useLang } from '../../contexts/LangContext';
 import { coverImageSrc } from '../../data/fundamentalsData';
 import PathJourneyMap from '../../components/paths/PathJourneyMap';
+import StarField from '../../components/ui/StarField';
 import { getPublishedPathBySlug } from '../../services/creatorDataService';
 import { getPathProgress, isPathEnrolled, enrollInPath } from '../../services/progressService';
 
@@ -19,7 +20,7 @@ const PathStat: React.FC<{
   label: string;
   accent: string;
 }> = ({ icon: Icon, value, label, accent }) => (
-  <div className="rounded-xl border border-[#263248]/80 bg-[#121a2a]/70 p-3.5 backdrop-blur-sm transition-colors hover:border-[#354562]">
+  <div className="rounded-xl border border-[#263248]/70 bg-[#0a0f18]/50 p-3.5 transition-colors hover:border-[#354562]">
     <span
       className="inline-flex h-9 w-9 items-center justify-center rounded-lg border"
       style={{ borderColor: `${accent}40`, backgroundColor: `${accent}14`, color: accent }}
@@ -69,7 +70,23 @@ const PathDetailPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    /* ── The sky ──
+       One surface for the whole page: the ground, the glow and the stars that
+       used to live inside the curriculum's own card, lifted up here so every
+       part of the path stands on the same thing. The negative margins reach
+       back through the layout's padding so it runs to the edges of the
+       content area; the padding goes back on inside. */
+    <div className="relative -m-4 overflow-hidden bg-[#070a12] sm:-m-6 md:-m-8">
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(70vw 60vh at 72% 2%, rgba(0,168,89,0.13), transparent 62%), radial-gradient(58vw 50vh at 12% 78%, rgba(0,168,89,0.06), transparent 62%), radial-gradient(46vw 40vh at 44% 44%, rgba(16,185,129,0.05), transparent 62%)',
+        }}
+      />
+      <StarField />
+
+      <div className="relative space-y-6 p-4 sm:p-6 md:p-8">
       {/* Back link */}
       <button
         onClick={() => navigate('/paths')}
@@ -80,56 +97,23 @@ const PathDetailPage: React.FC = () => {
       </button>
 
       {/* ── Hero ──
-          One card, on the same ground the curriculum below it stands on, so
-          the page reads as one surface rather than a light panel sitting above
-          a dark one. The cover takes a side and hands over to the card through
-          a scrim, the way a module's does, and the two counts live inside the
-          card with everything else they describe rather than as loose tiles
-          underneath it. */}
+          Glass on the page's own sky. No cover art: the picture is what a path
+          is recognised by in the listing, and repeating it here spends the top
+          third of the page telling you something you clicked on to get past. */}
       <motion.div
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="overflow-hidden rounded-2xl border border-[#263248] bg-[#070a12]"
+        className="overflow-hidden rounded-2xl border border-[#263248]/70 bg-[#121a2a]/45 backdrop-blur-md"
       >
-        <div className="relative flex flex-col md:flex-row">
-          {/* Accent wash behind the whole hero, tinted by the path's colour */}
+        <div className="relative p-6 md:p-8">
+          {/* Accent wash, tinted by the path's own colour */}
           <div
             className="pointer-events-none absolute inset-0"
-            style={{ background: `radial-gradient(90% 120% at 0% 0%, ${path.color}26 0%, transparent 62%)` }}
+            style={{ background: `radial-gradient(80% 130% at 0% 0%, ${path.color}1f 0%, transparent 60%)` }}
           />
 
-          {/* ── The cover, taking the side ── */}
-          <div className="relative w-full flex-shrink-0 md:w-[34%] md:max-w-[330px]">
-            <div className="relative h-44 w-full sm:h-56 md:h-full md:min-h-[280px]">
-              {path.coverImage ? (
-                <img
-                  src={coverImageSrc(path.coverImage)}
-                  alt=""
-                  aria-hidden
-                  className="absolute inset-0 h-full w-full object-cover"
-                />
-              ) : (
-                <div
-                  className="absolute inset-0"
-                  style={{ background: `linear-gradient(150deg, ${path.color}33 0%, #070a12 68%)` }}
-                >
-                  <Route
-                    size={190}
-                    className="absolute -bottom-7 -end-7 opacity-[0.1]"
-                    style={{ color: path.color }}
-                  />
-                </div>
-              )}
-
-              {/* The cover has to hand over to the card rather than stop at a
-                  hard edge: down the page on a phone, across it from md up. */}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#070a12] via-[#070a12]/20 to-transparent md:bg-gradient-to-r md:from-transparent md:via-transparent md:to-[#070a12]" />
-            </div>
-          </div>
-
-          {/* ── What you decide with ── */}
-          <div className="relative flex min-w-0 flex-1 flex-col justify-center gap-5 p-6 md:p-8">
+          <div className="relative flex flex-col gap-5">
             <div className="min-w-0">
               <div className="mb-3 flex flex-wrap items-center gap-2">
                 <span
@@ -206,7 +190,7 @@ const PathDetailPage: React.FC = () => {
                       {progress.completed}/{progress.total} · {progress.pct}%
                     </span>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-[#0a0f18]">
+                  <div className="h-2 overflow-hidden rounded-full bg-[#0a0f18]/70">
                     <div
                       className="h-full rounded-full bg-gradient-to-r from-[#00a859] to-[#9fef00] transition-all duration-700"
                       style={{ width: `${progress.pct}%` }}
@@ -253,7 +237,7 @@ const PathDetailPage: React.FC = () => {
                   transition={{ delay: 0.04 + idx * 0.05, duration: 0.35 }}
                   onClick={() => st.available && navigate(st.route)}
                   disabled={!st.available}
-                  className={`relative z-10 w-full flex items-center gap-4 rounded-xl border bg-[#121a2a] p-4 text-left transition-all group ${
+                  className={`relative z-10 w-full flex items-center gap-4 rounded-xl border bg-[#121a2a]/45 p-4 text-left backdrop-blur-md transition-all group ${
                     st.available
                       ? isNext
                         ? 'border-[#00a859]/50 hover:border-[#00a859]'
@@ -308,6 +292,7 @@ const PathDetailPage: React.FC = () => {
             })}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

@@ -50,17 +50,6 @@ function truncate(s: string, n = 22): string {
   return s.length > n ? `${s.slice(0, n - 1)}…` : s;
 }
 
-/* Deterministic PRNG so the starfield/glyph scatter is stable across renders. */
-function mulberry32(a: number): () => number {
-  return () => {
-    a |= 0;
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
 /**
  * PathJourneyMap — the path's curriculum as a climbing road of floating
  * isometric cubes over a space backdrop, alternating left/right up toward the
@@ -74,35 +63,15 @@ const PathJourneyMap: React.FC<PathJourneyMapProps> = ({ steps, states, nextInde
   const cyOf = (i: number) => TOP_PAD + (n - 1 - i) * ROW_GAP;
   const totalH = TOP_PAD + Math.max(0, n - 1) * ROW_GAP + BOTTOM_PAD;
 
-  // Faint static starfield for depth (the interactive stars sit on top).
-  const stars = useMemo(() => {
-    const rand = mulberry32(20240703);
-    return Array.from({ length: Math.round(totalH / 26) }, () => ({
-      x: rand() * VBW,
-      y: rand() * totalH,
-      r: 0.5 + rand() * 1.2,
-      o: 0.15 + rand() * 0.35,
-    }));
-  }, [totalH]);
-
   // Draw far (top) cubes first so nearer (bottom) ones overlap them.
   const order = Array.from({ length: n }, (_, i) => i).reverse();
 
+  /* No frame and no sky of its own. The page this sits on is already the
+     surface, gradients and stars included, and a bordered box drawn around
+     part of it would only redraw the seam the page exists to avoid. */
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-[#263248] bg-[#070a12]">
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(620px circle at 70% 6%, rgba(0,168,89,0.13), transparent 60%), radial-gradient(520px circle at 14% 82%, rgba(0,168,89,0.06), transparent 60%), radial-gradient(420px circle at 42% 46%, rgba(16,185,129,0.05), transparent 60%)',
-        }}
-      />
+    <div className="relative">
       <svg viewBox={`0 0 ${VBW} ${totalH}`} className="relative mx-auto h-auto w-full max-w-[880px]" role="img" aria-label="Learning path journey">
-        {/* Faint static starfield (depth) */}
-        {stars.map((s, i) => (
-          <circle key={`st${i}`} cx={s.x} cy={s.y} r={s.r} fill="#4a5d82" opacity={s.o} />
-        ))}
-
         {/* Climbing trails — from the inner side edges of the cubes */}
         {steps.slice(0, -1).map((_, i) => {
           const x1 = edgeX(i);
