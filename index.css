@@ -77,25 +77,29 @@
     transform: scaleX(-1);
   }
 
-  /* Sidebar tab icon: a quick nudge acknowledging the click. It travels one
-     way only — toward the edge the sidebar is anchored to, so the motion reads
-     as leaning out of the content: left in English, right in Arabic. */
+  /* Sidebar tab icon: a quick tilt acknowledging the click. The whole glyph
+     turns on its own centre and peeks one way before settling, and it only
+     ever leans the one way, toward the edge the sidebar is anchored to: left
+     in English, right in Arabic. Never a two-way wobble. */
   @keyframes nav-nudge {
-    0%   { transform: translateX(0); }
-    30%  { transform: translateX(-4px); }
-    58%  { transform: translateX(-1px); }
-    78%  { transform: translateX(-2.5px); }
-    100% { transform: translateX(0); }
+    0%   { transform: rotate(0deg); }
+    32%  { transform: rotate(-15deg); }
+    60%  { transform: rotate(-5deg); }
+    80%  { transform: rotate(-10deg); }
+    100% { transform: rotate(0deg); }
   }
   @keyframes nav-nudge-rtl {
-    0%   { transform: translateX(0); }
-    30%  { transform: translateX(4px); }
-    58%  { transform: translateX(1px); }
-    78%  { transform: translateX(2.5px); }
-    100% { transform: translateX(0); }
+    0%   { transform: rotate(0deg); }
+    32%  { transform: rotate(15deg); }
+    60%  { transform: rotate(5deg); }
+    80%  { transform: rotate(10deg); }
+    100% { transform: rotate(0deg); }
   }
   .nav-nudge {
-    animation: nav-nudge 0.4s ease-out;
+    animation: nav-nudge 0.45s ease-out;
+    /* An <svg> root box would otherwise be at the mercy of the UA default, and
+       a tilt about a corner reads as a swing rather than a turn. */
+    transform-origin: center;
   }
   [dir='rtl'] .nav-nudge {
     animation-name: nav-nudge-rtl;

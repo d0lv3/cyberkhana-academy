@@ -11,9 +11,11 @@ import { getTrackProgress, type TrackKey } from '../../services/progressService'
  * Cybersecurity 101. Hand-drawn isometric SVG, no chart library. Each cube
  * carries a chunky, extruded 3D emblem seated on its top face.
  *
- * The road runs top to bottom down one centre line: step one at the head of
- * the column, the goal at its foot, read in the same order as everything else
- * on the page. Being centred also means it needs no mirroring in Arabic.
+ * The road zigzags top to bottom: step one at the head of the scene, the goal
+ * at its foot, read in the same order as everything else on the page. Stops
+ * alternate sides so the trail between them has somewhere to sweep, and so a
+ * label stack never has to make room for the island below it. The scene is
+ * symmetric about its own centre, so it needs no mirroring in Arabic.
  */
 
 interface IslandDef {
@@ -31,12 +33,13 @@ interface IslandDef {
   isGoal?: boolean;
 }
 
-/* The centre line every stop is threaded onto, and the scene it lives in.
- * The column is only as wide as an island's widest label, so the whole thing
- * renders near 1:1 instead of being scaled down to fit a viewport. */
-const COLUMN_X = 280;
-const SCENE_W = 560;
-const SCENE_H = 1190;
+/* The two lanes the stops alternate between, and the scene they live in. The
+ * scene is only as wide as it needs to be, so the whole thing renders near 1:1
+ * instead of being scaled down to fit a viewport. */
+const LANE_L = 210;
+const LANE_R = 550;
+const SCENE_W = 760;
+const SCENE_H = 1030;
 
 const ISLANDS: IslandDef[] = [
   {
@@ -46,8 +49,8 @@ const ISLANDS: IslandDef[] = [
     icon: Code,
     color: '#9fef00',
     route: '/fundamentals/programming',
-    cx: COLUMN_X,
-    cy: 80,
+    cx: LANE_L,
+    cy: 90,
     scale: 0.68,
     title: { en: 'Programming', ar: 'البرمجة' },
     meta: { en: 'Python · scripting · logic', ar: 'بايثون · السكربتات · المنطق' },
@@ -59,8 +62,8 @@ const ISLANDS: IslandDef[] = [
     icon: Monitor,
     color: '#f3a43a',
     route: '/fundamentals/operating-systems',
-    cx: COLUMN_X,
-    cy: 370,
+    cx: LANE_R,
+    cy: 320,
     scale: 0.68,
     title: { en: 'Operating Systems', ar: 'أنظمة التشغيل' },
     meta: { en: 'Linux · terminal · hardening', ar: 'لينكس · الطرفية · التقوية' },
@@ -72,8 +75,8 @@ const ISLANDS: IslandDef[] = [
     icon: Wifi,
     color: '#60a5fa',
     route: '/fundamentals/networking',
-    cx: COLUMN_X,
-    cy: 660,
+    cx: LANE_L,
+    cy: 550,
     scale: 0.68,
     title: { en: 'Networking', ar: 'الشبكات' },
     meta: { en: 'TCP/IP · packets · protocols', ar: 'TCP/IP · الحزم · البروتوكولات' },
@@ -85,8 +88,8 @@ const ISLANDS: IslandDef[] = [
     icon: ShieldCheck,
     color: '#00a859',
     route: '/fundamentals/cybersecurity-101',
-    cx: COLUMN_X,
-    cy: 958,
+    cx: LANE_R,
+    cy: 790,
     scale: 0.8,
     title: { en: 'Cybersecurity', ar: 'الأمن السيبراني' },
     meta: { en: 'Security+ foundations', ar: 'أساسيات +Security' },
@@ -94,20 +97,26 @@ const ISLANDS: IslandDef[] = [
   },
 ];
 
-/* Trails between consecutive stops, derived from the positions above rather
- * than hand-drawn, so moving an island can never leave its road behind. Each
- * runs from just below one label stack to just above the next emblem. */
-const TRAILS: { from: string; d: string }[] = ISLANDS.slice(0, -1).map((island, i) => {
-  const next = ISLANDS[i + 1];
-  const start = island.cy + 107 * island.scale + 36 + 66;
-  const end = next.cy - 80 * next.scale;
-  return { from: island.key, d: `M ${COLUMN_X} ${start} L ${COLUMN_X} ${end}` };
-});
-
 /* Isometric cube geometry (top-face half-width / half-height, side depth). */
 const W = 96;
 const H = 55;
 const D = 52;
+
+/* Trails between consecutive stops, derived from the positions above rather
+ * than hand-drawn, so moving an island can never leave its road behind. Each
+ * one leaves the trailing edge of a cube and arrives at the leading edge of the
+ * next, sweeping across the gap between the lanes and passing clear of the
+ * label stack sitting under the island it left. */
+const TRAILS: { from: string; d: string }[] = ISLANDS.slice(0, -1).map((island, i) => {
+  const next = ISLANDS[i + 1];
+  const dir = next.cx > island.cx ? 1 : -1;
+  const x1 = island.cx + dir * (W * island.scale + 10);
+  const y1 = island.cy + H * island.scale;
+  const x2 = next.cx - dir * (W * next.scale + 10);
+  const y2 = next.cy;
+  const mx = (x1 + x2) / 2;
+  return { from: island.key, d: `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}` };
+});
 
 const cubeFaces = (s: number) => {
   const w = W * s;
@@ -446,30 +455,31 @@ const FundamentalsRoadmap: React.FC = () => {
               'radial-gradient(560px circle at 60% 8%, rgba(0,168,89,0.09), transparent 55%), radial-gradient(420px circle at 18% 85%, rgba(159,239,0,0.05), transparent 55%)',
           }}
         />
-        {/* Strapline, overlaid rather than stacked above the scene so it costs
-            no vertical space — height is what limits how big the diagram can
-            be. The art's top-left is empty (content starts at x=90), so it sits
-            clear of the islands in both directions. */}
-        <div className="pointer-events-none absolute top-0 start-0 z-10 p-5 sm:p-6 max-w-[min(15rem,26%)]">
+        {/* Strapline. It used to be overlaid to save vertical space, back when
+            the scene was squeezed into the viewport; now that stops alternate
+            lanes, whichever lane sits on the reading side would run straight
+            through it, and which side that is flips in Arabic. Height is no
+            longer scarce, so it simply leads the scene. */}
+        <div className="relative z-10 px-5 pt-5 sm:px-6 sm:pt-6">
           <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#00a859]">
             {lang === 'ar' ? 'المسار' : 'The path'}
           </p>
-          <p className="mt-1 text-sm leading-snug text-[#9aa5bf]">
+          <p className="mt-1 max-w-md text-sm leading-snug text-[#9aa5bf]">
             {lang === 'ar'
               ? 'ثلاث مراحل، ثم الهدف: الأمن السيبراني.'
               : 'Three stages, then the goal: Cybersecurity.'}
           </p>
         </div>
 
-        {/* A column this tall cannot also fit a viewport, and shrinking it to
-            try would take the labels down with it — a 12px meta line is not
-            worth a diagram nobody has to scroll. So the scene renders at its
-            own size instead, capped to the column's width, and the page scrolls
-            the road the way you would walk it. */}
+        {/* A road this long cannot also fit a viewport, and shrinking it to try
+            would take the labels down with it — a 12px meta line is not worth a
+            diagram nobody has to scroll. So the scene renders at its own size
+            instead, capped to its natural width, and the page scrolls the road
+            the way you would walk it. */}
         <svg
           viewBox={`0 0 ${SCENE_W} ${SCENE_H}`}
           preserveAspectRatio="xMidYMid meet"
-          className="relative mx-auto block h-auto w-full max-w-[540px]"
+          className="relative mx-auto block h-auto w-full max-w-[760px]"
         >
           <defs>
             <filter id="island-blur" x="-60%" y="-60%" width="220%" height="220%">
@@ -488,9 +498,9 @@ const FundamentalsRoadmap: React.FC = () => {
           {/* Ambient stars, kept off the centre line so they never read as
               part of the road itself */}
           {[
-            [46, 70, 1.2], [508, 150, 1], [96, 260, 1.4], [524, 355, 1.2], [30, 470, 1],
-            [498, 560, 1.3], [72, 680, 1.2], [520, 790, 1], [40, 900, 1.4], [486, 1010, 1.2],
-            [110, 1090, 1], [530, 1140, 1.3],
+            [56, 60, 1.2], [700, 120, 1], [380, 60, 1.4], [660, 300, 1.2], [40, 300, 1],
+            [366, 420, 1.1], [712, 520, 1.3], [64, 560, 1.2], [386, 700, 1], [700, 740, 1.4],
+            [48, 820, 1.1], [360, 900, 1.3], [676, 960, 1.2], [120, 990, 1],
           ].map(([x, y, r], i) => (
             <circle key={i} cx={x} cy={y} r={r} fill="#3d4f73" opacity={0.5} />
           ))}

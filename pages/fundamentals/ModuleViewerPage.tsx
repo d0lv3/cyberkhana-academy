@@ -22,7 +22,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { getViewableModuleBySlug } from '../../data/modulesData';
-import { moduleViewerPath } from '../../data/fundamentalsData';
+import { moduleLearnPath } from '../../data/fundamentalsData';
 import LessonMarkdown from '../../components/ui/LessonMarkdown';
 import quizBank, {
   answerMask,
@@ -248,7 +248,6 @@ const ModuleViewerPage: React.FC = () => {
         lectures: mod.lectures.map((l) => ({
           id: l.id,
           title: l.title,
-          duration: l.duration,
           hasQuiz: !!l.quiz || !!(l.quizQuestions && l.quizQuestions.length),
           kind: l.kind === 'lab' ? ('lab' as const) : ('lesson' as const),
         })),
@@ -261,7 +260,7 @@ const ModuleViewerPage: React.FC = () => {
     if (fundamentalModule && !isPreview) {
       recordActivity({
         kind: 'os',
-        route: moduleViewerPath(fundamentalModule),
+        route: moduleLearnPath(fundamentalModule),
         title: fundamentalModule.title,
       });
     }

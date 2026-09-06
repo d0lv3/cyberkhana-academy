@@ -4,7 +4,7 @@
  * data modules — importing those into creatorDataService would create a cycle.
  */
 
-import { fundamentalModules, moduleViewerPath } from './fundamentalsData';
+import { fundamentalModules, modulePath } from './fundamentalsData';
 import { getNetworkingLessons } from './networking';
 import { getProgrammingLanguages } from './programming';
 import { mergeFundamentalModules } from '../services/creatorDataService';
@@ -29,7 +29,7 @@ export function buildPathCatalog(): CatalogGroup[] {
     refId: m.id,
     title: m.title.en,
     subtitle: `${m.difficulty} · ${m.totalLessons} lessons`,
-    route: moduleViewerPath(m),
+    route: modulePath(m),
     accent: OS_ACCENT,
     coverImage: m.coverImage,
   }));

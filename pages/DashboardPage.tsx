@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLang } from '../contexts/LangContext';
-import { getFundamentalsByCategory, moduleViewerPath } from '../data/fundamentalsData';
+import { getFundamentalsByCategory, modulePath } from '../data/fundamentalsData';
 import { getAllModules } from '../data/modulesData';
 import { getNetworkingLessons } from '../data/networking';
 import { hasSimulation } from '../components/network-sim/types';
@@ -393,7 +393,7 @@ const DashboardPage: React.FC = () => {
                 {moduleShortlist.items.map(({ mod, done, pct }) => (
                   <button
                     key={mod.id}
-                    onClick={() => navigate(moduleViewerPath(mod))}
+                    onClick={() => navigate(modulePath(mod))}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#182235] transition-all group"
                   >
                     <div

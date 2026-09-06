@@ -23,6 +23,7 @@ const progKey = (langSlug: string) => `academy-prog-${langSlug}`;
 const osKey = (slug: string) => `academy-progress-${slug}`;
 const NET_KEY = 'academy-net';
 const PATHS_ENROLLED_KEY = 'academy-paths-enrolled';
+const MODULES_ENROLLED_KEY = 'academy-modules-enrolled';
 const LAST_ACTIVITY_KEY = 'academy-last-activity';
 
 /** Fired whenever any progress is written, so persistent UI (header/sidebar) can refresh. */
@@ -157,6 +158,39 @@ export function unenrollFromPath(pathId: string): void {
   if (set.has(pathId)) {
     set.delete(pathId);
     writeSet(PATHS_ENROLLED_KEY, set);
+  }
+}
+
+/* ── modules ──
+ * Enrolling is a bookmark, not a gate: it says "this one is mine" so the
+ * module can be picked up again from the dashboard, and it is what turns the
+ * overview page's call to action from "start" into "carry on". Lesson progress
+ * is recorded whether or not anyone enrolled, so nothing is lost by browsing a
+ * module first and enrolling later. Keyed by slug, which is what every route
+ * and every progress key already uses.
+ */
+
+export function getEnrolledModules(): Set<string> {
+  return readSet(MODULES_ENROLLED_KEY);
+}
+
+export function isModuleEnrolled(slug: string): boolean {
+  return readSet(MODULES_ENROLLED_KEY).has(slug);
+}
+
+export function enrollInModule(slug: string): void {
+  const set = readSet(MODULES_ENROLLED_KEY);
+  if (!set.has(slug)) {
+    set.add(slug);
+    writeSet(MODULES_ENROLLED_KEY, set);
+  }
+}
+
+export function unenrollFromModule(slug: string): void {
+  const set = readSet(MODULES_ENROLLED_KEY);
+  if (set.has(slug)) {
+    set.delete(slug);
+    writeSet(MODULES_ENROLLED_KEY, set);
   }
 }
 

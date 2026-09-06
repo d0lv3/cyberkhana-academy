@@ -22,6 +22,10 @@ const snapshotSchema = z
     ),
     networking: idArray,
     enrolledPaths: idArray,
+    /* Optional: a client cached from before module enrolment existed still
+       validates, and an absent key is left alone by the $set below rather
+       than clearing what the server already holds. */
+    enrolledModules: idArray.optional(),
     /** Client-computed leaderboard points total (deterministic from completions). */
     points: z.number().int().min(0).max(100_000_000).optional(),
     lastActivity: z
@@ -47,6 +51,7 @@ router.get('/', authenticate, async (req: AuthRequest, res) => {
             osModules: doc.osModules ?? {},
             networking: doc.networking ?? [],
             enrolledPaths: doc.enrolledPaths ?? [],
+            enrolledModules: doc.enrolledModules ?? [],
             lastActivity: doc.lastActivity ?? null,
           }
         : null,

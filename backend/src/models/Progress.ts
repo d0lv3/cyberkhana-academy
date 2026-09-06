@@ -11,6 +11,8 @@ export interface IProgress extends Document {
   networking: string[];
   /** enrolled path ids */
   enrolledPaths: string[];
+  /** enrolled module slugs */
+  enrolledModules: string[];
   lastActivity: {
     kind: 'programming' | 'networking' | 'os';
     route: string;
@@ -29,6 +31,7 @@ const ProgressSchema = new Schema<IProgress>(
     osModules: { type: Schema.Types.Mixed, default: {} },
     networking: { type: [String], default: [] },
     enrolledPaths: { type: [String], default: [] },
+    enrolledModules: { type: [String], default: [] },
     lastActivity: { type: Schema.Types.Mixed, default: null },
   },
   { timestamps: true, minimize: false }

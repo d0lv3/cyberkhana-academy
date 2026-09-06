@@ -70,6 +70,8 @@ export interface ProgressSnapshot {
   osModules: Record<string, string[]>;
   networking: string[];
   enrolledPaths: string[];
+  /** Optional so a client still validates against a server that predates it. */
+  enrolledModules?: string[];
   /** Client-computed leaderboard points total (omitted from server reads). */
   points?: number;
   lastActivity: unknown | null;
@@ -104,6 +106,7 @@ export function collectProgressSnapshot(): ProgressSnapshot {
     osModules,
     networking: readArray<string>('academy-net'),
     enrolledPaths: readArray<string>('academy-paths-enrolled'),
+    enrolledModules: readArray<string>('academy-modules-enrolled'),
     points: getTotalPoints(),
     lastActivity,
   };
@@ -148,6 +151,10 @@ function mergeProgress(server: ProgressSnapshot | null): void {
   localStorage.setItem(
     'academy-paths-enrolled',
     JSON.stringify(setUnion(readArray<string>('academy-paths-enrolled'), server.enrolledPaths ?? []))
+  );
+  localStorage.setItem(
+    'academy-modules-enrolled',
+    JSON.stringify(setUnion(readArray<string>('academy-modules-enrolled'), server.enrolledModules ?? []))
   );
 
   // Last activity: the newer timestamp wins.
@@ -219,6 +226,7 @@ export async function hydrateFromServer(): Promise<void> {
     const hadLocal =
       localSnap.networking.length > 0 ||
       localSnap.enrolledPaths.length > 0 ||
+      (localSnap.enrolledModules?.length ?? 0) > 0 ||
       Object.values(localSnap.programming).some((ids) => ids.length > 0) ||
       Object.values(localSnap.osModules).some((ids) => ids.length > 0);
     mergeProgress(progress);

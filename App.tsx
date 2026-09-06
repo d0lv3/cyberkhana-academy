@@ -25,6 +25,7 @@ import ProfilePage from './pages/ProfilePage';
 
 /* ── Lazy-loaded heavy pages (CodeMirror, react-markdown, Pyodide) ── */
 const ModuleViewerPage = lazy(() => import('./pages/fundamentals/ModuleViewerPage'));
+const ModuleOverviewPage = lazy(() => import('./pages/fundamentals/ModuleOverviewPage'));
 const NetworkingLessonPage = lazy(() => import('./pages/fundamentals/NetworkingLessonPage'));
 const ProgrammingLanguagePage = lazy(() => import('./pages/fundamentals/ProgrammingLanguagePage'));
 const ProgrammingLessonPage = lazy(() => import('./pages/fundamentals/ProgrammingLessonPage'));
@@ -113,12 +114,13 @@ function AppRoutes() {
         <Route path="/privacy" element={<LegalPage kind="privacy" />} />
         <Route path="/terms" element={<LegalPage kind="terms" />} />
 
-        {/* Module viewer — full-screen, outside AppLayout.
+        {/* Module viewer — full-screen, outside AppLayout, one level under the
+         * module's own page so the overview keeps the app shell around it.
          * Standalone (Modules-hub) modules use /modules/:slug; fundamentals
-         * modules use /fundamentals/module/:slug. Both render the same page,
+         * modules use /fundamentals/module/:slug. Both render the same pages,
          * and the fundamentals path stays a working alias for old links. */}
         <Route
-          path="/modules/:slug"
+          path="/modules/:slug/learn"
           element={
             <AuthGate>
               <ModuleViewerPage />
@@ -126,7 +128,7 @@ function AppRoutes() {
           }
         />
         <Route
-          path="/fundamentals/module/:slug"
+          path="/fundamentals/module/:slug/learn"
           element={
             <AuthGate>
               <ModuleViewerPage />
@@ -180,6 +182,9 @@ function AppRoutes() {
           <Route path="/fundamentals/operating-systems" element={<OperatingSystemsPage />} />
           <Route path="/fundamentals/cybersecurity-101" element={<CyberSecurity101Page />} />
           <Route path="/modules" element={<ModulesPage />} />
+          {/* A module's own page: what it covers and the way in. */}
+          <Route path="/modules/:slug" element={<ModuleOverviewPage />} />
+          <Route path="/fundamentals/module/:slug" element={<ModuleOverviewPage />} />
           <Route path="/paths" element={<PathsPage />} />
           <Route path="/paths/:slug" element={<PathDetailPage />} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />

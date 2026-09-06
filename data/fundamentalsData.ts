@@ -149,13 +149,23 @@ export const moduleDomain = (m: Pick<FundamentalModule, 'domain'>): ModuleDomain
   m.domain ?? 'general';
 
 /**
- * Canonical viewer route for a module. Standalone modules (category 'general',
- * surfaced in the Modules hub) live under /modules; fundamentals-pillar modules
- * (programming / networking / operating-systems) under /fundamentals/module.
- * The old /fundamentals/module/:slug route stays a working alias for both.
+ * A module's home: the overview page carrying its description, its details and
+ * the way in. Standalone modules (category 'general', surfaced in the Modules
+ * hub) live under /modules; fundamentals-pillar modules (programming /
+ * networking / operating-systems) under /fundamentals/module. The old
+ * /fundamentals/module/:slug route stays a working alias for both.
  */
-export function moduleViewerPath(m: Pick<FundamentalModule, 'category' | 'slug'>): string {
+export function modulePath(m: Pick<FundamentalModule, 'category' | 'slug'>): string {
   return m.category === 'general' ? `/modules/${m.slug}` : `/fundamentals/module/${m.slug}`;
+}
+
+/**
+ * The course viewer itself, one level under the module's home. Link here to
+ * drop someone straight into the lessons; link to `modulePath` when they are
+ * choosing rather than reading.
+ */
+export function moduleLearnPath(m: Pick<FundamentalModule, 'category' | 'slug'>): string {
+  return `${modulePath(m)}/learn`;
 }
 
 export const getFundamentalsByCategory = (category: FundamentalModule['category']) =>
