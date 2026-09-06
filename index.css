@@ -410,6 +410,25 @@
   }
 }
 
+/* ── PAGE SKIES ──────────────────────────────────────────────
+   The ground, glow and stars behind a route that is a place rather than a page
+   of documents. The values arrive as custom properties from components/ui/sky.ts;
+   what lives here is the one thing an inline style cannot express, which is
+   whether to use them at this width at all. */
+.page-sky {
+  background-image: var(--sky-image);
+  background-size: var(--sky-size);
+  background-repeat: var(--sky-repeat);
+}
+
+/* Some skies are desktop-only: their page is a plain stacked list on a phone,
+   and a starfield behind a list is just a darker list. */
+@media (max-width: 767px) {
+  .page-sky-desktop {
+    background-image: none;
+  }
+}
+
 /* ── LESSON PROSE ────────────────────────────────────────────
    Typography for rendered lesson markdown (components/ui/LessonMarkdown).
    Unlayered and last in the file so it wins over the base RTL defaults

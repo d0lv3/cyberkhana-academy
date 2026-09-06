@@ -7,7 +7,6 @@ import Button from '../../components/ui/EnhancedButton';
 import { useLang } from '../../contexts/LangContext';
 import { coverImageSrc } from '../../data/fundamentalsData';
 import PathJourneyMap from '../../components/paths/PathJourneyMap';
-import StarField from '../../components/ui/StarField';
 import { getPublishedPathBySlug } from '../../services/creatorDataService';
 import { getPathProgress, isPathEnrolled, enrollInPath } from '../../services/progressService';
 
@@ -69,24 +68,10 @@ const PathDetailPage: React.FC = () => {
     if (idx >= 0) navigate(progress.states[idx].route);
   };
 
+  /* The sky behind all of this belongs to AppLayout (see SKIES there), so that
+     it covers the whole scroll area rather than stopping at this page's box. */
   return (
-    /* ── The sky ──
-       One surface for the whole page: the ground, the glow and the stars that
-       used to live inside the curriculum's own card, lifted up here so every
-       part of the path stands on the same thing. The negative margins reach
-       back through the layout's padding so it runs to the edges of the
-       content area; the padding goes back on inside. */
-    <div className="relative -m-4 overflow-hidden bg-[#070a12] sm:-m-6 md:-m-8">
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(70vw 60vh at 72% 2%, rgba(0,168,89,0.13), transparent 62%), radial-gradient(58vw 50vh at 12% 78%, rgba(0,168,89,0.06), transparent 62%), radial-gradient(46vw 40vh at 44% 44%, rgba(16,185,129,0.05), transparent 62%)',
-        }}
-      />
-      <StarField />
-
-      <div className="relative space-y-6 p-4 sm:p-6 md:p-8">
+    <div className="space-y-6">
       {/* Back link */}
       <button
         onClick={() => navigate('/paths')}
@@ -292,7 +277,6 @@ const PathDetailPage: React.FC = () => {
             })}
           </div>
         </div>
-      </div>
       </div>
     </div>
   );
