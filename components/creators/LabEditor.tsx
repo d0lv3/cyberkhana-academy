@@ -133,6 +133,17 @@ const FlagRow: React.FC<{ flag: LabFlag; onChange: (f: LabFlag) => void }> = ({
         className={inputCls}
       />
     </div>
+    {/* The empty box already suggests the shape of whatever is typed above,
+        and says khana{...} when that is a flag. This is for the times that is
+        not nudge enough. */}
+    <input
+      type="text"
+      value={flag.placeholder ?? ''}
+      onChange={(e) => onChange({ ...flag, placeholder: e.target.value })}
+      placeholder="Format shown in the empty box (optional), e.g. 192.168.1.1"
+      dir="ltr"
+      className={`${inputCls} font-mono text-xs`}
+    />
     <label className="flex w-fit cursor-pointer items-center gap-2 text-[11px] text-[#8592ad]">
       <input
         type="checkbox"
@@ -442,10 +453,11 @@ const LabEditor: React.FC<LabEditorProps> = ({
                               flagMode ? 'text-[#9fef00]' : 'text-[#d2d7e3]'
                             }`}
                           >
-                            Flags to submit
+                            Answers to bring back
                           </span>
                           <span className="mt-0.5 block text-[11px] leading-relaxed text-[#8592ad]">
-                            Values they extract from the environment. All correct finishes the lab.
+                            Flags, or answers to questions about what they found. All correct
+                            finishes the lab.
                           </span>
                         </button>
                       </div>
@@ -458,7 +470,7 @@ const LabEditor: React.FC<LabEditorProps> = ({
                               updateLab(lab.id, { completion: { mode: 'flags', flags: next } })
                             }
                             createItem={newLabFlag}
-                            addLabel="Add another flag"
+                            addLabel="Add another answer"
                             maxItems={10}
                             renderItem={(item, _i, change) => (
                               <FlagRow flag={item} onChange={change} />

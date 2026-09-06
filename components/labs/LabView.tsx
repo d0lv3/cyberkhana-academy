@@ -20,6 +20,7 @@ import { NetworkSimulator } from '../network-sim';
 import { hasSimulation } from '../network-sim/types';
 import {
   checkFlag,
+  flagPlaceholder,
   formatBytes,
   isInsecureLabUrl,
   labFlags,
@@ -233,7 +234,7 @@ const FlagBoard: React.FC<{
                         setDrafts((d) => ({ ...d, [flag.id]: e.target.value }));
                         setWrong((w) => ({ ...w, [flag.id]: false }));
                       }}
-                      placeholder="khana{...}"
+                      placeholder={flagPlaceholder(flag)}
                       aria-label={flag.label}
                       className={`min-w-0 flex-1 rounded-lg border bg-[#0d1117] px-3.5 py-2.5 font-mono text-sm text-[#f3f6ff] transition-colors placeholder:text-[#7c8aa6] focus:outline-none disabled:opacity-50 ${
                         wrong[flag.id]

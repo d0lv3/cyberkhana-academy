@@ -48,6 +48,9 @@ export interface LabFlag {
   hint?: string;
   /** Off by default: most flags are strings where case is noise. */
   caseSensitive?: boolean;
+  /** What the empty box should suggest, when the shape of the answer is not
+   *  hint enough on its own. Optional: see flagPlaceholder(). */
+  placeholder?: string;
 }
 
 /** Where the lab sits in the module's table of contents. */
@@ -147,6 +150,42 @@ export function isInsecureLabUrl(url: string): boolean {
  * rather than implying a grade. Every comparison goes through here, so moving
  * to a server check later is one function, not a search.
  */
+/* ── What the empty box suggests ──
+ *
+ * Not every value a lab asks for is a flag. Plenty are answers to questions:
+ * the source IP, the name of the process, the port it was listening on. An
+ * input that says khana{...} in front of those is not a neutral placeholder,
+ * it is a wrong instruction, and a student who types khana{192.168.1.1} was
+ * told to.
+ *
+ * So the hint is derived from the answer the creator already wrote rather than
+ * asked for separately. A wrapped token is a flag and says so; anything else
+ * shows its own shape in asterisks, which is the same nudge a typed quiz
+ * answer gives. A creator who wants to say something more specific can, and
+ * that is the only case that costs them a field.
+ */
+
+/** A flag proper: some prefix wrapped around a braced body, khana{...} and its
+ *  cousins from other platforms. The prefix is captured, because a lab hosted
+ *  on someone else's range hands back their token, and telling a student to
+ *  type khana{...} when the answer starts HTB{ is the same wrong instruction
+ *  in a smaller size. */
+const WRAPPED_TOKEN = /^([A-Za-z0-9_.-]*)\{.+\}$/;
+
+/** Alphanumerics become asterisks; punctuation and spaces stay, because the
+ *  dots in an address are the part that tells you it is an address. */
+function shapeOf(answer: string): string {
+  return answer.trim().replace(/\s+/g, ' ').replace(/[A-Za-z0-9]/g, '*');
+}
+
+export function flagPlaceholder(flag: LabFlag): string {
+  if (flag.placeholder?.trim()) return flag.placeholder.trim();
+  const answer = flag.answer.trim();
+  if (!answer) return '';
+  const wrapped = WRAPPED_TOKEN.exec(answer);
+  return wrapped ? `${wrapped[1]}{...}` : shapeOf(answer);
+}
+
 export function checkFlag(flag: LabFlag, submitted: string): boolean {
   const expected = flag.answer.trim();
   const given = submitted.trim();
