@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown, { defaultUrlTransform } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
@@ -86,7 +86,43 @@ const lessonSchema = {
     div: [...(defaultSchema.attributes?.div ?? []), ['className', ...MATH_CLASSES]],
     span: [...(defaultSchema.attributes?.span ?? []), ['className', ...MATH_CLASSES]],
   },
+  /* A diagram inserted as SVG travels in the body as a data: image rather than
+     as an uploaded file, because SVG served from our own origin can execute;
+     loaded through <img> it cannot. The default schema allows http and https
+     only, so `data` is added here, and rehypeOnlyDataImages below holds it to
+     data:image/ so the widening cannot be used for anything else. The tag
+     allowlist has no script and no iframe, so there is nothing else on the
+     page for a data: URL to reach. */
+  protocols: {
+    ...defaultSchema.protocols,
+    src: [...(defaultSchema.protocols?.src ?? []), 'data'],
+  },
 };
+
+/* react-markdown blanks any URL whose protocol is not http, https, irc,
+   mailto or xmpp, before a rehype plugin ever sees it, so an embedded diagram
+   has to be let past here as well as through the sanitizer. Only data:image/
+   is let through, and only that: everything else still goes to the default,
+   which is what keeps javascript: out of a link. */
+function lessonUrlTransform(url: string, key: string): string {
+  if (key === 'src' && /^data:image\//i.test(url)) return url;
+  return defaultUrlTransform(url);
+}
+
+/** Drop any data: src that is not an image. The sanitizer only checks the
+ *  scheme, and a picture is the only data URL a lesson has business carrying. */
+function rehypeOnlyDataImages() {
+  return (tree: any) => {
+    const walk = (node: any) => {
+      const src = node.properties?.src;
+      if (typeof src === 'string' && /^data:/i.test(src) && !/^data:image\//i.test(src)) {
+        delete node.properties.src;
+      }
+      if (Array.isArray(node.children)) node.children.forEach(walk);
+    };
+    walk(tree);
+  };
+}
 
 /* ── Code blocks ──
  * Two things the plain <code> could not do.
@@ -283,18 +319,21 @@ const LessonMarkdown: React.FC<LessonMarkdownProps> = ({ content, dir }) => {
   return (
     <div className="lesson-prose" dir={direction} lang={isRtl ? 'ar' : undefined}>
       <ReactMarkdown
+        urlTransform={lessonUrlTransform}
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={
           isRtl
             ? [
                 rehypeRaw,
                 [rehypeSanitize, lessonSchema],
+                rehypeOnlyDataImages,
                 [rehypeKatex, { throwOnError: false, strict: false }],
                 rehypeWrapLatinRuns,
               ]
             : [
                 rehypeRaw,
                 [rehypeSanitize, lessonSchema],
+                rehypeOnlyDataImages,
                 [rehypeKatex, { throwOnError: false, strict: false }],
               ]
         }
@@ -403,6 +442,17 @@ const LessonMarkdown: React.FC<LessonMarkdownProps> = ({ content, dir }) => {
             <summary className="cursor-pointer list-none text-[1.05rem] font-semibold text-[#f3f6ff] hover:text-[#9fef00] transition-colors touch:min-h-tap flex items-center gap-2 select-none">
               {children}
             </summary>
+          ),
+          /* A picture, uploaded or embedded, is a block in the flow: never
+             wider than the column, never taller than a screenful, and on its
+             own line rather than jammed against the paragraph above it. */
+          img: ({ src, alt }) => (
+            <img
+              src={typeof src === 'string' ? src : undefined}
+              alt={alt ?? ''}
+              loading="lazy"
+              className="my-6 block max-h-[70vh] w-auto max-w-full rounded-lg border border-[#263248] bg-[#0e1522]"
+            />
           ),
           hr: () => <hr className="my-8 border-[#263248]" />,
           a: ({ href, children }) => (

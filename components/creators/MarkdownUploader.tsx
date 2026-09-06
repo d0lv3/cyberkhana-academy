@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { Upload, FileText, Edit3, ImagePlus, Loader2, AlertTriangle } from 'lucide-react';
+import { Upload, FileText, Edit3, ImagePlus, Loader2, AlertTriangle, Shapes } from 'lucide-react';
 import { api } from '../../services/api';
 
 interface MarkdownUploaderProps {
@@ -20,36 +20,76 @@ const MarkdownUploader: React.FC<MarkdownUploaderProps> = ({
   const [imageError, setImageError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const svgInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  /** Upload an image to the server and insert markdown at the caret. */
+  /** Drop a markdown snippet in at the caret, or on the end when there is none. */
+  const insertSnippet = useCallback(
+    (snippet: string) => {
+      const textarea = textareaRef.current;
+      if (textarea && mode === 'editor') {
+        const start = textarea.selectionStart ?? value.length;
+        const end = textarea.selectionEnd ?? value.length;
+        const before = value.slice(0, start);
+        const after = value.slice(end);
+        const pad = before && !before.endsWith('\n') ? '\n\n' : '';
+        onChange(`${before}${pad}${snippet}\n${after}`);
+      } else {
+        onChange(`${value}${value && !value.endsWith('\n') ? '\n\n' : ''}${snippet}\n`);
+      }
+    },
+    [mode, onChange, value]
+  );
+
+  /** Upload a raster image to the server and insert markdown at the caret. */
   const handleImageFile = useCallback(
     async (file: File) => {
       setImageError(null);
       setImageUploading(true);
       try {
         const { url } = await api.upload<{ url: string }>('/uploads', 'image', file);
-        const alt = file.name.replace(/\.[^.]+$/, '');
-        const snippet = `![${alt}](${url})`;
-
-        const textarea = textareaRef.current;
-        if (textarea && mode === 'editor') {
-          const start = textarea.selectionStart ?? value.length;
-          const end = textarea.selectionEnd ?? value.length;
-          const before = value.slice(0, start);
-          const after = value.slice(end);
-          const pad = before && !before.endsWith('\n') ? '\n\n' : '';
-          onChange(`${before}${pad}${snippet}\n${after}`);
-        } else {
-          onChange(`${value}${value && !value.endsWith('\n') ? '\n\n' : ''}${snippet}\n`);
-        }
+        insertSnippet(`![${file.name.replace(/\.[^.]+$/, '')}](${url})`);
       } catch (err) {
         setImageError(err instanceof Error ? err.message : 'Image upload failed');
       } finally {
         setImageUploading(false);
       }
     },
-    [mode, onChange, value]
+    [insertSnippet]
+  );
+
+  /* ── SVG ──
+   * Not uploaded. The image endpoint refuses SVG on purpose: a file served as
+   * image/svg+xml from our own origin can carry a script and run it there. So
+   * the markup is read in the browser and embedded as a data: image instead,
+   * which is what cover art already does. An SVG loaded through <img> is drawn
+   * but never executed, whatever is inside it.
+   *
+   * The whole picture then lives in the lesson body, so it is held to a size a
+   * body can carry. Parentheses are percent-encoded on top of the usual
+   * escaping, because one of them would close the markdown link early and
+   * transform(...) and rgb(...) are everywhere in exported SVG.
+   */
+  const handleSvgFile = useCallback(
+    async (file: File) => {
+      setImageError(null);
+      try {
+        const markup = (await file.text()).trim();
+        if (!markup.startsWith('<svg') || !markup.includes('</svg>')) {
+          setImageError('That file does not look like SVG (it must start with <svg> and close).');
+          return;
+        }
+        if (markup.length > 64 * 1024) {
+          setImageError('That SVG is too large (max 64 KB). Simplify it, or export it as a PNG.');
+          return;
+        }
+        const encoded = encodeURIComponent(markup).replace(/\(/g, '%28').replace(/\)/g, '%29');
+        insertSnippet(`![${file.name.replace(/\.[^.]+$/, '')}](data:image/svg+xml,${encoded})`);
+      } catch {
+        setImageError('Could not read that file.');
+      }
+    },
+    [insertSnippet]
   );
 
   const handleFile = useCallback(
@@ -128,7 +168,11 @@ const MarkdownUploader: React.FC<MarkdownUploaderProps> = ({
           </span>
         )}
 
-        {/* Insert image — uploads to the server, inserts ![...](url) */}
+        {/* Two ways to put a picture in a lesson, because the two need
+            different handling end to end: a photo or screenshot is uploaded
+            and linked, while a diagram drawn as SVG is embedded inline and
+            never leaves the browser. The author picks whichever their picture
+            actually is. */}
         <span className="w-px h-4 bg-[#263248] mx-0.5" />
         <button
           type="button"
@@ -152,6 +196,26 @@ const MarkdownUploader: React.FC<MarkdownUploaderProps> = ({
           onChange={(e) => {
             const f = e.target.files?.[0];
             if (f) void handleImageFile(f);
+            e.target.value = '';
+          }}
+        />
+
+        <button
+          type="button"
+          onClick={() => svgInputRef.current?.click()}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-[#8592ad] hover:text-[#9fef00] transition-colors"
+          title="Embed an SVG diagram (max 64 KB). Stays inside the lesson, nothing is uploaded."
+        >
+          <Shapes size={12} /> Insert SVG
+        </button>
+        <input
+          ref={svgInputRef}
+          type="file"
+          accept=".svg,image/svg+xml"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) void handleSvgFile(f);
             e.target.value = '';
           }}
         />

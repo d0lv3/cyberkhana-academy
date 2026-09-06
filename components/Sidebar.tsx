@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
-  BookOpen,
+  GraduationCap,
   Layers,
-  Route,
+  Signpost,
   Trophy,
   User,
-  PenTool,
+  Pencil,
   Users,
   ChevronLeft,
   ChevronRight,
@@ -36,12 +36,12 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, mobileOpen, onMo
 
   const learnItems = [
     { to: '/dashboard', icon: LayoutDashboard, label: t('sidebar.dashboard') },
-    { to: '/fundamentals', icon: BookOpen, label: t('sidebar.fundamentals') },
+    { to: '/fundamentals', icon: GraduationCap, label: t('sidebar.fundamentals') },
     { to: '/modules', icon: Layers, label: t('sidebar.modules') },
-    { to: '/paths', icon: Route, label: t('sidebar.paths') },
+    { to: '/paths', icon: Signpost, label: t('sidebar.paths') },
     { to: '/leaderboard', icon: Trophy, label: t('sidebar.leaderboard') },
     ...(isCreator
-      ? [{ to: '/creators', icon: PenTool, label: lang === 'ar' ? 'استوديو المحتوى' : 'Content Studio' }]
+      ? [{ to: '/creators', icon: Pencil, label: lang === 'ar' ? 'استوديو المحتوى' : 'Content Studio' }]
       : []),
   ];
 
@@ -78,18 +78,20 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, mobileOpen, onMo
               <span className="absolute start-0 w-0.5 h-6 bg-[#00a859] rounded-e" />
             )}
             <Icon
-              /* The chosen tab's glyph fills in. Half opacity rather than
-                 solid: these are stroked outlines, and painting them opaque
-                 collapses the ones built from open paths into blobs (an open
-                 book becomes a lump, a route becomes a smear). At 0.5 every
-                 glyph reads as filled while its own shape survives.
+              /* The chosen tab's glyph fills in, in its own colour: the fill
+                 is currentColor at full strength, so the icon reads as one
+                 solid shape rather than a paler wash sitting inside a brighter
+                 outline.
 
-                 Profile is drawn with User rather than UserCircle for the
-                 related reason: filling a glyph that encloses itself in a
-                 circle produces a disc sitting behind the person, which is a
-                 background rather than emphasis. */
+                 That constrains which glyphs can live here at all. These are
+                 stroked outlines, and filling one built from open paths closes
+                 it into a blob: BookOpen became a lump, Route a smear, PenTool
+                 lost its nib. Fundamentals, Paths and the Studio are drawn with
+                 a cap, a signpost and a pencil instead, shapes that survive
+                 being filled. Profile is User rather than UserCircle for the
+                 same family of reason: filling a glyph that encloses itself in
+                 a circle only produces a disc behind the person. */
               fill={isActive ? 'currentColor' : 'none'}
-              fillOpacity={isActive ? 0.5 : 0}
               onAnimationEnd={() => setNudging(null)}
               className={`flex-shrink-0 transition-colors ${
                 nudging === to ? 'nav-nudge' : ''

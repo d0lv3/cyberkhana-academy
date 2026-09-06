@@ -11,11 +11,11 @@ import { getTrackProgress, type TrackKey } from '../../services/progressService'
  * Cybersecurity 101. Hand-drawn isometric SVG, no chart library. Each cube
  * carries a chunky, extruded 3D emblem seated on its top face.
  *
- * The road zigzags top to bottom: step one at the head of the scene, the goal
- * at its foot, read in the same order as everything else on the page. Stops
- * alternate sides so the trail between them has somewhere to sweep, and so a
- * label stack never has to make room for the island below it. The scene is
- * symmetric about its own centre, so it needs no mirroring in Arabic.
+ * The road snakes top to bottom: across the first row, down, and back across
+ * the second, ending on the goal. Two stops to a row rather than four stacked
+ * ones is what lets the whole journey be seen at once without scrolling, and
+ * it buys back the height to draw the islands half again as large. The scene
+ * is symmetric about its own centre, so it needs no mirroring in Arabic.
  */
 
 interface IslandDef {
@@ -33,13 +33,13 @@ interface IslandDef {
   isGoal?: boolean;
 }
 
-/* The two lanes the stops alternate between, and the scene they live in. The
- * scene is only as wide as it needs to be, so the whole thing renders near 1:1
- * instead of being scaled down to fit a viewport. */
-const LANE_L = 210;
-const LANE_R = 550;
-const SCENE_W = 760;
-const SCENE_H = 1030;
+/* The four cells the stops sit in, and the scene they live in. */
+const COL_L = 240;
+const COL_R = 660;
+const ROW_TOP = 120;
+const ROW_BOTTOM = 500;
+const SCENE_W = 900;
+const SCENE_H = 770;
 
 const ISLANDS: IslandDef[] = [
   {
@@ -49,9 +49,9 @@ const ISLANDS: IslandDef[] = [
     icon: Code,
     color: '#9fef00',
     route: '/fundamentals/programming',
-    cx: LANE_L,
-    cy: 90,
-    scale: 0.68,
+    cx: COL_L,
+    cy: ROW_TOP,
+    scale: 1,
     title: { en: 'Programming', ar: 'البرمجة' },
     meta: { en: 'Python · scripting · logic', ar: 'بايثون · السكربتات · المنطق' },
   },
@@ -62,9 +62,9 @@ const ISLANDS: IslandDef[] = [
     icon: Monitor,
     color: '#f3a43a',
     route: '/fundamentals/operating-systems',
-    cx: LANE_R,
-    cy: 320,
-    scale: 0.68,
+    cx: COL_R,
+    cy: ROW_TOP,
+    scale: 1,
     title: { en: 'Operating Systems', ar: 'أنظمة التشغيل' },
     meta: { en: 'Linux · terminal · hardening', ar: 'لينكس · الطرفية · التقوية' },
   },
@@ -75,9 +75,9 @@ const ISLANDS: IslandDef[] = [
     icon: Wifi,
     color: '#60a5fa',
     route: '/fundamentals/networking',
-    cx: LANE_L,
-    cy: 550,
-    scale: 0.68,
+    cx: COL_R,
+    cy: ROW_BOTTOM,
+    scale: 1,
     title: { en: 'Networking', ar: 'الشبكات' },
     meta: { en: 'TCP/IP · packets · protocols', ar: 'TCP/IP · الحزم · البروتوكولات' },
   },
@@ -88,9 +88,9 @@ const ISLANDS: IslandDef[] = [
     icon: ShieldCheck,
     color: '#00a859',
     route: '/fundamentals/cybersecurity-101',
-    cx: LANE_R,
-    cy: 790,
-    scale: 0.8,
+    cx: COL_L,
+    cy: ROW_BOTTOM,
+    scale: 1.1,
     title: { en: 'Cybersecurity', ar: 'الأمن السيبراني' },
     meta: { en: 'Security+ foundations', ar: 'أساسيات +Security' },
     isGoal: true,
@@ -109,13 +109,25 @@ const D = 52;
  * label stack sitting under the island it left. */
 const TRAILS: { from: string; d: string }[] = ISLANDS.slice(0, -1).map((island, i) => {
   const next = ISLANDS[i + 1];
-  const dir = next.cx > island.cx ? 1 : -1;
-  const x1 = island.cx + dir * (W * island.scale + 10);
-  const y1 = island.cy + H * island.scale;
-  const x2 = next.cx - dir * (W * next.scale + 10);
-  const y2 = next.cy;
-  const mx = (x1 + x2) / 2;
-  return { from: island.key, d: `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}` };
+
+  /* Across a row: leave one cube's edge and arrive at the other's, arcing up
+     over the gap so the line stays clear of the label stacks hanging under
+     both of them. */
+  if (island.cy === next.cy) {
+    const dir = next.cx > island.cx ? 1 : -1;
+    const x1 = island.cx + dir * (W * island.scale + 12);
+    const x2 = next.cx - dir * (W * next.scale + 12);
+    const mx = (x1 + x2) / 2;
+    const lift = island.cy - 30;
+    return { from: island.key, d: `M ${x1} ${island.cy} C ${mx} ${lift}, ${mx} ${lift}, ${x2} ${next.cy}` };
+  }
+
+  /* Down a row: out from under the label stack and into the next emblem. */
+  const y1 = island.cy + 107 * island.scale + 36 + 66;
+  const y2 = next.cy - 80 * next.scale;
+  const my = (y1 + y2) / 2;
+  const bow = island.cx + 46;
+  return { from: island.key, d: `M ${island.cx} ${y1} C ${bow} ${my}, ${bow} ${my}, ${next.cx} ${y2}` };
 });
 
 const cubeFaces = (s: number) => {
@@ -360,20 +372,24 @@ const Island: React.FC<{
         </g>
 
         {/* ── Label stack ── */}
-        <text
-          x={0}
-          y={labelBase}
-          textAnchor="middle"
-          fill={c}
-          fontSize={10.5}
-          fontWeight={700}
-          letterSpacing={2.5}
-          fontFamily="'JetBrains Mono', 'Consolas', monospace"
-        >
-          {island.isGoal
-            ? lang === 'ar' ? '، الهدف، ' : ', THE GOAL, '
-            : lang === 'ar' ? `المرحلة 0${island.step}` : `STEP 0${island.step}`}
-        </text>
+        {/* The goal carries no step line. Its shield, its ring and the way in
+            below already say what it is, and "THE GOAL" over the top of them
+            was the scene explaining its own picture. The slot is still spent
+            so every title in the scene sits on the same line. */}
+        {!island.isGoal && (
+          <text
+            x={0}
+            y={labelBase}
+            textAnchor="middle"
+            fill={c}
+            fontSize={10.5}
+            fontWeight={700}
+            letterSpacing={2.5}
+            fontFamily="'JetBrains Mono', 'Consolas', monospace"
+          >
+            {lang === 'ar' ? `المرحلة 0${island.step}` : `STEP 0${island.step}`}
+          </text>
+        )}
         <text
           x={0}
           y={labelBase + 24}
@@ -467,15 +483,15 @@ const FundamentalsRoadmap: React.FC = () => {
           </p>
         </div>
 
-        {/* A road this long cannot also fit a viewport, and shrinking it to try
-            would take the labels down with it — a 12px meta line is not worth a
-            diagram nobody has to scroll. So the scene renders at its own size
-            instead, capped to its natural width, and the page scrolls the road
-            the way you would walk it. */}
+        {/* The whole road, in one screen. The height cap is what guarantees it:
+            it leaves room for the app header, the page's own padding, the title
+            and the strapline, and preserveAspectRatio scales the scene down to
+            whatever is left. Two stops per row keep that scaling mild enough
+            that the labels survive it. */}
         <svg
           viewBox={`0 0 ${SCENE_W} ${SCENE_H}`}
           preserveAspectRatio="xMidYMid meet"
-          className="relative mx-auto block h-auto w-full max-w-[760px] pb-10"
+          className="relative mx-auto block h-auto w-full max-w-[900px] max-h-[calc(100vh-14rem)]"
         >
           <defs>
             <filter id="island-blur" x="-60%" y="-60%" width="220%" height="220%">
@@ -494,9 +510,9 @@ const FundamentalsRoadmap: React.FC = () => {
           {/* Ambient stars, kept off the centre line so they never read as
               part of the road itself */}
           {[
-            [56, 60, 1.2], [700, 120, 1], [380, 60, 1.4], [660, 300, 1.2], [40, 300, 1],
-            [366, 420, 1.1], [712, 520, 1.3], [64, 560, 1.2], [386, 700, 1], [700, 740, 1.4],
-            [48, 820, 1.1], [360, 900, 1.3], [676, 960, 1.2], [120, 990, 1],
+            [40, 70, 1.2], [866, 96, 1], [452, 44, 1.3], [30, 250, 1], [872, 260, 1.2],
+            [450, 380, 1.4], [60, 430, 1.1], [850, 430, 1.3], [458, 190, 1], [24, 620, 1.2],
+            [878, 620, 1], [446, 620, 1.1], [70, 745, 1.3], [840, 748, 1.2], [456, 736, 1],
           ].map(([x, y, r], i) => (
             <circle key={i} cx={x} cy={y} r={r} fill="#3d4f73" opacity={0.5} />
           ))}
