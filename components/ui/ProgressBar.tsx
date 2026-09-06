@@ -2,8 +2,10 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 
 /* ─── Progress ───
  *
- * One bar, used everywhere progress is shown: a slanted track cut into a strip
- * of triangles that light up as you go. Every part of the shape comes off two
+ * The module bar: a slanted track cut into a strip of triangles that light up
+ * as you go. Used on a module's own page and inside the module viewer, and
+ * deliberately not elsewhere, so that a path, a dashboard tile and a module do
+ * not all shout in the same voice. Every part of the shape comes off two
  * numbers, the height and the triangle base, so a bar reads the same whether it
  * is 90px wide in a sidebar or 400px wide on a module page.
  *
@@ -50,13 +52,8 @@ const BASE_RATIO = 1.35;
 const TRACK = '#101725';
 const CUT = '#0a0f18';
 
-/**
- * The shape of a bar, given a width, a height and a percentage. Exported so
- * the Fundamentals islands can draw the same bar inside their own scene: they
- * are already SVG, and the alternative is a second set of triangles that drift
- * away from these the first time either is touched.
- */
-export function progressShapes(w: number, h: number, pct: number) {
+/** The shape of a bar, given a width, a height and a percentage. */
+function progressShapes(w: number, h: number, pct: number) {
   const base = h * BASE_RATIO;
   const slant = base / 2;
   /* The bottom edge is the short one, and it is what the fill sweeps along. */
@@ -78,9 +75,6 @@ export function progressShapes(w: number, h: number, pct: number) {
     zig: zig.join(' '),
   };
 }
-
-export const PROGRESS_TRACK = TRACK;
-export const PROGRESS_CUT = CUT;
 
 const ProgressBar: React.FC<ProgressBarProps> = ({
   value,

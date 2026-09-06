@@ -7,7 +7,6 @@ import DifficultyBadge from '../ui/DifficultyBadge';
 import { useLang } from '../../contexts/LangContext';
 import { coverImageSrc } from '../../data/fundamentalsData';
 import { getPathProgress, isPathEnrolled } from '../../services/progressService';
-import ProgressBar from '../ui/ProgressBar';
 import type { CreatorPath } from '../../services/creatorTypes';
 
 /**
@@ -74,9 +73,14 @@ const PathCard: React.FC<{ path: CreatorPath; index?: number }> = ({ path: p, in
 
         {enrolled && progress.total > 0 && (
           <div className="mb-2.5" dir="ltr">
-            <ProgressBar value={progress.pct} color="neon" size="sm" showLabel />
+            <div className="h-1.5 overflow-hidden rounded-full bg-[#0a0f18]/80">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-[#00a859] to-[#9fef00] transition-all duration-700"
+                style={{ width: `${progress.pct}%` }}
+              />
+            </div>
             <p className="mt-1 text-[10px] font-medium text-[#9aa5bf]">
-              {progress.completed}/{progress.total}
+              {progress.completed}/{progress.total} · {progress.pct}%
             </p>
           </div>
         )}

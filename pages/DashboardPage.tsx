@@ -14,7 +14,6 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useLang } from '../contexts/LangContext';
 import { getFundamentalsByCategory, modulePath } from '../data/fundamentalsData';
-import ProgressBar from '../components/ui/ProgressBar';
 import { getAllModules } from '../data/modulesData';
 import { getNetworkingLessons } from '../data/networking';
 import { hasSimulation } from '../components/network-sim/types';
@@ -189,8 +188,14 @@ const DashboardPage: React.FC = () => {
             <div className="mt-5 max-w-xs">
               <div className="flex items-center justify-between mb-1.5 text-xs" dir="ltr">
                 <span className="text-[#9aa5bf]">{t('dashboard.overall')}</span>
+                <span className="font-bold text-[#9fef00]">{data.overallPct}%</span>
               </div>
-              <ProgressBar value={data.overallPct} color="neon" size="md" showLabel />
+              <div className="h-2 rounded-full bg-[#0a0f18] overflow-hidden" dir="ltr">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-[#00a859] to-[#9fef00] transition-all duration-700"
+                  style={{ width: `${data.overallPct}%` }}
+                />
+              </div>
               <p className="text-[10px] text-[#8592ad] mt-1" dir="ltr">
                 {data.completedUnits} / {data.totalUnits} {t('dashboard.lessonsLabel')}
               </p>
@@ -297,11 +302,14 @@ const DashboardPage: React.FC = () => {
                     {streak.daysThisWeek}/{streak.weeklyGoal}
                   </span>
                 </div>
-                <ProgressBar
-                  value={Math.min(100, Math.round((streak.daysThisWeek / streak.weeklyGoal) * 100))}
-                  color="green"
-                  size="md"
-                />
+                <div className="h-2 rounded-full bg-[#0a0f18] overflow-hidden" dir="ltr">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#00a859] to-[#9fef00] transition-all duration-700"
+                    style={{
+                      width: `${Math.min(100, Math.round((streak.daysThisWeek / streak.weeklyGoal) * 100))}%`,
+                    }}
+                  />
+                </div>
                 <p className="text-[11px] text-[#8592ad] mt-2">
                   {streak.daysThisWeek >= streak.weeklyGoal
                     ? lang === 'ar'
@@ -403,7 +411,12 @@ const DashboardPage: React.FC = () => {
                       </p>
                       {done > 0 ? (
                         <div className="mt-1.5 flex items-center gap-2" dir="ltr">
-                          <ProgressBar value={pct} color="green" size="sm" className="flex-1" />
+                          <div className="h-1 flex-1 rounded-full bg-[#0a0f18] overflow-hidden">
+                            <div
+                              className="h-full rounded-full transition-all duration-700"
+                              style={{ width: `${pct}%`, backgroundColor: mod.iconColor }}
+                            />
+                          </div>
                           <span className="text-[10px] text-[#7c8aa6] tabular-nums flex-shrink-0">
                             {done}/{mod.totalLessons}
                           </span>

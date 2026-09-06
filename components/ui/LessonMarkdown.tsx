@@ -81,11 +81,6 @@ const MATH_CLASSES = ['math', 'math-display', 'math-inline'];
 
 const lessonSchema = {
   ...defaultSchema,
-  attributes: {
-    ...defaultSchema.attributes,
-    div: [...(defaultSchema.attributes?.div ?? []), ['className', ...MATH_CLASSES]],
-    span: [...(defaultSchema.attributes?.span ?? []), ['className', ...MATH_CLASSES]],
-  },
   /* A diagram inserted as SVG travels in the body as a data: image rather than
      as an uploaded file, because SVG served from our own origin can execute;
      loaded through <img> it cannot. The default schema allows http and https
@@ -97,7 +92,68 @@ const lessonSchema = {
     ...defaultSchema.protocols,
     src: [...(defaultSchema.protocols?.src ?? []), 'data'],
   },
+  /* `style` on any element, so an author who wants one heading a size larger
+     than the rest can write it by hand. What makes that safe is not the tag
+     list but rehypeSafeStyles below, which rebuilds every declaration from an
+     allowlist of presentational properties: nothing that positions an element
+     over the page, and nothing that can fetch. */
+  attributes: {
+    ...defaultSchema.attributes,
+    div: [...(defaultSchema.attributes?.div ?? []), ['className', ...MATH_CLASSES]],
+    span: [...(defaultSchema.attributes?.span ?? []), ['className', ...MATH_CLASSES]],
+    '*': [...(defaultSchema.attributes?.['*'] ?? []), 'style'],
+  },
 };
+
+/* Properties an author may set. Deliberately no position, z-index, transform,
+   inset or float: those are how a styled fragment stops being a fragment and
+   starts covering the page around it. */
+const STYLE_PROPS = new Set([
+  'color', 'background-color', 'background',
+  'font-size', 'font-weight', 'font-style', 'font-family', 'font-variant',
+  'text-align', 'text-decoration', 'text-transform', 'text-indent',
+  'letter-spacing', 'line-height', 'word-break', 'white-space', 'vertical-align',
+  'margin', 'margin-top', 'margin-bottom', 'margin-left', 'margin-right',
+  'padding', 'padding-top', 'padding-bottom', 'padding-left', 'padding-right',
+  'border', 'border-top', 'border-bottom', 'border-left', 'border-right',
+  'border-color', 'border-width', 'border-style', 'border-radius',
+  'opacity', 'width', 'max-width', 'min-width', 'height', 'max-height',
+]);
+
+/** Anything that fetches, escapes the declaration, or smuggles more CSS in. */
+const STYLE_VALUE_BAN = /url\(|expression|javascript:|@import|[<>{}]|\/\*/i;
+
+/**
+ * Rebuild every style attribute from the allowlist above, dropping the rest.
+ *
+ * Rebuilding rather than validating in place is the point: whatever survives
+ * is a string this code wrote, so the renderer downstream (which parses the
+ * attribute into a React style object and throws on malformed CSS) can never
+ * be handed something it cannot read. An element left with nothing loses the
+ * attribute rather than carrying an empty one.
+ */
+function rehypeSafeStyles() {
+  return (tree: any) => {
+    const walk = (node: any) => {
+      const raw = node.properties?.style;
+      if (typeof raw === 'string') {
+        const kept: string[] = [];
+        for (const decl of raw.split(';')) {
+          const at = decl.indexOf(':');
+          if (at < 0) continue;
+          const prop = decl.slice(0, at).trim().toLowerCase();
+          const value = decl.slice(at + 1).trim();
+          if (!value || !STYLE_PROPS.has(prop) || STYLE_VALUE_BAN.test(value)) continue;
+          kept.push(`${prop}: ${value}`);
+        }
+        if (kept.length) node.properties.style = `${kept.join('; ')};`;
+        else delete node.properties.style;
+      }
+      if (Array.isArray(node.children)) node.children.forEach(walk);
+    };
+    walk(tree);
+  };
+}
 
 /* react-markdown blanks any URL whose protocol is not http, https, irc,
    mailto or xmpp, before a rehype plugin ever sees it, so an embedded diagram
@@ -327,6 +383,7 @@ const LessonMarkdown: React.FC<LessonMarkdownProps> = ({ content, dir }) => {
                 rehypeRaw,
                 [rehypeSanitize, lessonSchema],
                 rehypeOnlyDataImages,
+                rehypeSafeStyles,
                 [rehypeKatex, { throwOnError: false, strict: false }],
                 rehypeWrapLatinRuns,
               ]
@@ -334,50 +391,63 @@ const LessonMarkdown: React.FC<LessonMarkdownProps> = ({ content, dir }) => {
                 rehypeRaw,
                 [rehypeSanitize, lessonSchema],
                 rehypeOnlyDataImages,
+                rehypeSafeStyles,
                 [rehypeKatex, { throwOnError: false, strict: false }],
               ]
         }
         components={{
-          h1: ({ children }) => (
+          /* Every override forwards `style`, so a heading an author sized by
+             hand keeps that size. Without it the attribute survives the
+             sanitizer and is then dropped here, which is the more confusing
+             of the two failures: the markup looks right and does nothing. */
+          h1: ({ children, style }) => (
             <h1
-              className="text-[1.75rem] md:text-[2rem] leading-tight font-bold text-[#f3f6ff] mb-6 pb-4 border-b border-[#263248]"
+              style={style}
+              className="text-[2rem] md:text-[2.35rem] leading-tight font-bold text-[#f3f6ff] mb-6 pb-4 border-b border-[#263248]"
             >
               {children}
             </h1>
           ),
-          h2: ({ children }) => (
-            <h2 className="text-2xl font-bold text-[#f3f6ff] mt-10 mb-4">
+          h2: ({ children, style }) => (
+            <h2 style={style} className="text-[1.9rem] leading-snug font-bold text-[#f3f6ff] mt-12 mb-4">
               {children}
             </h2>
           ),
-          h3: ({ children }) => (
-            <h3 className="text-xl font-semibold text-[#f3f6ff] mt-6 mb-3">
+          h3: ({ children, style }) => (
+            <h3 style={style} className="text-[1.45rem] leading-snug font-bold text-[#f3f6ff] mt-8 mb-3">
               {children}
             </h3>
           ),
-          p: ({ children }) => (
-            <p className="text-[#c4cad6] mb-4">
+          h4: ({ children, style }) => (
+            <h4 style={style} className="text-[1.2rem] leading-snug font-bold text-[#e5e9f2] mt-6 mb-2.5">
+              {children}
+            </h4>
+          ),
+          p: ({ children, style }) => (
+            <p style={style} className="text-[#c4cad6] mb-4">
               {children}
             </p>
           ),
-          strong: ({ children }) => (
-            <strong className="font-semibold text-[#f3f6ff]">{children}</strong>
+          strong: ({ children, style }) => (
+            <strong style={style} className="font-semibold text-[#f3f6ff]">{children}</strong>
           ),
-          em: ({ children }) => <em className="text-[#9aa5bf]">{children}</em>,
+          em: ({ children, style }) => <em style={style} className="text-[#9aa5bf]">{children}</em>,
           ul: ({ children }) => <ul className="space-y-2 mb-5 ms-1">{children}</ul>,
           ol: ({ children }) => (
             <ol className="space-y-2 mb-5 ms-1 list-decimal list-inside">{children}</ol>
           ),
-          li: ({ children }) => (
+          li: ({ children, style }) => (
             <li
+              style={style}
               className="text-[#c4cad6] flex items-start gap-2"
             >
               <span className="mt-2.5 h-1.5 w-1.5 rounded-full bg-[#00a859] flex-shrink-0" />
               <span className="min-w-0">{children}</span>
             </li>
           ),
-          blockquote: ({ children }) => (
+          blockquote: ({ children, style }) => (
             <blockquote
+              style={style}
               className="border-s-2 border-[#00a859]/40 bg-[#121a2a] rounded-e-lg px-4 py-3 my-4 text-[#9aa5bf] italic"
             >
               {children}
@@ -455,8 +525,9 @@ const LessonMarkdown: React.FC<LessonMarkdownProps> = ({ content, dir }) => {
             />
           ),
           hr: () => <hr className="my-8 border-[#263248]" />,
-          a: ({ href, children }) => (
+          a: ({ href, children, style }) => (
             <a
+              style={style}
               href={href}
               target="_blank"
               rel="noopener noreferrer"

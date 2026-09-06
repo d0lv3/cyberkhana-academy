@@ -232,7 +232,29 @@ const ModuleViewerPage: React.FC = () => {
     const saved = localStorage.getItem(`academy-progress-${slug}`);
     return saved ? JSON.parse(saved) : [];
   });
-  const [activeLectureId, setActiveLectureId] = useState<string>(allLectures[0]?.lecture.id || '');
+  /* Which stop you were on, remembered across a reload. Refreshing halfway
+     through a module used to drop you back at lesson one, which is the worst
+     possible place to land: the progress ticks were all still there, so it
+     read as lost work rather than a lost scroll position.
+     
+     The stored id is checked against the module as it stands now, because a
+     creator can delete or rename a section between visits; when it no longer
+     resolves the module simply opens at its first stop. Previews are excluded:
+     every draft shares the __preview__ slug, so one draft's position would be
+     restored into the next one. */
+  const lectureKey = `academy-lecture-${slug}`;
+
+  const [activeLectureId, setActiveLectureId] = useState<string>(() => {
+    const first = allLectures[0]?.lecture.id || '';
+    if (isPreview) return first;
+    try {
+      const saved = localStorage.getItem(lectureKey);
+      if (saved && allLectures.some((l) => l.lecture.id === saved)) return saved;
+    } catch {
+      /* private mode, or storage disabled */
+    }
+    return first;
+  });
   const [tocMobileOpen, setTocMobileOpen] = useState(false);
   const [tocCollapsed, setTocCollapsed] = useState<boolean>(() => {
     try { return localStorage.getItem('academy-toc-collapsed') === '1'; } catch { return false; }
@@ -254,6 +276,15 @@ const ModuleViewerPage: React.FC = () => {
       })) ?? [],
     [course]
   );
+
+  useEffect(() => {
+    if (!activeLectureId || isPreview) return;
+    try {
+      localStorage.setItem(lectureKey, activeLectureId);
+    } catch {
+      /* a full quota should not take the lesson down with it */
+    }
+  }, [activeLectureId, lectureKey, isPreview]);
 
   // Remember this as the learner's most recent activity (dashboard "Jump back in").
   useEffect(() => {
