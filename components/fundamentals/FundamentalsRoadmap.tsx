@@ -11,11 +11,19 @@ import { getTrackProgress, type TrackKey } from '../../services/progressService'
  * Cybersecurity 101. Hand-drawn isometric SVG, no chart library. Each cube
  * carries a chunky, extruded 3D emblem seated on its top face.
  *
- * The road snakes top to bottom: across the first row, down, and back across
- * the second, ending on the goal. Two stops to a row rather than four stacked
- * ones is what lets the whole journey be seen at once without scrolling, and
- * it buys back the height to draw the islands half again as large. The scene
- * is symmetric about its own centre, so it needs no mirroring in Arabic.
+ * The road zigzags straight down: one stop to a row, alternating sides, the
+ * goal at the foot. Fitting four of those on one screen is what sets the size
+ * of an island, not the other way round, so the cubes are drawn smaller than
+ * they would be otherwise. The labels are not scaled with them, which is the
+ * trade that keeps a stop readable at that size.
+ *
+ * Alternating sides is what makes the height work at all: two stops in a row
+ * are on opposite sides of the scene, so their label stacks and emblems can
+ * overlap vertically without ever touching. The only pair that has to clear
+ * each other is a stop and the one two below it, on the same side.
+ *
+ * The scene is symmetric about its own centre, so it needs no mirroring in
+ * Arabic.
  */
 
 interface IslandDef {
@@ -33,13 +41,12 @@ interface IslandDef {
   isGoal?: boolean;
 }
 
-/* The four cells the stops sit in, and the scene they live in. */
-const COL_L = 240;
-const COL_R = 660;
-const ROW_TOP = 120;
-const ROW_BOTTOM = 500;
-const SCENE_W = 900;
-const SCENE_H = 770;
+/* The two sides the stops alternate between, and the scene they live in. The
+ * sides are far enough apart that a label stack on one never reaches the other. */
+const SIDE_L = 190;
+const SIDE_R = 530;
+const SCENE_W = 720;
+const SCENE_H = 675;
 
 const ISLANDS: IslandDef[] = [
   {
@@ -49,9 +56,9 @@ const ISLANDS: IslandDef[] = [
     icon: Code,
     color: '#9fef00',
     route: '/fundamentals/programming',
-    cx: COL_L,
-    cy: ROW_TOP,
-    scale: 1,
+    cx: SIDE_L,
+    cy: 68,
+    scale: 0.6,
     title: { en: 'Programming', ar: 'البرمجة' },
     meta: { en: 'Python · scripting · logic', ar: 'بايثون · السكربتات · المنطق' },
   },
@@ -62,9 +69,9 @@ const ISLANDS: IslandDef[] = [
     icon: Monitor,
     color: '#f3a43a',
     route: '/fundamentals/operating-systems',
-    cx: COL_R,
-    cy: ROW_TOP,
-    scale: 1,
+    cx: SIDE_R,
+    cy: 198,
+    scale: 0.6,
     title: { en: 'Operating Systems', ar: 'أنظمة التشغيل' },
     meta: { en: 'Linux · terminal · hardening', ar: 'لينكس · الطرفية · التقوية' },
   },
@@ -75,9 +82,9 @@ const ISLANDS: IslandDef[] = [
     icon: Wifi,
     color: '#60a5fa',
     route: '/fundamentals/networking',
-    cx: COL_R,
-    cy: ROW_BOTTOM,
-    scale: 1,
+    cx: SIDE_L,
+    cy: 328,
+    scale: 0.6,
     title: { en: 'Networking', ar: 'الشبكات' },
     meta: { en: 'TCP/IP · packets · protocols', ar: 'TCP/IP · الحزم · البروتوكولات' },
   },
@@ -88,9 +95,9 @@ const ISLANDS: IslandDef[] = [
     icon: ShieldCheck,
     color: '#00a859',
     route: '/fundamentals/cybersecurity-101',
-    cx: COL_L,
-    cy: ROW_BOTTOM,
-    scale: 1.1,
+    cx: SIDE_R,
+    cy: 462,
+    scale: 0.7,
     title: { en: 'Cybersecurity', ar: 'الأمن السيبراني' },
     meta: { en: 'Security+ foundations', ar: 'أساسيات +Security' },
     isGoal: true,
@@ -109,25 +116,17 @@ const D = 52;
  * label stack sitting under the island it left. */
 const TRAILS: { from: string; d: string }[] = ISLANDS.slice(0, -1).map((island, i) => {
   const next = ISLANDS[i + 1];
-
-  /* Across a row: leave one cube's edge and arrive at the other's, arcing up
-     over the gap so the line stays clear of the label stacks hanging under
-     both of them. */
-  if (island.cy === next.cy) {
-    const dir = next.cx > island.cx ? 1 : -1;
-    const x1 = island.cx + dir * (W * island.scale + 12);
-    const x2 = next.cx - dir * (W * next.scale + 12);
-    const mx = (x1 + x2) / 2;
-    const lift = island.cy - 30;
-    return { from: island.key, d: `M ${x1} ${island.cy} C ${mx} ${lift}, ${mx} ${lift}, ${x2} ${next.cy}` };
-  }
-
-  /* Down a row: out from under the label stack and into the next emblem. */
-  const y1 = island.cy + 107 * island.scale + 36 + 66;
-  const y2 = next.cy - 80 * next.scale;
-  const my = (y1 + y2) / 2;
-  const bow = island.cx + 46;
-  return { from: island.key, d: `M ${island.cx} ${y1} C ${bow} ${my}, ${bow} ${my}, ${next.cx} ${y2}` };
+  /* Out of one cube's trailing edge and into the next one's leading edge, so
+     the line leaves at the height of the cube rather than from under the label
+     hanging beneath it, and crosses the gap between the two sides on its way
+     down. */
+  const dir = next.cx > island.cx ? 1 : -1;
+  const x1 = island.cx + dir * (W * island.scale + 12);
+  const y1 = island.cy + H * island.scale;
+  const x2 = next.cx - dir * (W * next.scale + 12);
+  const y2 = next.cy;
+  const mx = (x1 + x2) / 2;
+  return { from: island.key, d: `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}` };
 });
 
 const cubeFaces = (s: number) => {
@@ -491,7 +490,7 @@ const FundamentalsRoadmap: React.FC = () => {
         <svg
           viewBox={`0 0 ${SCENE_W} ${SCENE_H}`}
           preserveAspectRatio="xMidYMid meet"
-          className="relative mx-auto block h-auto w-full max-w-[900px] max-h-[calc(100vh-14rem)]"
+          className="relative mx-auto block h-auto w-full max-w-[720px] max-h-[calc(100vh-14rem)]"
         >
           <defs>
             <filter id="island-blur" x="-60%" y="-60%" width="220%" height="220%">
@@ -510,9 +509,9 @@ const FundamentalsRoadmap: React.FC = () => {
           {/* Ambient stars, kept off the centre line so they never read as
               part of the road itself */}
           {[
-            [40, 70, 1.2], [866, 96, 1], [452, 44, 1.3], [30, 250, 1], [872, 260, 1.2],
-            [450, 380, 1.4], [60, 430, 1.1], [850, 430, 1.3], [458, 190, 1], [24, 620, 1.2],
-            [878, 620, 1], [446, 620, 1.1], [70, 745, 1.3], [840, 748, 1.2], [456, 736, 1],
+            [34, 52, 1.2], [690, 88, 1], [360, 30, 1.3], [26, 210, 1], [700, 250, 1.2],
+            [364, 176, 1], [44, 380, 1.1], [686, 400, 1.3], [356, 462, 1.4], [22, 540, 1],
+            [696, 560, 1.1], [368, 610, 1], [58, 648, 1.3], [672, 656, 1.2], [352, 300, 1],
           ].map(([x, y, r], i) => (
             <circle key={i} cx={x} cy={y} r={r} fill="#3d4f73" opacity={0.5} />
           ))}

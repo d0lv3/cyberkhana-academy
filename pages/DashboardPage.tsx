@@ -180,7 +180,7 @@ const DashboardPage: React.FC = () => {
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 sm:p-8">
           <div>
             <h1 className="text-2xl sm:text-3xl font-black text-[#f3f6ff]">
-              {t('dashboard.welcome')}, {firstName} 👋
+              {t('dashboard.welcome')}{t('punct.comma')} {firstName} 👋
             </h1>
             <p className="text-[#9aa5bf] mt-2 max-w-md">{t('dashboard.subtitle')}</p>
 

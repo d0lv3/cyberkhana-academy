@@ -77,6 +77,11 @@ const translations: Record<string, Record<Lang, string>> = {
 
   // Dashboard
   'dashboard.welcome': { en: 'Welcome back', ar: 'مرحباً بعودتك' },
+  /* Punctuation that sits between two translated pieces in JSX rather than
+     inside a string, so it never got translated with them. Arabic has its own
+     comma, and a Latin one in the middle of an Arabic sentence reads as a
+     typo, or worse leans the wrong way at a direction boundary. */
+  'punct.comma': { en: ',', ar: '،' },
   'dashboard.overview': { en: 'Your Learning Overview', ar: 'نظرة عامة على تعلمك' },
   'dashboard.modulesCompleted': { en: 'Modules Completed', ar: 'الوحدات المكتملة' },
   'dashboard.learningTime': { en: 'Learning Time', ar: 'وقت التعلم' },

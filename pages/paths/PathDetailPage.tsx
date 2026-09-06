@@ -10,6 +10,27 @@ import PathJourneyMap from '../../components/paths/PathJourneyMap';
 import { getPublishedPathBySlug } from '../../services/creatorDataService';
 import { getPathProgress, isPathEnrolled, enrollInPath } from '../../services/progressService';
 
+/** One number and what it counts, the same tile a module's page uses. */
+const PathStat: React.FC<{
+  icon: React.ElementType;
+  value: React.ReactNode;
+  label: string;
+  accent: string;
+}> = ({ icon: Icon, value, label, accent }) => (
+  <div className="rounded-2xl border border-[#263248] bg-[#121a2a] p-4 transition-colors hover:border-[#354562] sm:p-5">
+    <span
+      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border"
+      style={{ borderColor: `${accent}40`, backgroundColor: `${accent}14`, color: accent }}
+    >
+      <Icon size={19} />
+    </span>
+    <p className="mt-3 text-2xl font-black leading-none text-[#f3f6ff] sm:text-[1.75rem]" dir="ltr">
+      {value}
+    </p>
+    <p className="mt-1.5 text-xs font-medium text-[#8592ad]">{label}</p>
+  </div>
+);
+
 const PathDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
@@ -56,106 +77,146 @@ const PathDetailPage: React.FC = () => {
         <span>{t('sidebar.paths')}</span>
       </button>
 
-      {/* ── Hero ── */}
+      {/* ── Hero ──
+          One card on one background, the way a module's front door is built.
+          The cover used to be a full-bleed band with the title floating on a
+          scrim over it, which made the top half of the page a different
+          surface from the bottom half, and the seam between them was the first
+          thing you saw. It is a picture on the card now, at the size a picture
+          needs to be, and everything sits on the same ground. */}
       <motion.div
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
         className="overflow-hidden rounded-2xl border border-[#263248] bg-[#121a2a]"
       >
-        {/* Cover band */}
-        <div className="relative h-52 md:h-64">
-          {path.coverImage ? (
-            <img
-              src={coverImageSrc(path.coverImage)}
-              alt=""
-              aria-hidden
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-          ) : (
-            <div
-              className="absolute inset-0"
-              style={{ background: `radial-gradient(130% 120% at 12% 0%, ${path.color}33 0%, #0d1424 52%, #0a0f18 100%)` }}
-            >
-              <Route size={230} className="absolute -bottom-10 -right-8 opacity-[0.06]" style={{ color: path.color }} />
-            </div>
-          )}
+        <div className="relative p-6 md:p-8">
+          {/* Accent wash, tinted by the path's own colour */}
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{ background: `radial-gradient(90% 120% at 0% 0%, ${path.color}22 0%, transparent 60%)` }}
+          />
 
-          {/* Readability scrims */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f18] via-[#0a0f18]/40 to-transparent" />
-          <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-black/40 to-transparent" />
-
-          {/* Top: path tag + difficulty */}
-          <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-5">
-            <span
-              className="inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-semibold backdrop-blur-sm"
-              style={{ color: path.color, backgroundColor: `${path.color}1f`, borderColor: `${path.color}55` }}
-            >
-              <Route size={13} /> {t('sidebar.paths')}
-            </span>
-            <DifficultyBadge difficulty={path.difficulty} className="backdrop-blur-sm" />
-          </div>
-
-          {/* Bottom: title + description */}
-          <div className="absolute inset-x-0 bottom-0 p-6">
-            <h1 className="text-2xl font-black text-white sm:text-3xl">{path.title[lang] || path.title.en}</h1>
-            {(path.description[lang] || path.description.en) && (
-              <p className="mt-2 max-w-2xl text-sm text-[#cbd3e1] line-clamp-2">
-                {path.description[lang] || path.description.en}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Info + CTA bar */}
-        <div className="space-y-4 p-5">
-          {enrolled && progress.total > 0 && (
-            <div dir="ltr">
-              <div className="mb-1.5 flex items-center justify-between">
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#00a859]">
-                  <Check size={13} /> {isComplete ? t('paths.completed') : t('paths.enrolled')}
-                </span>
-                <span className="text-xs font-medium text-[#9aa5bf]">
-                  {progress.completed}/{progress.total} · {progress.pct}%
-                </span>
-              </div>
-              <div className="h-2 overflow-hidden rounded-full bg-[#0a0f18]">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-[#00a859] to-[#9fef00] transition-all duration-700"
-                  style={{ width: `${progress.pct}%` }}
-                />
+          <div className="relative flex flex-col gap-6 md:flex-row md:items-start md:gap-8">
+            {/* ── The cover ── */}
+            <div className="w-full max-w-[220px] flex-shrink-0">
+              <div
+                className="relative aspect-square w-full overflow-hidden rounded-xl border"
+                style={{ borderColor: `${path.color}40`, backgroundColor: `${path.color}0f` }}
+              >
+                {path.coverImage ? (
+                  <img
+                    src={coverImageSrc(path.coverImage)}
+                    alt=""
+                    aria-hidden
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                ) : (
+                  <div
+                    className="absolute inset-0"
+                    style={{ background: `radial-gradient(120% 110% at 20% 0%, ${path.color}33 0%, #0d1424 62%)` }}
+                  >
+                    <Route
+                      size={150}
+                      className="absolute -bottom-5 -end-4 opacity-[0.12]"
+                      style={{ color: path.color }}
+                    />
+                  </div>
+                )}
               </div>
             </div>
-          )}
 
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-[#9aa5bf]" dir="ltr">
-              <span className="inline-flex items-center gap-1.5">
-                <ListChecks size={15} className="text-[#8592ad]" /> {progress.total} {t('paths.stepsLabel')}
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <Clock size={15} className="text-[#8592ad]" /> {path.estimatedHours}h
-              </span>
+            {/* ── What you decide with ── */}
+            <div className="flex min-w-0 flex-1 flex-col gap-5">
+              <div className="min-w-0">
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-semibold backdrop-blur-sm"
+                    style={{ color: path.color, backgroundColor: `${path.color}1f`, borderColor: `${path.color}55` }}
+                  >
+                    <Route size={13} /> {t('sidebar.paths')}
+                  </span>
+                  <DifficultyBadge difficulty={path.difficulty} className="backdrop-blur-sm" />
+                </div>
+
+                <h1 className="text-2xl font-black leading-tight text-[#f3f6ff] sm:text-3xl lg:text-4xl">
+                  {path.title[lang] || path.title.en}
+                </h1>
+
+                {(path.description[lang] || path.description.en) && (
+                  <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#9aa5bf]">
+                    {path.description[lang] || path.description.en}
+                  </p>
+                )}
+              </div>
+
+              {/* The way in, and how far in you already are */}
+              <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                {enrolled ? (
+                  firstAvailable >= 0 && (
+                    <button
+                      onClick={goToNext}
+                      className="group inline-flex w-fit items-center justify-center gap-2 rounded-xl border border-[#00a859]/45 bg-[#00a859]/12 px-6 py-3.5 text-sm font-bold text-[#00a859] shadow-lg shadow-[#00a859]/5 backdrop-blur-md transition-all hover:border-[#9fef00]/60 hover:bg-[#00a859]/20 hover:text-[#9fef00]"
+                    >
+                      {isComplete ? t('paths.review') : t('paths.continue')}
+                      <ChevronRight
+                        size={15}
+                        className="rtl-flip transition-transform group-hover:translate-x-0.5"
+                      />
+                    </button>
+                  )
+                ) : (
+                  <button
+                    onClick={handleEnroll}
+                    className="group inline-flex w-fit items-center justify-center gap-2 rounded-xl border border-[#9fef00]/45 bg-[#9fef00]/12 px-6 py-3.5 text-sm font-bold text-[#9fef00] shadow-lg shadow-[#9fef00]/5 backdrop-blur-md transition-all hover:border-[#9fef00]/70 hover:bg-[#9fef00]/20"
+                  >
+                    {t('paths.enroll')}
+                    <ChevronRight
+                      size={15}
+                      className="rtl-flip transition-transform group-hover:translate-x-0.5"
+                    />
+                  </button>
+                )}
+
+                {enrolled && progress.total > 0 && (
+                  <div className="w-full lg:w-[19rem] lg:flex-shrink-0" dir="ltr">
+                    <div className="mb-1.5 flex items-center justify-between gap-3">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#00a859]">
+                        <Check size={13} /> {isComplete ? t('paths.completed') : t('paths.enrolled')}
+                      </span>
+                      <span className="text-xs font-medium text-[#9aa5bf]">
+                        {progress.completed}/{progress.total} · {progress.pct}%
+                      </span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-[#0a0f18]">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-[#00a859] to-[#9fef00] transition-all duration-700"
+                        style={{ width: `${progress.pct}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-
-            {enrolled ? (
-              firstAvailable >= 0 && (
-                <Button
-                  variant={isComplete ? 'outline' : 'primary'}
-                  onClick={goToNext}
-                  rightIcon={<ChevronRight size={16} className="rtl-flip" />}
-                >
-                  {isComplete ? t('paths.review') : t('paths.continue')}
-                </Button>
-              )
-            ) : (
-              <Button variant="neon" onClick={handleEnroll} rightIcon={<ChevronRight size={16} className="rtl-flip" />}>
-                {t('paths.enroll')}
-              </Button>
-            )}
           </div>
         </div>
       </motion.div>
+
+      {/* ── The path at a glance ── */}
+      <div className="grid max-w-lg grid-cols-2 gap-3">
+        <PathStat
+          icon={ListChecks}
+          value={progress.total}
+          label={t('paths.stepsLabel')}
+          accent={path.color}
+        />
+        <PathStat
+          icon={Clock}
+          value={`${path.estimatedHours}${lang === 'ar' ? 'س' : 'h'}`}
+          label={lang === 'ar' ? 'الوقت المقدر' : 'Estimated time'}
+          accent="#60a5fa"
+        />
+      </div>
 
       {/* ── Curriculum timeline ── */}
       <div>

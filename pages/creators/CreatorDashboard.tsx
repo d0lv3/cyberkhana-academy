@@ -226,7 +226,8 @@ const CreatorDashboard: React.FC = () => {
                   {t('studio.contentStudio')}
                 </h1>
                 <p className="text-sm text-[#9aa5bf] mt-0.5">
-                  {t('studio.welcomeBack')}, {creatorName}, {t('studio.welcomeLine')}
+                  {t('studio.welcomeBack')}{t('punct.comma')} {creatorName}{t('punct.comma')}{' '}
+                  {t('studio.welcomeLine')}
                 </p>
               </div>
             </div>
