@@ -208,14 +208,18 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, mobileOpen, onMo
       {/* Desktop sidebar */}
       <aside
         className={`
-          hidden md:flex flex-col flex-shrink-0 h-screen sticky top-0 bg-[#0d1117] border-e border-[#1e293b]
+          hidden md:flex flex-col flex-shrink-0 h-screen sticky top-0 z-20 bg-[#0d1117] border-e border-[#1e293b]
           transition-all duration-300 ease-in-out
           ${collapsed ? 'w-[68px]' : 'w-60'}
         `}
       >
         {sidebarContent}
 
-        {/* Floating collapse/expand toggle — rides the sidebar's inner (content-facing) edge */}
+        {/* Floating collapse/expand toggle — rides the sidebar's inner
+            (content-facing) edge, overhanging the page by half its width. That
+            overhang is why the <aside> carries a z-index: `sticky` makes it a
+            stacking context, so this button's own z-index is spent inside the
+            sidebar, and without one the page's background paints over it. */}
         <button
           onClick={onToggle}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
