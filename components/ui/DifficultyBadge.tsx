@@ -19,7 +19,7 @@ const DifficultyBadge: React.FC<DifficultyBadgeProps> = ({ difficulty, className
   const { t } = useLang();
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold border ${colorMap[difficulty]} ${className}`}
+      className={`inline-flex items-center px-1.5 py-px rounded-md text-[11px] font-semibold border ${colorMap[difficulty]} ${className}`}
     >
       {t(`difficulty.${difficulty}`)}
     </span>
