@@ -51,7 +51,7 @@ const ProgrammingLessonPage: React.FC = () => {
     conceptSlug: string;
   }>();
   const navigate = useNavigate();
-  const { lang } = useLang();
+  const { lang, t } = useLang();
 
   const language = getLanguage(langSlug || '');
   const mod = getModule(langSlug || '', moduleSlug || '');
@@ -142,12 +142,12 @@ const ProgrammingLessonPage: React.FC = () => {
     return (
       <div className="fixed inset-0 z-40 flex items-center justify-center bg-[#0d1117]">
         <div className="text-center">
-          <h2 className="text-xl font-bold text-[#f3f6ff] mb-4">Lesson not found</h2>
+          <h2 className="text-xl font-bold text-[#f3f6ff] mb-4">{t('lesson.notFound')}</h2>
           <Button
             variant="outline"
             onClick={() => navigate('/fundamentals/programming')}
           >
-            Back to Programming
+            {t('lesson.backToProgramming')}
           </Button>
         </div>
       </div>
@@ -189,11 +189,11 @@ const ProgrammingLessonPage: React.FC = () => {
           {/* Type badge */}
           {isChallenge ? (
             <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-[#f3a43a]/10 border border-[#f3a43a]/20 text-[#f3a43a]">
-              <Trophy size={10} /> Challenge
+              <Trophy size={10} /> {t('lesson.challenge')}
             </span>
           ) : (
             <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-[#1a2332] border border-[#263248] text-[#9aa5bf]">
-              <BookOpen size={10} /> Lesson
+              <BookOpen size={10} /> {t('lesson.lesson')}
             </span>
           )}
         </div>

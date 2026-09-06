@@ -31,7 +31,7 @@ const LanguageCard: React.FC<{ language: ProgrammingLanguage; index?: number }> 
   language,
   index = 0,
 }) => {
-  const { lang } = useLang();
+  const { lang, t } = useLang();
   const navigate = useNavigate();
 
   const moduleCount = language.modules.length;
@@ -106,9 +106,9 @@ const LanguageCard: React.FC<{ language: ProgrammingLanguage; index?: number }> 
         {language.available && moduleCount > 0 ? (
           <div className="flex flex-wrap items-center gap-3 text-[11px] font-medium text-[#aab3c7]" dir="ltr">
             <span className="inline-flex items-center gap-1">
-              <Code size={11} /> {moduleCount} {moduleCount === 1 ? 'module' : 'modules'}
+              <Code size={11} /> {moduleCount} {t(moduleCount === 1 ? 'card.module' : 'card.modules')}
             </span>
-            <span>{conceptCount} {conceptCount === 1 ? 'lesson' : 'lessons'}</span>
+            <span>{conceptCount} {t(conceptCount === 1 ? 'card.lesson' : 'card.lessons')}</span>
           </div>
         ) : (
           <p className="line-clamp-2 text-[11px] leading-snug text-[#8794ad]">

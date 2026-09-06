@@ -29,7 +29,7 @@ interface ModuleCardProps {
  * when absent it falls back to an accent-tinted gradient.
  */
 const ModuleCard: React.FC<ModuleCardProps> = ({ module: mod, index = 0 }) => {
-  const { lang } = useLang();
+  const { lang, t } = useLang();
   const navigate = useNavigate();
   const ContentIcon = contentTypeIcons[mod.contentType];
   const domain = MODULE_DOMAIN_META[moduleDomain(mod)];
@@ -110,10 +110,10 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ module: mod, index = 0 }) => {
             </span>
           )}
           <span className="inline-flex items-center gap-1">
-            <Clock size={11} /> {mod.estimatedHours}h
+            <Clock size={11} /> {mod.estimatedHours}{t('card.hoursShort')}
           </span>
           <span className="inline-flex items-center gap-1">
-            <Layers size={11} /> {mod.totalModules} {mod.totalModules === 1 ? 'section' : 'sections'}
+            <Layers size={11} /> {mod.totalModules} {t(mod.totalModules === 1 ? 'card.section' : 'card.sections')}
           </span>
         </div>
       </div>

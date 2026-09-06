@@ -12,7 +12,7 @@ import { getLanguage } from '../../data/programming';
 const ProgrammingLanguagePage: React.FC = () => {
   const { langSlug } = useParams<{ langSlug: string }>();
   const navigate = useNavigate();
-  const { lang } = useLang();
+  const { lang, t } = useLang();
 
   const language = getLanguage(langSlug || '');
 
@@ -106,11 +106,11 @@ const ProgrammingLanguagePage: React.FC = () => {
                   </p>
                   <div className="flex items-center gap-3 mt-2">
                     <span className="flex items-center gap-1 text-xs text-[#8592ad]">
-                      <BookOpen size={12} /> {lessonCount} {lessonCount === 1 ? 'lesson' : 'lessons'}
+                      <BookOpen size={12} /> {lessonCount} {t(lessonCount === 1 ? 'card.lesson' : 'card.lessons')}
                     </span>
                     {challengeCount > 0 && (
                       <span className="flex items-center gap-1 text-xs text-[#f3a43a]">
-                        <Trophy size={12} /> {challengeCount} {challengeCount === 1 ? 'challenge' : 'challenges'}
+                        <Trophy size={12} /> {challengeCount} {t(challengeCount === 1 ? 'card.challenge' : 'card.challenges')}
                       </span>
                     )}
                     {mod.videoId && (

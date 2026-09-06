@@ -16,6 +16,7 @@ import ResizeHandle from '../ui/ResizeHandle';
 import type { ExecutionResult } from './PythonExecutor';
 import { runCode, isRunnerReady, type RunnerLanguage } from './runners';
 import type { TestCase } from '../../data/programming/types';
+import { useLang } from '../../contexts/LangContext';
 
 interface CodingEnvironmentProps {
   starterCode: string;
@@ -108,6 +109,7 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
   solution,
   onPass,
 }) => {
+  const { t, isArabic } = useLang();
   const [code, setCode] = useState(starterCode);
   const [stdin, setStdin] = useState(sampleInput ?? '');
   const [output, setOutput] = useState('');
@@ -239,9 +241,9 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
           <button
             onClick={handleReset}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[11px] font-medium text-[#7c8aa6] hover:text-[#8390ac] hover:bg-[#0d1420] transition-colors"
-            title="Reset to starter code"
+            title={t('lab.resetTitle')}
           >
-            <RotateCcw size={12} /> Reset
+            <RotateCcw size={12} /> {t('lab.reset')}
           </button>
 
           {isChallenge ? (
@@ -251,7 +253,7 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
                 disabled={isRunning}
                 className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[11px] font-medium text-[#8390ac] bg-[#0d1420] border border-[#1e2a3d] hover:border-[#2a3a52] transition-colors disabled:opacity-40"
               >
-                <Play size={12} /> Run
+                <Play size={12} /> {t('lab.run')}
               </button>
               <button
                 onClick={handleSubmit}
@@ -259,7 +261,7 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded text-[11px] font-bold text-[#0d1117] bg-[#00a859] hover:bg-[#00934e] transition-colors disabled:opacity-40"
               >
                 {isRunning ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
-                Submit
+                {t('lab.submit')}
               </button>
             </>
           ) : (
@@ -269,7 +271,7 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
               className="flex items-center gap-1.5 px-3 py-1.5 rounded text-[11px] font-bold text-[#0d1117] bg-[#00a859] hover:bg-[#00934e] transition-colors disabled:opacity-40"
             >
               {isRunning ? <Loader2 size={12} className="animate-spin" /> : <Play size={12} />}
-              {isRunning ? (isLoading ? LOADING_LABEL[language] ?? 'Loading...' : 'Running...') : 'Run'}
+              {isRunning ? (isLoading ? LOADING_LABEL[language] ?? t('common.loading') : t('lab.running')) : t('lab.run')}
             </button>
           )}
         </div>
@@ -288,7 +290,7 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
       {showStdin && (
         <>
           <ResizeHandle
-            label="Input panel"
+            label={t('lab.inputPanel')}
             onResize={resizer(setStdinHeight)}
             onReset={() => setStdinHeight(DEFAULTS.stdin)}
           />
@@ -298,8 +300,8 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
               className="flex items-center gap-2 px-3 py-2 text-[11px] font-medium text-[#8390ac]"
             >
               <Keyboard size={12} className="text-[#7c8aa6]" />
-              Input
-              <span className="text-[#7c8aa6]">, one line per input() call</span>
+              {t('lab.input')}
+              <span className="text-[#7c8aa6]">{t('lab.inputHint')}</span>
             </label>
             <textarea
               id="stdin-box"
@@ -308,7 +310,7 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
               spellCheck={false}
               dir="ltr"
               style={{ height: stdinHeight }}
-              placeholder="Type the lines your program should read..."
+              placeholder={t('lab.inputPlaceholder')}
               className="w-full resize-none bg-[#080c14] px-3 py-2 font-mono text-xs text-[#d2d7e3] placeholder:text-[#7c8aa6] focus:outline-none custom-scrollbar"
             />
           </div>
@@ -319,7 +321,7 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
       {testResults && (
         <>
           <ResizeHandle
-            label="Test results panel"
+            label={t('lab.testsPanel')}
             onResize={resizer(setTestsHeight)}
             onReset={() => setTestsHeight(DEFAULTS.tests)}
           />
@@ -329,13 +331,13 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
                 {allPassed ? (
                   <>
                     <CheckCircle2 size={13} className="text-[#00a859]" />
-                    <span className="text-[11px] font-bold text-[#00a859]">All tests passed</span>
+                    <span className="text-[11px] font-bold text-[#00a859]">{t('lab.allTestsPassed')}</span>
                   </>
                 ) : (
                   <>
                     <XCircle size={13} className="text-[#ef4444]" />
                     <span className="text-[11px] font-bold text-[#ef4444]">
-                      {testResults.filter((t) => t.passed).length}/{testResults.length} tests passed
+                      {testResults.filter((r) => r.passed).length}/{testResults.length} {t('lab.testsPassed')}
                     </span>
                   </>
                 )}
@@ -359,10 +361,10 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
                     {!tr.passed && (
                       <div className="mt-1.5 space-y-0.5 text-[10px] font-mono">
                         <p className="text-[#7c8aa6]">
-                          Expected: <span className="text-[#00a859]">{tr.expected || '(empty)'}</span>
+                          {t('lab.expected')}: <span className="text-[#00a859]">{tr.expected || t('lab.emptyValue')}</span>
                         </p>
                         <p className="text-[#7c8aa6]">
-                          Got: <span className="text-[#ef4444]">{tr.actual || '(empty)'}</span>
+                          {t('lab.got')}: <span className="text-[#ef4444]">{tr.actual || t('lab.emptyValue')}</span>
                         </p>
                       </div>
                     )}
@@ -376,7 +378,7 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
 
       {/* ── Output Panel ── */}
       <ResizeHandle
-        label="Output panel"
+        label={t('lab.outputPanel')}
         onResize={resizer(setOutputHeight)}
         onReset={() => setOutputHeight(DEFAULTS.output)}
       />
@@ -396,7 +398,7 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[11px] font-medium text-[#f3a43a] bg-[#1a1608] border border-[#3d2e0a] hover:bg-[#231c0a] transition-colors"
             >
               <Lightbulb size={11} />
-              Hint {revealedHints + 1}/{hints.length}
+              {t('lab.hint')} {revealedHints + 1}/{hints.length}
             </button>
           )}
           {solution && (
@@ -405,7 +407,7 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[11px] font-medium text-[#8592ad] bg-[#0d1420] border border-[#1e2a3d] hover:border-[#2a3a52] transition-colors"
             >
               <Eye size={11} />
-              {showSolution ? 'Hide Solution' : 'Show Solution'}
+              {showSolution ? t('lab.hideSolution') : t('lab.showSolution')}
             </button>
           )}
         </div>
@@ -425,7 +427,7 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
       {showSolution && solution && (
         <div className="mt-2 rounded-lg border border-[#1e2a3d] overflow-hidden flex-shrink-0">
           <div className="px-3 py-1.5 bg-[#0b1019] border-b border-[#1e2a3d]">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#7c8aa6]">Solution</span>
+            <span className={`text-[10px] font-bold text-[#7c8aa6] ${isArabic ? '' : 'uppercase tracking-wider'}`}>{t('lab.solution')}</span>
           </div>
           <div className="pointer-events-none opacity-85">
             <CodeEditor value={solution} onChange={() => {}} language={language} readOnly />

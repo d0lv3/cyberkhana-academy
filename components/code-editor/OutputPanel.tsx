@@ -1,5 +1,6 @@
 import React from 'react';
 import { ChevronRight, AlertTriangle, Clock, Trash2 } from 'lucide-react';
+import { useLang } from '../../contexts/LangContext';
 
 interface OutputPanelProps {
   output: string;
@@ -16,6 +17,7 @@ const OutputPanel: React.FC<OutputPanelProps> = ({
   isRunning,
   onClear,
 }) => {
+  const { t, isArabic } = useLang();
   const hasContent = output || error;
 
   return (
@@ -24,8 +26,10 @@ const OutputPanel: React.FC<OutputPanelProps> = ({
       <div className="flex items-center justify-between px-3 py-1.5 border-t border-[#151d2e] bg-[#0b1019]">
         <div className="flex items-center gap-2">
           <ChevronRight size={11} className="text-[#2d3748]" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-[#2d3748]">
-            Output
+          <span
+            className={`text-[10px] font-bold text-[#2d3748] ${isArabic ? '' : 'uppercase tracking-widest'}`}
+          >
+            {t('lab.output')}
           </span>
           {durationMs !== undefined && !isRunning && hasContent && (
             <span className="flex items-center gap-1 text-[9px] text-[#2d3748] font-mono">
@@ -37,7 +41,7 @@ const OutputPanel: React.FC<OutputPanelProps> = ({
           <button
             onClick={onClear}
             className="text-[#2d3748] hover:text-[#7c8aa6] transition-colors p-0.5"
-            title="Clear"
+            title={t('lab.clear')}
           >
             <Trash2 size={11} />
           </button>
@@ -49,13 +53,13 @@ const OutputPanel: React.FC<OutputPanelProps> = ({
         {isRunning && (
           <div className="flex items-center gap-2 text-[#7c8aa6]">
             <div className="w-2.5 h-2.5 border-[1.5px] border-[#00a859] border-t-transparent rounded-full animate-spin" />
-            <span className="text-[11px]">Running...</span>
+            <span className="text-[11px]">{t('lab.running')}</span>
           </div>
         )}
 
         {!isRunning && !hasContent && (
           <p className="text-[#2d3748] text-[11px]">
-            Run your code to see output here.
+            {t('lab.outputEmpty')}
           </p>
         )}
 
@@ -67,8 +71,10 @@ const OutputPanel: React.FC<OutputPanelProps> = ({
           <div className={output ? 'mt-2' : ''}>
             <div className="flex items-center gap-1.5 mb-1">
               <AlertTriangle size={11} className="text-[#ef4444]" />
-              <span className="text-[9px] font-bold uppercase tracking-widest text-[#ef4444]">
-                Error
+              <span
+                className={`text-[9px] font-bold text-[#ef4444] ${isArabic ? '' : 'uppercase tracking-widest'}`}
+              >
+                {t('lab.error')}
               </span>
             </div>
             <pre className="text-[#ef4444]/80 whitespace-pre-wrap break-words text-[12px]">

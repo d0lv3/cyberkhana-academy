@@ -2,6 +2,7 @@ import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } f
 import { Monitor } from 'lucide-react';
 import CourseTerminal, { type CourseTerminalHandle } from './CourseTerminal';
 import { createNet, randomLanIp, type CyberNet } from '../../services/cyberNet';
+import { useLang } from '../../contexts/LangContext';
 
 export interface TerminalSplitHandle {
   /** Reset every terminal currently shown. */
@@ -16,15 +17,18 @@ interface TerminalSplitProps {
 }
 
 /** A thin label above a split pane showing that box's LAN IP for the nc demo. */
-const PaneLabel: React.FC<{ name: string; ip: string }> = ({ name, ip }) => (
+const PaneLabel: React.FC<{ name: string; ip: string }> = ({ name, ip }) => {
+  const { t } = useLang();
+  return (
   <div className="flex flex-shrink-0 items-center gap-2 border-b border-[#1c2534] bg-[#0d1117] px-3 py-1 text-[11px] text-[#8592ad]" dir="ltr">
     <Monitor size={12} className="text-[#00c766]" />
     <span className="font-semibold text-[#9aa5bf]">{name}</span>
     <span className="text-[#4b5a72]">·</span>
     <span className="font-mono text-[#00c766]">{ip}</span>
-    <span className="text-[#4b5a72]">, use this IP to connect</span>
-  </div>
-);
+    <span className="text-[#4b5a72]" dir="auto">{t('terminal.useThisIp')}</span>
+    </div>
+  );
+};
 
 /**
  * Renders a single terminal, or — when `split` — two terminals stacked top and
@@ -32,6 +36,7 @@ const PaneLabel: React.FC<{ name: string; ip: string }> = ({ name, ip }) => (
  * the nc reverse-shell demo between them without opening a second tab.
  */
 const TerminalSplit = forwardRef<TerminalSplitHandle, TerminalSplitProps>(({ user, split, onExit }, ref) => {
+  const { t } = useLang();
   const singleRef = useRef<CourseTerminalHandle>(null);
   const aRef = useRef<CourseTerminalHandle>(null);
   const bRef = useRef<CourseTerminalHandle>(null);
@@ -56,14 +61,14 @@ const TerminalSplit = forwardRef<TerminalSplitHandle, TerminalSplitProps>(({ use
     return (
       <div className="flex h-full flex-col">
         <div className="flex min-h-0 flex-1 flex-col">
-          <PaneLabel name="Machine A" ip={nets.a.localIp} />
+          <PaneLabel name={`${t('terminal.machine')} A`} ip={nets.a.localIp} />
           <div className="min-h-0 flex-1">
             <CourseTerminal ref={aRef} user={user} net={nets.a} instanceId="split-a" />
           </div>
         </div>
         <div className="h-[3px] flex-shrink-0 bg-[#00a859]/25" />
         <div className="flex min-h-0 flex-1 flex-col">
-          <PaneLabel name="Machine B" ip={nets.b.localIp} />
+          <PaneLabel name={`${t('terminal.machine')} B`} ip={nets.b.localIp} />
           <div className="min-h-0 flex-1">
             <CourseTerminal ref={bRef} user={user} net={nets.b} instanceId="split-b" />
           </div>

@@ -463,6 +463,14 @@
   font-family: var(--font-ar-term);
   font-size: 0.92em;
   font-weight: inherit;
+  /* Isolate the run so trailing neutrals stay with it: without this, the ()
+     of print() are neutral characters that take the paragraph's RTL direction
+     and jump to the other side, rendering as ()print. Consecutive Latin words
+     are captured as ONE run, so isolating cannot reorder an English phrase. */
+  unicode-bidi: isolate;
+  /* isolate alone keeps the inherited RTL base, which still throws the
+     trailing neutrals leftward; a .lat run is Latin by construction. */
+  direction: ltr;
 }
 
 /* An English lesson opened while the UI is in Arabic reads in the Latin face. */

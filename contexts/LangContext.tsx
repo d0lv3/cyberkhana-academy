@@ -217,6 +217,58 @@ const translations: Record<string, Record<Lang, string>> = {
   'studio.statusPublishedDesc': { en: 'Live for all students', ar: 'متاح لجميع الطلاب' },
   'studio.justNow': { en: 'just now', ar: 'الآن' },
 
+  // Lab / code editor
+  'lab.reset': { en: 'Reset', ar: 'إعادة تعيين' },
+  'lab.resetTitle': { en: 'Reset to starter code', ar: 'استعادة الكود الأصلي' },
+  'lab.run': { en: 'Run', ar: 'تشغيل' },
+  'lab.running': { en: 'Running...', ar: 'جارٍ التنفيذ...' },
+  'lab.submit': { en: 'Submit', ar: 'تسليم' },
+  'lab.input': { en: 'Input', ar: 'الإدخال' },
+  'lab.inputHint': { en: ', one line per input() call', ar: '، سطر لكل استدعاء ()input' },
+  'lab.inputPlaceholder': { en: 'Type the lines your program should read...', ar: 'اكتب الأسطر التي سيقرأها برنامجك...' },
+  'lab.allTestsPassed': { en: 'All tests passed', ar: 'نجحت جميع الاختبارات' },
+  'lab.testsPassed': { en: 'tests passed', ar: 'اختبارات ناجحة' },
+  'lab.expected': { en: 'Expected', ar: 'المتوقع' },
+  'lab.got': { en: 'Got', ar: 'الناتج' },
+  'lab.emptyValue': { en: '(empty)', ar: '(فارغ)' },
+  'lab.hint': { en: 'Hint', ar: 'تلميح' },
+  'lab.showSolution': { en: 'Show Solution', ar: 'إظهار الحل' },
+  'lab.hideSolution': { en: 'Hide Solution', ar: 'إخفاء الحل' },
+  'lab.solution': { en: 'Solution', ar: 'الحل' },
+  'lab.output': { en: 'Output', ar: 'المخرجات' },
+  'lab.outputEmpty': { en: 'Run your code to see output here.', ar: 'شغّل الكود لعرض المخرجات هنا.' },
+  'lab.error': { en: 'Error', ar: 'خطأ' },
+  'lab.clear': { en: 'Clear', ar: 'مسح' },
+  'lab.inputPanel': { en: 'Input panel', ar: 'لوحة الإدخال' },
+  'lab.testsPanel': { en: 'Test results panel', ar: 'لوحة نتائج الاختبارات' },
+  'lab.outputPanel': { en: 'Output panel', ar: 'لوحة المخرجات' },
+
+  // Difficulty levels
+  'difficulty.Beginner': { en: 'Beginner', ar: 'مبتدئ' },
+  'difficulty.Easy': { en: 'Easy', ar: 'سهل' },
+  'difficulty.Medium': { en: 'Medium', ar: 'متوسط' },
+  'difficulty.Hard': { en: 'Hard', ar: 'صعب' },
+  'difficulty.Expert': { en: 'Expert', ar: 'خبير' },
+
+  // Card meta badges
+  'card.lesson': { en: 'lesson', ar: 'درس' },
+  'card.lessons': { en: 'lessons', ar: 'دروس' },
+  'card.challenge': { en: 'challenge', ar: 'تحدي' },
+  'card.challenges': { en: 'challenges', ar: 'تحديات' },
+  'card.module': { en: 'module', ar: 'وحدة' },
+  'card.modules': { en: 'modules', ar: 'وحدات' },
+  'card.section': { en: 'section', ar: 'قسم' },
+  'card.sections': { en: 'sections', ar: 'أقسام' },
+  'card.hoursShort': { en: 'h', ar: 'س' },
+
+  // Lesson viewer + practice terminal
+  'lesson.lesson': { en: 'Lesson', ar: 'درس' },
+  'lesson.challenge': { en: 'Challenge', ar: 'تحدي' },
+  'lesson.backToProgramming': { en: 'Back to Programming', ar: 'العودة إلى البرمجة' },
+  'lesson.notFound': { en: 'Lesson not found', ar: 'الدرس غير موجود' },
+  'terminal.machine': { en: 'Machine', ar: 'الجهاز' },
+  'terminal.useThisIp': { en: ', use this IP to connect', ar: 'استخدم هذا العنوان للاتصال' },
+
   // Common
   'common.loading': { en: 'Loading...', ar: 'جاري التحميل...' },
   'common.comingSoon': { en: 'Coming Soon', ar: 'قريباً' },

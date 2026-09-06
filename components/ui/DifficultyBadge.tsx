@@ -1,5 +1,6 @@
 import React from 'react';
 import { Difficulty } from '../../types';
+import { useLang } from '../../contexts/LangContext';
 
 interface DifficultyBadgeProps {
   difficulty: Difficulty;
@@ -15,11 +16,12 @@ const colorMap: Record<Difficulty, string> = {
 };
 
 const DifficultyBadge: React.FC<DifficultyBadgeProps> = ({ difficulty, className = '' }) => {
+  const { t } = useLang();
   return (
     <span
       className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold border ${colorMap[difficulty]} ${className}`}
     >
-      {difficulty}
+      {t(`difficulty.${difficulty}`)}
     </span>
   );
 };
