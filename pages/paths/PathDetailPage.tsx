@@ -92,10 +92,14 @@ const PathDetailPage: React.FC = () => {
         className="overflow-hidden rounded-2xl border border-[#263248]/70 bg-[#121a2a]/45 backdrop-blur-md"
       >
         <div className="relative p-6 md:p-8">
-          {/* Accent wash, tinted by the path's own colour */}
+          {/* Accent wash. Brand green rather than the path's own colour: the
+              glass sits on a green sky, and a card lit from the corner in some
+              other hue reads as a second light source in the same room. The
+              path's colour still marks its own things — the badge, the stat
+              tiles, its stops on the road. */}
           <div
             className="pointer-events-none absolute inset-0"
-            style={{ background: `radial-gradient(80% 130% at 0% 0%, ${path.color}1f 0%, transparent 60%)` }}
+            style={{ background: 'radial-gradient(80% 130% at 0% 0%, rgba(0,168,89,0.13) 0%, transparent 60%)' }}
           />
 
           <div className="relative flex flex-col gap-5">
