@@ -30,11 +30,24 @@ const Section: React.FC<{ s: LegalSection; index: number }> = ({ s, index }) => 
       {s.emphasis && (
         <AlertTriangle size={17} className="mt-1 shrink-0 text-[#f3a43a]" aria-hidden="true" />
       )}
-      <span>
-        <span className="text-[#00a859] font-mono text-sm me-2">
+      {/* The number and the heading are flex siblings so their spacing comes
+          from `gap` rather than a margin on the number.
+
+          The number is `font-mono`, and the app forces
+          `direction: ltr; unicode-bidi: isolate` on monospace inside [dir=rtl]
+          so that code never mirrors. That made the old `me-2`
+          (margin-inline-end) resolve against the number's own LTR direction —
+          i.e. to margin-right — which in an RTL line faces the outer edge, not
+          the Arabic text. The result was no visible gap at all. `gap` belongs
+          to the container, so the child's direction cannot misplace it.
+
+          Wider in Arabic: a Latin numeral set tight against Arabic script
+          reads as part of the first word. */}
+      <span className="flex items-baseline gap-2 rtl:gap-4">
+        <span className="text-[#00a859] font-mono text-sm shrink-0">
           {String(index + 1).padStart(2, '0')}
         </span>
-        {s.h}
+        <span>{s.h}</span>
       </span>
     </h2>
 
