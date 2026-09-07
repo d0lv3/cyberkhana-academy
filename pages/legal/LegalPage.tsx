@@ -8,23 +8,15 @@ import { displayStyle } from '../../components/ui/displayFont';
 import { TERMS } from '../../data/termsContent';
 import { PRIVACY } from '../../data/privacyContent';
 import { CREATOR_AGREEMENT } from '../../data/creatorAgreementContent';
-import type { LegalDoc, LegalSection } from '../../data/legalTypes';
+import type { BilingualDoc, LegalSection } from '../../data/legalTypes';
 
 export type LegalKind = 'privacy' | 'terms' | 'creator-agreement';
 
-const DOCS: Record<LegalKind, LegalDoc> = {
+const DOCS: Record<LegalKind, BilingualDoc> = {
   privacy: PRIVACY,
   terms: TERMS,
   'creator-agreement': CREATOR_AGREEMENT,
 };
-
-/* The Arabic translations are being prepared. Until they land, an Arabic reader
-   gets the English document plus this notice, rather than the previous, much
-   thinner Arabic text — which would now say something materially different from
-   the English that governs. Saying "not translated yet" is honest; leaving two
-   versions that disagree is not. */
-const AR_PENDING =
-  'هذه الوثيقة متاحة حاليًا باللغة الإنجليزية فقط. الترجمة العربية قيد الإعداد. النسخة الإنجليزية هي النسخة المُلزِمة.';
 
 const Section: React.FC<{ s: LegalSection; index: number }> = ({ s, index }) => (
   <section
@@ -78,7 +70,10 @@ const Section: React.FC<{ s: LegalSection; index: number }> = ({ s, index }) => 
 
 const LegalPage: React.FC<{ kind: LegalKind }> = ({ kind }) => {
   const { lang, setLang, isArabic } = useLang();
-  const doc = DOCS[kind];
+  /* Both languages are now written. The English still governs — each document
+     says so in its own Language section — but an Arabic reader gets the Arabic
+     text rather than the English plus an apology. */
+  const doc = DOCS[kind][lang];
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -103,34 +98,26 @@ const LegalPage: React.FC<{ kind: LegalKind }> = ({ kind }) => {
       </header>
 
       <main className="flex-1 px-6 py-14 md:py-20">
-        {/* The document itself always renders LTR English, even while the rest
-            of the app is in Arabic, so the governing text is never mirrored. */}
-        <article className="max-w-3xl mx-auto" dir="ltr">
+        <article className="max-w-3xl mx-auto" dir={isArabic ? 'rtl' : 'ltr'}>
           <Link
             to="/"
             className="inline-flex items-center gap-1.5 touch:min-h-tap text-sm text-[#8592ad] hover:text-[#9fef00] transition-colors mb-6 sm:mb-8"
           >
-            <ArrowLeft size={15} />
+            <ArrowLeft size={15} className="rtl:rotate-180" />
             {lang === 'ar' ? 'العودة إلى الرئيسية' : 'Back to home'}
           </Link>
 
-          {isArabic && (
-            <p
-              dir="rtl"
-              className="mb-8 rounded-xl border border-[#263248] bg-[#121a2a] p-4 text-sm leading-relaxed text-[#9aa5bf]"
-            >
-              {AR_PENDING}
-            </p>
-          )}
-
           <h1
-            style={displayStyle(false)}
+            style={displayStyle(isArabic)}
             className="text-3xl md:text-4xl font-black tracking-tight text-[#f3f6ff]"
           >
             {doc.title}
           </h1>
           <p className="mt-2 text-sm text-[#8592ad]">
-            Last updated {doc.updated} <span className="text-[#7c8aa6]">(version {doc.version})</span>
+            {isArabic ? 'آخر تحديث' : 'Last updated'} {doc.updated}{' '}
+            <span className="text-[#7c8aa6]">
+              ({isArabic ? 'الإصدار' : 'version'} {doc.version})
+            </span>
           </p>
 
           <p className="mt-6 text-[#9aa5bf] leading-relaxed">{doc.intro}</p>
@@ -157,7 +144,7 @@ const LegalPage: React.FC<{ kind: LegalKind }> = ({ kind }) => {
 
           <div className="mt-14 border-t border-[#1e293b] pt-6 text-sm text-[#8592ad]">
             <p>
-              Questions?{' '}
+              {isArabic ? 'أسئلة؟' : 'Questions?'}{' '}
               <a
                 href="mailto:support@cyberkhana.tech"
                 className="text-[#00a859] underline underline-offset-4 hover:text-[#9fef00]"
@@ -168,17 +155,17 @@ const LegalPage: React.FC<{ kind: LegalKind }> = ({ kind }) => {
             <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#7c8aa6]">
               {kind !== 'terms' && (
                 <Link to="/terms" className="hover:text-[#9fef00] transition-colors">
-                  Terms of Service
+                  {isArabic ? 'شروط الخدمة' : 'Terms of Service'}
                 </Link>
               )}
               {kind !== 'privacy' && (
                 <Link to="/privacy" className="hover:text-[#9fef00] transition-colors">
-                  Privacy Policy
+                  {isArabic ? 'سياسة الخصوصية' : 'Privacy Policy'}
                 </Link>
               )}
               {kind !== 'creator-agreement' && (
                 <Link to="/creator-agreement" className="hover:text-[#9fef00] transition-colors">
-                  Creator Agreement
+                  {isArabic ? 'اتفاقية المُنشِئ' : 'Creator Agreement'}
                 </Link>
               )}
             </p>

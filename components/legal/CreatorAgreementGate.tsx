@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import AcceptanceDialog from './AcceptanceDialog';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLang } from '../../contexts/LangContext';
 import { api } from '../../services/api';
 import {
   CREATOR_KEY_POINTS,
@@ -23,12 +24,47 @@ import {
  * Enforced independently on the server inside `requireRole`, which every
  * content, collab, upload and feedback-reading endpoint already passes through.
  */
+
+const COPY = {
+  en: {
+    title: 'Accept the Creator Agreement',
+    intro:
+      'Before you can author content, you need to accept the Agreement that governs the role. Your student account is unaffected — you can keep learning either way.',
+    docLabel: 'Read the full Creator Agreement',
+    acceptLabel: 'Accept and open the Studio',
+    secondaryLabel: 'Back to dashboard',
+    footnote:
+      'Until you accept, the Content Studio stays locked and you cannot publish, edit or upload. Your progress, points and rank are not affected.',
+    confirmBefore: 'By continuing you confirm you have read and agree to the ',
+    confirmLink: 'Creator Agreement',
+    confirmAfter:
+      ', including that everything you publish is yours to publish, and that the licence you give CyberKhana is perpetual and continues if you later delete your account.',
+  },
+  ar: {
+    title: 'الموافقة على اتفاقية المُنشِئ',
+    intro:
+      'قبل أن تتمكن من تأليف المحتوى، عليك الموافقة على الاتفاقية التي تحكم هذا الدور. ولن يتأثر حسابك كطالب — يمكنك مواصلة التعلّم في الحالتين.',
+    docLabel: 'اقرأ اتفاقية المُنشِئ كاملة',
+    acceptLabel: 'أوافق وافتح الاستوديو',
+    secondaryLabel: 'العودة إلى لوحة التحكم',
+    footnote:
+      'إلى أن توافق، يبقى استوديو المحتوى مقفلًا ولن تتمكن من النشر أو التعديل أو الرفع. ولن يتأثر تقدّمك ولا نقاطك ولا مرتبتك.',
+    confirmBefore: 'بالمتابعة فإنك تُقرّ بأنك قرأت ووافقت على ',
+    confirmLink: 'اتفاقية المُنشِئ',
+    confirmAfter:
+      '، بما في ذلك أن كل ما تنشره لك حق نشره، وأن الترخيص الذي تمنحه لسايبر خانة دائم ويستمر إذا حذفت حسابك لاحقًا.',
+  },
+};
+
 const CreatorAgreementGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, updateUser } = useAuth();
+  const { lang } = useLang();
   const navigate = useNavigate();
 
   const needsAcceptance = user?.role === 'creator' && user.creatorAgreementAccepted !== true;
   if (!needsAcceptance) return <>{children}</>;
+
+  const t = COPY[lang];
 
   const handleAccept = async () => {
     await api.post('/auth/accept-creator-agreement', {});
@@ -37,30 +73,29 @@ const CreatorAgreementGate: React.FC<{ children: React.ReactNode }> = ({ childre
 
   return (
     <AcceptanceDialog
-      title="Accept the Creator Agreement"
-      intro="Before you can author content, you need to accept the Agreement that governs the role. Your student account is unaffected — you can keep learning either way."
-      points={CREATOR_KEY_POINTS}
+      title={t.title}
+      intro={t.intro}
+      points={CREATOR_KEY_POINTS[lang]}
       docHref="#/creator-agreement"
-      docLabel="Read the full Creator Agreement"
-      updated={CREATOR_AGREEMENT_UPDATED}
-      acceptLabel="Accept and open the Studio"
+      docLabel={t.docLabel}
+      updated={CREATOR_AGREEMENT_UPDATED[lang]}
+      acceptLabel={t.acceptLabel}
       onAccept={handleAccept}
-      secondaryLabel="Back to dashboard"
+      secondaryLabel={t.secondaryLabel}
       onSecondary={() => navigate('/dashboard')}
-      footnote="Until you accept, the Content Studio stays locked and you cannot publish, edit or upload. Your progress, points and rank are not affected."
+      footnote={t.footnote}
       confirmation={
         <>
-          By continuing you confirm you have read and agree to the{' '}
+          {t.confirmBefore}
           <a
             href="#/creator-agreement"
             target="_blank"
             rel="noopener noreferrer"
             className="text-[#00a859] underline underline-offset-4 hover:text-[#9fef00]"
           >
-            Creator Agreement
+            {t.confirmLink}
           </a>
-          , including that everything you publish is yours to publish, and that the licence you
-          give CyberKhana is perpetual and continues if you later delete your account.
+          {t.confirmAfter}
         </>
       }
     />

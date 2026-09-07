@@ -26,3 +26,23 @@ export interface LegalKeyPoint {
   title: string;
   text: string;
 }
+
+/**
+ * A legal document in both languages.
+ *
+ * The English is the governing version — every one of these documents says so
+ * in its own Language section, and the Arabic repeats it. So when the two drift,
+ * the Arabic is what is wrong, and the fix is to re-translate rather than to
+ * reconcile. Keep the `sections` arrays the same length and in the same order:
+ * the page numbers them by index, so a section added to one and not the other
+ * silently renumbers the translation.
+ */
+export interface BilingualDoc {
+  en: LegalDoc;
+  ar: LegalDoc;
+}
+
+export interface BilingualKeyPoints {
+  en: LegalKeyPoint[];
+  ar: LegalKeyPoint[];
+}

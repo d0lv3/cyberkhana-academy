@@ -1,229 +1,446 @@
 /* ── The Privacy Policy, as rendered data ──
  *
- * Authoritative text: `legal/PRIVACY.md` at the repo root. Change one, change
- * the other.
+ * Authoritative text: `legal/PRIVACY.md` at the repo root (English governs; the
+ * Arabic below is a convenience translation).
  *
  * Every factual claim here is checkable against the code, and several were
  * written by reading it: there are no analytics or third-party trackers, only
  * Google OAuth is implemented, exercise code never leaves the browser, and the
  * leaderboard projection excludes email, country and bio. If any of that
- * changes, this file is wrong and has to change with it.
+ * changes, this file is wrong — in both languages — and has to change with it.
  */
-import type { LegalDoc } from './legalTypes';
+import type { BilingualDoc } from './legalTypes';
 
-export const PRIVACY: LegalDoc = {
-  title: 'Privacy Policy',
-  updated: '7 September 2026',
-  version: '2026-09-07',
-  intro:
-    'This policy explains what CyberKhana Academy collects, what we do with it, and what you can ask us to do about it.',
-  callout: {
-    heading: 'The short version',
-    body: [
-      'We collect what we need to run a learning platform and a leaderboard, and nothing else.',
-      'We have no analytics, no advertising, and no third-party trackers. Not Google Analytics, not Facebook, not anything. There is one cookie and it exists to keep you signed in. We do not sell your data and we never will.',
-      'The two things most people do not expect, so they are said plainly here: feedback you leave is not anonymous — creators see your name with it — and if you delete your account, lessons you wrote as a creator stay published. Both are explained below.',
+export const PRIVACY: BilingualDoc = {
+  en: {
+    title: 'Privacy Policy',
+    updated: '7 September 2026',
+    version: '2026-09-07',
+    intro:
+      'This policy explains what CyberKhana Academy collects, what we do with it, and what you can ask us to do about it.',
+    callout: {
+      heading: 'The short version',
+      body: [
+        'We collect what we need to run a learning platform and a leaderboard, and nothing else.',
+        'We have no analytics, no advertising, and no third-party trackers. Not Google Analytics, not Facebook, not anything. There is one cookie and it exists to keep you signed in. We do not sell your data and we never will.',
+        'The two things most people do not expect, so they are said plainly here: feedback you leave is not anonymous — creators see your name with it — and if you delete your account, lessons you wrote as a creator stay published. Both are explained below.',
+      ],
+    },
+    sections: [
+      {
+        h: 'Who is responsible for your data',
+        body: [
+          'CyberKhana, a cybersecurity education project run from Iraq. CyberKhana is not a registered company yet, so responsibility rests with the people who run it.',
+          'For anything about your data — questions, corrections, copies, deletion — write to support@cyberkhana.tech.',
+        ],
+      },
+      {
+        h: 'What we collect from Google',
+        body: [
+          'The Academy has no passwords of its own. You sign in with Google, and Google sends us:',
+        ],
+        list: [
+          'your name;',
+          'your email address, which must be verified on Google’s side;',
+          'your profile picture;',
+          'a Google account identifier, so we recognise you next time.',
+        ],
+        after: [
+          'We do not receive your Google password, and we cannot see anything else in your Google account.',
+        ],
+      },
+      {
+        h: 'What you add yourself',
+        list: [
+          'a display name and optional username;',
+          'an optional profile picture, if you upload one instead of using Google’s;',
+          'your university, chosen from a list, and your country;',
+          'a short bio;',
+          'your language preference (English or Arabic).',
+        ],
+        after: [
+          'All of these are optional except the display name, and you can change or clear them at any time on your profile.',
+        ],
+      },
+      {
+        h: 'What the Academy records as you learn',
+        list: [
+          'which lessons and modules you have completed, and your progress within them;',
+          'how much time you have spent learning, in minutes;',
+          'your points, your monthly points, and your position on the leaderboards;',
+          'when you last signed in;',
+          'whether your account is suspended.',
+        ],
+        after: [
+          'When you rate or comment on content, we store the rating, your comment, your name, which lesson it was about, and the language you wrote it in.',
+          'If you are a creator, we also store the content you author and its edit history, the files you upload, and which content permissions and grants you hold.',
+          'Technically, we store one authentication cookie and ordinary server logs, including IP address, browser type and the requests made, kept for security and debugging.',
+        ],
+      },
+      {
+        h: 'What we do not collect',
+        body: [
+          'We do not collect your date of birth, phone number, address, payment details or government identifiers. We do not ask for them and you should not send them.',
+          'We do not see the code you write. Python, C++ and shell exercises run entirely inside your own browser. Your code is never sent to our servers, so we could not read it even if we wanted to.',
+        ],
+      },
+      {
+        h: 'What we use it for',
+        list: [
+          'your Google name, email, picture and ID — to create your account, sign you in, and recognise you;',
+          'your display name, picture and university — to show who you are on the leaderboard and your profile;',
+          'your country, bio and language — to personalise the Academy and show it in your language;',
+          'your progress, completions and learning time — to track where you are and pick up where you left off;',
+          'your points — to build the leaderboards;',
+          'your feedback and ratings — to help creators improve their content;',
+          'creator content, uploads and permissions — to publish your content and control who can edit what;',
+          'the auth cookie — to keep you signed in;',
+          'server logs — to keep the service secure, find abuse, and fix faults.',
+        ],
+        after: [
+          'We do not use your data to build advertising profiles, and we do not make automated decisions about you that have legal effects.',
+          'We may email you at your Google address about your account or a significant change to the service. We do not send marketing email.',
+        ],
+      },
+      {
+        h: 'Cookies',
+        body: [
+          'One cookie. It is an httpOnly authentication cookie that keeps you signed in. It cannot be read by JavaScript in your browser.',
+          'There are no advertising cookies, no analytics cookies, and no third-party tracking cookies of any kind. That is why the Academy has no cookie banner — there is nothing to consent to beyond the cookie that makes signing in work.',
+          'The Academy also uses your browser’s local storage for practical things like your language choice and your place in a lesson. That stays on your device.',
+        ],
+      },
+      {
+        h: 'Who can see what',
+        body: ['Public, to anyone who can see the leaderboard:'],
+        list: [
+          'your display name;',
+          'your profile picture;',
+          'your university, if you set one;',
+          'your points, monthly points and rank.',
+        ],
+        after: [
+          'Your email address, your country and your bio are not shown on the leaderboard.',
+          'Content you publish as a creator is visible to everyone, with your name on it as the author.',
+        ],
+      },
+      {
+        h: 'Feedback is not anonymous',
+        emphasis: true,
+        body: [
+          'When you rate or comment on a lesson, every creator and administrator on the Academy can see your name next to it, along with your rating and your comment.',
+          'We are telling you plainly rather than burying it, because most people assume course feedback is anonymous and here it is not. Creators are told they may only use it to improve their content, and may not contact you about it or treat you differently because of it — but the honest position is that they can see who said it.',
+          'If you would rather raise something privately, email support@cyberkhana.tech instead of leaving feedback.',
+        ],
+      },
+      {
+        h: 'Who we share it with',
+        body: [
+          'We do not sell your personal data, and we never will. We do not share it with advertisers or data brokers.',
+          'It reaches other parties only in these ways:',
+        ],
+        list: [
+          'Google, because you sign in with it. Your use of Google sign-in is also governed by Google’s own privacy policy.',
+          'Our hosting provider, which runs the servers the Academy sits on.',
+          'A public CDN (jsDelivr), but only as a fallback. The Academy normally serves its Python runtime from its own servers. If that copy is unavailable, your browser fetches it from jsDelivr instead, which means jsDelivr sees your IP address and that you requested that file. It sees nothing about your account or your learning.',
+          'When the law requires it, or where we need to protect someone’s safety.',
+        ],
+      },
+      {
+        h: 'Where your data is stored',
+        body: [
+          'The Academy’s servers and database are hosted on a virtual server in Europe, operated by our hosting provider.',
+          'If you are using the Academy from Iraq or anywhere outside Europe, that means your data is transferred outside your country and stored there. By using the Academy you understand and accept that.',
+        ],
+      },
+      {
+        h: 'How long we keep it',
+        body: [
+          'We keep your account data for as long as your account exists. Server logs are kept only as long as they are useful for security and debugging.',
+        ],
+      },
+      {
+        h: 'Deleting your account',
+        emphasis: true,
+        body: [
+          'Email support@cyberkhana.tech and ask. There is no self-service delete button yet — we do it by hand, and we will complete it within 30 days of a request we can verify came from you.',
+          'What is deleted: your name, email address, profile picture, username, university, country, bio, language preference, and the link between your account and your Google identity.',
+          'What is not deleted, and why:',
+        ],
+        list: [
+          'Content you published as a creator stays. Lessons, modules and paths remain on the Academy under the licence in the Creator Agreement, with your authorship credit. Other creators’ Paths and Modules are built out of that content, and students are partway through it. If you are a creator, understand this before you publish, not after.',
+          'Past leaderboard entries are anonymised, not removed. Your name comes off; the historical standings stay intact so other people’s ranks still make sense.',
+          'Feedback you left is anonymised — the comment stays so creators keep the substance, your name comes off it.',
+          'Records we are required to keep, and records of moderation decisions such as a ban, are retained where we need them.',
+        ],
+        after: [
+          'Deleting your Academy account does not delete your Google account, and does not affect any account you have on the CTF platform, which is a separate service.',
+        ],
+      },
+      {
+        h: 'Your rights over your data',
+        body: ['You can:'],
+        list: [
+          'see what we hold about you — most of it is on your profile already;',
+          'correct it, directly on your profile or by asking us;',
+          'get a copy of it in a readable format;',
+          'delete it, as described above;',
+          'object to a particular use, and we will explain or stop.',
+        ],
+        after: [
+          'Ask at support@cyberkhana.tech. We will not charge you, and we will not make it difficult.',
+          'Iraq does not currently have a comprehensive data protection statute of the kind found in the EU. We have written this policy to give you these rights anyway.',
+        ],
+      },
+      {
+        h: 'If you are under 18',
+        body: [
+          'The Academy is for people aged 13 and over, and if you are under 18 you need a parent or guardian’s permission to use it.',
+          'We do not knowingly collect data from anyone under 13. If you believe a child under 13 has an account, tell us at support@cyberkhana.tech and we will delete it.',
+          'If you are under 18, think before you fill in your profile. Your display name, picture and university are shown publicly on the leaderboard. You do not have to use your real name or a photo of yourself.',
+        ],
+      },
+      {
+        h: 'Security',
+        body: [
+          'We protect your data with HTTPS everywhere, an httpOnly authentication cookie, rate limiting, role-based access controls, and a re-authentication step before sensitive administrative actions.',
+          'Passwords are not a risk here, because we do not have any — Google handles sign-in.',
+          'No system is perfectly secure. If we discover a breach affecting your personal data, we will tell affected users what happened, what was exposed, and what to do about it, as quickly as we reasonably can.',
+          'If you find a security flaw, please report it to support@cyberkhana.tech — the Terms of Service explain how we handle good-faith reports.',
+        ],
+      },
+      {
+        h: 'Changes to this policy',
+        body: [
+          'We may update this policy. When we do, we will change the "Last updated" date at the top, and for anything significant we will announce it in the Academy.',
+          'If a change means we would use data we already hold in a materially different way, we will ask first.',
+        ],
+      },
+      {
+        h: 'Language',
+        body: [
+          'This policy is written in English, and the Arabic translation is provided for convenience. If the two versions disagree, the English version is the one that counts.',
+        ],
+      },
+      {
+        h: 'Contact',
+        body: ['support@cyberkhana.tech'],
+      },
     ],
   },
-  sections: [
-    {
-      h: 'Who is responsible for your data',
+
+  ar: {
+    title: 'سياسة الخصوصية',
+    updated: '٧ أيلول/سبتمبر ٢٠٢٦',
+    version: '2026-09-07',
+    intro:
+      'تشرح هذه السياسة ما تجمعه أكاديمية سايبر خانة، وما نفعله به، وما يمكنك أن تطلب منا فعله بشأنه.',
+    callout: {
+      heading: 'النسخة المختصرة',
       body: [
-        'CyberKhana, a cybersecurity education project run from Iraq. CyberKhana is not a registered company yet, so responsibility rests with the people who run it.',
-        'For anything about your data — questions, corrections, copies, deletion — write to support@cyberkhana.tech.',
+        'نجمع ما نحتاجه لتشغيل منصة تعليمية ولوحة صدارة، ولا شيء غير ذلك.',
+        'ليس لدينا أي تحليلات ولا إعلانات ولا أدوات تتبّع من أطراف أخرى. لا Google Analytics ولا Facebook ولا غيرهما. هناك ملف تعريف ارتباط واحد فقط، وُجد ليُبقيك مسجَّل الدخول. ونحن لا نبيع بياناتك ولن نفعل.',
+        'أمران لا يتوقّعهما معظم الناس، ولذلك نقولهما هنا بوضوح: التقييمات التي تتركها ليست مجهولة المصدر — يرى مُنشِئو المحتوى اسمك معها — وإذا حذفت حسابك، تبقى الدروس التي كتبتها كمُنشِئ منشورة. وكلاهما مشروح أدناه.',
       ],
     },
-    {
-      h: 'What we collect from Google',
-      body: [
-        'The Academy has no passwords of its own. You sign in with Google, and Google sends us:',
-      ],
-      list: [
-        'your name;',
-        'your email address, which must be verified on Google’s side;',
-        'your profile picture;',
-        'a Google account identifier, so we recognise you next time.',
-      ],
-      after: [
-        'We do not receive your Google password, and we cannot see anything else in your Google account.',
-      ],
-    },
-    {
-      h: 'What you add yourself',
-      list: [
-        'a display name and optional username;',
-        'an optional profile picture, if you upload one instead of using Google’s;',
-        'your university, chosen from a list, and your country;',
-        'a short bio;',
-        'your language preference (English or Arabic).',
-      ],
-      after: [
-        'All of these are optional except the display name, and you can change or clear them at any time on your profile.',
-      ],
-    },
-    {
-      h: 'What the Academy records as you learn',
-      list: [
-        'which lessons and modules you have completed, and your progress within them;',
-        'how much time you have spent learning, in minutes;',
-        'your points, your monthly points, and your position on the leaderboards;',
-        'when you last signed in;',
-        'whether your account is suspended.',
-      ],
-      after: [
-        'When you rate or comment on content, we store the rating, your comment, your name, which lesson it was about, and the language you wrote it in.',
-        'If you are a creator, we also store the content you author and its edit history, the files you upload, and which content permissions and grants you hold.',
-        'Technically, we store one authentication cookie and ordinary server logs, including IP address, browser type and the requests made, kept for security and debugging.',
-      ],
-    },
-    {
-      h: 'What we do not collect',
-      body: [
-        'We do not collect your date of birth, phone number, address, payment details or government identifiers. We do not ask for them and you should not send them.',
-        'We do not see the code you write. Python, C++ and shell exercises run entirely inside your own browser. Your code is never sent to our servers, so we could not read it even if we wanted to.',
-      ],
-    },
-    {
-      h: 'What we use it for',
-      list: [
-        'your Google name, email, picture and ID — to create your account, sign you in, and recognise you;',
-        'your display name, picture and university — to show who you are on the leaderboard and your profile;',
-        'your country, bio and language — to personalise the Academy and show it in your language;',
-        'your progress, completions and learning time — to track where you are and pick up where you left off;',
-        'your points — to build the leaderboards;',
-        'your feedback and ratings — to help creators improve their content;',
-        'creator content, uploads and permissions — to publish your content and control who can edit what;',
-        'the auth cookie — to keep you signed in;',
-        'server logs — to keep the service secure, find abuse, and fix faults.',
-      ],
-      after: [
-        'We do not use your data to build advertising profiles, and we do not make automated decisions about you that have legal effects.',
-        'We may email you at your Google address about your account or a significant change to the service. We do not send marketing email.',
-      ],
-    },
-    {
-      h: 'Cookies',
-      body: [
-        'One cookie. It is an httpOnly authentication cookie that keeps you signed in. It cannot be read by JavaScript in your browser.',
-        'There are no advertising cookies, no analytics cookies, and no third-party tracking cookies of any kind. That is why the Academy has no cookie banner — there is nothing to consent to beyond the cookie that makes signing in work.',
-        'The Academy also uses your browser’s local storage for practical things like your language choice and your place in a lesson. That stays on your device.',
-      ],
-    },
-    {
-      h: 'Who can see what',
-      body: ['Public, to anyone who can see the leaderboard:'],
-      list: [
-        'your display name;',
-        'your profile picture;',
-        'your university, if you set one;',
-        'your points, monthly points and rank.',
-      ],
-      after: [
-        'Your email address, your country and your bio are not shown on the leaderboard.',
-        'Content you publish as a creator is visible to everyone, with your name on it as the author.',
-      ],
-    },
-    {
-      h: 'Feedback is not anonymous',
-      emphasis: true,
-      body: [
-        'When you rate or comment on a lesson, every creator and administrator on the Academy can see your name next to it, along with your rating and your comment.',
-        'We are telling you plainly rather than burying it, because most people assume course feedback is anonymous and here it is not. Creators are told they may only use it to improve their content, and may not contact you about it or treat you differently because of it — but the honest position is that they can see who said it.',
-        'If you would rather raise something privately, email support@cyberkhana.tech instead of leaving feedback.',
-      ],
-    },
-    {
-      h: 'Who we share it with',
-      body: [
-        'We do not sell your personal data, and we never will. We do not share it with advertisers or data brokers.',
-        'It reaches other parties only in these ways:',
-      ],
-      list: [
-        'Google, because you sign in with it. Your use of Google sign-in is also governed by Google’s own privacy policy.',
-        'Our hosting provider, which runs the servers the Academy sits on.',
-        'A public CDN (jsDelivr), but only as a fallback. The Academy normally serves its Python runtime from its own servers. If that copy is unavailable, your browser fetches it from jsDelivr instead, which means jsDelivr sees your IP address and that you requested that file. It sees nothing about your account or your learning.',
-        'When the law requires it, or where we need to protect someone’s safety.',
-      ],
-    },
-    {
-      h: 'Where your data is stored',
-      body: [
-        'The Academy’s servers and database are hosted on a virtual server in Europe, operated by our hosting provider.',
-        'If you are using the Academy from Iraq or anywhere outside Europe, that means your data is transferred outside your country and stored there. By using the Academy you understand and accept that.',
-      ],
-    },
-    {
-      h: 'How long we keep it',
-      body: [
-        'We keep your account data for as long as your account exists. Server logs are kept only as long as they are useful for security and debugging.',
-      ],
-    },
-    {
-      h: 'Deleting your account',
-      emphasis: true,
-      body: [
-        'Email support@cyberkhana.tech and ask. There is no self-service delete button yet — we do it by hand, and we will complete it within 30 days of a request we can verify came from you.',
-        'What is deleted: your name, email address, profile picture, username, university, country, bio, language preference, and the link between your account and your Google identity.',
-        'What is not deleted, and why:',
-      ],
-      list: [
-        'Content you published as a creator stays. Lessons, modules and paths remain on the Academy under the licence in the Creator Agreement, with your authorship credit. Other creators’ Paths and Modules are built out of that content, and students are partway through it. If you are a creator, understand this before you publish, not after.',
-        'Past leaderboard entries are anonymised, not removed. Your name comes off; the historical standings stay intact so other people’s ranks still make sense.',
-        'Feedback you left is anonymised — the comment stays so creators keep the substance, your name comes off it.',
-        'Records we are required to keep, and records of moderation decisions such as a ban, are retained where we need them.',
-      ],
-      after: [
-        'Deleting your Academy account does not delete your Google account, and does not affect any account you have on the CTF platform, which is a separate service.',
-      ],
-    },
-    {
-      h: 'Your rights over your data',
-      body: ['You can:'],
-      list: [
-        'see what we hold about you — most of it is on your profile already;',
-        'correct it, directly on your profile or by asking us;',
-        'get a copy of it in a readable format;',
-        'delete it, as described above;',
-        'object to a particular use, and we will explain or stop.',
-      ],
-      after: [
-        'Ask at support@cyberkhana.tech. We will not charge you, and we will not make it difficult.',
-        'Iraq does not currently have a comprehensive data protection statute of the kind found in the EU. We have written this policy to give you these rights anyway.',
-      ],
-    },
-    {
-      h: 'If you are under 18',
-      body: [
-        'The Academy is for people aged 13 and over, and if you are under 18 you need a parent or guardian’s permission to use it.',
-        'We do not knowingly collect data from anyone under 13. If you believe a child under 13 has an account, tell us at support@cyberkhana.tech and we will delete it.',
-        'If you are under 18, think before you fill in your profile. Your display name, picture and university are shown publicly on the leaderboard. You do not have to use your real name or a photo of yourself.',
-      ],
-    },
-    {
-      h: 'Security',
-      body: [
-        'We protect your data with HTTPS everywhere, an httpOnly authentication cookie, rate limiting, role-based access controls, and a re-authentication step before sensitive administrative actions.',
-        'Passwords are not a risk here, because we do not have any — Google handles sign-in.',
-        'No system is perfectly secure. If we discover a breach affecting your personal data, we will tell affected users what happened, what was exposed, and what to do about it, as quickly as we reasonably can.',
-        'If you find a security flaw, please report it to support@cyberkhana.tech — the Terms of Service explain how we handle good-faith reports.',
-      ],
-    },
-    {
-      h: 'Changes to this policy',
-      body: [
-        'We may update this policy. When we do, we will change the "Last updated" date at the top, and for anything significant we will announce it in the Academy.',
-        'If a change means we would use data we already hold in a materially different way, we will ask first.',
-      ],
-    },
-    {
-      h: 'Language',
-      body: [
-        'This policy is written in English. An Arabic translation is being prepared and will be provided for convenience. If the two versions disagree, the English version is the one that counts.',
-      ],
-    },
-    {
-      h: 'Contact',
-      body: ['support@cyberkhana.tech'],
-    },
-  ],
+    sections: [
+      {
+        h: 'مَن المسؤول عن بياناتك',
+        body: [
+          'سايبر خانة، وهو مشروع تعليمي في مجال الأمن السيبراني يُدار من العراق. وسايبر خانة ليست شركة مسجّلة بعد، فالمسؤولية تقع على الأشخاص الذين يديرونها.',
+          'ولأي أمر يخصّ بياناتك — استفسار أو تصحيح أو نسخة أو حذف — راسلنا على support@cyberkhana.tech.',
+        ],
+      },
+      {
+        h: 'ما نجمعه من Google',
+        body: ['ليس لدى الأكاديمية كلمات مرور خاصة بها. أنت تسجّل الدخول عبر Google، وترسل إلينا Google:'],
+        list: [
+          'اسمك؛',
+          'بريدك الإلكتروني، ويجب أن يكون مُوثَّقًا لدى Google؛',
+          'صورتك الشخصية؛',
+          'معرّف حساب Google، لنتعرّف عليك في المرة القادمة.',
+        ],
+        after: [
+          'ونحن لا نستلم كلمة مرور Google الخاصة بك، ولا يمكننا الاطّلاع على أي شيء آخر في حسابك عليها.',
+        ],
+      },
+      {
+        h: 'ما تضيفه أنت',
+        list: [
+          'اسم معروض، واسم مستخدم اختياري؛',
+          'صورة شخصية اختيارية، إن رفعتَ واحدة بدلًا من صورة Google؛',
+          'جامعتك، تختارها من قائمة، وبلدك؛',
+          'نبذة قصيرة؛',
+          'لغتك المفضّلة (الإنجليزية أو العربية).',
+        ],
+        after: [
+          'وكل هذه اختيارية عدا الاسم المعروض، ويمكنك تغييرها أو مسحها في أي وقت من ملفك الشخصي.',
+        ],
+      },
+      {
+        h: 'ما تسجّله الأكاديمية أثناء تعلّمك',
+        list: [
+          'الدروس والوحدات التي أكملتها، وتقدّمك داخلها؛',
+          'الوقت الذي قضيته في التعلّم، بالدقائق؛',
+          'نقاطك ونقاطك الشهرية وموقعك على لوحات الصدارة؛',
+          'آخر مرة سجّلت فيها الدخول؛',
+          'ما إذا كان حسابك معلَّقًا.',
+        ],
+        after: [
+          'وعندما تقيّم محتوى أو تعلّق عليه، نخزّن التقييم وتعليقك واسمك والدرس المعني واللغة التي كتبت بها.',
+          'وإذا كنت مُنشِئًا، فإننا نخزّن أيضًا المحتوى الذي تؤلّفه وسجلّ تعديلاته، والملفات التي ترفعها، وصلاحيات المحتوى والأذونات التي تملكها.',
+          'ومن الناحية التقنية، نخزّن ملف تعريف ارتباط واحدًا للمصادقة، وسجلّات خادم اعتيادية تشمل عنوان IP ونوع المتصفح والطلبات التي جرت، ونحتفظ بها لأغراض الأمان وتصحيح الأعطال.',
+        ],
+      },
+      {
+        h: 'ما لا نجمعه',
+        body: [
+          'لا نجمع تاريخ ميلادك ولا رقم هاتفك ولا عنوانك ولا بيانات الدفع ولا أي معرّفات حكومية. نحن لا نطلبها، ولا ينبغي أن ترسلها.',
+          'ولا نرى الشيفرة التي تكتبها. فتمارين Python وC++ والطرفية تعمل بالكامل داخل متصفحك أنت. وشيفرتك لا تُرسل إلى خوادمنا إطلاقًا، فلا نستطيع قراءتها حتى لو أردنا.',
+        ],
+      },
+      {
+        h: 'فيمَ نستخدمها',
+        list: [
+          'اسمك وبريدك وصورتك ومعرّفك من Google — لإنشاء حسابك وتسجيل دخولك والتعرّف عليك؛',
+          'اسمك المعروض وصورتك وجامعتك — لإظهار مَن أنت على لوحة الصدارة وفي ملفك الشخصي؛',
+          'بلدك ونبذتك ولغتك — لتخصيص الأكاديمية وعرضها بلغتك؛',
+          'تقدّمك وما أكملته ووقت تعلّمك — لتتبّع موضعك ومتابعة ما توقفت عنده؛',
+          'نقاطك — لبناء لوحات الصدارة؛',
+          'تقييماتك وتعليقاتك — لمساعدة المُنشِئين على تحسين محتواهم؛',
+          'محتوى المُنشِئ والملفات المرفوعة والصلاحيات — لنشر محتواك وضبط مَن يمكنه التعديل؛',
+          'ملف تعريف ارتباط المصادقة — لإبقائك مسجَّل الدخول؛',
+          'سجلّات الخادم — للحفاظ على أمان الخدمة ورصد إساءة الاستخدام وإصلاح الأعطال.',
+        ],
+        after: [
+          'ولا نستخدم بياناتك لبناء ملفات إعلانية، ولا نتخذ بشأنك قرارات آلية ذات أثر قانوني.',
+          'وقد نراسلك على بريدك في Google بخصوص حسابك أو تغيير جوهري في الخدمة. ولا نرسل رسائل تسويقية.',
+        ],
+      },
+      {
+        h: 'ملفات تعريف الارتباط',
+        body: [
+          'ملف واحد. وهو ملف مصادقة من نوع httpOnly يُبقيك مسجَّل الدخول، ولا يمكن لجافاسكربت في متصفحك قراءته.',
+          'ولا توجد ملفات إعلانية ولا تحليلية ولا أي ملفات تتبّع من أطراف أخرى. ولهذا لا تعرض الأكاديمية لافتة موافقة على الارتباطات — إذ لا شيء يستدعي موافقتك سوى الملف الذي يجعل تسجيل الدخول يعمل.',
+          'كما تستخدم الأكاديمية التخزين المحلي في متصفحك لأمور عملية مثل اختيارك للغة وموضعك في الدرس. وهذا يبقى على جهازك.',
+        ],
+      },
+      {
+        h: 'مَن يرى ماذا',
+        body: ['يظهر للجميع ممن يرى لوحة الصدارة:'],
+        list: [
+          'اسمك المعروض؛',
+          'صورتك الشخصية؛',
+          'جامعتك، إن حدّدتها؛',
+          'نقاطك ونقاطك الشهرية ومرتبتك.',
+        ],
+        after: [
+          'أما بريدك الإلكتروني وبلدك ونبذتك فلا تظهر على لوحة الصدارة.',
+          'والمحتوى الذي تنشره كمُنشِئ مرئي للجميع، ويحمل اسمك بوصفك مؤلّفه.',
+        ],
+      },
+      {
+        h: 'التقييمات ليست مجهولة المصدر',
+        emphasis: true,
+        body: [
+          'عندما تقيّم درسًا أو تعلّق عليه، يستطيع كل مُنشِئ محتوى وكل مشرف في الأكاديمية رؤية اسمك بجانب التقييم والتعليق.',
+          'ونقول لك ذلك صراحةً بدل إخفائه، لأن معظم الناس يفترضون أن تقييم الدروس مجهول المصدر، وهو هنا ليس كذلك. والمُنشِئون مُلزَمون بألّا يستخدموه إلا لتحسين محتواهم، وبألّا يراسلوك بشأنه أو يعاملوك معاملة مختلفة بسببه — لكن الحقيقة الصريحة أنهم يستطيعون رؤية مَن كتبه.',
+          'وإذا فضّلت طرح أمر ما بصورة خاصة، فراسلنا على support@cyberkhana.tech بدلًا من ترك تقييم.',
+        ],
+      },
+      {
+        h: 'مع مَن نشاركها',
+        body: [
+          'نحن لا نبيع بياناتك الشخصية ولن نفعل، ولا نشاركها مع معلنين أو وسطاء بيانات.',
+          'ولا تصل إلى أطراف أخرى إلا بهذه الطرق:',
+        ],
+        list: [
+          'Google، لأنك تسجّل الدخول عبرها. واستخدامك لتسجيل الدخول عبر Google يخضع أيضًا لسياسة الخصوصية الخاصة بها.',
+          'مزوّد الاستضافة لدينا، وهو الذي يشغّل الخوادم التي تعمل عليها الأكاديمية.',
+          'شبكة توزيع محتوى عامة (jsDelivr)، وذلك كخيار احتياطي فقط. فالأكاديمية تقدّم بيئة تشغيل Python من خوادمها عادةً، وإذا لم تكن تلك النسخة متاحة، يجلبها متصفحك من jsDelivr بدلًا منها، ما يعني أن jsDelivr ترى عنوان IP الخاص بك وأنك طلبت ذلك الملف. وهي لا ترى شيئًا عن حسابك أو تعلّمك.',
+          'وعندما يقتضي القانون ذلك، أو حين نحتاج إلى حماية سلامة شخص ما.',
+        ],
+      },
+      {
+        h: 'أين تُخزَّن بياناتك',
+        body: [
+          'خوادم الأكاديمية وقاعدة بياناتها مستضافة على خادم افتراضي في أوروبا، يشغّله مزوّد الاستضافة لدينا.',
+          'وإذا كنت تستخدم الأكاديمية من العراق أو من أي مكان خارج أوروبا، فهذا يعني أن بياناتك تُنقل خارج بلدك وتُخزَّن هناك. وباستخدامك الأكاديمية فإنك تدرك ذلك وتقبله.',
+        ],
+      },
+      {
+        h: 'مدة الاحتفاظ بها',
+        body: [
+          'نحتفظ ببيانات حسابك ما دام حسابك قائمًا. أما سجلّات الخادم فنحتفظ بها فقط ما دامت مفيدة لأغراض الأمان وتصحيح الأعطال.',
+        ],
+      },
+      {
+        h: 'حذف حسابك',
+        emphasis: true,
+        body: [
+          'راسلنا على support@cyberkhana.tech واطلب ذلك. لا يوجد زر حذف ذاتي بعد — نحن نقوم بذلك يدويًا، وسننجزه خلال ٣٠ يومًا من طلبٍ نتحقق من صدوره عنك.',
+          'ما يُحذف: اسمك وبريدك الإلكتروني وصورتك الشخصية واسم المستخدم وجامعتك وبلدك ونبذتك ولغتك المفضّلة، والرابط بين حسابك وهويتك على Google.',
+          'وما لا يُحذف، ولماذا:',
+        ],
+        list: [
+          'المحتوى الذي نشرته كمُنشِئ يبقى. فالدروس والوحدات والمسارات تظلّ على الأكاديمية بموجب الترخيص الوارد في اتفاقية المُنشِئ، مع نسبة التأليف إليك. ومسارات ووحدات مُنشِئين آخرين مبنيّة على ذلك المحتوى، وهناك طلاب في منتصفه. فإن كنت مُنشِئًا، افهم هذا قبل أن تنشر لا بعده.',
+          'مشاركاتك السابقة في لوحة الصدارة تُجهَّل ولا تُحذف. يُزال اسمك، وتبقى الترتيبات التاريخية كما هي حتى تظل مراتب الآخرين منطقية.',
+          'التقييمات التي تركتها تُجهَّل — يبقى التعليق ليحتفظ المُنشِئون بمضمونه، ويُزال اسمك عنه.',
+          'السجلّات التي يلزمنا الاحتفاظ بها، وسجلّات قرارات الإشراف كالحظر، نحتفظ بها حيث نحتاج إليها.',
+        ],
+        after: [
+          'وحذف حسابك في الأكاديمية لا يحذف حسابك على Google، ولا يؤثر على أي حساب لك على منصة التحديات، فهي خدمة منفصلة.',
+        ],
+      },
+      {
+        h: 'حقوقك تجاه بياناتك',
+        body: ['يمكنك أن:'],
+        list: [
+          'تطّلع على ما نحتفظ به عنك — ومعظمه موجود في ملفك الشخصي أصلًا؛',
+          'تصحّحه، مباشرةً من ملفك الشخصي أو بطلب منّا؛',
+          'تحصل على نسخة منه بصيغة قابلة للقراءة؛',
+          'تحذفه، على النحو المبيّن أعلاه؛',
+          'تعترض على استخدام معيّن، وسنشرح أو نتوقف.',
+        ],
+        after: [
+          'اطلب ذلك على support@cyberkhana.tech. لن نتقاضى منك شيئًا، ولن نُصعّب الأمر عليك.',
+          'ولا يوجد في العراق حاليًا قانون شامل لحماية البيانات من النوع المعمول به في الاتحاد الأوروبي. وقد كتبنا هذه السياسة لنمنحك هذه الحقوق على أي حال.',
+        ],
+      },
+      {
+        h: 'إذا كان عمرك دون ١٨',
+        body: [
+          'الأكاديمية مخصّصة لمن بلغ ١٣ عامًا فأكثر، وإذا كان عمرك دون ١٨ فأنت بحاجة إلى إذن أحد والديك أو وليّ أمرك لاستخدامها.',
+          'ولا نجمع عن علم بيانات أي شخص دون ١٣ عامًا. وإذا كنت تعتقد أن طفلًا دون ١٣ يملك حسابًا، فأخبرنا على support@cyberkhana.tech وسنحذفه.',
+          'وإذا كان عمرك دون ١٨، ففكّر قبل أن تملأ ملفك الشخصي. فاسمك المعروض وصورتك وجامعتك تظهر علنًا على لوحة الصدارة. ولستَ مضطرًا لاستخدام اسمك الحقيقي أو صورة لك.',
+        ],
+      },
+      {
+        h: 'الأمان',
+        body: [
+          'نحمي بياناتك باستخدام HTTPS في كل مكان، وملف مصادقة من نوع httpOnly، وتحديد لمعدّل الطلبات، وضوابط وصول قائمة على الأدوار، وخطوة إعادة مصادقة قبل الإجراءات الإدارية الحسّاسة.',
+          'وكلمات المرور ليست مصدر خطر هنا، لأننا لا نملك أيًّا منها — فـ Google تتولّى تسجيل الدخول.',
+          'ولا يوجد نظام آمن تمامًا. وإذا اكتشفنا خرقًا يمسّ بياناتك الشخصية، فسنُعلم المتأثرين بما حدث وبما انكشف وبما ينبغي فعله حياله، بأسرع ما نستطيع.',
+          'وإذا وجدت ثغرة أمنية، فأبلغنا بها على support@cyberkhana.tech — وشروط الخدمة تشرح كيف نتعامل مع البلاغات المقدَّمة بحسن نية.',
+        ],
+      },
+      {
+        h: 'التغييرات على هذه السياسة',
+        body: [
+          'قد نحدّث هذه السياسة. وعندما نفعل، سنغيّر تاريخ «آخر تحديث» في الأعلى، وسنعلن عن أي تغيير جوهري داخل الأكاديمية.',
+          'وإذا كان التغيير يعني أننا سنستخدم بيانات نحتفظ بها أصلًا بطريقة مختلفة جوهريًا، فسنستأذنك أولًا.',
+        ],
+      },
+      {
+        h: 'اللغة',
+        body: [
+          'كُتبت هذه السياسة بالإنجليزية، وهذه ترجمة عربية مقدَّمة للتيسير. وإذا اختلفت النسختان، فالنسخة الإنجليزية هي المُلزِمة.',
+        ],
+      },
+      {
+        h: 'التواصل',
+        body: ['support@cyberkhana.tech'],
+      },
+    ],
+  },
 };

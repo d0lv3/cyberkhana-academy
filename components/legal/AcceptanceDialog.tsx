@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, ExternalLink, Loader2 } from 'lucide-react';
 import type { LegalKeyPoint } from '../../data/legalTypes';
+import { useLang } from '../../contexts/LangContext';
 
 interface AcceptanceDialogProps {
   title: string;
@@ -43,6 +44,7 @@ const AcceptanceDialog: React.FC<AcceptanceDialogProps> = ({
   onSecondary,
   footnote,
 }) => {
+  const { isArabic } = useLang();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const panelRef = useRef<HTMLDivElement>(null);
@@ -97,9 +99,15 @@ const AcceptanceDialog: React.FC<AcceptanceDialogProps> = ({
       // No success state: accepting removes the condition that renders this,
       // so the caller unmounts us.
     } catch (err: any) {
+      /* The server's own error messages are English-only, and none of them is
+         more actionable than "try again" — so an Arabic reader gets the Arabic
+         text rather than a sentence they cannot read. Translate the backend's
+         messages and this can prefer them in both languages. */
       setError(
-        err?.message ||
-          'Could not save your acceptance — the server did not respond. Check your connection and try again.'
+        isArabic
+          ? 'تعذّر حفظ موافقتك. تحقّق من اتصالك وحاول مرة أخرى، وإن تكرّر الأمر فراسلنا على support@cyberkhana.tech.'
+          : err?.message ||
+              'Could not save your acceptance — the server did not respond. Check your connection and try again.'
       );
       setSubmitting(false);
     }
@@ -112,7 +120,7 @@ const AcceptanceDialog: React.FC<AcceptanceDialogProps> = ({
       aria-modal="true"
       aria-labelledby="acceptance-title"
       aria-describedby="acceptance-intro"
-      dir="ltr"
+      dir={isArabic ? 'rtl' : 'ltr'}
     >
       <div
         ref={panelRef}
@@ -135,7 +143,9 @@ const AcceptanceDialog: React.FC<AcceptanceDialogProps> = ({
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-7">
-          <p className="text-sm font-semibold text-[#d2d7e3]">The parts that matter most:</p>
+          <p className="text-sm font-semibold text-[#d2d7e3]">
+            {isArabic ? 'أهمّ ما ينبغي أن تعرفه:' : 'The parts that matter most:'}
+          </p>
 
           <ul className="mt-4 space-y-4">
             {points.map((point) => (
@@ -161,7 +171,10 @@ const AcceptanceDialog: React.FC<AcceptanceDialogProps> = ({
             {docLabel}
             <ExternalLink size={15} aria-hidden="true" />
           </a>
-          <p className="mt-1 text-xs text-[#7c8aa6]">Opens in a new tab · Last updated {updated}</p>
+          <p className="mt-1 text-xs text-[#7c8aa6]">
+            {isArabic ? 'يُفتح في تبويب جديد · آخر تحديث ' : 'Opens in a new tab · Last updated '}
+            {updated}
+          </p>
         </div>
 
         <div className="border-t border-[#1e293b] bg-[#0f1624]/70 px-5 py-5 sm:px-7">
@@ -193,7 +206,7 @@ const AcceptanceDialog: React.FC<AcceptanceDialogProps> = ({
               className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#00a859] px-6 text-sm font-bold text-white transition-colors hover:bg-[#009a51] active:scale-[0.99] disabled:cursor-wait disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9fef00] sm:w-64"
             >
               {submitting && <Loader2 size={17} className="animate-spin" aria-hidden="true" />}
-              {submitting ? 'Saving…' : acceptLabel}
+              {submitting ? (isArabic ? 'جارٍ الحفظ…' : 'Saving…') : acceptLabel}
             </button>
           </div>
 
