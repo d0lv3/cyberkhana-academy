@@ -48,6 +48,14 @@ export interface IUser extends Document {
   monthlyPointsMonth: string;
   isBanned: boolean;
   lastLoginAt: Date;
+  /** When this user last passed the sign-in notice under the current Terms.
+   *  Stamped at sign-in, not through a dialog — see config/legal.ts. */
+  termsAcceptedAt?: Date;
+  termsVersion?: string;
+  /** When this creator explicitly accepted the Creator Agreement. Absent means
+   *  the Content Studio stays locked for role 'creator'. */
+  creatorAgreementAcceptedAt?: Date;
+  creatorAgreementVersion?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -104,6 +112,12 @@ const UserSchema = new Schema<IUser>(
     monthlyPointsMonth: { type: String, default: '' },
     isBanned: { type: Boolean, default: false },
     lastLoginAt: { type: Date, default: Date.now },
+    // No defaults: an absent value is exactly what "has not accepted" means,
+    // and every account predating these fields reads that way correctly.
+    termsAcceptedAt: { type: Date },
+    termsVersion: { type: String },
+    creatorAgreementAcceptedAt: { type: Date },
+    creatorAgreementVersion: { type: String },
   },
   { timestamps: true }
 );

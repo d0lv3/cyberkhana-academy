@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Globe, AlertTriangle } from 'lucide-react';
 import BrandLogo from '../components/ui/BrandLogo';
@@ -328,10 +328,28 @@ const LoginPage: React.FC = () => {
                     </button>
                   )}
 
+                  {/* This notice is how agreement to the Terms is obtained —
+                      the server records it against the account on sign-in (see
+                      stampTermsAgreement in backend routes/auth.ts). It must
+                      therefore name the actual documents and link them; an
+                      unlinked mention of a "Terms of Use" that does not exist
+                      would not be worth much. */}
                   <p className="text-center text-[11px] text-[#7c8aa6] mt-6 leading-relaxed">
-                    {ar
-                      ? 'بالمتابعة، أنت توافق على شروط الاستخدام وسياسة الخصوصية.'
-                      : 'By continuing, you agree to the Terms of Use and Privacy Policy.'}
+                    {ar ? 'بالمتابعة، أنت توافق على ' : 'By continuing, you agree to the '}
+                    <Link
+                      to="/terms"
+                      className="text-[#9aa5bf] underline underline-offset-2 hover:text-[#9fef00] transition-colors"
+                    >
+                      {ar ? 'شروط الخدمة' : 'Terms of Service'}
+                    </Link>
+                    {ar ? ' و' : ' and '}
+                    <Link
+                      to="/privacy"
+                      className="text-[#9aa5bf] underline underline-offset-2 hover:text-[#9fef00] transition-colors"
+                    >
+                      {ar ? 'سياسة الخصوصية' : 'Privacy Policy'}
+                    </Link>
+                    {ar ? '.' : '.'}
                   </p>
                 </div>
               </div>

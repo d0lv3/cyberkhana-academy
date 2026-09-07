@@ -12,6 +12,7 @@ import AppLayout from './components/AppLayout';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import LegalPage from './pages/legal/LegalPage';
+import CreatorAgreementGate from './components/legal/CreatorAgreementGate';
 import NotFoundPage from './pages/NotFoundPage';
 import DashboardPage from './pages/DashboardPage';
 import FundamentalsPage from './pages/fundamentals/FundamentalsPage';
@@ -68,14 +69,20 @@ function PublicGate({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-/** Content Studio is for creators/admins only. */
+/** Content Studio is for creators/admins only — and creators must additionally
+ *  have accepted the Creator Agreement, which is what governs the powers on the
+ *  other side of this gate. */
 function CreatorGate() {
   const { user, isLoading } = useAuth();
   if (isLoading) return <LazyFallback />;
   if (!user || (user.role !== 'creator' && user.role !== 'admin')) {
     return <Navigate to="/dashboard" replace />;
   }
-  return <Outlet />;
+  return (
+    <CreatorAgreementGate>
+      <Outlet />
+    </CreatorAgreementGate>
+  );
 }
 
 /** Admin-only area (member management). */
@@ -113,6 +120,7 @@ function AppRoutes() {
         {/* Legal — public, accessible signed-in or out */}
         <Route path="/privacy" element={<LegalPage kind="privacy" />} />
         <Route path="/terms" element={<LegalPage kind="terms" />} />
+        <Route path="/creator-agreement" element={<LegalPage kind="creator-agreement" />} />
 
         {/* Module viewer — full-screen, outside AppLayout, one level under the
          * module's own page so the overview keeps the app shell around it.

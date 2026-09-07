@@ -13,6 +13,13 @@ import { env } from '../config/env';
 import { logger } from '../utils/logger';
 import { effectivePermissions } from '../types';
 
+import {
+  CURRENT_TERMS_VERSION,
+  CURRENT_CREATOR_AGREEMENT_VERSION,
+  hasAcceptedCurrentTerms,
+  hasAcceptedCurrentCreatorAgreement,
+} from '../config/legal';
+
 const router = Router();
 const googleClient = env.googleClientId ? new OAuth2Client(env.googleClientId) : null;
 
@@ -32,6 +39,8 @@ function publicUser(user: IUser) {
     country: user.country,
     bio: user.bio,
     createdAt: user.createdAt,
+    termsAccepted: hasAcceptedCurrentTerms(user),
+    creatorAgreementAccepted: hasAcceptedCurrentCreatorAgreement(user),
   };
 }
 
@@ -39,6 +48,24 @@ function issueSession(res: Response, user: IUser) {
   const token = signToken(String(user._id));
   setAuthCookie(res, token);
   return { user: publicUser(user) };
+}
+
+/**
+ * Records agreement to the current Terms on the user document.
+ *
+ * The login screen states that continuing means agreeing to the Terms and the
+ * Privacy Policy, and links both, so passing through it *is* the agreement.
+ * This writes down that it happened and against which version — a notice on a
+ * page cannot tell you later who saw which revision.
+ *
+ * Mutates only; every caller already saves the user on the same request, so
+ * folding into that write avoids a second round trip. Bumping
+ * CURRENT_TERMS_VERSION makes this re-stamp everyone on their next sign-in.
+ */
+function stampTermsAgreement(user: IUser): void {
+  if (hasAcceptedCurrentTerms(user)) return;
+  user.termsAcceptedAt = new Date();
+  user.termsVersion = CURRENT_TERMS_VERSION;
 }
 
 /* ── POST /api/auth/google ──
@@ -93,6 +120,7 @@ router.post('/google', async (req, res) => {
       return;
     }
     user.lastLoginAt = new Date();
+    stampTermsAgreement(user);
     await user.save();
 
     logger.info('auth.google_login', { userId: String(user._id) });
@@ -136,6 +164,7 @@ router.post('/dev-login', async (req, res) => {
       user.role = parsed.data.role;
     }
     user.lastLoginAt = new Date();
+    stampTermsAgreement(user);
     await user.save();
 
     logger.info('auth.dev_login', { userId: String(user._id), role: user.role });
@@ -148,6 +177,37 @@ router.post('/dev-login', async (req, res) => {
 /* ── GET /api/auth/me ── */
 router.get('/me', authenticate, (req: AuthRequest, res) => {
   res.json({ user: publicUser(req.user!) });
+});
+
+/* ── POST /api/auth/accept-creator-agreement ──
+ * Records that a creator explicitly accepted the Creator Agreement.
+ *
+ * Unlike the Terms, this is never inferred from signing in: sections 9 and 11
+ * put a perpetual licence and personal responsibility on the creator, which a
+ * login notice cannot carry. Nothing is taken from the request body — the user
+ * comes from the session, the version from server config, the time from the
+ * server clock.
+ */
+router.post('/accept-creator-agreement', authenticate, async (req: AuthRequest, res) => {
+  const user = req.user!;
+
+  if (user.role !== 'creator' && user.role !== 'admin') {
+    res.status(403).json({ error: 'Only creators accept this agreement.' });
+    return;
+  }
+
+  try {
+    // Re-accepting is a no-op rather than an error: two tabs open on the
+    // dialog should not produce a failure in one of them.
+    if (!hasAcceptedCurrentCreatorAgreement(user)) {
+      user.creatorAgreementAcceptedAt = new Date();
+      user.creatorAgreementVersion = CURRENT_CREATOR_AGREEMENT_VERSION;
+      await user.save();
+    }
+    res.json({ user: publicUser(user) });
+  } catch {
+    res.status(500).json({ error: 'Could not record your acceptance' });
+  }
 });
 
 /* ── PATCH /api/auth/profile ── */

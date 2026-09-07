@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
 import User, { IUser } from '../models/User';
 import type { IJWTPayload, UserRole } from '../types';
+import { hasAcceptedCurrentCreatorAgreement } from '../config/legal';
 
 export interface AuthRequest extends Request {
   user?: IUser;
@@ -79,13 +80,42 @@ export const authenticate = async (
   }
 };
 
-/** Role gate — use AFTER authenticate. */
+/**
+ * Role gate — use AFTER authenticate.
+ *
+ * A gate that admits creators additionally requires the Creator Agreement.
+ * That check lives here rather than on each route because `requireRole
+ * ('creator', 'admin')` is the one thing every content, collab, upload and
+ * feedback-reading endpoint already passes through — and those endpoints are
+ * exactly the powers the Agreement governs.
+ *
+ * Admins are exempt: they operate the Academy rather than volunteer as
+ * creators, and gating them could lock the only people able to unlock anyone
+ * else. `requireRole('admin')` is unaffected either way.
+ *
+ * No extra query — `authenticate` has already loaded the full user document.
+ */
 export const requireRole = (...roles: UserRole[]) => {
+  const gatesCreators = roles.includes('creator');
+
   return (req: AuthRequest, res: Response, next: NextFunction): void => {
     if (!req.user || !roles.includes(req.user.role)) {
       res.status(403).json({ error: 'Insufficient permissions' });
       return;
     }
+
+    if (
+      gatesCreators &&
+      req.user.role === 'creator' &&
+      !hasAcceptedCurrentCreatorAgreement(req.user)
+    ) {
+      res.status(403).json({
+        error: 'You must accept the Creator Agreement before authoring content.',
+        code: 'CREATOR_AGREEMENT_NOT_ACCEPTED',
+      });
+      return;
+    }
+
     next();
   };
 };

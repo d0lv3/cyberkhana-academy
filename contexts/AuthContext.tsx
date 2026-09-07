@@ -17,6 +17,8 @@ interface ServerUser {
   country?: string;
   bio?: string;
   createdAt: string;
+  termsAccepted?: boolean;
+  creatorAgreementAccepted?: boolean;
 }
 
 interface AuthContextType {
@@ -64,6 +66,8 @@ function mapServerUser(u: ServerUser): AcademyUser {
     completedLessonsCount: 0,
     totalLearningTimeMinutes: 0,
     createdAt: u.createdAt,
+    termsAccepted: u.termsAccepted,
+    creatorAgreementAccepted: u.creatorAgreementAccepted,
   };
 }
 
