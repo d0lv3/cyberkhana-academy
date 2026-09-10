@@ -14,7 +14,7 @@ import {
   PanelRightOpen,
 } from 'lucide-react';
 import { getLanguage, getModule, getConcept } from '../../data/programming';
-import type { ProgrammingConcept } from '../../data/programming';
+import { courseSteps, stepPath, type CourseStep } from '../../data/programming/courseMap';
 import { CodingEnvironment } from '../../components/code-editor';
 import { runnerFor } from '../../components/code-editor/runners';
 import Button from '../../components/ui/EnhancedButton';
@@ -85,13 +85,16 @@ const ProgrammingLessonPage: React.FC = () => {
   const concepts = mod?.concepts ?? [];
   const currentIdx = concepts.findIndex((c) => c.slug === conceptSlug);
 
-  const prevConcept: ProgrammingConcept | null =
-    currentIdx > 0 ? concepts[currentIdx - 1] : null;
-  const nextConcept: ProgrammingConcept | null =
-    currentIdx < concepts.length - 1 ? concepts[currentIdx + 1] : null;
+  /* Previous and next walk the whole course, the same path the course map
+     draws: the step after a module's last one is the first of the next. */
+  const steps = language ? courseSteps(language) : [];
+  const stepIdx = steps.findIndex((s) => s.module.slug === moduleSlug && s.concept.slug === conceptSlug);
+  const prevStep: CourseStep | null = stepIdx > 0 ? steps[stepIdx - 1] : null;
+  const nextStep: CourseStep | null =
+    stepIdx >= 0 && stepIdx < steps.length - 1 ? steps[stepIdx + 1] : null;
+  const here: CourseStep | null = stepIdx >= 0 ? steps[stepIdx] : null;
 
-  const goTo = (c: ProgrammingConcept) =>
-    navigate(`/fundamentals/programming/${langSlug}/${moduleSlug}/${c.slug}`);
+  const goTo = (step: Pick<CourseStep, 'module' | 'concept'>) => navigate(stepPath(langSlug || '', step));
 
   const markDone = (id: string) => {
     const next = markProgrammingDone(langSlug || '', id);
@@ -122,7 +125,7 @@ const ProgrammingLessonPage: React.FC = () => {
   const handleCompleteLesson = () => {
     if (!concept) return;
     askAboutModule(markDone(concept.id));
-    if (nextConcept) goTo(nextConcept);
+    if (nextStep) goTo(nextStep);
   };
 
   // Remember this as the learner's most recent activity (dashboard "Jump back in").
@@ -228,7 +231,7 @@ const ProgrammingLessonPage: React.FC = () => {
             {concepts.map((c) => (
               <button
                 key={c.id}
-                onClick={() => goTo(c)}
+                onClick={() => goTo({ module: mod, concept: c })}
                 className={`tap-expand-y w-2 h-2 rounded-full transition-all ${
                   c.slug === conceptSlug
                     ? 'w-5 bg-[#00a859]'
@@ -314,6 +317,20 @@ const ProgrammingLessonPage: React.FC = () => {
             <article
               className={`mx-auto px-6 py-8 md:px-8 md:py-10 ${codeOpen ? 'max-w-2xl' : 'max-w-4xl'}`}
             >
+              {/* Where this step sits in the course */}
+              {here && (
+                <p className="mb-6 text-[11px] font-bold uppercase tracking-wider text-[#00a859]">
+                  {lang === 'ar' ? `الوحدة ${here.moduleNumber}` : `Module ${here.moduleNumber}`}
+                  <span className="mx-1.5 text-[#4d5a73]" aria-hidden>·</span>
+                  <span className="normal-case tracking-normal">{mod.title[lang] || mod.title.en}</span>
+                  <span className="mx-1.5 text-[#4d5a73]" aria-hidden>·</span>
+                  <span className="normal-case tracking-normal text-[#8592ad]">
+                    {lang === 'ar'
+                      ? `الخطوة ${here.stepNumber} من ${concepts.length}`
+                      : `Step ${here.stepNumber} of ${concepts.length}`}
+                  </span>
+                </p>
+              )}
               <LessonMarkdown content={mdFor(concept.markdownContent, lang)} />
             </article>
           </div>
@@ -326,14 +343,20 @@ const ProgrammingLessonPage: React.FC = () => {
                   <span className="flex items-center gap-2 text-sm font-semibold text-[#00a859]">
                     <CheckCircle2 size={16} /> {lang === 'ar' ? 'مكتمل' : 'Completed'}
                   </span>
-                  {nextConcept && (
+                  {nextStep && (
                     <Button
                       variant="primary"
                       size="sm"
-                      onClick={() => goTo(nextConcept)}
-                      rightIcon={<ChevronRight size={14} />}
+                      onClick={() => goTo(nextStep)}
+                      rightIcon={<ChevronRight size={14} className="rtl-flip" />}
                     >
-                      {lang === 'ar' ? 'الدرس التالي' : 'Next lesson'}
+                      {nextStep.module.id !== mod.id
+                        ? lang === 'ar'
+                          ? 'الوحدة التالية'
+                          : 'Next module'
+                        : lang === 'ar'
+                          ? 'الدرس التالي'
+                          : 'Next lesson'}
                     </Button>
                   )}
                 </div>
@@ -345,7 +368,7 @@ const ProgrammingLessonPage: React.FC = () => {
                   onClick={handleCompleteLesson}
                   leftIcon={<CheckCircle2 size={16} />}
                 >
-                  {nextConcept
+                  {nextStep
                     ? lang === 'ar'
                       ? 'إكمال ومتابعة'
                       : 'Complete & Continue'
@@ -359,14 +382,14 @@ const ProgrammingLessonPage: React.FC = () => {
 
           {/* ── Bottom nav bar ── */}
           <div className="flex-shrink-0 flex items-center justify-between px-6 py-3 border-t border-[#263248] bg-[#121a2a]">
-            {prevConcept ? (
+            {prevStep ? (
               <button
-                onClick={() => goTo(prevConcept)}
-                className="flex items-center gap-2 text-xs text-[#9aa5bf] hover:text-[#f3f6ff] transition-colors touch:min-h-tap px-1 select-none"
+                onClick={() => goTo(prevStep)}
+                className="flex min-w-0 items-center gap-2 text-xs text-[#9aa5bf] hover:text-[#f3f6ff] transition-colors touch:min-h-tap px-1 select-none"
               >
-                <ChevronLeft size={14} />
-                <span className="hidden sm:inline">{prevConcept.title[lang]}</span>
-                <span className="sm:hidden">Previous</span>
+                <ChevronLeft size={14} className="flex-shrink-0 rtl-flip" />
+                <span className="hidden truncate sm:inline">{prevStep.concept.title[lang]}</span>
+                <span className="sm:hidden">{lang === 'ar' ? 'السابق' : 'Previous'}</span>
               </button>
             ) : (
               <div />
@@ -376,17 +399,30 @@ const ProgrammingLessonPage: React.FC = () => {
               {currentIdx + 1} / {concepts.length}
             </span>
 
-            {nextConcept ? (
+            {nextStep ? (
+              /* Crossing into the next module says so, rather than dropping
+                 the learner into a new topic under a lesson title alone. */
               <button
-                onClick={() => goTo(nextConcept)}
-                className="flex items-center gap-2 text-xs text-[#9aa5bf] hover:text-[#f3f6ff] transition-colors touch:min-h-tap px-1 select-none"
+                onClick={() => goTo(nextStep)}
+                className="flex min-w-0 items-center gap-2 text-xs text-[#9aa5bf] hover:text-[#f3f6ff] transition-colors touch:min-h-tap px-1 select-none"
               >
-                <span className="hidden sm:inline">{nextConcept.title[lang]}</span>
-                <span className="sm:hidden">Next</span>
-                <ChevronRight size={14} />
+                <span className="hidden truncate sm:inline">
+                  {nextStep.module.id !== mod.id
+                    ? `${lang === 'ar' ? 'الوحدة التالية' : 'Next module'}: ${nextStep.module.title[lang] || nextStep.module.title.en}`
+                    : nextStep.concept.title[lang]}
+                </span>
+                <span className="sm:hidden">{lang === 'ar' ? 'التالي' : 'Next'}</span>
+                <ChevronRight size={14} className="flex-shrink-0 rtl-flip" />
               </button>
             ) : (
-              <div />
+              /* The last step of the course: the way on is back to the map. */
+              <button
+                onClick={() => navigate(`/fundamentals/programming/${langSlug}`)}
+                className="flex items-center gap-2 text-xs font-semibold text-[#00a859] hover:text-[#9fef00] transition-colors touch:min-h-tap px-1 select-none"
+              >
+                {lang === 'ar' ? 'خريطة المنهج' : 'Course map'}
+                <ChevronRight size={14} className="flex-shrink-0 rtl-flip" />
+              </button>
             )}
           </div>
         </div>

@@ -191,26 +191,30 @@ router.get('/published', authenticate, async (_req: AuthRequest, res) => {
 
     for (const doc of docs) {
       const items = (doc.items as AnyItem[]) ?? [];
+      const author = authors.get(String(doc.ownerId));
 
       if (doc.bucket === 'programming-patches') {
+        /* Patches from several creators merge into one per language below,
+           so each module, lesson and language is credited on its own, to the
+           owner of the patch it came from. */
         for (const patch of items) {
           if (!isPlainObject(patch) || typeof patch.languageSlug !== 'string') continue;
-          const publishedModules = (Array.isArray(patch.newModules) ? patch.newModules : []).filter(
-            (m): m is AnyItem => isPlainObject(m) && isPublishedItem(m)
-          );
+          const publishedModules = (Array.isArray(patch.newModules) ? patch.newModules : [])
+            .filter((m): m is AnyItem => isPlainObject(m) && isPublishedItem(m))
+            .map((m) => credited(m, author));
           const publishedConcepts: Record<string, AnyItem[]> = {};
           if (isPlainObject(patch.newConcepts)) {
             for (const [modSlug, concepts] of Object.entries(patch.newConcepts)) {
-              const pub = (Array.isArray(concepts) ? concepts : []).filter(
-                (c): c is AnyItem => isPlainObject(c) && isPublishedItem(c)
-              );
+              const pub = (Array.isArray(concepts) ? concepts : [])
+                .filter((c): c is AnyItem => isPlainObject(c) && isPublishedItem(c))
+                .map((c) => credited(c, author));
               if (pub.length) publishedConcepts[modSlug] = pub;
             }
           }
           // Creator-defined language: published ones reach every student.
           const publishedLanguage =
             isPlainObject(patch.newLanguage) && isPublishedItem(patch.newLanguage)
-              ? (patch.newLanguage as AnyItem)
+              ? credited(patch.newLanguage as AnyItem, author)
               : undefined;
           if (!publishedModules.length && !Object.keys(publishedConcepts).length && !publishedLanguage) continue;
 
@@ -230,7 +234,6 @@ router.get('/published', authenticate, async (_req: AuthRequest, res) => {
           patchByLang.set(patch.languageSlug, merged);
         }
       } else {
-        const author = authors.get(String(doc.ownerId));
         result[doc.bucket].push(
           ...items
             .filter((i) => isPlainObject(i) && isPublishedItem(i))
