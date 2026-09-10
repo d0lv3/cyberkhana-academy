@@ -1,8 +1,8 @@
 # CyberKhana Academy — Privacy Policy
 
 **Applies to:** academy.cyberkhana.tech (the "Academy")
-**Last updated:** 7 September 2026
-**Effective from:** 7 September 2026
+**Last updated:** 10 September 2026
+**Effective from:** 10 September 2026
 
 ---
 
@@ -50,7 +50,10 @@ Google account.
 - a **display name** and optional **username**;
 - an optional **profile picture**, if you upload one instead of using Google's;
 - your **university**, chosen from a list, and your **country**;
-- a short **bio**;
+- a short **bio**, which stays private unless you choose to show it on your
+  profile;
+- **links to your accounts elsewhere**, such as GitHub, LinkedIn, X, TryHackMe
+  or a website, if you choose to add them;
 - your **language preference** (English or Arabic).
 
 All of these are optional except the display name, and you can change or clear
@@ -97,8 +100,9 @@ could not read it even if we wanted to.
 | What | Why |
 |---|---|
 | Google name, email, picture, ID | To create your account, sign you in, and recognise you |
-| Display name, picture, university | To show who you are on the leaderboard and your profile |
-| Country, bio, language | To personalise the Academy and show it in your language |
+| Display name, username, picture, university | To show who you are on the leaderboard, on your public profile and beside anything you publish |
+| Social links, and your bio if you switch it on | To show on your public profile |
+| Country, language | To personalise the Academy and show it in your language |
 | Progress, completions, learning time | To track where you are and pick up where you left off |
 | Points and monthly points | To build the leaderboards |
 | Feedback and ratings | To help creators improve their content |
@@ -126,17 +130,25 @@ your language choice and your place in a lesson. That stays on your device.
 
 ## 5. Who can see what
 
-### Public, to anyone who can see the leaderboard
+### Visible to anyone signed in to the Academy
 
-- your **display name**;
+On the leaderboard and on your **public profile**, which other members can open
+from the leaderboard or from anything you publish:
+
+- your **display name** and **username**;
 - your **profile picture**;
 - your **university**, if you set one;
-- your **points, monthly points and rank**.
+- your **points, monthly points and rank**;
+- **links to your accounts elsewhere**, if you add them;
+- your **bio**, only if you switch on "Show my bio on my public profile". It is
+  off until you do;
+- the **content you have published** as a creator.
 
-### Not public
+### Never shown to other members
 
-Your **email address**, your **country** and your **bio** are not shown on the
-leaderboard.
+Your **email address**, your **country**, your **language setting**, the
+**Google account** you sign in with, **when you last signed in**, **whether your
+account is suspended**, and your **learning record** beyond your points.
 
 ### Feedback — please read this one
 
@@ -155,8 +167,9 @@ instead of leaving feedback.
 
 ### Creator content
 
-Content you publish as a creator is visible to everyone, with your name on it as
-the author.
+Content you publish as a creator is visible to everyone, credited to your
+account: your display name, username and picture appear beside it and link to
+your profile.
 
 ## 6. Who we share it with
 
@@ -199,8 +212,8 @@ button yet — we do it by hand, and **we will complete it within 30 days** of a
 request we can verify came from you.
 
 **What is deleted:** your name, email address, profile picture, username,
-university, country, bio, language preference, and the link between your account
-and your Google identity.
+university, country, bio, social links, language preference, your public
+profile, and the link between your account and your Google identity.
 
 **What is not deleted, and why:**
 
@@ -246,8 +259,10 @@ under 13 has an account, tell us at support@cyberkhana.tech and we will delete
 it.
 
 **If you are under 18, think before you fill in your profile.** Your display
-name, picture and university are shown publicly on the leaderboard. You do not
-have to use your real name or a photo of yourself.
+name, username, picture and university are shown to other members on the
+leaderboard and on your profile, and so are any links you add. Your bio stays
+private unless you choose to show it. You do not have to use your real name or a
+photo of yourself.
 
 ## 12. Security
 

@@ -12,12 +12,12 @@
 import type { BilingualDoc } from './legalTypes';
 
 /** Must match CURRENT_TERMS_VERSION in backend/src/config/legal.ts. */
-export const TERMS_VERSION = '2026-09-07';
+export const TERMS_VERSION = '2026-09-10';
 
 export const TERMS: BilingualDoc = {
   en: {
     title: 'Terms of Service',
-    updated: '7 September 2026',
+    updated: '10 September 2026',
     version: TERMS_VERSION,
     intro:
       'These Terms govern your use of CyberKhana Academy at academy.cyberkhana.tech (the "Academy"). By signing in or using the Academy, you agree to them.',
@@ -104,6 +104,7 @@ export const TERMS: BilingualDoc = {
         list: [
           'harass, threaten, bully or abuse anyone, or post hateful, discriminatory, sexual or violent content, including in feedback and profile fields;',
           'pretend to be someone else, a creator, or CyberKhana;',
+          'put links on your profile that lead to malware, phishing or anything else these Terms forbid, or to accounts that are not yours;',
           'scrape the Academy, or point automated tools at it;',
           'copy our lessons, modules or paths and republish them elsewhere;',
           'get around a ban, a rate limit, or any access control;',
@@ -122,7 +123,7 @@ export const TERMS: BilingualDoc = {
         h: 'Points, ranks and leaderboards',
         body: [
           'You earn points as you complete lessons and modules. There is an all-time leaderboard and a monthly one, and you can be filtered onto your university’s board if you have set one.',
-          'What others can see: your display name, your profile picture, your university if you set one, and your points and rank. Your email address, your country and your bio are not shown on the leaderboard. There is more detail in the Privacy Policy.',
+          'What others can see: signed-in members can open your public profile from the leaderboard or from anything you publish. It shows your display name and username, your profile picture, your university if you set one, your points and rank, the links you choose to add, and your bio only if you switch it on. Your email address and your country are never shown. There is more detail in the Privacy Policy.',
           'Points are not money. They have no cash value, are not your property, and cannot be sold, traded or transferred.',
           'We can adjust or reset them. We may correct points, recalculate them, or reset them at the start of a new season, to fix errors, deal with broken content, or respond to cheating. Monthly points reset each month by design.',
         ],
@@ -157,7 +158,7 @@ export const TERMS: BilingualDoc = {
       {
         h: 'Content you post',
         body: [
-          'This covers feedback, ratings and profile fields. Creators have their own, fuller obligations in the Creator Agreement.',
+          'This covers feedback, ratings and profile fields, including the links on your profile. Creators have their own, fuller obligations in the Creator Agreement.',
           'Feedback is not anonymous. When you rate or comment on a lesson, your name goes with it, and the creators and administrators of the Academy can see it. Write accordingly — useful and honest is welcome, abusive is not.',
           'You keep ownership of what you post, and you give us permission to store and display it so the Academy works. You are responsible for it, and it must not break the rules above.',
           'We can moderate. We may edit, hide or delete anything that breaks these Terms, without notice where there is a risk of harm.',
@@ -264,7 +265,7 @@ export const TERMS: BilingualDoc = {
 
   ar: {
     title: 'شروط الخدمة',
-    updated: '٧ أيلول/سبتمبر ٢٠٢٦',
+    updated: '١٠ أيلول/سبتمبر ٢٠٢٦',
     version: TERMS_VERSION,
     intro:
       'تحكم هذه الشروط استخدامك لأكاديمية سايبر خانة على academy.cyberkhana.tech («الأكاديمية»). وبتسجيل دخولك أو استخدامك للأكاديمية، فإنك توافق عليها.',
@@ -351,6 +352,7 @@ export const TERMS: BilingualDoc = {
         list: [
           'تتحرّش بأحد أو تهدّده أو تسيء إليه، أو تنشر محتوى يحضّ على الكراهية أو التمييز أو محتوى جنسيًا أو عنيفًا، بما في ذلك في التقييمات وحقول الملف الشخصي؛',
           'تنتحل شخصية شخص آخر أو مُنشِئ محتوى أو سايبر خانة؛',
+          'تضع في ملفك الشخصي روابط تقود إلى برمجيات خبيثة أو تصيّد احتيالي أو أي شيء آخر تمنعه هذه الشروط، أو إلى حسابات لا تخصّك؛',
           'تسحب بيانات الأكاديمية آليًا أو توجّه إليها أدوات مؤتمتة؛',
           'تنسخ دروسنا أو وحداتنا أو مساراتنا وتعيد نشرها في مكان آخر؛',
           'تتحايل على حظر أو على حدّ للمعدّل أو على أي ضابط وصول؛',
@@ -369,7 +371,7 @@ export const TERMS: BilingualDoc = {
         h: 'النقاط والمراتب ولوحات الصدارة',
         body: [
           'تكسب نقاطًا كلما أكملت دروسًا ووحدات. وهناك لوحة صدارة عامة وأخرى شهرية، ويمكن تصفيتها لتظهر على لوحة جامعتك إن كنت قد حدّدتها.',
-          'ما يراه الآخرون: اسمك المعروض، وصورتك الشخصية، وجامعتك إن حدّدتها، ونقاطك ومرتبتك. أما بريدك الإلكتروني وبلدك ونبذتك فلا تظهر على لوحة الصدارة. وتجد تفصيلًا أوفى في سياسة الخصوصية.',
+          'ما يراه الآخرون: يستطيع الأعضاء المسجَّلون فتح ملفك العام من لوحة الصدارة أو من أي محتوى تنشره. ويعرض اسمك المعروض واسم المستخدم، وصورتك الشخصية، وجامعتك إن حدّدتها، ونقاطك ومرتبتك، والروابط التي تختار إضافتها، ونبذتك فقط إذا فعّلت إظهارها. أما بريدك الإلكتروني وبلدك فلا يظهران أبدًا. وتجد تفصيلًا أوفى في سياسة الخصوصية.',
           'النقاط ليست مالًا. لا قيمة نقدية لها، وليست ملكًا لك، ولا يمكن بيعها أو تداولها أو نقلها.',
           'ويمكننا تعديلها أو إعادة ضبطها. فقد نصحّح النقاط أو نعيد حسابها أو نعيد ضبطها في بداية موسم جديد، لتصحيح أخطاء أو لمعالجة محتوى معطّل أو للتعامل مع الغش. والنقاط الشهرية يُعاد ضبطها كل شهر بحكم التصميم.',
         ],
@@ -404,7 +406,7 @@ export const TERMS: BilingualDoc = {
       {
         h: 'المحتوى الذي تنشره',
         body: [
-          'يشمل هذا التقييمات والتعليقات وحقول الملف الشخصي. أما المُنشِئون فلهم التزامات أوسع في اتفاقية المُنشِئ.',
+          'يشمل هذا التقييمات والتعليقات وحقول الملف الشخصي، ومنها الروابط في ملفك. أما المُنشِئون فلهم التزامات أوسع في اتفاقية المُنشِئ.',
           'التقييمات ليست مجهولة المصدر. فعندما تقيّم درسًا أو تعلّق عليه، يُرفق اسمك بذلك، ويستطيع مُنشِئو المحتوى ومشرفو الأكاديمية رؤيته. فاكتب على هذا الأساس — المفيد والصريح مرحّب به، والمسيء لا.',
           'تحتفظ بملكية ما تنشره، وتمنحنا إذنًا بتخزينه وعرضه لتعمل الأكاديمية. وأنت مسؤول عنه، ويجب ألّا يخالف القواعد أعلاه.',
           'ويمكننا الإشراف على المحتوى. فقد نعدّل أو نخفي أو نحذف أي شيء يخالف هذه الشروط، ودون إشعار مسبق إذا كان هناك خطر ضرر.',

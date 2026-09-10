@@ -1,8 +1,8 @@
 # CyberKhana Academy — Terms of Service
 
 **Applies to:** academy.cyberkhana.tech (the "Academy")
-**Last updated:** 7 September 2026
-**Effective from:** 7 September 2026
+**Last updated:** 10 September 2026
+**Effective from:** 10 September 2026
 
 ---
 
@@ -134,6 +134,8 @@ You also agree not to:
 - harass, threaten, bully or abuse anyone, or post hateful, discriminatory,
   sexual or violent content, including in feedback and profile fields;
 - pretend to be someone else, a creator, or CyberKhana;
+- put links on your profile that lead to malware, phishing or anything else
+  these Terms forbid, or to accounts that are not yours;
 - scrape the Academy, or point automated tools at it;
 - copy our lessons, modules or paths and republish them elsewhere;
 - get around a ban, a rate limit, or any access control;
@@ -155,10 +157,12 @@ You earn points as you complete lessons and modules. There is an all-time
 leaderboard and a monthly one, and you can be filtered onto your university's
 board if you have set one.
 
-**What others can see:** your display name, your profile picture, your
-university if you set one, and your points and rank. Your email address, your
-country and your bio are not shown on the leaderboard. There is more detail in
-the Privacy Policy.
+**What others can see:** signed-in members can open your public profile from
+the leaderboard or from anything you publish. It shows your display name and
+username, your profile picture, your university if you set one, your points and
+rank, the links you choose to add, and your bio only if you switch it on. Your
+email address and your country are never shown. There is more detail in the
+Privacy Policy.
 
 **Points are not money.** They have no cash value, are not your property, and
 cannot be sold, traded or transferred.
@@ -202,8 +206,8 @@ section 6.
 
 ## 13. Content you post
 
-This covers feedback, ratings and profile fields. Creators have their own,
-fuller obligations in the Creator Agreement.
+This covers feedback, ratings and profile fields, including the links on your
+profile. Creators have their own, fuller obligations in the Creator Agreement.
 
 **Feedback is not anonymous.** When you rate or comment on a lesson, your name
 goes with it, and the creators and administrators of the Academy can see it.

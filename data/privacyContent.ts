@@ -5,17 +5,19 @@
  *
  * Every factual claim here is checkable against the code, and several were
  * written by reading it: there are no analytics or third-party trackers, only
- * Google OAuth is implemented, exercise code never leaves the browser, and the
- * leaderboard projection excludes email, country and bio. If any of that
- * changes, this file is wrong — in both languages — and has to change with it.
+ * Google OAuth is implemented, exercise code never leaves the browser, the
+ * leaderboard and public-profile projections (routes/leaderboard.ts,
+ * routes/users.ts) exclude email and country, and the bio reaches other
+ * members only when its owner has switched it on. If any of that changes,
+ * this file is wrong, in both languages, and has to change with it.
  */
 import type { BilingualDoc } from './legalTypes';
 
 export const PRIVACY: BilingualDoc = {
   en: {
     title: 'Privacy Policy',
-    updated: '7 September 2026',
-    version: '2026-09-07',
+    updated: '10 September 2026',
+    version: '2026-09-10',
     intro:
       'This policy explains what CyberKhana Academy collects, what we do with it, and what you can ask us to do about it.',
     callout: {
@@ -55,7 +57,8 @@ export const PRIVACY: BilingualDoc = {
           'a display name and optional username;',
           'an optional profile picture, if you upload one instead of using Google’s;',
           'your university, chosen from a list, and your country;',
-          'a short bio;',
+          'a short bio, which stays private unless you choose to show it on your profile;',
+          'links to your accounts elsewhere, such as GitHub, LinkedIn, X, TryHackMe or a website, if you choose to add them;',
           'your language preference (English or Arabic).',
         ],
         after: [
@@ -87,15 +90,16 @@ export const PRIVACY: BilingualDoc = {
       {
         h: 'What we use it for',
         list: [
-          'your Google name, email, picture and ID — to create your account, sign you in, and recognise you;',
-          'your display name, picture and university — to show who you are on the leaderboard and your profile;',
-          'your country, bio and language — to personalise the Academy and show it in your language;',
-          'your progress, completions and learning time — to track where you are and pick up where you left off;',
-          'your points — to build the leaderboards;',
-          'your feedback and ratings — to help creators improve their content;',
-          'creator content, uploads and permissions — to publish your content and control who can edit what;',
-          'the auth cookie — to keep you signed in;',
-          'server logs — to keep the service secure, find abuse, and fix faults.',
+          'your Google name, email, picture and ID: to create your account, sign you in, and recognise you;',
+          'your display name, username, picture and university: to show who you are on the leaderboard, on your public profile and beside anything you publish;',
+          'your social links, and your bio if you switch it on: to show on your public profile;',
+          'your country and language: to personalise the Academy and show it in your language;',
+          'your progress, completions and learning time: to track where you are and pick up where you left off;',
+          'your points: to build the leaderboards;',
+          'your feedback and ratings: to help creators improve their content;',
+          'creator content, uploads and permissions: to publish your content and control who can edit what;',
+          'the auth cookie: to keep you signed in;',
+          'server logs: to keep the service secure, find abuse, and fix faults.',
         ],
         after: [
           'We do not use your data to build advertising profiles, and we do not make automated decisions about you that have legal effects.',
@@ -112,16 +116,19 @@ export const PRIVACY: BilingualDoc = {
       },
       {
         h: 'Who can see what',
-        body: ['Public, to anyone who can see the leaderboard:'],
+        body: ['Visible to anyone signed in to the Academy, on the leaderboard and on your public profile:'],
         list: [
-          'your display name;',
+          'your display name and username;',
           'your profile picture;',
           'your university, if you set one;',
-          'your points, monthly points and rank.',
+          'your points, monthly points and rank;',
+          'links to your accounts elsewhere, if you add them;',
+          'your bio, only if you switch on "Show my bio on my public profile". It is off until you do;',
+          'the content you have published as a creator.',
         ],
         after: [
-          'Your email address, your country and your bio are not shown on the leaderboard.',
-          'Content you publish as a creator is visible to everyone, with your name on it as the author.',
+          'Never shown to other members: your email address, your country, your language setting, the Google account you sign in with, when you last signed in, whether your account is suspended, and your learning record beyond your points.',
+          'Content you publish as a creator is visible to everyone, credited to your account: your display name, username and picture appear beside it and link to your profile.',
         ],
       },
       {
@@ -164,7 +171,7 @@ export const PRIVACY: BilingualDoc = {
         emphasis: true,
         body: [
           'Email support@cyberkhana.tech and ask. There is no self-service delete button yet — we do it by hand, and we will complete it within 30 days of a request we can verify came from you.',
-          'What is deleted: your name, email address, profile picture, username, university, country, bio, language preference, and the link between your account and your Google identity.',
+          'What is deleted: your name, email address, profile picture, username, university, country, bio, social links, language preference, your public profile, and the link between your account and your Google identity.',
           'What is not deleted, and why:',
         ],
         list: [
@@ -197,7 +204,7 @@ export const PRIVACY: BilingualDoc = {
         body: [
           'The Academy is for people aged 13 and over, and if you are under 18 you need a parent or guardian’s permission to use it.',
           'We do not knowingly collect data from anyone under 13. If you believe a child under 13 has an account, tell us at support@cyberkhana.tech and we will delete it.',
-          'If you are under 18, think before you fill in your profile. Your display name, picture and university are shown publicly on the leaderboard. You do not have to use your real name or a photo of yourself.',
+          'If you are under 18, think before you fill in your profile. Your display name, username, picture and university are shown to other members on the leaderboard and on your profile, and so are any links you add. Your bio stays private unless you choose to show it. You do not have to use your real name or a photo of yourself.',
         ],
       },
       {
@@ -231,8 +238,8 @@ export const PRIVACY: BilingualDoc = {
 
   ar: {
     title: 'سياسة الخصوصية',
-    updated: '٧ أيلول/سبتمبر ٢٠٢٦',
-    version: '2026-09-07',
+    updated: '١٠ أيلول/سبتمبر ٢٠٢٦',
+    version: '2026-09-10',
     intro:
       'تشرح هذه السياسة ما تجمعه أكاديمية سايبر خانة، وما نفعله به، وما يمكنك أن تطلب منا فعله بشأنه.',
     callout: {
@@ -270,7 +277,8 @@ export const PRIVACY: BilingualDoc = {
           'اسم معروض، واسم مستخدم اختياري؛',
           'صورة شخصية اختيارية، إن رفعتَ واحدة بدلًا من صورة Google؛',
           'جامعتك، تختارها من قائمة، وبلدك؛',
-          'نبذة قصيرة؛',
+          'نبذة قصيرة، تبقى خاصة ما لم تختر إظهارها في ملفك؛',
+          'روابط لحساباتك في مواقع أخرى، مثل GitHub وLinkedIn وX وTryHackMe أو موقعك الشخصي، إن اخترت إضافتها؛',
           'لغتك المفضّلة (الإنجليزية أو العربية).',
         ],
         after: [
@@ -302,15 +310,16 @@ export const PRIVACY: BilingualDoc = {
       {
         h: 'فيمَ نستخدمها',
         list: [
-          'اسمك وبريدك وصورتك ومعرّفك من Google — لإنشاء حسابك وتسجيل دخولك والتعرّف عليك؛',
-          'اسمك المعروض وصورتك وجامعتك — لإظهار مَن أنت على لوحة الصدارة وفي ملفك الشخصي؛',
-          'بلدك ونبذتك ولغتك — لتخصيص الأكاديمية وعرضها بلغتك؛',
-          'تقدّمك وما أكملته ووقت تعلّمك — لتتبّع موضعك ومتابعة ما توقفت عنده؛',
-          'نقاطك — لبناء لوحات الصدارة؛',
-          'تقييماتك وتعليقاتك — لمساعدة المُنشِئين على تحسين محتواهم؛',
-          'محتوى المُنشِئ والملفات المرفوعة والصلاحيات — لنشر محتواك وضبط مَن يمكنه التعديل؛',
-          'ملف تعريف ارتباط المصادقة — لإبقائك مسجَّل الدخول؛',
-          'سجلّات الخادم — للحفاظ على أمان الخدمة ورصد إساءة الاستخدام وإصلاح الأعطال.',
+          'اسمك وبريدك وصورتك ومعرّفك من Google: لإنشاء حسابك وتسجيل دخولك والتعرّف عليك؛',
+          'اسمك المعروض واسم المستخدم وصورتك وجامعتك: لإظهار مَن أنت على لوحة الصدارة وفي ملفك العام وبجانب ما تنشره؛',
+          'روابطك، ونبذتك إن فعّلت إظهارها: لعرضها في ملفك العام؛',
+          'بلدك ولغتك: لتخصيص الأكاديمية وعرضها بلغتك؛',
+          'تقدّمك وما أكملته ووقت تعلّمك: لتتبّع موضعك ومتابعة ما توقفت عنده؛',
+          'نقاطك: لبناء لوحات الصدارة؛',
+          'تقييماتك وتعليقاتك: لمساعدة المُنشِئين على تحسين محتواهم؛',
+          'محتوى المُنشِئ والملفات المرفوعة والصلاحيات: لنشر محتواك وضبط مَن يمكنه التعديل؛',
+          'ملف تعريف ارتباط المصادقة: لإبقائك مسجَّل الدخول؛',
+          'سجلّات الخادم: للحفاظ على أمان الخدمة ورصد إساءة الاستخدام وإصلاح الأعطال.',
         ],
         after: [
           'ولا نستخدم بياناتك لبناء ملفات إعلانية، ولا نتخذ بشأنك قرارات آلية ذات أثر قانوني.',
@@ -327,16 +336,19 @@ export const PRIVACY: BilingualDoc = {
       },
       {
         h: 'مَن يرى ماذا',
-        body: ['يظهر للجميع ممن يرى لوحة الصدارة:'],
+        body: ['يظهر لكل مَن سجّل الدخول إلى الأكاديمية، على لوحة الصدارة وفي ملفك العام:'],
         list: [
-          'اسمك المعروض؛',
+          'اسمك المعروض واسم المستخدم؛',
           'صورتك الشخصية؛',
           'جامعتك، إن حدّدتها؛',
-          'نقاطك ونقاطك الشهرية ومرتبتك.',
+          'نقاطك ونقاطك الشهرية ومرتبتك؛',
+          'روابط حساباتك في مواقع أخرى، إن أضفتها؛',
+          'نبذتك، فقط إذا فعّلت خيار «أظهر نبذتي في ملفي العام». وهو مطفأ حتى تفعّله؛',
+          'المحتوى الذي نشرته كمُنشِئ.',
         ],
         after: [
-          'أما بريدك الإلكتروني وبلدك ونبذتك فلا تظهر على لوحة الصدارة.',
-          'والمحتوى الذي تنشره كمُنشِئ مرئي للجميع، ويحمل اسمك بوصفك مؤلّفه.',
+          'ولا يظهر للأعضاء الآخرين أبدًا: بريدك الإلكتروني، وبلدك، وإعداد لغتك، وحساب Google الذي تسجّل الدخول به، ووقت آخر تسجيل دخول لك، وما إذا كان حسابك معلَّقًا، وسجلّ تعلّمك فيما عدا نقاطك.',
+          'والمحتوى الذي تنشره كمُنشِئ مرئي للجميع، ويُنسب إلى حسابك: يظهر بجانبه اسمك المعروض واسم المستخدم وصورتك، مع رابط إلى ملفك.',
         ],
       },
       {
@@ -379,7 +391,7 @@ export const PRIVACY: BilingualDoc = {
         emphasis: true,
         body: [
           'راسلنا على support@cyberkhana.tech واطلب ذلك. لا يوجد زر حذف ذاتي بعد — نحن نقوم بذلك يدويًا، وسننجزه خلال ٣٠ يومًا من طلبٍ نتحقق من صدوره عنك.',
-          'ما يُحذف: اسمك وبريدك الإلكتروني وصورتك الشخصية واسم المستخدم وجامعتك وبلدك ونبذتك ولغتك المفضّلة، والرابط بين حسابك وهويتك على Google.',
+          'ما يُحذف: اسمك وبريدك الإلكتروني وصورتك الشخصية واسم المستخدم وجامعتك وبلدك ونبذتك وروابطك ولغتك المفضّلة وملفك العام، والرابط بين حسابك وهويتك على Google.',
           'وما لا يُحذف، ولماذا:',
         ],
         list: [
@@ -412,7 +424,7 @@ export const PRIVACY: BilingualDoc = {
         body: [
           'الأكاديمية مخصّصة لمن بلغ ١٣ عامًا فأكثر، وإذا كان عمرك دون ١٨ فأنت بحاجة إلى إذن أحد والديك أو وليّ أمرك لاستخدامها.',
           'ولا نجمع عن علم بيانات أي شخص دون ١٣ عامًا. وإذا كنت تعتقد أن طفلًا دون ١٣ يملك حسابًا، فأخبرنا على support@cyberkhana.tech وسنحذفه.',
-          'وإذا كان عمرك دون ١٨، ففكّر قبل أن تملأ ملفك الشخصي. فاسمك المعروض وصورتك وجامعتك تظهر علنًا على لوحة الصدارة. ولستَ مضطرًا لاستخدام اسمك الحقيقي أو صورة لك.',
+          'وإذا كان عمرك دون ١٨، ففكّر قبل أن تملأ ملفك الشخصي. فاسمك المعروض واسم المستخدم وصورتك وجامعتك تظهر للأعضاء الآخرين على لوحة الصدارة وفي ملفك، وكذلك أي روابط تضيفها. وتبقى نبذتك خاصة ما لم تختر إظهارها. ولستَ مضطرًا لاستخدام اسمك الحقيقي أو صورة لك.',
         ],
       },
       {
