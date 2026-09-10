@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   UserCircle,
@@ -14,6 +15,9 @@ import {
   ImagePlus,
   Loader2,
   AlertCircle,
+  Link2,
+  EyeOff,
+  Eye,
 } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/EnhancedButton';
@@ -23,10 +27,22 @@ import { useLang } from '../contexts/LangContext';
 import UniversityPicker from '../components/university/UniversityPicker';
 import Avatar from '../components/ui/Avatar';
 import AvatarPicker from '../components/account/AvatarPicker';
+import SocialLinksRow, { SocialIcon } from '../components/profile/SocialLinks';
 import { universityLabel } from '../data/iraqUniversities';
+import { profilePath } from '../services/profiles';
+import {
+  SOCIAL_META,
+  SOCIAL_PLATFORMS,
+  normalizeSocial,
+  type SocialPlatform,
+} from '../services/socials';
 
 const BIO_MAX = 500;
 const HANDLE_RE = /^[a-zA-Z0-9_]{3,20}$/;
+
+type SocialDraft = Record<SocialPlatform, string>;
+const emptySocials = (): SocialDraft =>
+  Object.fromEntries(SOCIAL_PLATFORMS.map((p) => [p, ''])) as SocialDraft;
 
 /* ── Form section ──
  * The editor used to be a single stack of controls in a column beside the
@@ -55,8 +71,9 @@ const Section: React.FC<{
 );
 
 const ProfilePage: React.FC = () => {
-  const { user, updateUser, updateUsername, logout } = useAuth();
+  const { user, updateUsername, updateProfile, logout } = useAuth();
   const { t, lang, setLang } = useLang();
+  const navigate = useNavigate();
   const ar = lang === 'ar';
 
   const [editing, setEditing] = useState(false);
@@ -69,11 +86,15 @@ const ProfilePage: React.FC = () => {
     university: '',
     avatarUrl: '',
     username: '',
+    showBio: false,
+    socials: emptySocials(),
   });
   const [saving, setSaving] = useState(false);
   /* The handle is the only field the server can refuse (it must be unique), so
      its rejection has to land on the field rather than as a page-level error. */
   const [handleError, setHandleError] = useState<string | null>(null);
+  /* Anything else the server refuses on save (a link it will not accept). */
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   if (!user) return null;
 
@@ -83,11 +104,14 @@ const ProfilePage: React.FC = () => {
     university: user.university ?? '',
     avatarUrl: user.avatarUrl ?? '',
     username: user.username ?? '',
+    showBio: !!user.showBio,
+    socials: { ...emptySocials(), ...(user.socials ?? {}) } as SocialDraft,
   };
 
   const startEdit = () => {
     setForm(current);
     setHandleError(null);
+    setSaveError(null);
     setEditing(true);
   };
 
@@ -101,19 +125,37 @@ const ProfilePage: React.FC = () => {
   const nameEmpty = form.displayName.trim() === '';
   const bioTooLong = form.bio.length > BIO_MAX;
 
+  /* Each link checked as it is typed, with the same rules the server applies,
+     so a mistake shows under its own field instead of failing the save. */
+  const socialChecks = SOCIAL_PLATFORMS.map((p) => [p, normalizeSocial(p, form.socials[p])] as const);
+  const socialErrors: Partial<Record<SocialPlatform, string>> = {};
+  for (const [p, check] of socialChecks) if (!check.ok) socialErrors[p] = check.reason[lang];
+  const socialsInvalid = Object.keys(socialErrors).length > 0;
+  const socialsChanged = socialChecks.some(
+    ([p, check]) => (check.ok ? check.value : form.socials[p]) !== (current.socials[p] || '')
+  );
+
   const dirty =
     form.displayName.trim() !== current.displayName ||
     form.bio.trim() !== current.bio ||
     form.university.trim() !== current.university ||
     form.avatarUrl !== current.avatarUrl ||
+    form.showBio !== current.showBio ||
+    socialsChanged ||
     handleChanged;
 
-  const blocked = nameEmpty || bioTooLong || handleMalformed;
+  const blocked = nameEmpty || bioTooLong || handleMalformed || socialsInvalid;
+
+  const setSocial = (platform: SocialPlatform, value: string) => {
+    setForm((f) => ({ ...f, socials: { ...f.socials, [platform]: value } }));
+    setSaveError(null);
+  };
 
   const save = async () => {
     if (saving || !dirty || blocked) return;
     setSaving(true);
     setHandleError(null);
+    setSaveError(null);
 
     /* Handle first. It is the one round-trip that can fail, and if it does the
        form has to stay open on the offending field — so nothing else is
@@ -130,12 +172,22 @@ const ProfilePage: React.FC = () => {
       }
     }
 
-    updateUser({
-      displayName: form.displayName.trim(),
-      bio: form.bio.trim(),
-      university: form.university.trim(),
-      avatarUrl: form.avatarUrl,
-    });
+    /* The rest in one request, waited for: links can be refused, and the
+       server hands them back normalised, which is what the view should show. */
+    try {
+      await updateProfile({
+        displayName: form.displayName.trim(),
+        bio: form.bio.trim(),
+        university: form.university.trim(),
+        avatarUrl: form.avatarUrl,
+        showBio: form.showBio,
+        socials: form.socials,
+      });
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : ar ? 'تعذر الحفظ.' : 'Could not save your profile.');
+      setSaving(false);
+      return;
+    }
     setSaving(false);
     setEditing(false);
   };
@@ -316,6 +368,26 @@ const ProfilePage: React.FC = () => {
                           : 'border-[#263248] focus:ring-[#00a859] focus:border-[#00a859]'
                       }`}
                     />
+                    {/* Opt-in, never on by default: bios were written when
+                        they were private, so showing one is the owner's call. */}
+                    <label className="mt-2.5 flex cursor-pointer items-start gap-2.5 rounded-lg border border-[#263248] bg-[#0e1522] px-3 py-2.5">
+                      <input
+                        type="checkbox"
+                        checked={form.showBio}
+                        onChange={(e) => set('showBio', e.target.checked)}
+                        className="mt-0.5 h-4 w-4 flex-shrink-0 accent-[#00a859]"
+                      />
+                      <span className="min-w-0">
+                        <span className="block text-sm font-medium text-[#d2d7e3]">
+                          {ar ? 'أظهر نبذتي في ملفي العام' : 'Show my bio on my public profile'}
+                        </span>
+                        <span className="block text-xs text-[#8592ad]">
+                          {ar
+                            ? 'مطفأ افتراضيا. عند إطفائه تبقى نبذتك ظاهرة لك وحدك.'
+                            : 'Off by default. While it is off, only you can see your bio.'}
+                        </span>
+                      </span>
+                    </label>
                   </div>
 
                   <div>
@@ -330,6 +402,61 @@ const ProfilePage: React.FC = () => {
                   </div>
                 </div>
               </Section>
+
+              <Section
+                icon={Link2}
+                title={ar ? 'روابط التواصل' : 'Social links'}
+                hint={
+                  ar
+                    ? 'تظهر في ملفك العام لبقية الأعضاء المسجلين. الصق رابط ملفك أو اكتب اسم المستخدم فقط.'
+                    : 'Shown on your public profile to other signed-in members. Paste a profile link or type just the username.'
+                }
+              >
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {SOCIAL_PLATFORMS.map((platform) => {
+                    const meta = SOCIAL_META[platform];
+                    const error = socialErrors[platform];
+                    return (
+                      <div key={platform}>
+                        <label
+                          htmlFor={`social-${platform}`}
+                          className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-[#9aa5bf]"
+                        >
+                          <span style={{ color: meta.color }} className="inline-flex w-4 justify-center">
+                            <SocialIcon platform={platform} size={14} />
+                          </span>
+                          {meta.label}
+                        </label>
+                        <input
+                          id={`social-${platform}`}
+                          value={form.socials[platform]}
+                          onChange={(e) => setSocial(platform, e.target.value)}
+                          placeholder={meta.placeholder}
+                          dir="ltr"
+                          maxLength={300}
+                          spellCheck={false}
+                          autoComplete="off"
+                          aria-invalid={!!error}
+                          className={`w-full rounded-lg border bg-[#1a2332] px-3 py-2 text-sm text-[#f3f6ff] placeholder:text-[#7c8aa6] focus:outline-none transition-colors ${
+                            error ? 'border-[#f3a43a]/60 focus:border-[#f3a43a]' : 'border-[#263248] focus:border-[#00a859]'
+                          }`}
+                        />
+                        {error && (
+                          <p className="mt-1 flex items-center gap-1.5 text-xs text-[#f3a43a]">
+                            <AlertCircle size={12} className="flex-shrink-0" /> {error}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </Section>
+
+              {saveError && (
+                <p className="mb-3 flex items-center gap-1.5 text-sm text-[#ff6b6b]">
+                  <AlertCircle size={14} className="flex-shrink-0" /> {saveError}
+                </p>
+              )}
 
               {/* Action bar. Save states its own reason for being disabled, so
                   a greyed-out button is never a dead end. */}
@@ -370,12 +497,16 @@ const ProfilePage: React.FC = () => {
           ) : (
             /* ── View mode ── */
             <div className="flex items-start gap-5">
-              <Avatar
-                avatarUrl={user.avatarUrl}
-                name={user.displayName}
-                className="w-20 h-20 rounded-2xl"
-                initialClassName="text-3xl"
-              />
+              {/* The picture with the links pinned under it, as members see it */}
+              <div className="flex flex-shrink-0 flex-col items-center">
+                <Avatar
+                  avatarUrl={user.avatarUrl}
+                  name={user.displayName}
+                  className="w-20 h-20 rounded-2xl"
+                  initialClassName="text-3xl"
+                />
+                <SocialLinksRow links={user.socials} lang={lang} className="relative z-10 -mt-3 max-w-[9.5rem]" />
+              </div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 flex-wrap">
@@ -393,8 +524,10 @@ const ProfilePage: React.FC = () => {
                 </div>
 
                 {user.username && (
-                  <p className="mt-1 text-sm font-mono text-[#00a859]" dir="ltr">
-                    @{user.username}
+                  <p className="mt-1 text-sm text-[#00a859]">
+                    <span dir="ltr" className="font-mono">
+                      @{user.username}
+                    </span>
                   </p>
                 )}
 
@@ -418,14 +551,42 @@ const ProfilePage: React.FC = () => {
                   </span>
                 </div>
 
-                <p className="mt-3 text-sm text-[#d2d7e3] max-w-lg">
-                  {user.bio || <span className="text-[#8592ad]">{t('profile.noBio')}</span>}
+                <p className="mt-3 text-sm text-[#d2d7e3] max-w-lg whitespace-pre-line">
+                  {user.bio ? (
+                    <span dir="auto">{user.bio}</span>
+                  ) : (
+                    <span className="text-[#8592ad]">{t('profile.noBio')}</span>
+                  )}
                 </p>
+                {user.bio && (
+                  <p className="mt-1.5 inline-flex items-center gap-1.5 text-xs text-[#8592ad]">
+                    {user.showBio ? <Eye size={12} /> : <EyeOff size={12} />}
+                    {user.showBio
+                      ? ar
+                        ? 'تظهر في ملفك العام.'
+                        : 'Shown on your public profile.'
+                      : ar
+                        ? 'مخفية، تظهر لك وحدك.'
+                        : 'Hidden, only you can see it.'}
+                  </p>
+                )}
               </div>
 
-              <Button variant="outline" size="sm" onClick={startEdit} leftIcon={<Pencil size={14} />}>
-                {t('profile.edit')}
-              </Button>
+              <div className="flex flex-shrink-0 flex-col items-stretch gap-2">
+                <Button variant="outline" size="sm" onClick={startEdit} leftIcon={<Pencil size={14} />}>
+                  {t('profile.edit')}
+                </Button>
+                {profilePath({ id: user._id, username: user.username }) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate(profilePath({ id: user._id, username: user.username })!)}
+                    leftIcon={<Eye size={14} />}
+                  >
+                    {ar ? 'ملفي العام' : 'Public profile'}
+                  </Button>
+                )}
+              </div>
             </div>
           )}
         </div>

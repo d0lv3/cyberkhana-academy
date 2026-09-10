@@ -15,6 +15,10 @@ export interface AcademyUser {
   university?: string;
   country?: string;
   bio?: string;
+  /** Whether other members see the bio on the public profile. Opt-in. */
+  showBio?: boolean;
+  /** Links shown on the public profile, stored normalised (services/socials.ts). */
+  socials?: Partial<Record<import('./services/socials').SocialPlatform, string>>;
   completedModulesCount: number;
   completedLessonsCount: number;
   totalLearningTimeMinutes: number;

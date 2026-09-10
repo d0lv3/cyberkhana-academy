@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit3, Trash2, Eye, EyeOff, Clock, Activity, Lock, User, ShieldCheck } from 'lucide-react';
+import { Plus, Edit3, Trash2, Eye, EyeOff, Clock, Activity, Lock, User, ShieldCheck, ListOrdered } from 'lucide-react';
 import EnhancedCard from '../../components/ui/EnhancedCard';
 import Button from '../../components/ui/EnhancedButton';
 import CreatorLayout from '../../components/creators/CreatorLayout';
@@ -16,10 +16,21 @@ import {
   deleteNetworkingLesson,
   saveNetworkingLesson,
   fetchAllModeratableNetworkingForAdmin,
+  getCreatorNetworkingUnits,
+  deleteNetworkingUnit,
+  saveNetworkingUnit,
+  fetchAllModeratableNetworkingUnitsForAdmin,
   type AdminPublishedNetworkingLesson,
+  type AdminPublishedNetworkingUnit,
 } from '../../services/creatorDataService';
-import { statusOf, authorOf, type CreatorNetworkingLesson } from '../../services/creatorTypes';
+import {
+  statusOf,
+  authorOf,
+  type CreatorNetworkingLesson,
+  type NetworkingUnit,
+} from '../../services/creatorTypes';
 import { ADMIN_NETWORKING_STASH } from './networkingEditStash';
+import { ADMIN_UNIT_STASH, type AdminUnitStash } from './networkingUnitStash';
 import { ownerLabel } from './ownerLabel';
 import ShareTab from '../../components/creators/ShareTab';
 import SharedWithMe, { type SharedGroup } from '../../components/creators/SharedWithMe';
@@ -65,6 +76,51 @@ const NetworkingCreator: React.FC = () => {
   }, [isAdmin, refreshKey]);
 
   const isMine = (lesson: AdminPublishedNetworkingLesson) => lesson._ownerId === user?._id;
+
+  /* ── Units: the groups the Networking page lays lessons out in ── */
+  const creatorUnits = getCreatorNetworkingUnits()
+    .slice()
+    .sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0));
+
+  // Admin-only: every published or in-review unit, whoever arranged it.
+  const [allUnits, setAllUnits] = useState<AdminPublishedNetworkingUnit[]>([]);
+  useEffect(() => {
+    if (!isAdmin) return;
+    fetchAllModeratableNetworkingUnitsForAdmin()
+      .then(setAllUnits)
+      .catch(() => setAllUnits([]));
+  }, [isAdmin, refreshKey]);
+
+  const editUnit = (unit: AdminPublishedNetworkingUnit) => {
+    if (unit._ownerId === user?._id) {
+      navigate(`/creators/networking/units/edit/${unit.id}`);
+      return;
+    }
+    const { _ownerId, _ownerName, _bucket, ...clean } = unit;
+    const stash: AdminUnitStash = { id: unit.id, ownerId: _ownerId, ownerName: _ownerName, unit: clean };
+    sessionStorage.setItem(ADMIN_UNIT_STASH, JSON.stringify(stash));
+    navigate(`/creators/networking/units/edit/${unit.id}?admin=1`);
+  };
+
+  const toggleUnitPublish = (unit: NetworkingUnit) => {
+    const next = statusOf(unit) === 'published' ? 'draft' : 'published';
+    saveNetworkingUnit({ ...unit, status: next, isPublished: next === 'published' });
+    setRefreshKey((k) => k + 1);
+  };
+
+  const removeUnit = async (unit: NetworkingUnit) => {
+    const ok = await confirmDialog({
+      title: lang === 'ar' ? 'حذف المرحلة؟' : 'Delete unit?',
+      message:
+        lang === 'ar'
+          ? 'ستُحذف المرحلة نهائيا. تبقى دروسها كما هي وتظهر ضمن الدروس الأخرى.'
+          : 'The unit will be permanently removed. Its lessons stay as they are and show under More lessons.',
+      confirmLabel: t('studio.delete'),
+    });
+    if (!ok) return;
+    deleteNetworkingUnit(unit.id);
+    setRefreshKey((k) => k + 1);
+  };
 
   /* ── Lessons another creator has shared with me ── */
   const [shared, setShared] = useState<SharedGroup<CreatorNetworkingLesson>[]>([]);
@@ -190,6 +246,14 @@ const NetworkingCreator: React.FC = () => {
           />
           <Button
             size="sm"
+            variant="secondary"
+            leftIcon={<ListOrdered size={14} />}
+            onClick={() => navigate('/creators/networking/units/new')}
+          >
+            {lang === 'ar' ? 'مرحلة جديدة' : 'New unit'}
+          </Button>
+          <Button
+            size="sm"
             leftIcon={<Plus size={14} />}
             onClick={() => navigate('/creators/networking/new')}
           >
@@ -197,6 +261,113 @@ const NetworkingCreator: React.FC = () => {
           </Button>
         </div>
       )}
+
+      {/* ── Units ── */}
+      <div className="space-y-3">
+        <div>
+          <h2 className="text-sm font-bold text-[#8592ad] uppercase tracking-wider">
+            {lang === 'ar' ? 'مراحلك' : 'Your units'} {creatorUnits.length > 0 && `(${creatorUnits.length})`}
+          </h2>
+          <p className="text-xs text-[#8592ad] mt-1">
+            {lang === 'ar'
+              ? 'تجمع المراحل الدروس في المسار الذي يراه الطلاب في صفحة الشبكات. الدروس التي لا تنتمي لمرحلة تظهر بعدها.'
+              : 'Units group lessons into the path students see on the Networking page. Lessons in no unit are listed after them.'}
+          </p>
+        </div>
+
+        {creatorUnits.length === 0 ? (
+          <EnhancedCard padding="lg" className="text-center">
+            <p className="text-sm text-[#8592ad]">
+              {lang === 'ar' ? 'لا توجد مراحل بعد.' : 'No units yet.'}
+            </p>
+          </EnhancedCard>
+        ) : (
+          creatorUnits.map((unit) => (
+            <EnhancedCard key={unit.id} padding="none" hoverable className="overflow-hidden group">
+              <div className="flex items-center gap-4 px-5 py-4">
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-[#60a5fa]/10 border border-[#60a5fa]/20">
+                  <ListOrdered size={16} className="text-[#60a5fa]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-bold text-[#f3f6ff] truncate">
+                    {unit.title[lang] || unit.title.en || t('studio.untitled')}
+                  </h3>
+                  <p className="text-xs text-[#8592ad] truncate mt-0.5">
+                    {unit.lessonIds.length} {t(unit.lessonIds.length === 1 ? 'card.lesson' : 'card.lessons')} ·{' '}
+                    {lang === 'ar' ? `الترتيب ${unit.order}` : `position ${unit.order}`}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <StatusBadge status={statusOf(unit)} />
+                  <button
+                    onClick={() => toggleUnitPublish(unit)}
+                    className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#8592ad] hover:text-[#00a859] hover:bg-[#00a859]/10 transition-all"
+                    title={statusOf(unit) === 'published' ? t('studio.unpublish') : t('studio.publish')}
+                  >
+                    {statusOf(unit) === 'published' ? <EyeOff size={13} /> : <Eye size={13} />}
+                  </button>
+                  <button
+                    onClick={() => navigate(`/creators/networking/units/edit/${unit.id}`)}
+                    className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#8592ad] hover:text-[#60a5fa] hover:bg-[#60a5fa]/10 transition-all"
+                    title={t('studio.edit')}
+                  >
+                    <Edit3 size={13} />
+                  </button>
+                  <button
+                    onClick={() => removeUnit(unit)}
+                    className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#8592ad] hover:text-red-400 hover:bg-red-500/10 transition-all"
+                    title={t('studio.delete')}
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              </div>
+            </EnhancedCard>
+          ))
+        )}
+
+        {/* Admin: everyone's live and in-review units, to moderate */}
+        {isAdmin && allUnits.some((u) => u._ownerId !== user?._id) && (
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center gap-2">
+              <ShieldCheck size={14} className="text-[#f3a43a]" />
+              <h3 className="text-xs font-bold text-[#8592ad] uppercase tracking-wider">
+                {lang === 'ar' ? 'مراحل المنشئين الآخرين' : "Other creators' units"}
+              </h3>
+            </div>
+            {allUnits
+              .filter((u) => u._ownerId !== user?._id)
+              .map((unit) => (
+                <EnhancedCard key={`${unit._ownerId}-${unit.id}`} padding="none" hoverable className="overflow-hidden">
+                  <div className="flex items-center gap-4 px-5 py-4">
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-[#f3a43a]/10 border border-[#f3a43a]/20">
+                      <ListOrdered size={16} className="text-[#f3a43a]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-bold text-[#f3f6ff] truncate">
+                        {unit.title[lang] || unit.title.en || t('studio.untitled')}
+                      </h3>
+                      <p className="text-xs text-[#8592ad] truncate mt-0.5">
+                        {ownerLabel(unit._ownerId, unit._ownerName, user?._id, lang)} · {unit.lessonIds.length}{' '}
+                        {t(unit.lessonIds.length === 1 ? 'card.lesson' : 'card.lessons')}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <StatusBadge status={statusOf(unit)} />
+                      <button
+                        onClick={() => editUnit(unit)}
+                        title={lang === 'ar' ? 'تعديل (مشرف)' : 'Edit as admin'}
+                        className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#8592ad] hover:text-[#f3a43a] hover:bg-[#f3a43a]/10 transition-all"
+                      >
+                        <Edit3 size={13} />
+                      </button>
+                    </div>
+                  </div>
+                </EnhancedCard>
+              ))}
+          </div>
+        )}
+      </div>
 
       {/* Built-in lessons */}
       {visibleStatic.length > 0 && (

@@ -1,5 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import type { UserRole } from '../types';
+import { SOCIAL_PLATFORMS, type SocialLinks } from '../utils/socials';
 
 export interface IUser extends Document {
   email: string;
@@ -23,6 +24,14 @@ export interface IUser extends Document {
   university?: string;
   country?: string;
   bio?: string;
+  /** Whether other members see the bio on the public profile. Bios were
+   *  written when the Privacy Policy said they were private, so showing one
+   *  is the member's choice, never a default: absent means hidden. */
+  showBio?: boolean;
+  /** Accounts elsewhere, shown on the public profile. Stored normalised by
+   *  utils/socials.ts: a handle, or a checked URL for the platforms without a
+   *  fixed profile address. */
+  socials?: SocialLinks;
   /** Explicit creator capability grants (admin-managed). Unset → default set. */
   creatorPermissions?: string[];
   preferredLang: 'en' | 'ar';
@@ -96,6 +105,14 @@ const UserSchema = new Schema<IUser>(
     university: { type: String },
     country: { type: String },
     bio: { type: String, maxlength: 500 },
+    showBio: { type: Boolean },
+    socials: {
+      type: new Schema(
+        Object.fromEntries(SOCIAL_PLATFORMS.map((p) => [p, { type: String, maxlength: 200 }])),
+        { _id: false }
+      ),
+      default: undefined,
+    },
     creatorPermissions: { type: [String], default: undefined },
     preferredLang: { type: String, enum: ['en', 'ar'], default: 'en' },
     completedModulesCount: { type: Number, default: 0 },

@@ -11,10 +11,12 @@ import {
   PanelRightClose,
   PanelRightOpen,
 } from 'lucide-react';
-import { getNetworkingLesson, getNetworkingLessons } from '../../data/networking';
+import { getNetworkingLesson, getNetworkingPath } from '../../data/networking';
 import { NetworkSimulator } from '../../components/network-sim';
 import { hasSimulation, tFor, type NetworkingLesson } from '../../components/network-sim/types';
 import Button from '../../components/ui/EnhancedButton';
+import AuthorChip from '../../components/ui/AuthorChip';
+import { creditOf } from '../../services/creatorTypes';
 import ResizeHandle from '../../components/ui/ResizeHandle';
 import LessonMarkdown from '../../components/ui/LessonMarkdown';
 import LessonQuiz from '../../components/ui/LessonQuiz';
@@ -119,14 +121,27 @@ const NetworkingLessonPage: React.FC = () => {
   // whole screen, and the mobile tab strip has only one tab to offer.
   const splitView = showSim && simOpen;
 
-  /* ── Where to go next, in lesson order ── */
-  const lessons = getNetworkingLessons();
-  const currentIdx = lessons.findIndex((l) => l.id === lesson.id);
+  /* ── Where this lesson sits on the path, and where it leads ──
+     "Next" follows the Networking page's own order: through the units, then
+     the lessons no unit lists. */
+  const path = getNetworkingPath();
+  const currentIdx = path.ordered.findIndex((l) => l.id === lesson.id);
   const nextLesson: NetworkingLesson | null =
-    currentIdx >= 0 && currentIdx < lessons.length - 1 ? lessons[currentIdx + 1] : null;
+    currentIdx >= 0 && currentIdx < path.ordered.length - 1 ? path.ordered[currentIdx + 1] : null;
   const goToNext = () => {
     if (nextLesson) navigate(`/fundamentals/networking/lesson/${nextLesson.slug}`);
   };
+  const unitIdx = path.units.findIndex((s) => s.lessons.some((l) => l.id === lesson.id));
+  const unitStop = unitIdx >= 0 ? path.units[unitIdx] : null;
+  const ar = lang === 'ar';
+
+  const updatedAt = (lesson as { updatedAt?: string }).updatedAt;
+  const updatedLabel = (() => {
+    if (!updatedAt) return null;
+    const d = new Date(updatedAt);
+    if (Number.isNaN(d.getTime())) return null;
+    return d.toLocaleDateString(ar ? 'ar' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  })();
 
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-[#0d1117] text-[#d2d7e3]">
@@ -241,6 +256,43 @@ const NetworkingLessonPage: React.FC = () => {
               splitView ? 'max-w-2xl' : 'max-w-4xl'
             }`}
           >
+            {/* ── Where this is, and who wrote it ── */}
+            <div className="mb-8 border-b border-[#263248] pb-5">
+              {unitStop && (
+                <p className="mb-2.5 text-[11px] font-bold uppercase tracking-wider text-[#60a5fa]">
+                  {ar ? `المرحلة ${unitIdx + 1}` : `Unit ${unitIdx + 1}`}
+                  <span className="mx-1.5 text-[#4d5a73]" aria-hidden>·</span>
+                  <span className="normal-case tracking-normal">
+                    {unitStop.unit.title[lang] || unitStop.unit.title.en}
+                  </span>
+                  <span className="mx-1.5 text-[#4d5a73]" aria-hidden>·</span>
+                  <span className="normal-case tracking-normal text-[#8592ad]">
+                    {ar
+                      ? `الدرس ${unitStop.lessons.findIndex((l) => l.id === lesson.id) + 1} من ${unitStop.lessons.length}`
+                      : `Lesson ${unitStop.lessons.findIndex((l) => l.id === lesson.id) + 1} of ${unitStop.lessons.length}`}
+                  </span>
+                </p>
+              )}
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-[#8592ad]">
+                <span className="text-[#8592ad]">{ar ? 'بقلم' : 'Written by'}</span>
+                <AuthorChip
+                  credit={creditOf(lesson)}
+                  size="sm"
+                  showHandle
+                  linked
+                  className="text-sm font-semibold text-[#d2d7e3]"
+                />
+                {updatedLabel && (
+                  <>
+                    <span aria-hidden className="text-[#4d5a73]">·</span>
+                    <span>
+                      {ar ? 'آخر تحديث' : 'Updated'} {updatedLabel}
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+
             <LessonMarkdown content={tFor(lesson.markdownContent, lang)} />
 
             {/* ── Completion — quiz-gated when the lesson has one ── */}

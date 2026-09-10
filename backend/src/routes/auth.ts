@@ -12,6 +12,7 @@ import {
 import { env } from '../config/env';
 import { logger } from '../utils/logger';
 import { effectivePermissions } from '../types';
+import { isSocialPlatform, normalizeSocial, publicSocials } from '../utils/socials';
 
 import {
   CURRENT_TERMS_VERSION,
@@ -38,6 +39,8 @@ function publicUser(user: IUser) {
     university: user.university,
     country: user.country,
     bio: user.bio,
+    showBio: Boolean(user.showBio),
+    socials: publicSocials(user.socials),
     createdAt: user.createdAt,
     termsAccepted: hasAcceptedCurrentTerms(user),
     creatorAgreementAccepted: hasAcceptedCurrentCreatorAgreement(user),
@@ -236,6 +239,11 @@ const profileSchema = z
     university: z.string().max(120).optional(),
     country: z.string().max(80).optional(),
     preferredLang: z.enum(['en', 'ar']).optional(),
+    /* Opt-in: other members see the bio only once this is true. */
+    showBio: z.boolean().optional(),
+    /* Each platform mapped to what the member typed ('' clears it). Every value goes
+     * through normalizeSocial below; the shape is all that is checked here. */
+    socials: z.record(z.string().max(20), z.string().max(300)).optional(),
   })
   .strict();
 
@@ -254,7 +262,28 @@ router.patch('/profile', authenticate, async (req: AuthRequest, res) => {
     return;
   }
 
-  const { username, ...rest } = parsed.data;
+  const { username, socials, ...rest } = parsed.data;
+
+  /* Social links: each one normalised, or the whole update refused with the
+     reason for the first field that fails, so nothing half-saves. Platforms
+     left out of the request keep what they had. */
+  let nextSocials: Record<string, string> | undefined;
+  if (socials !== undefined) {
+    nextSocials = { ...publicSocials(req.user!.socials) };
+    for (const [platform, raw] of Object.entries(socials)) {
+      if (!isSocialPlatform(platform)) {
+        res.status(400).json({ error: 'Unknown social platform', field: platform });
+        return;
+      }
+      const result = normalizeSocial(platform, raw);
+      if (!result.ok) {
+        res.status(400).json({ error: result.reason, field: platform });
+        return;
+      }
+      if (result.value) nextSocials[platform] = result.value;
+      else delete nextSocials[platform];
+    }
+  }
 
   if (username !== undefined) {
     const handle = username.toLowerCase();
@@ -279,6 +308,9 @@ router.patch('/profile', authenticate, async (req: AuthRequest, res) => {
     // rather than storing an empty string, so `avatarUrl` is either a real
     // value or absent — never a third, falsy-but-present state to reason about.
     if (rest.avatarUrl === '') req.user!.set('avatarUrl', undefined);
+    if (nextSocials !== undefined) {
+      req.user!.set('socials', Object.keys(nextSocials).length ? nextSocials : undefined);
+    }
     await req.user!.save();
     res.json({ user: publicUser(req.user!) });
   } catch (err) {

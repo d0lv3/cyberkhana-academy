@@ -20,6 +20,7 @@ const MAX_GRANTEES_PER_BUCKET = 25;
 /** Which creator permission a bucket write requires. Mirrors content.ts. */
 const PERMISSION_BY_BUCKET: Record<ContentBucketKey, CreatorPermission> = {
   'networking-lessons': 'networking',
+  'networking-units': 'networking',
   'programming-patches': 'programming',
   'os-modules': 'os-modules',
   'standalone-modules': 'modules',

@@ -18,6 +18,7 @@ import {
   Route,
   Box,
   MessageSquare,
+  ListOrdered,
 } from 'lucide-react';
 import EnhancedCard from '../../components/ui/EnhancedCard';
 import StatusBadge from '../../components/creators/StatusBadge';
@@ -187,6 +188,7 @@ const CreatorDashboard: React.FC = () => {
 
   const TYPE_ICON: Record<StudioContentItem['kind'], React.ElementType> = {
     networking: Wifi,
+    'networking-unit': ListOrdered,
     'programming-concept': Code,
     'programming-module': Code,
     'os-module': Monitor,

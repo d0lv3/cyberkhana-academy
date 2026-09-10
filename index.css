@@ -429,6 +429,35 @@
   }
 }
 
+/* ── NETWORKING PATH TRAIL ───────────────────────────────────
+   The dashed line between neighbouring lessons in a unit (pages/fundamentals/
+   NetworkingPage). It belongs only between two cards on the same row, so each
+   breakpoint here mirrors the grid's column count there: grid-cols-1, then
+   xs:2 (400px), md:3 and xl:4. Change one and the other must follow. Plain
+   media queries rather than a resize listener: correct on first paint, and
+   nothing to fall out of step when the window changes size. */
+.path-trail {
+  display: none;
+}
+
+@media (min-width: 400px) and (max-width: 767.98px) {
+  .path-cell:not(:nth-child(2n)):not(:last-child) > .path-trail {
+    display: block;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1279.98px) {
+  .path-cell:not(:nth-child(3n)):not(:last-child) > .path-trail {
+    display: block;
+  }
+}
+
+@media (min-width: 1280px) {
+  .path-cell:not(:nth-child(4n)):not(:last-child) > .path-trail {
+    display: block;
+  }
+}
+
 /* ── LESSON PROSE ────────────────────────────────────────────
    Typography for rendered lesson markdown (components/ui/LessonMarkdown).
    Unlayered and last in the file so it wins over the base RTL defaults

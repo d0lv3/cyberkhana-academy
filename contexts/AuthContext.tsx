@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { AcademyUser } from '../types';
 import { api } from '../services/api';
 import { hydrateFromServer, setSyncEnabled } from '../services/syncService';
+import { setOwnAuthor } from '../services/creatorDataService';
 
 interface ServerUser {
   id: string;
@@ -16,10 +17,20 @@ interface ServerUser {
   university?: string;
   country?: string;
   bio?: string;
+  showBio?: boolean;
+  socials?: AcademyUser['socials'];
   createdAt: string;
   termsAccepted?: boolean;
   creatorAgreementAccepted?: boolean;
 }
+
+/** What the profile form may change in one save. */
+export type ProfilePatch = Partial<
+  Pick<AcademyUser, 'displayName' | 'bio' | 'university' | 'avatarUrl' | 'showBio'>
+> & {
+  /** Each platform mapped to what was typed; '' clears that link. */
+  socials?: Record<string, string>;
+};
 
 interface AuthContextType {
   user: AcademyUser | null;
@@ -35,6 +46,9 @@ interface AuthContextType {
   /** Claim or change the public handle. Awaited, and throws with the server's
    *  reason (taken / reserved / malformed) so the caller can show it. */
   updateUsername: (username: string) => Promise<void>;
+  /** Save profile fields and wait for the server's answer, adopting the user
+   *  it returns (social links come back normalised). Throws on refusal. */
+  updateProfile: (patch: ProfilePatch) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -46,6 +60,7 @@ const AuthContext = createContext<AuthContextType>({
   logout: () => {},
   updateUser: () => {},
   updateUsername: async () => {},
+  updateProfile: async () => {},
 });
 
 function mapServerUser(u: ServerUser): AcademyUser {
@@ -62,6 +77,8 @@ function mapServerUser(u: ServerUser): AcademyUser {
     university: u.university,
     country: u.country,
     bio: u.bio,
+    showBio: u.showBio ?? false,
+    socials: u.socials ?? {},
     completedModulesCount: 0,
     completedLessonsCount: 0,
     totalLearningTimeMinutes: 0,
@@ -77,6 +94,22 @@ const PROFILE_FIELDS = ['displayName', 'bio', 'university', 'preferredLang', 'av
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AcademyUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  /* My own content is credited to whoever is signed in (see setOwnAuthor).
+     Pages render behind AuthGate, which waits for the session, so this is in
+     place before anything reads it. */
+  useEffect(() => {
+    setOwnAuthor(
+      user
+        ? {
+            id: user._id,
+            displayName: user.displayName,
+            username: user.username,
+            avatarUrl: user.avatarUrl,
+          }
+        : null
+    );
+  }, [user?._id, user?.displayName, user?.username, user?.avatarUrl]);
 
   // Restore the session from the httpOnly cookie on boot.
   useEffect(() => {
@@ -161,6 +194,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(mapServerUser(serverUser));
   };
 
+  const updateProfile = async (patch: ProfilePatch) => {
+    const { user: serverUser } = await api.patch<{ user: ServerUser }>('/auth/profile', patch);
+    setUser(mapServerUser(serverUser));
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -172,6 +210,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logout,
         updateUser,
         updateUsername,
+        updateProfile,
       }}
     >
       {children}

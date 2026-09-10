@@ -24,6 +24,7 @@ const ADMIN_ITEM_BUCKETS: ContentBucketKey[] = [
   'os-modules',
   'standalone-modules',
   'networking-lessons',
+  'networking-units',
 ];
 
 function isAdminItemBucket(value: string): value is ContentBucketKey {
@@ -33,6 +34,7 @@ function isAdminItemBucket(value: string): value is ContentBucketKey {
 /** Which creator permission a bucket write requires. */
 const PERMISSION_BY_BUCKET: Record<ContentBucketKey, CreatorPermission> = {
   'networking-lessons': 'networking',
+  'networking-units': 'networking',
   'programming-patches': 'programming',
   'os-modules': 'os-modules',
   'standalone-modules': 'modules',
@@ -71,6 +73,53 @@ function isPlainObject(v: unknown): v is AnyItem {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
 
+/* ── Author credit ──
+ * Published content goes out credited to the account that owns its bucket,
+ * read fresh on every request so a renamed creator or a new picture shows up
+ * everywhere at once. The credit is never taken from the item itself: items
+ * are written by their author, so a stored credit would let anyone sign their
+ * work with someone else's name. Only public profile fields leave the server. */
+interface PublicAuthor {
+  id: string;
+  displayName: string;
+  username?: string;
+  avatarUrl?: string;
+}
+
+async function publicAuthorsFor(ownerIds: string[]): Promise<Map<string, PublicAuthor>> {
+  if (ownerIds.length === 0) return new Map();
+  const owners = await User.find({ _id: { $in: ownerIds } })
+    .select('displayName username avatarUrl')
+    .lean();
+  return new Map(
+    owners.map((u) => [
+      String(u._id),
+      {
+        id: String(u._id),
+        displayName: u.displayName,
+        ...(u.username ? { username: u.username } : {}),
+        ...(u.avatarUrl ? { avatarUrl: u.avatarUrl } : {}),
+      },
+    ])
+  );
+}
+
+/** A copy of the item with no `_author` of its own. */
+function withoutCredit(item: AnyItem): AnyItem {
+  if (!('_author' in item)) return item;
+  const copy = { ...item };
+  delete copy._author;
+  return copy;
+}
+
+/** The item as students receive it: credited to its owner, or to nobody when
+ * the owning account no longer exists (the client then falls back to the name
+ * saved on the item). */
+function credited(item: AnyItem, author: PublicAuthor | undefined): AnyItem {
+  const clean = withoutCredit(item);
+  return author ? { ...clean, _author: author } : clean;
+}
+
 /** Structural validation per bucket (deep content is free-form, identity fields are not). */
 function validateBucketItems(bucket: ContentBucketKey, items: unknown): string | null {
   if (!Array.isArray(items)) return 'items must be an array';
@@ -87,6 +136,18 @@ function validateBucketItems(bucket: ContentBucketKey, items: unknown): string |
         return 'Every item needs a string id';
       }
     }
+    // A unit is a list of lesson ids. Anything else in that slot would reach
+    // every student's Networking page, so its shape is checked, not assumed.
+    if (bucket === 'networking-units') {
+      const ids = item.lessonIds;
+      if (
+        !Array.isArray(ids) ||
+        ids.length > 200 ||
+        ids.some((id) => typeof id !== 'string' || !id || id.length > 160)
+      ) {
+        return 'A unit lists its lessons as an array of lesson ids';
+      }
+    }
   }
 
   const safety = checkSafeJson(items);
@@ -100,13 +161,16 @@ function isBucketKey(value: string): value is ContentBucketKey {
 
 /* ── GET /api/content/published ──
  * Aggregates PUBLISHED items across every creator. This is what students see;
- * drafts and in-review content never leave their author's account. */
+ * drafts and in-review content never leave their author's account. Every item
+ * in the flat buckets carries `_author`, its owner's public credit. */
 router.get('/published', authenticate, async (_req: AuthRequest, res) => {
   try {
     const docs = await ContentBucket.find({}).lean();
+    const authors = await publicAuthorsFor([...new Set(docs.map((d) => String(d.ownerId)))]);
 
     const result: Record<ContentBucketKey, unknown[]> = {
       'networking-lessons': [],
+      'networking-units': [],
       'programming-patches': [],
       'os-modules': [],
       'standalone-modules': [],
@@ -166,7 +230,12 @@ router.get('/published', authenticate, async (_req: AuthRequest, res) => {
           patchByLang.set(patch.languageSlug, merged);
         }
       } else {
-        result[doc.bucket].push(...items.filter((i) => isPlainObject(i) && isPublishedItem(i)));
+        const author = authors.get(String(doc.ownerId));
+        result[doc.bucket].push(
+          ...items
+            .filter((i) => isPlainObject(i) && isPublishedItem(i))
+            .map((i) => credited(i, author))
+        );
       }
     }
 
@@ -214,9 +283,11 @@ router.put('/:bucket', authenticate, requireRole('creator', 'admin'), async (req
   }
 
   try {
+    // Credit is assigned on the way out; a stored copy would only go stale.
+    const clean = (items as unknown[]).map((i) => (isPlainObject(i) ? withoutCredit(i) : i));
     await ContentBucket.findOneAndUpdate(
       { ownerId: req.user!._id, bucket },
-      { $set: { items } },
+      { $set: { items: clean } },
       { upsert: true, new: true }
     );
     res.json({ ok: true, count: (items as unknown[]).length });
@@ -314,7 +385,7 @@ router.patch(
         return;
       }
 
-      list[idx] = item;
+      list[idx] = withoutCredit(item);
       doc.markModified('items');
       await doc.save();
 

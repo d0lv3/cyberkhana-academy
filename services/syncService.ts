@@ -203,6 +203,10 @@ export async function hydrateFromServer(): Promise<void> {
       JSON.stringify(buckets['networking-lessons'] ?? [])
     );
     localStorage.setItem(
+      PUBLISHED_CACHE_KEYS.NETWORKING_UNITS,
+      JSON.stringify(buckets['networking-units'] ?? [])
+    );
+    localStorage.setItem(
       PUBLISHED_CACHE_KEYS.PROGRAMMING_PATCHES,
       JSON.stringify(buckets['programming-patches'] ?? [])
     );

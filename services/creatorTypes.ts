@@ -55,8 +55,71 @@ export interface CreatorMeta {
   updatedAt: string;
 }
 
+/* ── Author credit ──
+ * Published content reaches students credited to the account that owns it:
+ * the server adds `_author` to every published item as it sends it, read
+ * fresh from that account, and never stores it. `authorName` is only the name
+ * saved on the item when it was first written, kept as the fallback for
+ * built-in content and for an account that no longer exists. */
+export interface PublicAuthor {
+  /** The owning account. */
+  id: string;
+  displayName: string;
+  username?: string;
+  /** A built-in `avatar:<id>`, a photo URL, or absent for the initial. */
+  avatarUrl?: string;
+}
+
+/** Who a piece of content is credited to, resolved for display. `id` is
+ *  present only when the credit came from a real account. */
+export interface ContentCredit {
+  displayName: string;
+  id?: string;
+  username?: string;
+  avatarUrl?: string;
+}
+
+/** The credit to show for any content item: the owning account when the
+ *  server supplied one, else the name saved on the item, else CyberKhana. */
+export function creditOf(item: unknown): ContentCredit {
+  const it = (item ?? {}) as {
+    _author?: Partial<PublicAuthor>;
+    authorName?: unknown;
+    author?: unknown;
+  };
+  const a = it._author;
+  if (a && typeof a.displayName === 'string' && a.displayName) {
+    return {
+      displayName: a.displayName,
+      id: typeof a.id === 'string' ? a.id : undefined,
+      username: typeof a.username === 'string' && a.username ? a.username : undefined,
+      avatarUrl: typeof a.avatarUrl === 'string' && a.avatarUrl ? a.avatarUrl : undefined,
+    };
+  }
+  const saved =
+    (typeof it.authorName === 'string' && it.authorName) ||
+    (typeof it.author === 'string' && it.author) ||
+    'CyberKhana';
+  return { displayName: saved };
+}
+
 /* ── Networking ── */
 export type CreatorNetworkingLesson = NetworkingLesson & CreatorMeta;
+
+/* ── Networking units ──
+ * An ordered run of networking lessons, arranged by the creator who made the
+ * unit (the lessons in it may be anyone's). The Networking page lays the
+ * published units out as a path; a lesson no unit lists is still shown after
+ * them, so publishing a lesson never makes it disappear. */
+export interface NetworkingUnit extends CreatorMeta {
+  id: string;
+  title: { en: string; ar: string };
+  description: { en: string; ar: string };
+  /** Position on the Networking page, lowest first. */
+  order: number;
+  /** Lesson ids, in the order they are taken. */
+  lessonIds: string[];
+}
 
 /* ── Programming ── */
 export type CreatorProgrammingConcept = ProgrammingConcept & CreatorMeta;
@@ -150,6 +213,7 @@ export interface CreatorPath extends CreatorMeta {
 /* ── localStorage Keys ── */
 export const STORAGE_KEYS = {
   NETWORKING_LESSONS: 'creator-networking-lessons',
+  NETWORKING_UNITS: 'creator-networking-units',
   PROGRAMMING_PATCHES: 'creator-programming-patches',
   OS_MODULES: 'creator-os-modules',
   STANDALONE_MODULES: 'creator-standalone-modules',
@@ -161,6 +225,7 @@ export const STORAGE_KEYS = {
  * content; these hold what other creators have published. ── */
 export const PUBLISHED_CACHE_KEYS = {
   NETWORKING_LESSONS: 'published-networking-lessons',
+  NETWORKING_UNITS: 'published-networking-units',
   PROGRAMMING_PATCHES: 'published-programming-patches',
   OS_MODULES: 'published-os-modules',
   STANDALONE_MODULES: 'published-standalone-modules',
@@ -170,6 +235,7 @@ export const PUBLISHED_CACHE_KEYS = {
 /** Server bucket names, keyed by the local creator-* storage key. */
 export const SERVER_BUCKET_BY_STORAGE_KEY: Record<string, string> = {
   [STORAGE_KEYS.NETWORKING_LESSONS]: 'networking-lessons',
+  [STORAGE_KEYS.NETWORKING_UNITS]: 'networking-units',
   [STORAGE_KEYS.PROGRAMMING_PATCHES]: 'programming-patches',
   [STORAGE_KEYS.OS_MODULES]: 'os-modules',
   [STORAGE_KEYS.STANDALONE_MODULES]: 'standalone-modules',
@@ -205,6 +271,7 @@ export interface ProgrammingPatch {
 /* ── Unified content item (for the studio overview / recent activity) ── */
 export type StudioContentKind =
   | 'networking'
+  | 'networking-unit'
   | 'programming-concept'
   | 'programming-module'
   | 'os-module'

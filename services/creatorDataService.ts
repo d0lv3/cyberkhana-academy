@@ -14,10 +14,12 @@ import {
   type CreatorProgrammingLanguage,
   type CreatorFundamentalModule,
   type CreatorPath,
+  type NetworkingUnit,
   type ProgrammingPatch,
   type ContentStatus,
   type StudioContentItem,
   type CreatorMeta,
+  type PublicAuthor,
   statusOf,
   authorOf,
 } from './creatorTypes';
@@ -37,14 +39,35 @@ function readStorage<T>(key: string): T[] {
   }
 }
 
+/** A copy without `_author`. Credit is the server's to assign as content goes
+ *  out, so it is never written back: a stored copy would only go stale. */
+function withoutCredit<T>(item: T): T {
+  if (!item || typeof item !== 'object' || !('_author' in item)) return item;
+  const copy = { ...(item as Record<string, unknown>) };
+  delete copy._author;
+  return copy as T;
+}
+
 function writeStorage<T>(key: string, data: T[]): void {
+  const clean = data.map(withoutCredit);
   try {
-    localStorage.setItem(key, JSON.stringify(data));
+    localStorage.setItem(key, JSON.stringify(clean));
   } catch (err) {
     console.warn('[creator] local cache write failed (quota?):', err);
   }
   // Write-through to the server (debounced; no-op when signed out).
-  queueContentPush(key, data as unknown[]);
+  queueContentPush(key, clean as unknown[]);
+}
+
+/* ── Credit for my own items ──
+ * The server credits everyone's published items as it sends them, but my own
+ * items are read from my own buckets, which it never annotates. They are mine
+ * by definition, so they carry the signed-in account's credit instead. Set by
+ * AuthContext whenever the session user changes, cleared on sign-out. */
+let ownAuthor: PublicAuthor | null = null;
+
+export function setOwnAuthor(author: PublicAuthor | null): void {
+  ownAuthor = author;
 }
 
 /* ── Published cache: everyone's published content, hydrated from the
@@ -57,7 +80,8 @@ function readPublishedCache<T extends { id?: string }>(key: string): T[] {
 function mergeWithPublishedCache<T extends { id: string }>(own: T[], cacheKey: string): T[] {
   const ownIds = new Set(own.map((item) => item.id));
   const remote = readPublishedCache<T>(cacheKey).filter((item) => !ownIds.has(item.id));
-  return [...own, ...remote];
+  const mine = ownAuthor ? own.map((item) => ({ ...item, _author: ownAuthor })) : own;
+  return [...mine, ...remote];
 }
 
 /** Keep the legacy `isPublished` flag in sync with the lifecycle `status`. */
@@ -121,6 +145,49 @@ export function mergeNetworkingLessons(staticLessons: NetworkingLesson[]): Netwo
 
   const merged = staticLessons.map((l) => overrides.get(l.id) ?? l);
   return [...merged, ...additional].sort((a, b) => a.order - b.order);
+}
+
+/* ── Networking units ── */
+
+export function getCreatorNetworkingUnits(): NetworkingUnit[] {
+  return readStorage<NetworkingUnit>(STORAGE_KEYS.NETWORKING_UNITS);
+}
+
+/** Every published unit (mine and everyone else's), in page order. */
+export function getPublishedNetworkingUnits(): NetworkingUnit[] {
+  return mergeWithPublishedCache(
+    getCreatorNetworkingUnits().filter((u) => statusOf(u) === 'published'),
+    PUBLISHED_CACHE_KEYS.NETWORKING_UNITS
+  )
+    .filter((u) => Array.isArray(u.lessonIds))
+    .sort(
+      (a, b) =>
+        (Number(a.order) || 0) - (Number(b.order) || 0) ||
+        (a.title?.en ?? '').localeCompare(b.title?.en ?? '')
+    );
+}
+
+export function getNetworkingUnitById(id: string): NetworkingUnit | undefined {
+  return getCreatorNetworkingUnits().find((u) => u.id === id);
+}
+
+export function saveNetworkingUnit(unit: NetworkingUnit): void {
+  const units = getCreatorNetworkingUnits();
+  const idx = units.findIndex((u) => u.id === unit.id);
+  const next = syncPublished({ ...unit, updatedAt: new Date().toISOString() });
+  if (idx >= 0) {
+    units[idx] = next;
+  } else {
+    units.push(next);
+  }
+  writeStorage(STORAGE_KEYS.NETWORKING_UNITS, units);
+}
+
+export function deleteNetworkingUnit(id: string): void {
+  writeStorage(
+    STORAGE_KEYS.NETWORKING_UNITS,
+    getCreatorNetworkingUnits().filter((u) => u.id !== id)
+  );
 }
 
 /* ═══════════════════════════════════════════════
@@ -592,6 +659,23 @@ export function getAllCreatorContent(): StudioContentItem[] {
     });
   }
 
+  // Networking units
+  for (const unit of getCreatorNetworkingUnits()) {
+    const count = unit.lessonIds?.length ?? 0;
+    items.push({
+      kind: 'networking-unit',
+      kindLabel: 'Unit',
+      id: unit.id,
+      title: unit.title.en || 'Untitled unit',
+      subtitle: `${count} ${count === 1 ? 'lesson' : 'lessons'}`,
+      status: statusOf(unit),
+      author: authorOf(unit),
+      updatedAt: unit.updatedAt || unit.createdAt || '',
+      editPath: `/creators/networking/units/edit/${unit.id}`,
+      accent: ACCENTS.networking,
+    });
+  }
+
   // Programming content (modules + concepts across every language patch)
   for (const patch of getCreatorProgrammingPatches()) {
     for (const mod of patch.newModules) {
@@ -686,7 +770,11 @@ export function getAllCreatorContent(): StudioContentItem[] {
  * ═══════════════════════════════════════════════ */
 
 /** Buckets that store a flat, id-keyed array and share one admin endpoint. */
-export type AdminItemBucket = 'os-modules' | 'standalone-modules' | 'networking-lessons';
+export type AdminItemBucket =
+  | 'os-modules'
+  | 'standalone-modules'
+  | 'networking-lessons'
+  | 'networking-units';
 
 /** The two module buckets — the subset the module studio pages care about. */
 export type AdminModuleBucket = Extract<AdminItemBucket, 'os-modules' | 'standalone-modules'>;
@@ -707,7 +795,11 @@ export interface AdminPublishedNetworkingLesson extends CreatorNetworkingLesson,
   _bucket: 'networking-lessons';
 }
 
-type AdminPublishedItem = (CreatorFundamentalModule | CreatorNetworkingLesson) &
+export interface AdminPublishedNetworkingUnit extends NetworkingUnit, AdminOwned {
+  _bucket: 'networking-units';
+}
+
+type AdminPublishedItem = (CreatorFundamentalModule | CreatorNetworkingLesson | NetworkingUnit) &
   AdminOwned & { _bucket: AdminItemBucket };
 
 /** Every published or in-review item across all authors, in every flat bucket.
@@ -733,11 +825,17 @@ export async function fetchAllModeratableNetworkingForAdmin(): Promise<AdminPubl
   return items.filter((i): i is AdminPublishedNetworkingLesson => i._bucket === 'networking-lessons');
 }
 
+/** Every published or in-review unit across all authors (admin-only). */
+export async function fetchAllModeratableNetworkingUnitsForAdmin(): Promise<AdminPublishedNetworkingUnit[]> {
+  const items = await fetchAllPublishedItemsForAdmin();
+  return items.filter((i): i is AdminPublishedNetworkingUnit => i._bucket === 'networking-units');
+}
+
 /** Save an admin edit back into the original author's bucket, in place. */
 export async function saveItemAsAdmin(
   ownerId: string,
   bucket: AdminItemBucket,
-  item: CreatorFundamentalModule | CreatorNetworkingLesson
+  item: CreatorFundamentalModule | CreatorNetworkingLesson | NetworkingUnit
 ): Promise<void> {
   await api.patch('/content/admin/item', { ownerId, bucket, item });
 }
@@ -797,7 +895,7 @@ export function getStudioStats(): StudioStats {
 
   for (const item of all) {
     byStatus[item.status] += 1;
-    if (item.kind === 'networking') byKind.networking += 1;
+    if (item.kind === 'networking' || item.kind === 'networking-unit') byKind.networking += 1;
     else if (item.kind === 'programming-concept' || item.kind === 'programming-module') byKind.programming += 1;
     else if (item.kind === 'os-module') byKind.os += 1;
     else if (item.kind === 'module') byKind.modules += 1;

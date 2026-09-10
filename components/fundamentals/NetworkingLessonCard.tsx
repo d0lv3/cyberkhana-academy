@@ -1,20 +1,37 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Clock, Activity } from 'lucide-react';
+import { Clock, Activity, Check } from 'lucide-react';
 import CardArt from './CardArt';
+import AuthorChip from '../ui/AuthorChip';
 import { useLang } from '../../contexts/LangContext';
 import { simulationStepCount, type NetworkingLesson } from '../network-sim/types';
+import { creditOf } from '../../services/creatorTypes';
 
 const ACCENT = '#60a5fa';
+
+interface NetworkingLessonCardProps {
+  lesson: NetworkingLesson;
+  index?: number;
+  /** Its place on the path, e.g. "2.3". Takes the top corner, where the step
+   *  count used to repeat what the bottom line already says. */
+  position?: string;
+  /** Finished by this learner. */
+  done?: boolean;
+  /** The next lesson to take, outlined so it can be found at a glance. */
+  isNext?: boolean;
+}
 
 /**
  * Square Networking-lesson tile — mirrors ModuleCard, but the cover is a
  * generated node-mesh SVG (or the creator's uploaded SVG) instead of a photo.
  */
-const NetworkingLessonCard: React.FC<{ lesson: NetworkingLesson; index?: number }> = ({
+const NetworkingLessonCard: React.FC<NetworkingLessonCardProps> = ({
   lesson,
   index = 0,
+  position,
+  done = false,
+  isNext = false,
 }) => {
   const { lang } = useLang();
   const navigate = useNavigate();
@@ -36,7 +53,11 @@ const NetworkingLessonCard: React.FC<{ lesson: NetworkingLesson; index?: number 
           open();
         }
       }}
-      className="group relative aspect-square w-full cursor-pointer overflow-hidden rounded-2xl border border-[#263248] bg-[#121a2a] transition-all duration-200 hover:-translate-y-1 hover:border-[#60a5fa]/50 hover:shadow-lg hover:shadow-black/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#60a5fa]/50"
+      className={`group relative aspect-square w-full cursor-pointer overflow-hidden rounded-2xl border bg-[#121a2a] transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-black/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#60a5fa]/50 ${
+        isNext
+          ? 'border-[#00a859] ring-1 ring-[#00a859]/60 hover:border-[#00a859]'
+          : 'border-[#263248] hover:border-[#60a5fa]/50'
+      }`}
     >
       <CardArt
         kind="network"
@@ -54,14 +75,31 @@ const NetworkingLessonCard: React.FC<{ lesson: NetworkingLesson; index?: number 
         <span className="inline-flex items-center rounded-md border border-[#60a5fa]/30 bg-[#60a5fa]/15 px-2 py-0.5 text-xs font-semibold text-[#bcd6ff] backdrop-blur-sm">
           {steps > 0 ? (lang === 'ar' ? 'تفاعلي' : 'Interactive') : lang === 'ar' ? 'درس' : 'Lesson'}
         </span>
-        {steps > 0 && (
-          <span className="inline-flex max-w-full items-center gap-1 truncate rounded-md border border-white/10 bg-black/45 px-2 py-0.5 text-[11px] sm:text-xs font-semibold text-[#e5e9f0] backdrop-blur-sm" dir="ltr">
-            <Activity size={12} /> {steps}
+        {done ? (
+          <span
+            className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#00a859] text-[#0d1117]"
+            title={lang === 'ar' ? 'مكتمل' : 'Completed'}
+            aria-label={lang === 'ar' ? 'مكتمل' : 'Completed'}
+          >
+            <Check size={14} strokeWidth={3} />
           </span>
+        ) : position ? (
+          <span
+            className="inline-flex items-center rounded-md border border-white/10 bg-black/45 px-2 py-0.5 font-mono text-[11px] sm:text-xs font-semibold text-[#e5e9f0] backdrop-blur-sm"
+            dir="ltr"
+          >
+            {position}
+          </span>
+        ) : (
+          steps > 0 && (
+            <span className="inline-flex max-w-full items-center gap-1 truncate rounded-md border border-white/10 bg-black/45 px-2 py-0.5 text-[11px] sm:text-xs font-semibold text-[#e5e9f0] backdrop-blur-sm" dir="ltr">
+              <Activity size={12} /> {steps}
+            </span>
+          )
         )}
       </div>
 
-      {/* Bottom: title + stats */}
+      {/* Bottom: title + stats + who wrote it */}
       <div className="absolute inset-x-0 bottom-0 p-4">
         <h3 className="mb-2 line-clamp-2 text-base font-bold leading-snug text-[#f3f6ff] transition-colors group-hover:text-[#60a5fa]">
           {lesson.title[lang]}
@@ -76,6 +114,10 @@ const NetworkingLessonCard: React.FC<{ lesson: NetworkingLesson; index?: number 
             </span>
           )}
         </div>
+        <AuthorChip
+          credit={creditOf(lesson)}
+          className="mt-2 max-w-full text-[11px] font-medium text-[#aab3c7]"
+        />
       </div>
     </motion.div>
   );

@@ -1,13 +1,16 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Crown, Medal, GraduationCap } from 'lucide-react';
 import { useLang } from '../../contexts/LangContext';
 import { universityLabel } from '../../data/iraqUniversities';
+import { profilePath } from '../../services/profiles';
 import CyberAvatar, { presetFor } from '../ui/CyberAvatar';
 
 export interface PodiumEntry {
   rank: number;
   userId: string;
+  username?: string | null;
   displayName: string;
   avatarUrl: string | null;
   university: string | null;
@@ -52,9 +55,15 @@ const PodiumCard: React.FC<{ entry: PodiumEntry; highlight?: boolean; isMe?: boo
   const rank = entry.rank as 1 | 2 | 3;
   const tier = TIERS[rank] ?? TIERS[3];
   const height = highlight ? 'h-[18rem] md:h-[20rem]' : 'h-[15.5rem] md:h-[17rem]';
+  const to = profilePath({ id: entry.userId, username: entry.username }) ?? '/leaderboard';
 
   return (
-    <div className="relative pt-6">
+    /* The whole card opens the member's profile. */
+    <Link
+      to={to}
+      aria-label={entry.displayName}
+      className="group relative block rounded-2xl pt-6 transition-transform hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00a859]/60"
+    >
       {/* Crown floats above the #1 card */}
       {rank === 1 && (
         <Crown
@@ -161,7 +170,7 @@ const PodiumCard: React.FC<{ entry: PodiumEntry; highlight?: boolean; isMe?: boo
           </div>
         </div>
       </motion.div>
-    </div>
+    </Link>
   );
 };
 

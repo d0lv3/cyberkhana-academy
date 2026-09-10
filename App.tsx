@@ -35,6 +35,7 @@ const ProgrammingLessonPage = lazy(() => import('./pages/fundamentals/Programmin
 const CreatorDashboard = lazy(() => import('./pages/creators/CreatorDashboard'));
 const NetworkingCreator = lazy(() => import('./pages/creators/NetworkingCreator'));
 const NetworkingEditor = lazy(() => import('./pages/creators/NetworkingEditor'));
+const NetworkingUnitEditor = lazy(() => import('./pages/creators/NetworkingUnitEditor'));
 const ProgrammingCreator = lazy(() => import('./pages/creators/ProgrammingCreator'));
 const ProgrammingConceptEditor = lazy(() => import('./pages/creators/ProgrammingConceptEditor'));
 const ProgrammingModuleEditor = lazy(() => import('./pages/creators/ProgrammingModuleEditor'));
@@ -48,6 +49,7 @@ const FeedbackTrackPage = lazy(() => import('./pages/creators/FeedbackTrackPage'
 const PathEditor = lazy(() => import('./pages/creators/PathEditor'));
 const PathDetailPage = lazy(() => import('./pages/paths/PathDetailPage'));
 const MembersPage = lazy(() => import('./pages/admin/MembersPage'));
+const PublicProfilePage = lazy(() => import('./pages/PublicProfilePage'));
 const CyberSecurity101Page = lazy(() => import('./pages/fundamentals/CyberSecurity101Page'));
 const TerminalPage = lazy(() => import('./pages/TerminalPage'));
 
@@ -197,6 +199,8 @@ function AppRoutes() {
           <Route path="/paths/:slug" element={<PathDetailPage />} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          {/* Another member's public profile, by username or account id. */}
+          <Route path="/u/:handle" element={<PublicProfilePage />} />
 
           {/* Creator Studio — role-gated */}
           <Route element={<CreatorGate />}>
@@ -204,6 +208,8 @@ function AppRoutes() {
             <Route path="/creators/networking" element={<NetworkingCreator />} />
             <Route path="/creators/networking/new" element={<NetworkingEditor />} />
             <Route path="/creators/networking/edit/:id" element={<NetworkingEditor />} />
+            <Route path="/creators/networking/units/new" element={<NetworkingUnitEditor />} />
+            <Route path="/creators/networking/units/edit/:id" element={<NetworkingUnitEditor />} />
             <Route path="/creators/programming" element={<ProgrammingCreator />} />
             <Route path="/creators/programming/new-language" element={<ProgrammingLanguageEditor />} />
             <Route path="/creators/programming/edit-language/:slug" element={<ProgrammingLanguageEditor />} />

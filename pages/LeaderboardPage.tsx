@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Trophy, GraduationCap, Loader2 } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
@@ -7,6 +8,7 @@ import LeaderboardPodium from '../components/leaderboard/LeaderboardPodium';
 import { useAuth } from '../contexts/AuthContext';
 import { useLang } from '../contexts/LangContext';
 import { api } from '../services/api';
+import { profilePath } from '../services/profiles';
 import { universityLabel, NOT_ENROLLED } from '../data/iraqUniversities';
 
 type Scope = 'overall' | 'monthly';
@@ -14,6 +16,8 @@ type Scope = 'overall' | 'monthly';
 interface LbEntry {
   rank: number;
   userId: string;
+  /** Public handle, when claimed; the row links to the profile either way. */
+  username?: string | null;
   displayName: string;
   avatarUrl: string | null;
   university: string | null;
@@ -147,7 +151,7 @@ const LeaderboardPage: React.FC = () => {
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Top-3 podium */}
+          {/* Top-3 podium, each card linking to its profile */}
           <LeaderboardPodium top={podium} currentUserId={user?._id} />
 
           {/* Ranks 4+ */}
@@ -173,8 +177,12 @@ const LeaderboardPage: React.FC = () => {
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: Math.min(i * 0.025, 0.4), duration: 0.3 }}
-                      className={`grid grid-cols-[3rem_1fr_auto] sm:grid-cols-[4rem_1fr_10rem_auto] gap-3 items-center px-4 sm:px-5 py-3 ${
-                        isMe ? 'bg-[#00a859]/10' : ''
+                    >
+                    {/* The whole row opens the member's profile. */}
+                    <Link
+                      to={profilePath({ id: e.userId, username: e.username }) ?? '/leaderboard'}
+                      className={`grid grid-cols-[3rem_1fr_auto] sm:grid-cols-[4rem_1fr_10rem_auto] gap-3 items-center px-4 sm:px-5 py-3 transition-colors focus:outline-none focus-visible:bg-[#1a2332] ${
+                        isMe ? 'bg-[#00a859]/10 hover:bg-[#00a859]/15' : 'hover:bg-[#1a2332]/70'
                       }`}
                       dir={lang === 'ar' ? 'rtl' : 'ltr'}
                     >
@@ -222,6 +230,7 @@ const LeaderboardPage: React.FC = () => {
                         </span>
                         <span className="text-[10px] text-[#8592ad] ms-1">{t('leaderboard.pts')}</span>
                       </div>
+                    </Link>
                     </motion.div>
                   );
                 })}
@@ -231,8 +240,9 @@ const LeaderboardPage: React.FC = () => {
 
           {/* Your standing, if outside the visible top list */}
           {data?.me && !meInList && (
-            <div
-              className="grid grid-cols-[3rem_1fr_auto] sm:grid-cols-[4rem_1fr_10rem_auto] gap-3 items-center px-4 sm:px-5 py-3 rounded-2xl border border-[#00a859]/30 bg-[#00a859]/10"
+            <Link
+              to={profilePath({ id: user?._id, username: user?.username }) ?? '/profile'}
+              className="grid grid-cols-[3rem_1fr_auto] sm:grid-cols-[4rem_1fr_10rem_auto] gap-3 items-center px-4 sm:px-5 py-3 rounded-2xl border border-[#00a859]/30 bg-[#00a859]/10 transition-colors hover:bg-[#00a859]/15"
               dir={lang === 'ar' ? 'rtl' : 'ltr'}
             >
               <div className="flex items-center">
@@ -257,7 +267,7 @@ const LeaderboardPage: React.FC = () => {
                 </span>
                 <span className="text-[10px] text-[#8592ad] ms-1">{t('leaderboard.pts')}</span>
               </div>
-            </div>
+            </Link>
           )}
         </div>
       )}

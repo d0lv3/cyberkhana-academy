@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Clock, Layers, FileText, Video, FlaskConical } from 'lucide-react';
 import DifficultyBadge from '../ui/DifficultyBadge';
+import AuthorChip from '../ui/AuthorChip';
 import { useLang } from '../../contexts/LangContext';
 import { MODULE_DOMAIN_META, moduleDomain, coverImageSrc, modulePath, hasLabs, type FundamentalModule } from '../../data/fundamentalsData';
+import { creditOf } from '../../services/creatorTypes';
 
 const contentTypeIcons = {
   video: Video,
@@ -116,6 +118,10 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ module: mod, index = 0 }) => {
             <Layers size={11} /> {mod.totalModules} {t(mod.totalModules === 1 ? 'card.section' : 'card.sections')}
           </span>
         </div>
+        <AuthorChip
+          credit={creditOf(mod)}
+          className="mt-2 max-w-full text-[11px] font-medium text-[#aab3c7]"
+        />
       </div>
     </motion.div>
   );

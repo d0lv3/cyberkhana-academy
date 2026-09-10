@@ -5,9 +5,12 @@ export interface IJWTPayload {
   userId: string;
 }
 
-/** The five creator-content buckets, mirroring the frontend storage layout. */
+/** The creator-content buckets, mirroring the frontend storage layout.
+ *  `networking-units` holds the ordered groups the Networking page lays its
+ *  lessons out in; it is authored under the same permission as the lessons. */
 export const CONTENT_BUCKETS = [
   'networking-lessons',
+  'networking-units',
   'programming-patches',
   'os-modules',
   'standalone-modules',

@@ -10,13 +10,14 @@ import {
   FlaskConical,
   Video,
   FileText,
-  User,
   Check,
   PlayCircle,
   ChevronRight,
 } from 'lucide-react';
 import Button from '../../components/ui/EnhancedButton';
 import DifficultyBadge from '../../components/ui/DifficultyBadge';
+import AuthorChip from '../../components/ui/AuthorChip';
+import { creditOf } from '../../services/creatorTypes';
 import LessonMarkdown from '../../components/ui/LessonMarkdown';
 import ProgressBar from '../../components/ui/ProgressBar';
 import { useLang } from '../../contexts/LangContext';
@@ -245,9 +246,16 @@ const ModuleOverviewPage: React.FC = () => {
                 {mod.title[lang] || mod.title.en}
               </h1>
 
-              <p className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-medium text-[#8592ad]">
-                <User size={12} /> {mod.author}
-              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium text-[#8592ad]">
+                <span>{ar ? 'بقلم' : 'By'}</span>
+                <AuthorChip
+                  credit={creditOf(mod)}
+                  size="sm"
+                  showHandle
+                  linked
+                  className="text-sm font-semibold text-[#d2d7e3]"
+                />
+              </div>
             </div>
 
             {/* ── The way in, and how far in you already are ──

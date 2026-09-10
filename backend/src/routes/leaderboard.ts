@@ -42,12 +42,14 @@ router.get('/', authenticate, async (req: AuthRequest, res) => {
     const docs = await User.find(filter)
       .sort({ [sortField]: -1, updatedAt: 1 })
       .limit(limit)
-      .select('displayName avatarUrl university role points monthlyPoints')
+      .select('displayName username avatarUrl university role points monthlyPoints')
       .lean();
 
     const entries = docs.map((u, i) => ({
       rank: i + 1,
       userId: String(u._id),
+      // The public handle, so a row can link to its profile.
+      username: u.username ?? null,
       displayName: u.displayName,
       avatarUrl: u.avatarUrl ?? null,
       university: u.university || null,
