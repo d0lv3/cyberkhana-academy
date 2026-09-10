@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   ArrowLeft,
   CheckCircle2,
@@ -17,8 +17,6 @@ import {
   ChevronRight,
   RotateCcw,
   Award,
-  Flag,
-  Zap,
   FileText,
 } from 'lucide-react';
 import { getViewableModuleBySlug } from '../../data/modulesData';
@@ -118,84 +116,6 @@ const PILLAR_LABEL: Record<string, string> = {
   programming: 'Programming',
   networking: 'Networking',
   general: 'Modules',
-};
-
-/** The hands-on capstone (e.g. "Linux Final Cyber Challenge") gets a flag field. */
-const isFinalChallenge = (title: string) => /final.*challenge/i.test(title);
-
-/* ── Flag submission (validation intentionally not wired up yet) ── */
-const FlagSubmission: React.FC = () => {
-  const [flag, setFlag] = useState('');
-  const [message, setMessage] = useState<{ type: 'error' | 'pending'; text: string } | null>(null);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!flag.trim()) {
-      setMessage({ type: 'error', text: 'Please enter a flag.' });
-      return;
-    }
-    setMessage({
-      type: 'pending',
-      text: 'Flag received, automatic validation will be enabled soon.',
-    });
-  };
-
-  return (
-    <div className="rounded-xl border border-[#263248] bg-[#121a2a] overflow-hidden">
-      <div className="px-6 py-4 border-b border-[#263248] flex items-center gap-2">
-        <Flag className="w-4 h-4 text-[#9fef00]" />
-        <h3 className="text-sm font-semibold text-[#f3f6ff]">Flag Submission</h3>
-      </div>
-      <div className="p-6">
-        <p className="text-sm text-[#9aa5bf] mb-5">
-          Completed the challenge? Capture the flag and submit it below to finish the course.
-        </p>
-
-        <form onSubmit={handleSubmit} className="space-y-4" dir="ltr">
-          <div className="relative group">
-            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-[#8592ad] group-focus-within:text-[#9fef00] transition-colors">
-              <Zap size={18} />
-            </div>
-            <input
-              type="text"
-              placeholder="khana{...}"
-              value={flag}
-              onChange={(e) => setFlag(e.target.value)}
-              className="w-full pl-12 pr-4 py-3.5 bg-[#0d1117] border border-[#263248] focus:border-[#9fef00]/50 focus:outline-none rounded-xl text-[#f3f6ff] font-mono text-sm placeholder:text-[#7c8aa6] transition-all"
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full py-3.5 rounded-xl bg-[#007a42] hover:bg-[#006737] text-white text-base font-black tracking-wide transition-all shadow-lg shadow-[#00a859]/10"
-          >
-            SUBMIT FLAG
-          </button>
-        </form>
-
-        <AnimatePresence>
-          {message && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className={`mt-5 p-4 rounded-xl flex items-center gap-3 ${
-                message.type === 'error'
-                  ? 'bg-red-500/10 text-red-400 border border-red-500/20'
-                  : 'bg-[#9fef00]/10 text-[#9fef00] border border-[#9fef00]/20'
-              }`}
-            >
-              {message.type === 'error' ? (
-                <X size={18} className="flex-shrink-0" />
-              ) : (
-                <CheckCircle2 size={18} className="flex-shrink-0" />
-              )}
-              <span className="text-sm font-semibold">{message.text}</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
-  );
 };
 
 const ModuleViewerPage: React.FC = () => {
@@ -601,9 +521,6 @@ const ModuleViewerPage: React.FC = () => {
                   </ul>
                 </div>
               )}
-
-              {/* ── FINAL CHALLENGE FLAG SUBMISSION ── */}
-              {isFinalChallenge(activeLecture.title) && <FlagSubmission />}
 
               {/* ── QUIZ SECTION ── */}
               {(() => {
