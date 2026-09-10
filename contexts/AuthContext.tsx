@@ -1,8 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { AcademyUser } from '../types';
 import { api } from '../services/api';
-import { hydrateFromServer, setSyncEnabled } from '../services/syncService';
+import {
+  hydrateFromServer,
+  setSyncEnabled,
+  claimCachesFor,
+  flushPendingSync,
+  forgetServerBackedCaches,
+} from '../services/syncService';
 import { setOwnAuthor } from '../services/creatorDataService';
+import { flushPendingFeedback } from '../services/feedbackService';
 
 interface ServerUser {
   id: string;
@@ -41,7 +48,9 @@ interface AuthContextType {
   login: () => Promise<void>;
   /** Real sign-in: exchanges a Google ID token for a cookie session. */
   loginWithGoogle: (credential: string) => Promise<void>;
-  logout: () => void;
+  /** Saves what is still waiting, signs out, then clears this account's
+   *  caches. Resolves once the browser holds nothing of theirs to sync. */
+  logout: () => Promise<void>;
   updateUser: (patch: Partial<AcademyUser>) => void;
   /** Claim or change the public handle. Awaited, and throws with the server's
    *  reason (taken / reserved / malformed) so the caller can show it. */
@@ -57,7 +66,7 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   login: async () => {},
   loginWithGoogle: async () => {},
-  logout: () => {},
+  logout: async () => {},
   updateUser: () => {},
   updateUsername: async () => {},
   updateProfile: async () => {},
@@ -111,6 +120,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
   }, [user?._id, user?.displayName, user?.username, user?.avatarUrl]);
 
+  /* Adopt a session. The local caches are made this account's BEFORE the user
+     is set: setting it renders the app, and some of what renders reads the
+     caches or sends from them straight away (unsent feedback is retried the
+     moment someone is signed in). */
+  const adopt = (serverUser: ServerUser) => {
+    const next = mapServerUser(serverUser);
+    const account = { id: next._id, displayName: next.displayName };
+    claimCachesFor(account);
+    setUser(next);
+    return account;
+  };
+
   // Restore the session from the httpOnly cookie on boot.
   useEffect(() => {
     let cancelled = false;
@@ -118,8 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const { user: serverUser } = await api.get<{ user: ServerUser }>('/auth/me');
         if (cancelled) return;
-        setUser(mapServerUser(serverUser));
-        await hydrateFromServer();
+        await hydrateFromServer(adopt(serverUser));
       } catch {
         if (!cancelled) setUser(null);
       } finally {
@@ -132,8 +152,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const establishSession = async (serverUser: ServerUser) => {
-    setUser(mapServerUser(serverUser));
-    await hydrateFromServer();
+    await hydrateFromServer(adopt(serverUser));
   };
 
   const login = async () => {
@@ -165,9 +184,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const logout = () => {
-    api.post('/auth/logout').catch(() => {});
+  /* In this order, and each step waited for. The session saves what this
+     account still has waiting while it still can; only then is it ended; only
+     then are the caches cleared. Clearing first would let a late push send an
+     empty snapshot, and the server replaces progress, points and all, with
+     whatever it is sent. */
+  const logout = async () => {
+    await flushPendingSync();
+    await flushPendingFeedback().catch(() => {
+      /* offline: the answer stays queued for this account's next sign-in */
+    });
     setSyncEnabled(false);
+    await api.post('/auth/logout').catch(() => {});
+    forgetServerBackedCaches();
     setUser(null);
   };
 

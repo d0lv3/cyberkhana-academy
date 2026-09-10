@@ -6,13 +6,15 @@
  *    content UP to the server instead of wiping it).
  *  - queueContentPush()/queueProgressPush(): debounced write-through called
  *    by creatorDataService/progressService on every local write.
+ *  - claimCachesFor() / flushPendingSync() / forgetServerBackedCaches(): keep
+ *    the caches to one account at a time (see "Whose caches these are").
  *
  * All pushes are no-ops until a session exists, so the app still works fully
  * offline against the local cache.
  */
 
 import { api, ApiError } from './api';
-import { PUBLISHED_CACHE_KEYS, SERVER_BUCKET_BY_STORAGE_KEY } from './creatorTypes';
+import { PUBLISHED_CACHE_KEYS, SERVER_BUCKET_BY_STORAGE_KEY, STORAGE_KEYS } from './creatorTypes';
 // Cycle-safe: getTotalPoints is only ever called at runtime (inside functions).
 import { getTotalPoints } from './pointsService';
 
@@ -48,7 +50,12 @@ export function queueContentPush(storageKey: string, items: unknown[]): void {
   if (!bucket || !syncEnabled) return;
   pendingBuckets.set(bucket, items);
   if (bucketTimer) clearTimeout(bucketTimer);
-  bucketTimer = setTimeout(flushBuckets, 800);
+  bucketTimer = setTimeout(() => {
+    bucketTimer = null;
+    // Signed out in the meantime: sign-out already pushed what was waiting.
+    if (syncEnabled) void flushBuckets();
+    else pendingBuckets.clear();
+  }, 800);
 }
 
 async function flushBuckets(): Promise<void> {
@@ -118,12 +125,210 @@ export function queueProgressPush(): void {
   if (!syncEnabled) return;
   if (progressTimer) clearTimeout(progressTimer);
   progressTimer = setTimeout(async () => {
+    progressTimer = null;
+    /* The server replaces the whole snapshot, points included, so a push
+       made after sign-out has cleared the caches would wipe the account.
+       Sign-out pushes what was waiting itself; a late timer stands down. */
+    if (!syncEnabled) return;
     try {
       await api.put('/progress', collectProgressSnapshot());
     } catch (err) {
       console.warn('[sync] failed to push progress:', err);
     }
   }, 800);
+}
+
+/* ── Whose caches these are ──
+ *
+ * Everything above lives under fixed localStorage keys, not per account, and
+ * is pushed to whichever account is signed in. So the caches must belong to
+ * exactly one account at a time. `academy-cache-owner` records which: it is
+ * claimed on every sign-in before anything reads or pushes, and nothing
+ * cached under one account is ever merged into, or pushed as, another.
+ *
+ * Device preferences are not account data and are never touched: the
+ * interface language, collapsed panels, the terminal dock, `ck.*` layout
+ * choices, and the published-* caches, which hold public content that
+ * hydration refreshes anyway.
+ */
+
+export const CACHE_OWNER_KEY = 'academy-cache-owner';
+
+/** The creator-* keys: my own Studio content, mirrored from my buckets. */
+const CREATOR_KEYS: string[] = Object.keys(SERVER_BUCKET_BY_STORAGE_KEY);
+
+/** Learning progress: exactly what collectProgressSnapshot() pushes. */
+function isProgressKey(key: string): boolean {
+  return (
+    key.startsWith('academy-progress-') ||
+    key.startsWith('academy-prog-') ||
+    key === 'academy-net' ||
+    key === 'academy-paths-enrolled' ||
+    key === 'academy-modules-enrolled' ||
+    key === 'academy-last-activity'
+  );
+}
+
+/** Account caches the server also holds, so dropping them loses nothing: the
+ *  next sign-in hydrates them back. The module preview is a creator's
+ *  unsaved draft snapshot and goes with their Studio content. */
+function isServerBackedKey(key: string): boolean {
+  return CREATOR_KEYS.includes(key) || isProgressKey(key) || key === 'academy-module-preview';
+}
+
+/** Account state that only ever lives on this device: the study streak and
+ *  weekly goal, a lab's working state, which feedback prompts were answered
+ *  and any answer still waiting to send, where each module was left, and the
+ *  practice terminal's files. It stays through its owner's own sign-out, so
+ *  they find their streak again, and goes the moment another account signs
+ *  in. */
+function isDeviceOnlyAccountKey(key: string): boolean {
+  return (
+    key === 'academy-study-days' ||
+    key === 'academy-weekly-goal' ||
+    key.startsWith('academy-lab-') ||
+    key === 'academy-feedback-answered' ||
+    key === 'academy-feedback-pending' ||
+    key.startsWith('academy-lecture-') ||
+    (key.startsWith('academy-shell-') && key !== 'academy-shell-dock')
+  );
+}
+
+function removeKeys(match: (key: string) => boolean): void {
+  // Collected first: removing while walking the keys would skip some.
+  const doomed: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && match(key)) doomed.push(key);
+  }
+  for (const key of doomed) localStorage.removeItem(key);
+}
+
+/** Queued pushes belong to the session that queued them. */
+function discardPendingPushes(): void {
+  if (bucketTimer) clearTimeout(bucketTimer);
+  bucketTimer = null;
+  pendingBuckets.clear();
+  if (progressTimer) clearTimeout(progressTimer);
+  progressTimer = null;
+}
+
+/** The names a Studio cache's items are credited to. Programming patches
+ *  carry theirs on the modules, lessons and language inside each patch. */
+function creditedNames(storageKey: string, items: unknown[]): string[] {
+  const names: string[] = [];
+  const take = (item: unknown) => {
+    const name = (item as { authorName?: unknown } | null)?.authorName;
+    names.push(typeof name === 'string' ? name : '');
+  };
+  for (const item of items) {
+    if (storageKey === STORAGE_KEYS.PROGRAMMING_PATCHES) {
+      const patch = (item ?? {}) as {
+        newModules?: unknown[];
+        newConcepts?: Record<string, unknown[]>;
+        newLanguage?: unknown;
+      };
+      (Array.isArray(patch.newModules) ? patch.newModules : []).forEach(take);
+      for (const list of Object.values(patch.newConcepts ?? {})) {
+        (Array.isArray(list) ? list : []).forEach(take);
+      }
+      if (patch.newLanguage) take(patch.newLanguage);
+    } else {
+      take(item);
+    }
+  }
+  return names;
+}
+
+/** Is everything in this Studio cache credited to this person? For content
+ *  cached before owners were recorded, that is the only evidence there is. */
+function creditedTo(storageKey: string, displayName: string): boolean {
+  const names = creditedNames(storageKey, readArray(storageKey));
+  return !!displayName && names.length > 0 && names.every((name) => name === displayName);
+}
+
+/**
+ * Make the local caches this account's, before anything reads or pushes them.
+ * Called on every sign-in and session restore, ahead of hydration.
+ *
+ *  - Same owner: nothing to do.
+ *  - Another owner: none of it is this person's. Every account cache goes,
+ *    device-only state included.
+ *  - No owner yet: caches from before owners were recorded, left by whoever
+ *    used this browser last. Their progress is already on their account, so
+ *    it is dropped rather than merged into this one, and so are a lab's
+ *    working state (it can complete a lesson) and feedback still waiting to
+ *    send (it would go out under this name). Studio content stays only where
+ *    every item is credited to this person, for the first-login migration in
+ *    seedOwnBuckets.
+ */
+export function claimCachesFor(account: { id: string; displayName: string }): void {
+  try {
+    const owner = localStorage.getItem(CACHE_OWNER_KEY);
+    if (owner === account.id) return;
+
+    discardPendingPushes();
+    if (owner) {
+      removeKeys((key) => isServerBackedKey(key) || isDeviceOnlyAccountKey(key));
+    } else {
+      removeKeys(
+        (key) =>
+          isProgressKey(key) ||
+          key === 'academy-module-preview' ||
+          key.startsWith('academy-lab-') ||
+          key === 'academy-feedback-pending'
+      );
+      for (const key of CREATOR_KEYS) {
+        if (!creditedTo(key, account.displayName)) localStorage.removeItem(key);
+      }
+    }
+    localStorage.setItem(CACHE_OWNER_KEY, account.id);
+  } catch {
+    /* Storage unavailable: nothing is cached, so nothing can cross over. */
+  }
+}
+
+/**
+ * Before signing out, while the session can still save: push whatever is
+ * still waiting, so it lands on the account that made it. Must run before
+ * the caches are cleared (see queueProgressPush for why the order matters).
+ */
+export async function flushPendingSync(): Promise<void> {
+  if (bucketTimer) clearTimeout(bucketTimer);
+  bucketTimer = null;
+  const progressWaiting = progressTimer !== null;
+  if (progressTimer) clearTimeout(progressTimer);
+  progressTimer = null;
+
+  await flushBuckets();
+  if (progressWaiting && syncEnabled) {
+    try {
+      await api.put('/progress', collectProgressSnapshot());
+    } catch (err) {
+      console.warn('[sync] failed to push progress:', err);
+    }
+  }
+}
+
+/**
+ * After signing out: drop the account caches the server holds, and the
+ * Studio's per-tab stashes of other creators' items. Device-only state and
+ * the owner mark stay, so the same person finds their streak again, and
+ * anyone else's sign-in clears them (claimCachesFor).
+ */
+export function forgetServerBackedCaches(): void {
+  discardPendingPushes();
+  try {
+    removeKeys(isServerBackedKey);
+    const stashes: string[] = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i);
+      if (key?.startsWith('academy-')) stashes.push(key);
+    }
+    for (const key of stashes) sessionStorage.removeItem(key);
+  } catch {
+    /* Storage unavailable: nothing was cached. */
+  }
 }
 
 /* ── hydration ── */
@@ -179,7 +384,9 @@ function seedOwnBuckets(serverBuckets: Record<string, unknown[] | undefined>): v
       // Server is the source of truth once a bucket exists there.
       localStorage.setItem(storageKey, JSON.stringify(serverItems));
     } else {
-      // Never synced: migrate any existing local content up.
+      /* Never synced: migrate any existing local content up. Whatever is
+         still cached here got through claimCachesFor, so it is this
+         account's own work and nobody else's. */
       const local = readArray(storageKey);
       if (local.length > 0) queueContentPush(storageKey, local);
     }
@@ -190,7 +397,10 @@ function seedOwnBuckets(serverBuckets: Record<string, unknown[] | undefined>): v
  * Full hydration after authentication. Failures are non-fatal: the app keeps
  * working from the local cache.
  */
-export async function hydrateFromServer(): Promise<void> {
+export async function hydrateFromServer(account: { id: string; displayName: string }): Promise<void> {
+  /* The caller claims the caches before showing the session; confirming it
+     here means no path can merge or seed another account's leftovers. */
+  claimCachesFor(account);
   setSyncEnabled(true);
 
   // Everyone's published content → published-* caches (all roles).
