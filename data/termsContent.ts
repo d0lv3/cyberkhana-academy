@@ -115,17 +115,17 @@ export const TERMS: BilingualDoc = {
       {
         h: 'Learning honestly',
         body: [
-          'Points and ranks only mean something if they are earned.',
-          'Do not use extra accounts to farm points, automate lesson completion, or exploit a bug in progress tracking or scoring instead of doing the work. If you find such a bug, tell us — reporting it in good faith earns credit; using it does not.',
+          'XP, levels and ranks only mean something if they are earned.',
+          'Do not use extra accounts to farm XP, automate lesson completion, or exploit a bug in progress tracking or scoring instead of doing the work. If you find such a bug, tell us — reporting it in good faith earns credit; using it does not.',
         ],
       },
       {
-        h: 'Points, ranks and leaderboards',
+        h: 'XP, levels and leaderboards',
         body: [
-          'You earn points as you complete lessons and modules. There is an all-time leaderboard and a monthly one, and you can be filtered onto your university’s board if you have set one.',
-          'What others can see: signed-in members can open your public profile from the leaderboard or from anything you publish. It shows your display name and username, your profile picture, your university if you set one, your points and rank, the links you choose to add, and your bio only if you switch it on. Your email address and your country are never shown. There is more detail in the Privacy Policy.',
-          'Points are not money. They have no cash value, are not your property, and cannot be sold, traded or transferred.',
-          'We can adjust or reset them. We may correct points, recalculate them, or reset them at the start of a new season, to fix errors, deal with broken content, or respond to cheating. Monthly points reset each month by design.',
+          'You earn XP as you complete lessons and modules, and your XP sets your level, from 0x1 to 0xD. There is an all-time leaderboard and a monthly one, which list members from level 0x2 up, and you can be filtered onto your university’s board if you have set one.',
+          'What others can see: signed-in members can open your public profile from the leaderboard or from anything you publish. It shows your display name and username, your profile picture, your university if you set one, your level, XP and rank, the links you choose to add, and your bio only if you switch it on. Your email address and your country are never shown. There is more detail in the Privacy Policy.',
+          'XP is not money. It has no cash value, is not your property, and cannot be sold, traded or transferred.',
+          'We can adjust it. We may correct XP or recalculate it, for example when we change how lessons are measured, and we may reset the leaderboards at the start of a new season, to fix errors, deal with broken content, or respond to cheating. A leaderboard reset does not lower your level. Monthly XP resets each month by design.',
         ],
       },
       {
@@ -149,7 +149,7 @@ export const TERMS: BilingualDoc = {
           'go only as far as you need to prove it is real, and stop there;',
           'do not read, change, download or delete anyone else’s data;',
           'do not degrade the service for other people, and do not run denial-of-service tests;',
-          'do not use the flaw to gain points or rank.',
+          'do not use the flaw to gain XP or rank.',
         ],
         after: [
           'Stay inside those lines and we will thank you, credit you if you want, and fix it. Step outside them and it stops being research and becomes a breach of the section above on how you may use what you learn.',
@@ -191,7 +191,7 @@ export const TERMS: BilingualDoc = {
       {
         h: 'Suspension and closing your account',
         body: [
-          'We may suspend, ban or delete your account, remove points, or restrict what you can do, if you break these Terms, if we believe your behaviour puts other users or the Academy at risk, or if the law requires it. We may also delete an account that is a duplicate, is fake, or belongs to someone who is not allowed to use the Academy. Deleting an account is permanent: it takes effect straight away and cannot be undone.',
+          'We may suspend, ban or delete your account, remove XP, or restrict what you can do, if you break these Terms, if we believe your behaviour puts other users or the Academy at risk, or if the law requires it. We may also delete an account that is a duplicate, is fake, or belongs to someone who is not allowed to use the Academy. Deleting an account is permanent: it takes effect straight away and cannot be undone.',
           'For minor problems we will normally warn you first. For anything involving abuse, another person’s data, or real harm, we may act immediately and without warning.',
           'We may also remove content — lessons, uploads, feedback or profile text — that breaks these Terms, and withdraw creator access from someone who misuses it, without ending their student account.',
           'You can delete your account yourself, at any time, from your profile page. It is deleted 7 days after you ask, unless you sign in again before then, which cancels the request; after that it cannot be recovered. If you cannot sign in, ask us at support@cyberkhana.tech. What happens to your data when an account is deleted, and what survives, is set out in the Privacy Policy.',
@@ -213,7 +213,7 @@ export const TERMS: BilingualDoc = {
         ],
         list: [
           'indirect or knock-on losses of any kind;',
-          'lost data, progress, points, rank or opportunity;',
+          'lost data, progress, XP, level, rank or opportunity;',
           'damage to your computer or systems arising from lessons, exercises, code you ran, or files you downloaded;',
           'anything another user does, or content we did not write;',
           'any consequence — legal, academic or otherwise — of you using what you learn outside the limits set out above.',
@@ -363,17 +363,17 @@ export const TERMS: BilingualDoc = {
       {
         h: 'التعلّم بنزاهة',
         body: [
-          'النقاط والمراتب لا تعني شيئًا ما لم تُكتسب فعلًا.',
-          'لا تستخدم حسابات إضافية لجمع النقاط، ولا تُؤتمت إكمال الدروس، ولا تستغلّ خللًا في تتبّع التقدّم أو في احتساب النقاط بدلًا من إنجاز العمل. وإذا وجدت خللًا من هذا النوع فأخبرنا به — فالإبلاغ بحسن نية يستحق التقدير، أما استغلاله فلا.',
+          'نقاط الخبرة والمستويات والمراتب لا تعني شيئًا ما لم تُكتسب فعلًا.',
+          'لا تستخدم حسابات إضافية لجمع نقاط الخبرة، ولا تُؤتمت إكمال الدروس، ولا تستغلّ خللًا في تتبّع التقدّم أو في احتساب نقاط الخبرة بدلًا من إنجاز العمل. وإذا وجدت خللًا من هذا النوع فأخبرنا به — فالإبلاغ بحسن نية يستحق التقدير، أما استغلاله فلا.',
         ],
       },
       {
-        h: 'النقاط والمراتب ولوحات الصدارة',
+        h: 'نقاط الخبرة والمستويات ولوحات الصدارة',
         body: [
-          'تكسب نقاطًا كلما أكملت دروسًا ووحدات. وهناك لوحة صدارة عامة وأخرى شهرية، ويمكن تصفيتها لتظهر على لوحة جامعتك إن كنت قد حدّدتها.',
-          'ما يراه الآخرون: يستطيع الأعضاء المسجَّلون فتح ملفك العام من لوحة الصدارة أو من أي محتوى تنشره. ويعرض اسمك المعروض واسم المستخدم، وصورتك الشخصية، وجامعتك إن حدّدتها، ونقاطك ومرتبتك، والروابط التي تختار إضافتها، ونبذتك فقط إذا فعّلت إظهارها. أما بريدك الإلكتروني وبلدك فلا يظهران أبدًا. وتجد تفصيلًا أوفى في سياسة الخصوصية.',
-          'النقاط ليست مالًا. لا قيمة نقدية لها، وليست ملكًا لك، ولا يمكن بيعها أو تداولها أو نقلها.',
-          'ويمكننا تعديلها أو إعادة ضبطها. فقد نصحّح النقاط أو نعيد حسابها أو نعيد ضبطها في بداية موسم جديد، لتصحيح أخطاء أو لمعالجة محتوى معطّل أو للتعامل مع الغش. والنقاط الشهرية يُعاد ضبطها كل شهر بحكم التصميم.',
+          'تكسب نقاط خبرة كلما أكملت دروسًا ووحدات، وتحدّد نقاط خبرتك مستواك من 0x1 إلى 0xD. وهناك لوحة صدارة عامة وأخرى شهرية تضمّان الأعضاء من المستوى 0x2 فما فوق، ويمكن تصفيتها لتظهر على لوحة جامعتك إن كنت قد حدّدتها.',
+          'ما يراه الآخرون: يستطيع الأعضاء المسجَّلون فتح ملفك العام من لوحة الصدارة أو من أي محتوى تنشره. ويعرض اسمك المعروض واسم المستخدم، وصورتك الشخصية، وجامعتك إن حدّدتها، ومستواك ونقاط خبرتك ومرتبتك، والروابط التي تختار إضافتها، ونبذتك فقط إذا فعّلت إظهارها. أما بريدك الإلكتروني وبلدك فلا يظهران أبدًا. وتجد تفصيلًا أوفى في سياسة الخصوصية.',
+          'نقاط الخبرة ليست مالًا. لا قيمة نقدية لها، وليست ملكًا لك، ولا يمكن بيعها أو تداولها أو نقلها.',
+          'ويمكننا تعديلها. فقد نصحّح نقاط الخبرة أو نعيد حسابها، كأن نغيّر طريقة قياس الدروس، وقد نعيد ضبط لوحات الصدارة في بداية موسم جديد، لتصحيح أخطاء أو لمعالجة محتوى معطّل أو للتعامل مع الغش. وإعادة ضبط لوحات الصدارة لا تُنزل مستواك. ونقاط الخبرة الشهرية يُعاد ضبطها كل شهر بحكم التصميم.',
         ],
       },
       {
@@ -397,7 +397,7 @@ export const TERMS: BilingualDoc = {
           'ذهبتَ بالقدر اللازم فقط لإثبات أنها حقيقية ثم توقفت؛',
           'لم تطّلع على بيانات أي شخص آخر ولم تعدّلها أو تنزّلها أو تحذفها؛',
           'لم تُضعف الخدمة على الآخرين، ولم تُجرِ اختبارات حجب الخدمة؛',
-          'لم تستخدم الثغرة لكسب نقاط أو مرتبة.',
+          'لم تستخدم الثغرة لكسب نقاط خبرة أو مرتبة.',
         ],
         after: [
           'التزم بهذه الحدود وسنشكرك، وننسب الفضل إليك إن أردت، ونصلح الخلل. أما تجاوزها فيُخرج الأمر من نطاق البحث ويجعله مخالفة للقسم الخاص بكيفية استخدام ما تتعلّمه.',
@@ -439,7 +439,7 @@ export const TERMS: BilingualDoc = {
       {
         h: 'التعليق وإغلاق الحساب',
         body: [
-          'يجوز لنا تعليق حسابك أو حظره أو حذفه، أو خصم نقاط، أو تقييد ما يمكنك فعله، إذا خالفت هذه الشروط، أو إذا رأينا أن سلوكك يعرّض مستخدمين آخرين أو الأكاديمية للخطر، أو إذا اقتضى القانون ذلك. وقد نحذف كذلك حسابًا مكرّرًا أو مزيّفًا، أو حسابًا يعود إلى شخص لا يُسمح له باستخدام الأكاديمية. وحذف الحساب نهائي: يسري فورًا ولا يمكن التراجع عنه.',
+          'يجوز لنا تعليق حسابك أو حظره أو حذفه، أو خصم نقاط خبرة، أو تقييد ما يمكنك فعله، إذا خالفت هذه الشروط، أو إذا رأينا أن سلوكك يعرّض مستخدمين آخرين أو الأكاديمية للخطر، أو إذا اقتضى القانون ذلك. وقد نحذف كذلك حسابًا مكرّرًا أو مزيّفًا، أو حسابًا يعود إلى شخص لا يُسمح له باستخدام الأكاديمية. وحذف الحساب نهائي: يسري فورًا ولا يمكن التراجع عنه.',
           'وفي المخالفات البسيطة سننبّهك أولًا عادةً. أما في أي أمر يتعلق بالإساءة أو ببيانات شخص آخر أو بضرر حقيقي، فقد نتصرّف فورًا ودون إنذار.',
           'ويجوز لنا أيضًا حذف محتوى — دروس أو ملفات مرفوعة أو تقييمات أو نصوص ملف شخصي — يخالف هذه الشروط، وسحب صلاحية الإنشاء ممن يسيء استخدامها، دون إنهاء حسابه كطالب.',
           'ويمكنك حذف حسابك بنفسك في أي وقت من صفحة ملفك الشخصي. ويُحذف بعد ٧ أيام من طلبك، ما لم تسجّل الدخول مجددًا قبل ذلك، فتسجيل الدخول يلغي الطلب؛ وبعد انقضائها لا يمكن استرجاعه. وإذا لم تتمكن من تسجيل الدخول، فاطلب ذلك منا على support@cyberkhana.tech. وما يحدث لبياناتك عند حذف الحساب، وما يبقى منها، مبيّن في سياسة الخصوصية.',
@@ -461,7 +461,7 @@ export const TERMS: BilingualDoc = {
         ],
         list: [
           'أي خسائر غير مباشرة أو تبعية من أي نوع؛',
-          'فقدان بيانات أو تقدّم أو نقاط أو مرتبة أو فرصة؛',
+          'فقدان بيانات أو تقدّم أو نقاط خبرة أو مستوى أو مرتبة أو فرصة؛',
           'أي ضرر يلحق بحاسوبك أو أنظمتك بسبب الدروس أو التمارين أو شيفرة شغّلتها أو ملفات نزّلتها؛',
           'أي شيء يفعله مستخدم آخر، أو محتوى لم نكتبه نحن؛',
           'أي نتيجة — قانونية أو أكاديمية أو غيرها — لاستخدامك ما تعلّمته خارج الحدود المبيّنة أعلاه.',

@@ -64,7 +64,7 @@ them at any time on your profile.
 - which **lessons and modules you have completed**, and your progress within
   them;
 - **how much time you have spent learning**, in minutes;
-- your **points**, your monthly points, and your position on the leaderboards;
+- your **XP** and **level**, your monthly XP, and your position on the leaderboards;
 - when you **last signed in**;
 - whether your account is **suspended**;
 - whether you have **asked for your account to be deleted**, and when.
@@ -105,7 +105,7 @@ could not read it even if we wanted to.
 | Social links, and your bio if you switch it on | To show on your public profile |
 | Country, language | To personalise the Academy and show it in your language |
 | Progress, completions, learning time | To track where you are and pick up where you left off |
-| Points and monthly points | To build the leaderboards |
+| XP, level and monthly XP | To show your level and build the leaderboards |
 | Feedback and ratings | To help creators improve their content |
 | Creator content, uploads, permissions | To publish your content and control who can edit what |
 | Auth cookie | To keep you signed in |
@@ -139,7 +139,7 @@ from the leaderboard or from anything you publish:
 - your **display name** and **username**;
 - your **profile picture**;
 - your **university**, if you set one;
-- your **points, monthly points and rank**;
+- your **level, XP, monthly XP and rank**;
 - **links to your accounts elsewhere**, if you add them;
 - your **bio**, only if you switch on "Show my bio on my public profile". It is
   off until you do;
@@ -150,7 +150,7 @@ from the leaderboard or from anything you publish:
 Your **email address**, your **country**, your **language setting**, the
 **Google account** you sign in with, **when you last signed in**, **whether your
 account is suspended**, **whether you have asked for it to be deleted**, and
-your **learning record** beyond your points.
+your **learning record** beyond your XP and level.
 
 ### Feedback — please read this one
 
@@ -233,11 +233,11 @@ and keeps exactly what is listed below.
 **What is deleted:** your name, email address, profile picture, username,
 university, country, bio, social links, language preference, your public
 profile, and the link between your account and your Google identity; your
-learning progress, your points and your place on the leaderboards; and anything
+learning progress, your XP and your place on the leaderboards; and anything
 you wrote as a creator but had not published, such as drafts and content
 waiting for review, along with uploaded files that nothing else uses. Sharing
 between you and other creators ends. The leaderboards are worked out from the
-accounts that exist, so nobody else loses points; the members below you each
+accounts that exist, so nobody else loses XP; the members below you each
 move up a place.
 
 **What is not deleted, and why:**

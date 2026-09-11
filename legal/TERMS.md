@@ -144,32 +144,35 @@ You also agree not to:
 
 ## 9. Learning honestly
 
-Points and ranks only mean something if they are earned.
+XP, levels and ranks only mean something if they are earned.
 
-Do not use extra accounts to farm points, automate lesson completion, or exploit
+Do not use extra accounts to farm XP, automate lesson completion, or exploit
 a bug in progress tracking or scoring instead of doing the work. If you find
 such a bug, tell us under section 12 — reporting it in good faith earns credit;
 using it does not.
 
-## 10. Points, ranks and leaderboards
+## 10. XP, levels and leaderboards
 
-You earn points as you complete lessons and modules. There is an all-time
-leaderboard and a monthly one, and you can be filtered onto your university's
-board if you have set one.
+You earn XP as you complete lessons and modules, and your XP sets your level,
+from 0x1 to 0xD. There is an all-time leaderboard and a monthly one, which list
+members from level 0x2 up, and you can be filtered onto your university's board
+if you have set one.
 
 **What others can see:** signed-in members can open your public profile from
 the leaderboard or from anything you publish. It shows your display name and
-username, your profile picture, your university if you set one, your points and
-rank, the links you choose to add, and your bio only if you switch it on. Your
+username, your profile picture, your university if you set one, your level, XP
+and rank, the links you choose to add, and your bio only if you switch it on. Your
 email address and your country are never shown. There is more detail in the
 Privacy Policy.
 
-**Points are not money.** They have no cash value, are not your property, and
-cannot be sold, traded or transferred.
+**XP is not money.** It has no cash value, is not your property, and cannot be
+sold, traded or transferred.
 
-**We can adjust or reset them.** We may correct points, recalculate them, or
-reset them at the start of a new season, to fix errors, deal with broken
-content, or respond to cheating. Monthly points reset each month by design.
+**We can adjust it.** We may correct XP or recalculate it, for example when we
+change how lessons are measured, and we may reset the leaderboards at the start
+of a new season, to fix errors, deal with broken content, or respond to
+cheating. A leaderboard reset does not lower your level. Monthly XP resets each
+month by design.
 
 ## 11. Certificates
 
@@ -198,7 +201,7 @@ as long as you:
 - do not read, change, download or delete anyone else's data;
 - do not degrade the service for other people, and do not run denial-of-service
   tests;
-- do not use the flaw to gain points or rank.
+- do not use the flaw to gain XP or rank.
 
 Stay inside those lines and we will thank you, credit you if you want, and fix
 it. Step outside them and it stops being research and becomes a breach of
@@ -260,7 +263,7 @@ obliged to.
 
 ## 17. Suspension and closing your account
 
-We may suspend, ban or delete your account, remove points, or restrict what you
+We may suspend, ban or delete your account, remove XP, or restrict what you
 can do, if you break these Terms, if we believe your behaviour puts other users
 or the Academy at risk, or if the law requires it. We may also delete an account
 that is a duplicate, is fake, or belongs to someone who is not allowed to use
@@ -310,7 +313,7 @@ As far as the law allows, CyberKhana and the people who run it are not liable
 for:
 
 - indirect or knock-on losses of any kind;
-- lost data, progress, points, rank or opportunity;
+- lost data, progress, XP, level, rank or opportunity;
 - damage to your computer or systems arising from lessons, exercises, code you
   ran, or files you downloaded;
 - anything another user does, or content we did not write;
