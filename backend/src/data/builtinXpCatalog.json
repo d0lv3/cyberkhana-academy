@@ -1,0 +1,1781 @@
+{
+  "modules": [
+    {
+      "id": "linux-for-cybersecurity",
+      "slug": "linux-for-cybersecurity",
+      "difficulty": "Beginner",
+      "stops": [
+        {
+          "id": "1.1",
+          "m": {
+            "words": 20,
+            "videoMinutes": 2.88,
+            "extraMinutes": 0,
+            "mcq": 0,
+            "typed": 0,
+            "independentMinutes": 0,
+            "handsOnMinutes": 0
+          }
+        },
+        {
+          "id": "1.2",
+          "m": {
+            "words": 30,
+            "videoMinutes": 2.72,
+            "extraMinutes": 0,
+            "mcq": 0,
+            "typed": 0,
+            "independentMinutes": 0,
+            "handsOnMinutes": 0
+          }
+        },
+        {
+          "id": "1.3",
+          "m": {
+            "words": 30,
+            "videoMinutes": 3.05,
+            "extraMinutes": 0,
+            "mcq": 0,
+            "typed": 0,
+            "independentMinutes": 0,
+            "handsOnMinutes": 0
+          }
+        },
+        {
+          "id": "1.4",
+          "m": {
+            "words": 40,
+            "videoMinutes": 3.52,
+            "extraMinutes": 0,
+            "mcq": 0,
+            "typed": 0,
+            "independentMinutes": 0,
+            "handsOnMinutes": 0
+          }
+        },
+        {
+          "id": "1.5",
+          "m": {
+            "words": 40,
+            "videoMinutes": 8.92,
+            "extraMinutes": 0,
+            "mcq": 0,
+            "typed": 0,
+            "independentMinutes": 0,
+            "handsOnMinutes": 0
+          }
+        },
+        {
+          "id": "2.1",
+          "m": {
+            "words": 40,
+            "videoMinutes": 8.87,
+            "extraMinutes": 0,
+            "mcq": 4,
+            "typed": 0,
+            "independentMinutes": 0,
+            "handsOnMinutes": 0
+          }
+        },
+        {
+          "id": "2.2",
+          "m": {
+            "words": 40,
+            "videoMinutes": 14.53,
+            "extraMinutes": 0,
+            "mcq": 6,
+            "typed": 0,
+            "independentMinutes": 0,
+            "handsOnMinutes": 0
+          }
+        },
+        {
+          "id": "2.3",
+          "m": {
+            "words": 40,
+            "videoMinutes": 12.45,
+            "extraMinutes": 0,
+            "mcq": 8,
+            "typed": 0,
+            "independentMinutes": 0,
+            "handsOnMinutes": 0
+          }
+        },
+        {
+          "id": "2.4",
+          "m": {
+            "words": 50,
+            "videoMinutes": 17.23,
+            "extraMinutes": 0,
+            "mcq": 6,
+            "typed": 0,
+            "independentMinutes": 0,
+            "handsOnMinutes": 0
+          }
+        },
+        {
+          "id": "3.1",
+          "m": {
+            "words": 40,
+            "videoMinutes": 12.22,
+            "extraMinutes": 0,
+            "mcq": 6,
+            "typed": 0,
+            "independentMinutes": 0,
+            "handsOnMinutes": 0
+          }
+        },
+        {
+          "id": "3.2",
+          "m": {
+            "words": 40,
+            "videoMinutes": 14.25,
+            "extraMinutes": 0,
+            "mcq": 6,
+            "typed": 0,
+            "independentMinutes": 0,
+            "handsOnMinutes": 0
+          }
+        },
+        {
+          "id": "3.3",
+          "m": {
+            "words": 50,
+            "videoMinutes": 3.65,
+            "extraMinutes": 0,
+            "mcq": 4,
+            "typed": 0,
+            "independentMinutes": 0,
+            "handsOnMinutes": 0
+          }
+        },
+        {
+          "id": "4.1",
+          "m": {
+            "words": 50,
+            "videoMinutes": 3.82,
+            "extraMinutes": 0,
+            "mcq": 4,
+            "typed": 0,
+            "independentMinutes": 0,
+            "handsOnMinutes": 0
+          }
+        },
+        {
+          "id": "4.2",
+          "m": {
+            "words": 30,
+            "videoMinutes": 3.25,
+            "extraMinutes": 0,
+            "mcq": 3,
+            "typed": 0,
+            "independentMinutes": 0,
+            "handsOnMinutes": 0
+          }
+        },
+        {
+          "id": "5.1",
+          "m": {
+            "words": 40,
+            "videoMinutes": 8.77,
+            "extraMinutes": 0,
+            "mcq": 3,
+            "typed": 0,
+            "independentMinutes": 0,
+            "handsOnMinutes": 0
+          }
+        },
+        {
+          "id": "5.2",
+          "m": {
+            "words": 40,
+            "videoMinutes": 4.63,
+            "extraMinutes": 0,
+            "mcq": 3,
+            "typed": 0,
+            "independentMinutes": 0,
+            "handsOnMinutes": 0
+          }
+        },
+        {
+          "id": "5.3",
+          "m": {
+            "words": 50,
+            "videoMinutes": 7.95,
+            "extraMinutes": 0,
+            "mcq": 3,
+            "typed": 0,
+            "independentMinutes": 0,
+            "handsOnMinutes": 0
+          }
+        },
+        {
+          "id": "6.1",
+          "m": {
+            "words": 40,
+            "videoMinutes": 29.83,
+            "extraMinutes": 0,
+            "mcq": 4,
+            "typed": 0,
+            "independentMinutes": 0,
+            "handsOnMinutes": 0
+          }
+        },
+        {
+          "id": "6.2",
+          "m": {
+            "words": 50,
+            "videoMinutes": 11.92,
+            "extraMinutes": 0,
+            "mcq": 3,
+            "typed": 0,
+            "independentMinutes": 0,
+            "handsOnMinutes": 0
+          }
+        },
+        {
+          "id": "7.1",
+          "m": {
+            "words": 50,
+            "videoMinutes": 9.18,
+            "extraMinutes": 0,
+            "mcq": 5,
+            "typed": 0,
+            "independentMinutes": 0,
+            "handsOnMinutes": 0
+          }
+        },
+        {
+          "id": "7.2",
+          "m": {
+            "words": 50,
+            "videoMinutes": 8.77,
+            "extraMinutes": 0,
+            "mcq": 3,
+            "typed": 0,
+            "independentMinutes": 0,
+            "handsOnMinutes": 0
+          }
+        },
+        {
+          "id": "8.1",
+          "m": {
+            "words": 40,
+            "videoMinutes": 14.73,
+            "extraMinutes": 0,
+            "mcq": 3,
+            "typed": 0,
+            "independentMinutes": 0,
+            "handsOnMinutes": 0
+          }
+        },
+        {
+          "id": "8.2",
+          "m": {
+            "words": 40,
+            "videoMinutes": 11.95,
+            "extraMinutes": 0,
+            "mcq": 3,
+            "typed": 0,
+            "independentMinutes": 0,
+            "handsOnMinutes": 0
+          }
+        },
+        {
+          "id": "8.3",
+          "m": {
+            "words": 50,
+            "videoMinutes": 3.13,
+            "extraMinutes": 0,
+            "mcq": 3,
+            "typed": 0,
+            "independentMinutes": 0,
+            "handsOnMinutes": 0
+          }
+        },
+        {
+          "id": "9.1",
+          "m": {
+            "words": 50,
+            "videoMinutes": 8.45,
+            "extraMinutes": 0,
+            "mcq": 3,
+            "typed": 0,
+            "independentMinutes": 0,
+            "handsOnMinutes": 0
+          }
+        },
+        {
+          "id": "9.2",
+          "m": {
+            "words": 50,
+            "videoMinutes": 5.3,
+            "extraMinutes": 0,
+            "mcq": 2,
+            "typed": 0,
+            "independentMinutes": 0,
+            "handsOnMinutes": 0
+          }
+        },
+        {
+          "id": "9.3",
+          "m": {
+            "words": 30,
+            "videoMinutes": 1.25,
+            "extraMinutes": 0,
+            "mcq": 0,
+            "typed": 0,
+            "independentMinutes": 0,
+            "handsOnMinutes": 45
+          }
+        },
+        {
+          "id": "9.4",
+          "m": {
+            "words": 40,
+            "videoMinutes": 4.53,
+            "extraMinutes": 0,
+            "mcq": 0,
+            "typed": 0,
+            "independentMinutes": 0,
+            "handsOnMinutes": 0
+          }
+        }
+      ]
+    }
+  ],
+  "languages": [
+    {
+      "slug": "python",
+      "modules": [
+        {
+          "id": "py-getting-started",
+          "slug": "getting-started",
+          "order": 1,
+          "concepts": [
+            {
+              "id": "py-what-is-python",
+              "order": 1,
+              "m": {
+                "words": 380,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-setup",
+              "order": 2,
+              "m": {
+                "words": 310,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-syntax-first-program",
+              "order": 3,
+              "m": {
+                "words": 350,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-comments",
+              "order": 4,
+              "m": {
+                "words": 330,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-ch-first-program",
+              "order": 5,
+              "m": {
+                "words": 100,
+                "videoMinutes": 0,
+                "extraMinutes": 0,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 12,
+                "handsOnMinutes": 0
+              }
+            }
+          ]
+        },
+        {
+          "id": "py-variables",
+          "slug": "variables",
+          "order": 2,
+          "concepts": [
+            {
+              "id": "py-working-with-data",
+              "order": 1,
+              "m": {
+                "words": 350,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-data-types",
+              "order": 2,
+              "m": {
+                "words": 350,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-variables-intro",
+              "order": 3,
+              "m": {
+                "words": 320,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-variables-naming",
+              "order": 4,
+              "m": {
+                "words": 350,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-escape-sequences",
+              "order": 5,
+              "m": {
+                "words": 270,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-concatenation",
+              "order": 6,
+              "m": {
+                "words": 280,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-variables-challenge",
+              "order": 7,
+              "m": {
+                "words": 140,
+                "videoMinutes": 0,
+                "extraMinutes": 0,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 12,
+                "handsOnMinutes": 0
+              }
+            }
+          ]
+        },
+        {
+          "id": "py-strings",
+          "slug": "strings",
+          "order": 3,
+          "concepts": [
+            {
+              "id": "py-strings-intro",
+              "order": 1,
+              "m": {
+                "words": 300,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-strings-indexing",
+              "order": 2,
+              "m": {
+                "words": 320,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-strings-methods-case",
+              "order": 3,
+              "m": {
+                "words": 280,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-strings-methods-search",
+              "order": 4,
+              "m": {
+                "words": 270,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-strings-methods-split",
+              "order": 5,
+              "m": {
+                "words": 330,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-strings-methods-test",
+              "order": 6,
+              "m": {
+                "words": 260,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-string-formatting",
+              "order": 7,
+              "m": {
+                "words": 360,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-fstrings",
+              "order": 8,
+              "m": {
+                "words": 310,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-ch-log-parser",
+              "order": 9,
+              "m": {
+                "words": 150,
+                "videoMinutes": 0,
+                "extraMinutes": 0,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 12,
+                "handsOnMinutes": 0
+              }
+            }
+          ]
+        },
+        {
+          "id": "py-numbers",
+          "slug": "numbers",
+          "order": 4,
+          "concepts": [
+            {
+              "id": "py-numbers-intro",
+              "order": 1,
+              "m": {
+                "words": 300,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-arithmetic",
+              "order": 2,
+              "m": {
+                "words": 440,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-ch-seconds",
+              "order": 3,
+              "m": {
+                "words": 160,
+                "videoMinutes": 0,
+                "extraMinutes": 0,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 12,
+                "handsOnMinutes": 0
+              }
+            }
+          ]
+        },
+        {
+          "id": "py-lists-tuples",
+          "slug": "lists-tuples",
+          "order": 5,
+          "concepts": [
+            {
+              "id": "py-lists-intro",
+              "order": 1,
+              "m": {
+                "words": 300,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-lists-methods-add",
+              "order": 2,
+              "m": {
+                "words": 350,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-lists-methods-order",
+              "order": 3,
+              "m": {
+                "words": 420,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-tuples-intro",
+              "order": 4,
+              "m": {
+                "words": 380,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-ch-top-ports",
+              "order": 5,
+              "m": {
+                "words": 150,
+                "videoMinutes": 0,
+                "extraMinutes": 0,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 12,
+                "handsOnMinutes": 0
+              }
+            }
+          ]
+        },
+        {
+          "id": "py-sets-dicts",
+          "slug": "sets-dicts",
+          "order": 6,
+          "concepts": [
+            {
+              "id": "py-sets-intro",
+              "order": 1,
+              "m": {
+                "words": 300,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-sets-methods-change",
+              "order": 2,
+              "m": {
+                "words": 210,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-sets-methods-compare",
+              "order": 3,
+              "m": {
+                "words": 310,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-dicts-intro",
+              "order": 4,
+              "m": {
+                "words": 330,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-dicts-methods-access",
+              "order": 5,
+              "m": {
+                "words": 250,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-dicts-methods-change",
+              "order": 6,
+              "m": {
+                "words": 340,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-ch-scan-diff",
+              "order": 7,
+              "m": {
+                "words": 180,
+                "videoMinutes": 0,
+                "extraMinutes": 0,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 12,
+                "handsOnMinutes": 0
+              }
+            }
+          ]
+        },
+        {
+          "id": "py-booleans-operators",
+          "slug": "booleans-operators",
+          "order": 7,
+          "concepts": [
+            {
+              "id": "py-booleans-intro",
+              "order": 1,
+              "m": {
+                "words": 370,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-comparison-operators",
+              "order": 2,
+              "m": {
+                "words": 440,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-boolean-operators",
+              "order": 3,
+              "m": {
+                "words": 340,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-assignment-operators",
+              "order": 4,
+              "m": {
+                "words": 350,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-type-conversion",
+              "order": 5,
+              "m": {
+                "words": 300,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-ch-access-check",
+              "order": 6,
+              "m": {
+                "words": 130,
+                "videoMinutes": 0,
+                "extraMinutes": 0,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 12,
+                "handsOnMinutes": 0
+              }
+            }
+          ]
+        },
+        {
+          "id": "py-input",
+          "slug": "input",
+          "order": 8,
+          "concepts": [
+            {
+              "id": "py-user-input",
+              "order": 1,
+              "m": {
+                "words": 390,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-practical-email",
+              "order": 2,
+              "m": {
+                "words": 320,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-practical-age",
+              "order": 3,
+              "m": {
+                "words": 320,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-ch-login-report",
+              "order": 4,
+              "m": {
+                "words": 150,
+                "videoMinutes": 0,
+                "extraMinutes": 0,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 12,
+                "handsOnMinutes": 0
+              }
+            }
+          ]
+        },
+        {
+          "id": "py-control-flow",
+          "slug": "control-flow",
+          "order": 9,
+          "concepts": [
+            {
+              "id": "py-if-elif-else",
+              "order": 1,
+              "m": {
+                "words": 360,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-nested-if",
+              "order": 2,
+              "m": {
+                "words": 330,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-ternary",
+              "order": 3,
+              "m": {
+                "words": 350,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-membership",
+              "order": 4,
+              "m": {
+                "words": 370,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-practical-access",
+              "order": 5,
+              "m": {
+                "words": 330,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-ch-grade-report",
+              "order": 6,
+              "m": {
+                "words": 160,
+                "videoMinutes": 0,
+                "extraMinutes": 0,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 16,
+                "handsOnMinutes": 0
+              }
+            }
+          ]
+        },
+        {
+          "id": "py-loops",
+          "slug": "loops",
+          "order": 10,
+          "concepts": [
+            {
+              "id": "py-while",
+              "order": 1,
+              "m": {
+                "words": 360,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-while-practice",
+              "order": 2,
+              "m": {
+                "words": 360,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-for",
+              "order": 3,
+              "m": {
+                "words": 340,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-break-continue",
+              "order": 4,
+              "m": {
+                "words": 390,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-nested-loops",
+              "order": 5,
+              "m": {
+                "words": 340,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-loops-dicts",
+              "order": 6,
+              "m": {
+                "words": 340,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-ch-log-summary",
+              "order": 7,
+              "m": {
+                "words": 200,
+                "videoMinutes": 0,
+                "extraMinutes": 0,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 12,
+                "handsOnMinutes": 0
+              }
+            }
+          ]
+        },
+        {
+          "id": "py-functions",
+          "slug": "functions",
+          "order": 11,
+          "concepts": [
+            {
+              "id": "py-functions-intro",
+              "order": 1,
+              "m": {
+                "words": 380,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-parameters",
+              "order": 2,
+              "m": {
+                "words": 340,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-args-kwargs",
+              "order": 3,
+              "m": {
+                "words": 340,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-scope",
+              "order": 4,
+              "m": {
+                "words": 410,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-recursion",
+              "order": 5,
+              "m": {
+                "words": 360,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-lambda",
+              "order": 6,
+              "m": {
+                "words": 300,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-ch-port-toolkit",
+              "order": 7,
+              "m": {
+                "words": 180,
+                "videoMinutes": 0,
+                "extraMinutes": 0,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 12,
+                "handsOnMinutes": 0
+              }
+            }
+          ]
+        },
+        {
+          "id": "py-files-builtins",
+          "slug": "files-builtins",
+          "order": 12,
+          "concepts": [
+            {
+              "id": "py-files-intro",
+              "order": 1,
+              "m": {
+                "words": 380,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-files-read",
+              "order": 2,
+              "m": {
+                "words": 300,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-files-write",
+              "order": 3,
+              "m": {
+                "words": 250,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-files-practice",
+              "order": 4,
+              "m": {
+                "words": 340,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-builtins-essential",
+              "order": 5,
+              "m": {
+                "words": 420,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-map-filter",
+              "order": 6,
+              "m": {
+                "words": 440,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-reduce",
+              "order": 7,
+              "m": {
+                "words": 370,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-ch-log-file",
+              "order": 8,
+              "m": {
+                "words": 160,
+                "videoMinutes": 0,
+                "extraMinutes": 0,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 12,
+                "handsOnMinutes": 0
+              }
+            }
+          ]
+        },
+        {
+          "id": "py-modules-iteration",
+          "slug": "modules-iteration",
+          "order": 13,
+          "concepts": [
+            {
+              "id": "py-modules-intro",
+              "order": 1,
+              "m": {
+                "words": 370,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-own-module",
+              "order": 2,
+              "m": {
+                "words": 330,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-packages",
+              "order": 3,
+              "m": {
+                "words": 410,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-datetime",
+              "order": 4,
+              "m": {
+                "words": 370,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-date-format",
+              "order": 5,
+              "m": {
+                "words": 320,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-iterables",
+              "order": 6,
+              "m": {
+                "words": 320,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-generators",
+              "order": 7,
+              "m": {
+                "words": 390,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-decorators",
+              "order": 8,
+              "m": {
+                "words": 350,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-practical-timing",
+              "order": 9,
+              "m": {
+                "words": 560,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-practical-zip",
+              "order": 10,
+              "m": {
+                "words": 320,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-ch-scan-report",
+              "order": 11,
+              "m": {
+                "words": 150,
+                "videoMinutes": 0,
+                "extraMinutes": 0,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 12,
+                "handsOnMinutes": 0
+              }
+            }
+          ]
+        },
+        {
+          "id": "py-quality-errors",
+          "slug": "quality-errors",
+          "order": 14,
+          "concepts": [
+            {
+              "id": "py-pillow",
+              "order": 1,
+              "m": {
+                "words": 370,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-docstrings",
+              "order": 2,
+              "m": {
+                "words": 390,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-linting",
+              "order": 3,
+              "m": {
+                "words": 390,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-errors",
+              "order": 4,
+              "m": {
+                "words": 370,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-try-except",
+              "order": 5,
+              "m": {
+                "words": 430,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-exceptions-practice",
+              "order": 6,
+              "m": {
+                "words": 360,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-debugging",
+              "order": 7,
+              "m": {
+                "words": 440,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-type-hints",
+              "order": 8,
+              "m": {
+                "words": 410,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-requests-intro",
+              "order": 9,
+              "m": {
+                "words": 390,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-requests-practice",
+              "order": 10,
+              "m": {
+                "words": 430,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "py-ch-robust-parse",
+              "order": 11,
+              "m": {
+                "words": 220,
+                "videoMinutes": 0,
+                "extraMinutes": 0,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 12,
+                "handsOnMinutes": 0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "c",
+      "modules": [
+        {
+          "id": "c-getting-started",
+          "slug": "getting-started",
+          "order": 1,
+          "concepts": [
+            {
+              "id": "c-hello-world",
+              "order": 1,
+              "m": {
+                "words": 150,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "c-sum-two",
+              "order": 2,
+              "m": {
+                "words": 100,
+                "videoMinutes": 0,
+                "extraMinutes": 0,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 16,
+                "handsOnMinutes": 0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "cpp",
+      "modules": []
+    },
+    {
+      "slug": "bash",
+      "modules": [
+        {
+          "id": "bash-getting-started",
+          "slug": "getting-started",
+          "order": 1,
+          "concepts": [
+            {
+              "id": "bash-echo-variables",
+              "order": 1,
+              "m": {
+                "words": 150,
+                "videoMinutes": 0,
+                "extraMinutes": 3,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 0,
+                "handsOnMinutes": 0
+              }
+            },
+            {
+              "id": "bash-sum-two",
+              "order": 2,
+              "m": {
+                "words": 100,
+                "videoMinutes": 0,
+                "extraMinutes": 0,
+                "mcq": 0,
+                "typed": 0,
+                "independentMinutes": 16,
+                "handsOnMinutes": 0
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "networking": []
+}

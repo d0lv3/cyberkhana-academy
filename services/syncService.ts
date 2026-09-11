@@ -15,12 +15,15 @@
 
 import { api, ApiError } from './api';
 import { PUBLISHED_CACHE_KEYS, SERVER_BUCKET_BY_STORAGE_KEY, STORAGE_KEYS } from './creatorTypes';
-// Cycle-safe: getTotalPoints is only ever called at runtime (inside functions).
-import { getTotalPoints } from './pointsService';
 
 /* Mirrors progressService's event name (defined locally to avoid an import
  * cycle — progressService imports this module for write-through). */
 const PROGRESS_EVENT = 'academy-progress-changed';
+
+/** Modules the server has recorded as finished, so their XP bonus stays when a
+ *  lesson is added later. Only ever written from the server's answers here;
+ *  progressService reads it. */
+export const FINISHED_MODULES_KEY = 'academy-finished-modules';
 
 let syncEnabled = false;
 
@@ -79,9 +82,35 @@ export interface ProgressSnapshot {
   enrolledPaths: string[];
   /** Optional so a client still validates against a server that predates it. */
   enrolledModules?: string[];
-  /** Client-computed leaderboard points total (omitted from server reads). */
-  points?: number;
+  /** Sent by the server only: never pushed, because the server records it. */
+  finishedModules?: string[];
   lastActivity: unknown | null;
+}
+
+/** What the server answers a push with, scored from the completions it was sent. */
+interface PushResult {
+  xp?: number;
+  finishedModules?: string[];
+}
+
+/** Keep the server's list of finished modules, adding to what is cached. */
+function rememberFinishedModules(keys: unknown): void {
+  if (!Array.isArray(keys)) return;
+  const current = readArray<string>(FINISHED_MODULES_KEY);
+  const merged = setUnion(current, keys.filter((k): k is string => typeof k === 'string'));
+  if (merged.length === current.length) return;
+  try {
+    localStorage.setItem(FINISHED_MODULES_KEY, JSON.stringify(merged));
+  } catch {
+    return;
+  }
+  window.dispatchEvent(new Event(PROGRESS_EVENT));
+}
+
+/** Push the snapshot, then keep what the server worked out from it. */
+async function pushProgress(): Promise<void> {
+  const result = await api.put<PushResult>('/progress', collectProgressSnapshot());
+  rememberFinishedModules(result?.finishedModules);
 }
 
 /** Builds the full snapshot from the academy-* localStorage keys. */
@@ -114,7 +143,6 @@ export function collectProgressSnapshot(): ProgressSnapshot {
     networking: readArray<string>('academy-net'),
     enrolledPaths: readArray<string>('academy-paths-enrolled'),
     enrolledModules: readArray<string>('academy-modules-enrolled'),
-    points: getTotalPoints(),
     lastActivity,
   };
 }
@@ -131,7 +159,7 @@ export function queueProgressPush(): void {
        Sign-out pushes what was waiting itself; a late timer stands down. */
     if (!syncEnabled) return;
     try {
-      await api.put('/progress', collectProgressSnapshot());
+      await pushProgress();
     } catch (err) {
       console.warn('[sync] failed to push progress:', err);
     }
@@ -165,7 +193,8 @@ function isProgressKey(key: string): boolean {
     key === 'academy-net' ||
     key === 'academy-paths-enrolled' ||
     key === 'academy-modules-enrolled' ||
-    key === 'academy-last-activity'
+    key === 'academy-last-activity' ||
+    key === FINISHED_MODULES_KEY
   );
 }
 
@@ -303,7 +332,7 @@ export async function flushPendingSync(): Promise<void> {
   await flushBuckets();
   if (progressWaiting && syncEnabled) {
     try {
-      await api.put('/progress', collectProgressSnapshot());
+      await pushProgress();
     } catch (err) {
       console.warn('[sync] failed to push progress:', err);
     }
@@ -360,6 +389,10 @@ function mergeProgress(server: ProgressSnapshot | null): void {
   localStorage.setItem(
     'academy-modules-enrolled',
     JSON.stringify(setUnion(readArray<string>('academy-modules-enrolled'), server.enrolledModules ?? []))
+  );
+  localStorage.setItem(
+    FINISHED_MODULES_KEY,
+    JSON.stringify(setUnion(readArray<string>(FINISHED_MODULES_KEY), server.finishedModules ?? []))
   );
 
   // Last activity: the newer timestamp wins.

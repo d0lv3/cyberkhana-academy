@@ -13,8 +13,20 @@ import {
 import { canEditOthersBucket } from '../utils/grants';
 import { isPlainObject, isPublishedItem, type AnyItem } from '../utils/contentStatus';
 import { logger } from '../utils/logger';
+import { invalidateXpCatalog } from '../utils/xpCatalog';
 
 const router = Router();
+
+/* XP is scored against the published content, so any successful write here
+   drops the server's cached catalog (utils/xpCatalog.ts). */
+router.use((req, res, next) => {
+  if (req.method !== 'GET') {
+    res.on('finish', () => {
+      if (res.statusCode < 400) invalidateXpCatalog();
+    });
+  }
+  next();
+});
 
 const MAX_ITEMS_PER_BUCKET = 300;
 

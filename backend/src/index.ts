@@ -17,6 +17,7 @@ import feedbackRoutes from './routes/feedback';
 import adminRoutes from './routes/admin';
 import uploadRoutes, { UPLOADS_DIR, LAB_RESOURCES_DIR } from './routes/uploads';
 import { startDeletionSweep } from './utils/accountDeletion';
+import { restateStaleAccounts } from './utils/xpMigration';
 
 const app = express();
 
@@ -110,7 +111,11 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-connectDatabase().then(() => {
+connectDatabase().then(async () => {
+  /* Accounts still in an older XP formula's units are restated before the
+     first request, so no push books the change as XP earned this month. A
+     failure is logged and the account is restated on its next push instead. */
+  await restateStaleAccounts().catch((err) => logger.error('xp.restate_all_failed', { error: String(err) }));
   // Carries out deletion requests whose 7 days are up.
   startDeletionSweep();
   app.listen(env.port, () => {

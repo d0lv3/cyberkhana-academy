@@ -13,6 +13,10 @@ export interface IProgress extends Document {
   enrolledPaths: string[];
   /** enrolled module slugs */
   enrolledModules: string[];
+  /** XP group keys of the modules this learner has finished, recorded by the
+   *  server when it first sees one complete. The finishing bonus stays once
+   *  earned, so a lesson added to a module later takes nothing away. */
+  finishedModules: string[];
   lastActivity: {
     kind: 'programming' | 'networking' | 'os';
     route: string;
@@ -32,6 +36,7 @@ const ProgressSchema = new Schema<IProgress>(
     networking: { type: [String], default: [] },
     enrolledPaths: { type: [String], default: [] },
     enrolledModules: { type: [String], default: [] },
+    finishedModules: { type: [String], default: [] },
     lastActivity: { type: Schema.Types.Mixed, default: null },
   },
   { timestamps: true, minimize: false }

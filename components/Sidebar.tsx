@@ -16,7 +16,8 @@ import {
 import BrandLogo from './ui/BrandLogo';
 import { useLang } from '../contexts/LangContext';
 import { useAuth } from '../contexts/AuthContext';
-import { useOverallProgress } from '../services/progressService';
+import { useXp } from '../services/xpService';
+import { levelColor } from './ui/LevelBadge';
 
 interface SidebarProps {
   collapsed: boolean;
@@ -28,7 +29,7 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, mobileOpen, onMobileClose }) => {
   const { t, lang } = useLang();
   const { user } = useAuth();
-  const progress = useOverallProgress();
+  const { xp, level } = useXp();
   /** Route whose icon is mid-nudge, cleared when the animation ends. */
   const [nudging, setNudging] = useState<string | null>(null);
 
@@ -172,9 +173,27 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, mobileOpen, onMo
                 <p className="text-xs font-semibold text-[#d2d7e3] truncate">
                   {user.displayName}
                 </p>
-                <p className="text-[10px] text-[#9fef00] font-bold" dir="ltr">
-                  Lv {progress.level} · {progress.pct}%
+                <p className="flex items-center gap-1 text-[10px] font-bold" style={{ color: levelColor(level.level) }}>
+                  <span dir="ltr" className="font-mono">
+                    {level.level.hex}
+                  </span>
+                  <span className="truncate">{level.level.name[lang]}</span>
                 </p>
+                {/* How far through the level, toward the next one. */}
+                <div
+                  className="mt-1 h-1 rounded-full bg-[#0a0f18] overflow-hidden"
+                  dir="ltr"
+                  title={
+                    level.next
+                      ? `${xp.toLocaleString('en-US')} / ${level.next.minXp.toLocaleString('en-US')} XP`
+                      : `${xp.toLocaleString('en-US')} XP`
+                  }
+                >
+                  <div
+                    className="h-full rounded-full transition-all duration-700"
+                    style={{ width: `${Math.round(level.fraction * 100)}%`, backgroundColor: levelColor(level.level) }}
+                  />
+                </div>
               </div>
             </div>
           )}

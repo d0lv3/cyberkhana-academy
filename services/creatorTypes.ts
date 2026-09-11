@@ -139,6 +139,9 @@ export interface CreatorModuleSection {
   subtitle?: string;
   /** Optional YouTube video id shown above the markdown */
   videoId?: string;
+  /** The video's length in minutes, which its XP is timed from. Unset counts
+   *  as a short video (EFFORT.unknownVideo in backend/src/shared/xp.ts). */
+  videoMinutes?: number;
   /** The section's markdown body (bilingual) */
   markdownContent: LocalizedMarkdown;
   /** Optional end-of-section quiz (MCQ and/or written-answer questions). */

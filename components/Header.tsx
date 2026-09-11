@@ -5,7 +5,8 @@ import BrandLogo from './ui/BrandLogo';
 import Avatar from './ui/Avatar';
 import { useAuth } from '../contexts/AuthContext';
 import { useLang } from '../contexts/LangContext';
-import { useOverallProgress } from '../services/progressService';
+import { useXp } from '../services/xpService';
+import { levelColor } from './ui/LevelBadge';
 
 interface HeaderProps {
   onMenuToggle: () => void;
@@ -14,7 +15,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
   const { user, logout } = useAuth();
   const { lang, setLang } = useLang();
-  const progress = useOverallProgress();
+  const { xp, level } = useXp();
 
   return (
     <header className="flex-shrink-0 bg-[#0d1117]/95 border-b border-[#1e293b] backdrop-blur-md sticky top-0 z-30">
@@ -64,10 +65,20 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
                 >
                   {user.displayName}
                 </span>
-                <span className="text-[11px] font-bold text-[#9fef00]" dir="ltr">
-                  {lang === 'ar'
-                    ? `المستوى ${progress.level} · ${progress.completedUnits} درس`
-                    : `Level ${progress.level} · ${progress.completedUnits} lessons`}
+                <span
+                  className="flex items-center gap-1 text-[11px] font-bold"
+                  style={{ color: levelColor(level.level) }}
+                >
+                  <span dir="ltr" className="font-mono">
+                    {level.level.hex}
+                  </span>
+                  <span>{level.level.name[lang]}</span>
+                  <span className="text-[#4d5a73]" aria-hidden>
+                    ·
+                  </span>
+                  <span className="font-semibold text-[#8592ad]" dir="ltr">
+                    {xp.toLocaleString('en-US')} XP
+                  </span>
                 </span>
               </span>
             )}

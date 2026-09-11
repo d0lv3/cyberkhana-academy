@@ -1,34 +1,23 @@
 /* ─── Skill Matrix Service ───
- * Rates a learner across cybersecurity pillars, THM-style.
+ * How much of each cybersecurity area a learner has covered, TryHackMe-style.
  *
- * Inspiration: TryHackMe's "Skills Matrix" plots you on a handful of broad
- * security categories, scoring each by how much of the content tagged to that
- * category you've completed. We do the same, but route OUR content into pillars
- * deterministically and reuse the very same point weights the leaderboard uses,
- * so a learner's matrix and their points always agree.
+ * TryHackMe's "Skills Matrix" plots you on a handful of broad security
+ * categories, scoring each by how much of the content in it you have
+ * completed. We do the same, routing our content into pillars and weighting
+ * every stop by its XP (services/xpService.ts), so a long lab counts for more
+ * of an area than a short reading and the matrix agrees with the XP total.
  *
  * Per pillar:
- *   available = points of ALL content routed to the pillar
- *   earned    = points of the content the learner has completed
- *   score     = round(100 × earned / available)        // "coverage"
- *   tier      = named band from the score (Novice → Master)
- * Pillars with no content yet report `hasContent: false` and are shown muted —
- * they light up automatically as creators publish offensive/defensive modules.
- *
- * The Overall Skill Index is the average score across pillars that have content,
- * which maps to a single gamified rank (Recruit → Elite).
+ *   available = XP of every stop routed to the pillar
+ *   earned    = XP of the stops the learner has completed
+ *   score     = round(100 × earned / available)        // coverage
+ * Coverage is a share of what exists, so it dips when content is added. That
+ * is why it is shown only here, as coverage, and the level is read from XP.
+ * Pillars with no content yet report `hasContent: false` and are shown muted;
+ * they light up as creators publish offensive and defensive modules.
  */
 
-import { getMergedFundamentalModules } from '../data/fundamentalsData';
-import { getNetworkingLessons } from '../data/networking';
-import { getProgrammingLanguages } from '../data/programming';
-import { getProgrammingDone, getNetworkingDone } from './progressService';
-import {
-  modulePoints,
-  networkingLessonPoints,
-  conceptPoints,
-  isModuleComplete,
-} from './pointsService';
+import { getXpGroups } from './xpService';
 
 export type PillarId =
   | 'offensive'
@@ -90,54 +79,11 @@ export const PILLAR_BY_ID: Record<PillarId, PillarMeta> = SKILL_PILLARS.reduce(
   {} as Record<PillarId, PillarMeta>,
 );
 
-/* ── Proficiency tiers (per pillar) ──
- * Coverage-based bands. `min` is the inclusive lower bound on the 0-100 score. */
-export interface Tier {
-  key: string;
-  min: number;
-  label: { en: string; ar: string };
-  color: string;
-}
-
-const TIERS: Tier[] = [
-  { key: 'master', min: 100, label: { en: 'Master', ar: 'متمكّن' }, color: '#9fef00' },
-  { key: 'proficient', min: 75, label: { en: 'Proficient', ar: 'محترف' }, color: '#2dd4bf' },
-  { key: 'practitioner', min: 50, label: { en: 'Practitioner', ar: 'ممارس' }, color: '#60a5fa' },
-  { key: 'apprentice', min: 25, label: { en: 'Apprentice', ar: 'متدرّب' }, color: '#f3a43a' },
-  { key: 'novice', min: 1, label: { en: 'Novice', ar: 'مبتدئ' }, color: '#f3c84b' },
-  { key: 'untrained', min: 0, label: { en: 'Untrained', ar: 'غير مُدرّب' }, color: '#6e7a94' },
-];
-
-export function tierForScore(score: number): Tier {
-  return TIERS.find((t) => score >= t.min) ?? TIERS[TIERS.length - 1];
-}
-
-/* ── Overall rank from the skill index ── */
-export interface Rank {
-  key: string;
-  min: number;
-  label: { en: string; ar: string };
-  color: string;
-}
-
-const RANKS: Rank[] = [
-  { key: 'elite', min: 100, label: { en: 'Elite', ar: 'نخبة' }, color: '#9fef00' },
-  { key: 'expert', min: 75, label: { en: 'Expert', ar: 'خبير' }, color: '#2dd4bf' },
-  { key: 'specialist', min: 50, label: { en: 'Specialist', ar: 'متخصّص' }, color: '#60a5fa' },
-  { key: 'operative', min: 25, label: { en: 'Operative', ar: 'عامل ميداني' }, color: '#f3a43a' },
-  { key: 'recruit', min: 1, label: { en: 'Recruit', ar: 'مُجنَّد' }, color: '#f3c84b' },
-  { key: 'initiate', min: 0, label: { en: 'Initiate', ar: 'مبتدئ' }, color: '#6e7a94' },
-];
-
-export function rankForIndex(index: number): Rank {
-  return RANKS.find((r) => index >= r.min) ?? RANKS[RANKS.length - 1];
-}
-
 /* ── Content → pillar routing ──
- * Every piece of content is routed to up to two pillars: a "track" pillar
- * (programming / networking / systems) by its category, and a "domain" pillar
- * (offensive / defensive / fundamentals) by its security domain. Concepts and
- * networking lessons route to their single obvious pillar. */
+ * A module goes to up to two pillars: a "track" pillar (programming /
+ * networking / systems) by its category, and a "domain" pillar (offensive /
+ * defensive / fundamentals) by its security domain. Programming lessons and
+ * networking lessons go to their single obvious pillar. */
 
 const CATEGORY_PILLAR: Record<string, PillarId | undefined> = {
   programming: 'programming',
@@ -145,7 +91,7 @@ const CATEGORY_PILLAR: Record<string, PillarId | undefined> = {
   'operating-systems': 'systems',
 };
 
-const DOMAIN_PILLAR: Record<string, PillarId> = {
+const DOMAIN_PILLAR: Record<string, PillarId | undefined> = {
   offensive: 'offensive',
   defensive: 'defensive',
   general: 'fundamentals',
@@ -158,17 +104,15 @@ export interface SkillRating {
   /** 0-100 coverage; 0 when no content exists yet. */
   score: number;
   hasContent: boolean;
-  tier: Tier;
-  /** Item counts for the "3 / 8 done" subtitle. */
+  /** Stop counts for the "3 / 8 done" subtitle. */
   doneItems: number;
   totalItems: number;
 }
 
 export interface SkillMatrix {
   ratings: SkillRating[];
-  /** Average score across pillars that have content (0 when nothing exists). */
+  /** Average coverage across pillars that have content (0 when nothing exists). */
   index: number;
-  rank: Rank;
   /** Pillars the learner is strongest / weakest in (content-bearing only). */
   strongest?: SkillRating;
   weakest?: SkillRating;
@@ -181,63 +125,43 @@ interface Bucket {
   totalItems: number;
 }
 
-function emptyBuckets(): Record<PillarId, Bucket> {
-  return SKILL_PILLARS.reduce(
+/** Recompute the learner's skill matrix from their completions. */
+export function getSkillMatrix(): SkillMatrix {
+  const buckets = SKILL_PILLARS.reduce(
     (acc, p) => ({ ...acc, [p.id]: { earned: 0, available: 0, doneItems: 0, totalItems: 0 } }),
     {} as Record<PillarId, Bucket>,
   );
-}
 
-/** Recompute the learner's skill matrix from their completion sets. */
-export function getSkillMatrix(): SkillMatrix {
-  const b = emptyBuckets();
-
-  const add = (id: PillarId | undefined, pts: number, done: boolean) => {
-    if (!id) return;
-    const bucket = b[id];
-    bucket.available += pts;
-    bucket.totalItems += 1;
-    if (done) {
-      bucket.earned += pts;
-      bucket.doneItems += 1;
-    }
-  };
-
-  /* Modules → track pillar (category) + domain pillar (domain). */
-  for (const m of getMergedFundamentalModules()) {
-    const pts = modulePoints(m.difficulty, m.estimatedHours);
-    const done = isModuleComplete(m.slug, m.totalLessons);
-    add(CATEGORY_PILLAR[m.category], pts, done);
-    add(DOMAIN_PILLAR[m.domain ?? 'general'], pts, done);
-  }
-
-  /* Networking lessons → Networking. */
-  const netDone = getNetworkingDone();
-  for (const lesson of getNetworkingLessons()) {
-    add('networking', networkingLessonPoints(lesson.estimatedMinutes), netDone.has(lesson.id));
-  }
-
-  /* Programming concepts → Programming. */
-  for (const lang of getProgrammingLanguages()) {
-    const done = getProgrammingDone(lang.slug);
-    for (const mod of lang.modules) {
-      for (const concept of mod.concepts) {
-        add('programming', conceptPoints(concept.type), done.has(concept.id));
+  for (const group of getXpGroups()) {
+    const pillars: PillarId[] =
+      group.track === 'module'
+        ? [CATEGORY_PILLAR[group.category ?? ''], DOMAIN_PILLAR[group.domain ?? 'general']].filter(
+            (p): p is PillarId => !!p,
+          )
+        : [group.track === 'programming' ? 'programming' : 'networking'];
+    for (const stop of group.stops) {
+      const done = group.done.has(stop.id);
+      for (const id of pillars) {
+        const bucket = buckets[id];
+        bucket.available += stop.xp;
+        bucket.totalItems += 1;
+        if (done) {
+          bucket.earned += stop.xp;
+          bucket.doneItems += 1;
+        }
       }
     }
   }
 
   const ratings: SkillRating[] = SKILL_PILLARS.map((pillar) => {
-    const bucket = b[pillar.id];
+    const bucket = buckets[pillar.id];
     const hasContent = bucket.available > 0;
-    const score = hasContent ? Math.round((bucket.earned / bucket.available) * 100) : 0;
     return {
       pillar,
       earned: bucket.earned,
       available: bucket.available,
-      score,
+      score: hasContent ? Math.round((bucket.earned / bucket.available) * 100) : 0,
       hasContent,
-      tier: tierForScore(score),
       doneItems: bucket.doneItems,
       totalItems: bucket.totalItems,
     };
@@ -246,13 +170,11 @@ export function getSkillMatrix(): SkillMatrix {
   const active = ratings.filter((r) => r.hasContent);
   const index =
     active.length > 0 ? Math.round(active.reduce((s, r) => s + r.score, 0) / active.length) : 0;
-
-  const ranked = [...active].sort((a, b2) => b2.score - a.score);
+  const ranked = [...active].sort((a, b) => b.score - a.score);
 
   return {
     ratings,
     index,
-    rank: rankForIndex(index),
     strongest: ranked[0],
     weakest: ranked[ranked.length - 1],
   };

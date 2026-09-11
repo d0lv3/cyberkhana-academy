@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import Avatar from '../components/ui/Avatar';
 import Button from '../components/ui/EnhancedButton';
+import LevelBadge from '../components/ui/LevelBadge';
 import SocialLinksRow from '../components/profile/SocialLinks';
 import NetworkingLessonCard from '../components/fundamentals/NetworkingLessonCard';
 import ModuleCard from '../components/fundamentals/ModuleCard';
@@ -159,6 +160,8 @@ const PublicProfilePage: React.FC = () => {
   }
 
   const uni = universityLabel(profile.university ?? undefined, lang);
+  // Lifetime XP; a server from before XP only had the board score.
+  const xp = profile.xp ?? profile.points;
 
   return (
     <div className="space-y-6">
@@ -221,6 +224,7 @@ const PublicProfilePage: React.FC = () => {
               <h1 dir="auto" className="text-2xl font-black leading-tight text-[#f3f6ff] sm:text-3xl">
                 {profile.displayName}
               </h1>
+              <LevelBadge xp={xp} lang={lang} className="text-[11px]" />
               {publishedCount > 0 && (
                 <span className="inline-flex items-center gap-1 rounded-md border border-[#9fef00]/30 bg-[#9fef00]/10 px-2 py-0.5 text-[11px] font-bold text-[#9fef00]">
                   <PenTool size={11} /> {ar ? 'منشئ محتوى' : 'Creator'}
@@ -256,8 +260,8 @@ const PublicProfilePage: React.FC = () => {
         <div className="relative grid grid-cols-2 gap-3 border-t border-[#263248] px-6 py-4 sm:grid-cols-3 sm:px-8">
           <Stat
             icon={Trophy}
-            value={profile.points.toLocaleString('en-US')}
-            label={ar ? 'النقاط' : 'Points'}
+            value={xp.toLocaleString('en-US')}
+            label={ar ? 'نقاط الخبرة' : 'XP'}
             accent="#f3c84b"
           />
           <Stat

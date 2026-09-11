@@ -461,7 +461,8 @@ const linuxCourse = {
             "Download the challenge files and follow along",
             "Think like a pentester: enumerate → exploit → escalate"
           ],
-          "resource": "/resources/Linux_9.3_challange.tar.gz"
+          "resource": "/resources/Linux_9.3_challange.tar.gz",
+          "handsOnMinutes": 45
         },
         {
           "id": "9.4",

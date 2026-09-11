@@ -10,7 +10,7 @@ import { getLanguage } from '../../data/programming';
 import { courseSteps, stepPath } from '../../data/programming/courseMap';
 import type { ProgrammingConcept } from '../../data/programming';
 import { getProgrammingDone, PROGRESS_EVENT } from '../../services/progressService';
-import { conceptPoints } from '../../services/pointsService';
+import { conceptXp, languageXp } from '../../services/xpService';
 import { creditOf, type ContentCredit } from '../../services/creatorTypes';
 
 /* ─── A language's course map ───
@@ -181,9 +181,8 @@ const ProgrammingLanguagePage: React.FC = () => {
   const doneCount = steps.filter((s) => done.has(s.concept.id)).length;
   const challenges = steps.filter((s) => s.concept.type === 'challenge');
   const challengesDone = challenges.filter((s) => done.has(s.concept.id)).length;
-  const points = steps
-    .filter((s) => done.has(s.concept.id))
-    .reduce((sum, s) => sum + conceptPoints(s.concept.type), 0);
+  // Read after `done` changes, so it moves with every finished step.
+  const xpEarned = done.size > 0 ? languageXp(langSlug) : 0;
   const pct = steps.length ? Math.round((doneCount / steps.length) * 100) : 0;
   const next = steps.find((s) => !done.has(s.concept.id)) ?? null;
   const currentModuleId = next?.module.id ?? null;
@@ -214,7 +213,10 @@ const ProgrammingLanguagePage: React.FC = () => {
                 <span className="mx-2 text-[#4d5a73]" aria-hidden>·</span>
                 التحديات: <span className="font-semibold text-[#f3f6ff]">{challengesDone}</span> من {challenges.length}
                 <span className="mx-2 text-[#4d5a73]" aria-hidden>·</span>
-                النقاط: <span className="font-semibold text-[#00a859]">{points}</span>
+                نقاط الخبرة:{' '}
+                <span className="font-semibold text-[#00a859]" dir="ltr">
+                  {xpEarned.toLocaleString('en-US')}
+                </span>
               </>
             ) : (
               <>
@@ -223,7 +225,7 @@ const ProgrammingLanguagePage: React.FC = () => {
                 <span className="font-semibold text-[#f3f6ff]">{challengesDone}</span> of {challenges.length}{' '}
                 {challenges.length === 1 ? 'challenge' : 'challenges'}
                 <span className="mx-2 text-[#4d5a73]" aria-hidden>·</span>
-                <span className="font-semibold text-[#00a859]">{points}</span> points
+                <span className="font-semibold text-[#00a859]">{xpEarned.toLocaleString('en-US')}</span> XP
               </>
             )}
           </p>
@@ -400,7 +402,7 @@ const ProgrammingLanguagePage: React.FC = () => {
                             )}
                             {isChallenge && (
                               <span className="flex-shrink-0 text-[11px] font-semibold text-[#f3a43a]" dir="ltr">
-                                {conceptPoints('challenge')} {ar ? 'نقطة' : 'pts'}
+                                {conceptXp(c).toLocaleString('en-US')} XP
                               </span>
                             )}
                           </Link>

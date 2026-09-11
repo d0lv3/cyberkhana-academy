@@ -13,19 +13,16 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLang } from '../contexts/LangContext';
-import { getFundamentalsByCategory, modulePath } from '../data/fundamentalsData';
+import { modulePath } from '../data/fundamentalsData';
 import { getAllModules } from '../data/modulesData';
 import { getNetworkingLessons } from '../data/networking';
 import { hasSimulation } from '../components/network-sim/types';
 import { getProgrammingLanguages } from '../data/programming';
-import {
-  getProgrammingDone,
-  getNetworkingDone,
-  getOSModuleDoneCount,
-  getLastActivity,
-} from '../services/progressService';
+import { getProgrammingDone, getOSModuleDoneCount, getLastActivity } from '../services/progressService';
+import { useXp } from '../services/xpService';
 import { getStreak } from '../services/streakService';
 import SkillMatrix from '../components/skills/SkillMatrix';
+import { levelColor } from '../components/ui/LevelBadge';
 
 /** Monday-first day initials for the streak pips. */
 const WEEK_LABELS: Record<'en' | 'ar', string[]> = {
@@ -74,59 +71,23 @@ const DashboardPage: React.FC = () => {
   /* ── compute real content + local progress ── */
   const data = useMemo(() => {
     const python = getProgrammingLanguages().find((l) => l.slug === 'python');
-    const pyModules = python?.modules ?? [];
-    const pyConcepts = pyModules.flatMap((m) =>
+    const pyConcepts = (python?.modules ?? []).flatMap((m) =>
       m.concepts.map((c) => ({ ...c, moduleSlug: m.slug }))
     );
-
     const doneSet = getProgrammingDone('python');
-    const pyDone = pyConcepts.filter((c) => doneSet.has(c.id)).length;
     const nextConcept = pyConcepts.find((c) => !doneSet.has(c.id)) ?? pyConcepts[0];
 
-    const osModules = getFundamentalsByCategory('operating-systems');
-    const osLessonsTotal = osModules.reduce((s, m) => s + m.totalLessons, 0);
-    const osDone = osModules.reduce(
-      (s, m) => s + Math.min(getOSModuleDoneCount(m.slug), m.totalLessons),
-      0
-    );
-    const netLessons = getNetworkingLessons();
-    const netTotal = netLessons.length;
     // The featured card follows whatever is actually published: the first
     // networking lesson that ships a simulation, or nothing at all.
-    const featuredSim = netLessons.find((l) => hasSimulation(l.simulation)) ?? null;
-    const netDoneSet = getNetworkingDone();
-    const netDone = netLessons.filter((l) => netDoneSet.has(l.id)).length;
+    const featuredSim = getNetworkingLessons().find((l) => hasSimulation(l.simulation)) ?? null;
 
-    const completedUnits = pyDone + osDone + netDone;
-    const totalUnits = pyConcepts.length + osLessonsTotal + netTotal;
-    const overallPct = totalUnits > 0 ? Math.round((completedUnits / totalUnits) * 100) : 0;
-
-    const xp = completedUnits * 20;
-    const level = Math.floor(xp / 100) + 1;
-    const xpInLevel = xp % 100;
-
-    const lastActivity = getLastActivity();
-
-    return {
-      pyModules,
-      pyConcepts,
-      pyDone,
-      nextConcept,
-      osLessonsTotal,
-      osDone,
-      netTotal,
-      netDone,
-      featuredSim,
-      completedUnits,
-      totalUnits,
-      overallPct,
-      xp,
-      level,
-      xpInLevel,
-      lastActivity,
-      started: completedUnits > 0,
-    };
+    return { nextConcept, featuredSim, lastActivity: getLastActivity() };
   }, []);
+
+  /* XP and the level, the same numbers as the header and sidebar. */
+  const { xp, level, stopsDone } = useXp();
+  const started = stopsDone > 0;
+  const accent = levelColor(level.level);
 
   const streak = useMemo(() => getStreak(), []);
 
@@ -184,48 +145,64 @@ const DashboardPage: React.FC = () => {
             </h1>
             <p className="text-[#9aa5bf] mt-2 max-w-md">{t('dashboard.subtitle')}</p>
 
-            {/* Overall progress */}
-            <div className="mt-5 max-w-xs">
-              <div className="flex items-center justify-between mb-1.5 text-xs" dir="ltr">
-                <span className="text-[#9aa5bf]">{t('dashboard.overall')}</span>
-                <span className="font-bold text-[#9fef00]">{data.overallPct}%</span>
-              </div>
-              <div className="h-2 rounded-full bg-[#0a0f18] overflow-hidden" dir="ltr">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-[#00a859] to-[#9fef00] transition-all duration-700"
-                  style={{ width: `${data.overallPct}%` }}
-                />
-              </div>
-              <p className="text-[10px] text-[#8592ad] mt-1" dir="ltr">
-                {data.completedUnits} / {data.totalUnits} {t('dashboard.lessonsLabel')}
-              </p>
-            </div>
+            <p className="mt-4 text-xs text-[#8592ad]">
+              {lang === 'ar' ? (
+                <>
+                  الدروس المكتملة:{' '}
+                  <span className="font-bold text-[#d2d7e3]" dir="ltr">
+                    {stopsDone.toLocaleString('en-US')}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="font-bold text-[#d2d7e3]">{stopsDone.toLocaleString('en-US')}</span>{' '}
+                  {stopsDone === 1 ? 'lesson finished so far' : 'lessons finished so far'}
+                </>
+              )}
+            </p>
 
             <button
               onClick={() => navigate(jumpRoute)}
-              className="mt-6 inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#9fef00] text-[#0d1117] font-bold text-sm hover:bg-[#8dd900] transition-all hover:shadow-[0_0_20px_rgba(159,239,0,0.35)]"
+              className="mt-5 inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#9fef00] text-[#0d1117] font-bold text-sm hover:bg-[#8dd900] transition-all hover:shadow-[0_0_20px_rgba(159,239,0,0.35)]"
             >
-              {data.started ? t('dashboard.continueBtn') : t('dashboard.start')}
+              {started ? t('dashboard.continueBtn') : t('dashboard.start')}
               <ArrowRight size={16} />
             </button>
           </div>
 
-          {/* Level ring */}
-          <div className="flex items-center gap-5 self-start md:self-center" dir="ltr">
-            <ProgressRing progress={data.xpInLevel} color="#9fef00">
+          {/* Level: the ring fills toward the next level */}
+          <div className="flex items-center gap-5 self-start md:self-center">
+            <ProgressRing progress={level.fraction * 100} color={accent}>
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#8592ad]">
                 {t('dashboard.level')}
               </span>
-              <span className="text-3xl font-black text-[#f3f6ff] leading-none">{data.level}</span>
+              <span dir="ltr" className="font-mono text-2xl font-black leading-none" style={{ color: accent }}>
+                {level.level.hex}
+              </span>
             </ProgressRing>
-            <div className="hidden sm:block">
-              <div className="flex items-center gap-1.5 text-[#9fef00]">
-                <Zap size={15} />
-                <span className="text-xl font-black">{data.xp}</span>
-                <span className="text-xs font-semibold text-[#8592ad]">{t('dashboard.xp')}</span>
+            <div className="min-w-0">
+              <p className="text-lg font-black leading-tight" style={{ color: accent }}>
+                {level.level.name[lang]}
+              </p>
+              <div className="mt-1 flex items-center gap-1.5 text-[#f3f6ff]">
+                <Zap size={14} className="text-[#9fef00]" />
+                <span className="text-base font-black" dir="ltr">
+                  {xp.toLocaleString('en-US')}
+                </span>
+                <span className="text-xs font-semibold text-[#8592ad]">XP</span>
               </div>
-              <p className="text-xs text-[#8592ad] mt-1">
-                {100 - data.xpInLevel} {t('dashboard.toNextLevel')}
+              <p className="mt-1 text-xs text-[#8592ad]">
+                {level.next ? (
+                  <>
+                    <span dir="ltr">{level.toNext.toLocaleString('en-US')}</span>{' '}
+                    {lang === 'ar' ? 'نقطة خبرة حتى' : 'XP to'}{' '}
+                    <span className="font-semibold text-[#9aa5bf]">{level.next.name[lang]}</span>
+                  </>
+                ) : lang === 'ar' ? (
+                  'أعلى مستوى في الأكاديمية'
+                ) : (
+                  'The top level in the Academy'
+                )}
               </p>
             </div>
           </div>

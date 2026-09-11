@@ -38,12 +38,16 @@ export interface IUser extends Document {
   completedModulesCount: number;
   completedLessonsCount: number;
   totalLearningTimeMinutes: number;
-  /** All-time leaderboard standing: `pointsRaw` minus `pointsBaseline`, never below zero. */
+  /** All-time leaderboard standing, in XP: `pointsRaw` minus `pointsBaseline`, never below zero. */
   points: number;
-  /** The client's derived total, stored as pushed. Points are computed from the
-   *  learner's completions, so this is the one figure a push can be trusted to
-   *  restate; anything the board shows has to be derived from it. */
+  /** Lifetime XP, scored by the server from the learner's completions
+   *  (utils/xpCatalog.ts); whatever total a client sends is ignored. The level
+   *  comes from this, so a leaderboard reset never lowers it. */
   pointsRaw?: number;
+  /** The XP formula the figures above are in. Absent or older than
+   *  XP_FORMULA_VERSION means the account has not been restated yet
+   *  (utils/xpMigration.ts). */
+  xpVersion?: number;
   /** Where the board counts from. An admin reset moves this up to whatever the
    *  learner had earned, which zeroes the board without touching a single
    *  completion — and, because every later push is measured against it, without
@@ -131,6 +135,8 @@ const UserSchema = new Schema<IUser>(
     // rather than as zero, or its first reset would take a baseline of nothing
     // and clear nobody.
     pointsRaw: { type: Number },
+    // No default either: absent is what "never restated" means.
+    xpVersion: { type: Number },
     pointsBaseline: { type: Number, default: 0 },
     pointsResetAt: { type: Date },
     monthlyPoints: { type: Number, default: 0 },

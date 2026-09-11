@@ -8,15 +8,16 @@
  *   academy-prog-<langSlug>   → programming concept ids (lessons + challenges)
  *   academy-progress-<slug>   → OS-module lecture ids
  *   academy-net               → networking lesson ids
+ *   academy-finished-modules  → XP keys of modules the server recorded as
+ *                               finished (written by syncService only)
  */
 
-import { useEffect, useState } from 'react';
 import { getProgrammingLanguages } from '../data/programming';
 import { getNetworkingLessons } from '../data/networking';
 import { getFundamentalsByCategory, getMergedFundamentalModules } from '../data/fundamentalsData';
 import { buildCatalogIndex } from '../data/pathCatalog';
 import { recordStudyDay } from './streakService';
-import { queueProgressPush } from './syncService';
+import { queueProgressPush, FINISHED_MODULES_KEY } from './syncService';
 import type { PathStep } from './creatorTypes';
 
 const progKey = (langSlug: string) => `academy-prog-${langSlug}`;
@@ -94,6 +95,27 @@ export function markNetworkingDone(lessonId: string): Set<string> {
 /** Number of completed lectures stored for an OS module. */
 export function getOSModuleDoneCount(slug: string): number {
   return readSet(osKey(slug)).size;
+}
+
+/** Completed lecture ids (labs included) for a module. */
+export function getOSModuleDone(slug: string): string[] {
+  return [...readSet(osKey(slug))];
+}
+
+/** Mark a module lecture or lab complete. Returns the module's completed ids. */
+export function markOSLectureDone(slug: string, lectureId: string): string[] {
+  const set = readSet(osKey(slug));
+  if (!set.has(lectureId)) {
+    set.add(lectureId);
+    writeSet(osKey(slug), set);
+  }
+  return [...set];
+}
+
+/** Modules the server has recorded as finished, whose XP bonus stays even
+ *  after a lesson is added to them. */
+export function getFinishedModules(): Set<string> {
+  return readSet(FINISHED_MODULES_KEY);
 }
 
 /* ── last activity ──
@@ -273,9 +295,9 @@ export function getPathProgress(steps: PathStep[]): PathProgress {
   return { total, completed, pct, states, nextIndex };
 }
 
-/* ── aggregate ──
- * The canonical "overall progress" used by the dashboard hero, header and
- * sidebar. Counts completed units against total units across all tracks.
+/* ── per track ──
+ * Completed against total units for each fundamentals track, for the roadmap.
+ * XP and the level come from services/xpService.ts instead.
  */
 
 export type TrackKey = 'programming' | 'networking' | 'os';
@@ -286,19 +308,7 @@ export interface TrackProgress {
   total: number;
 }
 
-export interface OverallProgress {
-  completedUnits: number;
-  totalUnits: number;
-  pct: number;
-  xp: number;
-  level: number;
-  xpInLevel: number;
-}
-
-const XP_PER_UNIT = 20;
-const XP_PER_LEVEL = 100;
-
-/** Per-track completed vs. total units. The shared basis for all progress numbers. */
+/** Per-track completed vs. total units. */
 export function getTrackProgress(): TrackProgress[] {
   // Programming — every language patch with content
   let progDone = 0;
@@ -329,38 +339,4 @@ export function getTrackProgress(): TrackProgress[] {
     { key: 'networking', done: netDoneCount, total: netLessons.length },
     { key: 'os', done: osDone, total: osTotal },
   ];
-}
-
-export function getOverallProgress(): OverallProgress {
-  const tracks = getTrackProgress();
-  const completedUnits = tracks.reduce((s, t) => s + t.done, 0);
-  const totalUnits = tracks.reduce((s, t) => s + t.total, 0);
-
-  const pct = totalUnits > 0 ? Math.round((completedUnits / totalUnits) * 100) : 0;
-  const xp = completedUnits * XP_PER_UNIT;
-  const level = Math.floor(xp / XP_PER_LEVEL) + 1;
-  const xpInLevel = xp % XP_PER_LEVEL;
-
-  return { completedUnits, totalUnits, pct, xp, level, xpInLevel };
-}
-
-/**
- * Live overall progress for persistent UI (header, sidebar) that never unmounts.
- * Refreshes on any progress write (same tab via PROGRESS_EVENT, other tabs via storage).
- */
-export function useOverallProgress(): OverallProgress {
-  const [progress, setProgress] = useState<OverallProgress>(getOverallProgress);
-
-  useEffect(() => {
-    const refresh = () => setProgress(getOverallProgress());
-    refresh(); // catch any change between first render and effect
-    window.addEventListener(PROGRESS_EVENT, refresh);
-    window.addEventListener('storage', refresh);
-    return () => {
-      window.removeEventListener(PROGRESS_EVENT, refresh);
-      window.removeEventListener('storage', refresh);
-    };
-  }, []);
-
-  return progress;
 }

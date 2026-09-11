@@ -39,7 +39,7 @@ import CourseTerminalLauncher from '../../components/terminal/CourseTerminalLaun
 import LabView from '../../components/labs/LabView';
 import type { ModuleLab } from '../../services/labTypes';
 import { mdFor, type LocalizedMarkdown } from '../../services/creatorTypes';
-import { emitProgressChange, recordActivity } from '../../services/progressService';
+import { getOSModuleDone, markOSLectureDone, recordActivity } from '../../services/progressService';
 import { requestFeedback } from '../../components/feedback/FeedbackHost';
 
 type Lecture = {
@@ -148,10 +148,12 @@ const ModuleViewerPage: React.FC = () => {
     [course]
   );
 
-  const [completedLectures, setCompletedLectures] = useState<string[]>(() => {
-    const saved = localStorage.getItem(`academy-progress-${slug}`);
-    return saved ? JSON.parse(saved) : [];
-  });
+  /* A preview's ticks live only in this page, for the same reason as the
+     position below: every draft shares the __preview__ slug, and anything
+     saved under it would be synced to the creator's account as progress. */
+  const [completedLectures, setCompletedLectures] = useState<string[]>(() =>
+    isPreview ? [] : getOSModuleDone(slug ?? '')
+  );
   /* Which stop you were on, remembered across a reload. Refreshing halfway
      through a module used to drop you back at lesson one, which is the worst
      possible place to land: the progress ticks were all still there, so it
@@ -231,16 +233,13 @@ const ModuleViewerPage: React.FC = () => {
 
   const isCompleted = (id: string) => completedLectures.includes(id);
 
-  const persistProgress = (next: string[]) => {
-    setCompletedLectures(next);
-    localStorage.setItem(`academy-progress-${slug}`, JSON.stringify(next));
-    emitProgressChange();
-  };
-
   const markComplete = (id: string) => {
     if (isCompleted(id)) return;
-    const next = [...completedLectures, id];
-    persistProgress(next);
+    /* Through the progress service, which also queues the push to the server.
+       Writing the key here used to skip that push, so a lecture finished just
+       before signing out never reached the account. */
+    const next = isPreview ? [...completedLectures, id] : markOSLectureDone(slug ?? '', id);
+    setCompletedLectures(next);
 
     /* The last lecture closes the module out, which is the point worth asking
        about. Previews are the creator's own draft, not a finished course. */

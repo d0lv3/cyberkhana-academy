@@ -15,8 +15,11 @@ export interface PublicProfile {
   bio: string | null;
   university: string | null;
   socials: SocialLinks;
+  /** All-time board score: XP since the last leaderboard reset. */
   points: number;
-  /** All-time leaderboard position; null with no points. */
+  /** Lifetime XP, which the level is read from. Absent from servers before XP. */
+  xp?: number;
+  /** All-time leaderboard position; null when not ranked. */
   rank: number | null;
 }
 

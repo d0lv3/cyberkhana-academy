@@ -48,7 +48,7 @@ const SkillMatrix: React.FC<{ variant?: 'full' | 'compact'; className?: string }
 }) => {
   const { lang } = useLang();
   const matrix = useMemo(() => getSkillMatrix(), []);
-  const { ratings, index, rank, strongest } = matrix;
+  const { ratings, index, strongest } = matrix;
 
   const n = ratings.length;
   const angleFor = (i: number) => -90 + (360 / n) * i;
@@ -84,20 +84,10 @@ const SkillMatrix: React.FC<{ variant?: 'full' | 'compact'; className?: string }
             </h3>
             <p className="text-[11px] text-[#8592ad]">
               {lang === 'ar'
-                ? 'تقييمك عبر ركائز الأمن السيبراني'
-                : 'Your proficiency across security pillars'}
+                ? 'كم غطّيت من كل مجال في الأمن السيبراني'
+                : 'How much of each security area you have covered'}
             </p>
           </div>
-        </div>
-        {/* Overall index + rank */}
-        <div className="text-end">
-          <p className="text-2xl font-black leading-none" style={{ color: rank.color }} dir="ltr">
-            {index}
-            <span className="text-sm text-[#8592ad] font-bold">/100</span>
-          </p>
-          <p className="text-[11px] font-bold uppercase tracking-wide mt-1" style={{ color: rank.color }}>
-            {rank.label[lang]}
-          </p>
         </div>
       </div>
 
@@ -219,7 +209,7 @@ const SkillMatrix: React.FC<{ variant?: 'full' | 'compact'; className?: string }
   );
 };
 
-/* ── One pillar row: name · tier badge · coverage bar ── */
+/* ── One pillar row: name · coverage · bar ── */
 const PillarRow: React.FC<{
   r: SkillRating;
   lang: 'en' | 'ar';
@@ -250,37 +240,23 @@ const PillarRow: React.FC<{
             <Lock size={10} /> {lang === 'ar' ? 'قريباً' : 'Soon'}
           </span>
         ) : (
-          <span
-            className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide flex-shrink-0"
-            style={{
-              color: r.tier.color,
-              backgroundColor: `${r.tier.color}15`,
-              border: `1px solid ${r.tier.color}30`,
-            }}
-          >
-            {r.tier.label[lang]}
-          </span>
-        )}
-      </div>
-      <div className="flex items-center gap-2">
-        <div className="flex-1 h-1.5 rounded-full bg-[#0a0f18] overflow-hidden" dir="ltr">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${muted ? 0 : r.score}%` }}
-            transition={{ delay, duration: 0.6, ease: 'easeOut' }}
-            className="h-full rounded-full"
-            style={{ backgroundColor: muted ? '#243047' : r.pillar.color }}
-          />
-        </div>
-        {!muted && (
-          <span className="text-[11px] font-bold text-[#9aa5bf] tabular-nums w-9 text-end" dir="ltr">
+          <span className="text-[11px] font-bold tabular-nums flex-shrink-0" style={{ color: r.pillar.color }} dir="ltr">
             {r.score}%
           </span>
         )}
       </div>
+      <div className="h-1.5 rounded-full bg-[#0a0f18] overflow-hidden" dir="ltr">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${muted ? 0 : r.score}%` }}
+          transition={{ delay, duration: 0.6, ease: 'easeOut' }}
+          className="h-full rounded-full"
+          style={{ backgroundColor: muted ? '#243047' : r.pillar.color }}
+        />
+      </div>
       {!compact && !muted && (
         <p className="text-[10px] text-[#7c8aa6] mt-1" dir="ltr">
-          {r.doneItems}/{r.totalItems} · {r.earned.toLocaleString('en-US')} pts
+          {r.doneItems}/{r.totalItems} · {r.earned.toLocaleString('en-US')} / {r.available.toLocaleString('en-US')} XP
         </p>
       )}
     </div>

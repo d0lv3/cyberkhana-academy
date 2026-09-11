@@ -5,10 +5,12 @@ import { Trophy, GraduationCap, Loader2 } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
 import Avatar from '../components/ui/Avatar';
 import LeaderboardPodium from '../components/leaderboard/LeaderboardPodium';
+import LevelBadge from '../components/ui/LevelBadge';
 import { useAuth } from '../contexts/AuthContext';
 import { useLang } from '../contexts/LangContext';
 import { api } from '../services/api';
 import { profilePath } from '../services/profiles';
+import { LEVELS } from '../services/xpService';
 import { universityLabel, NOT_ENROLLED } from '../data/iraqUniversities';
 
 type Scope = 'overall' | 'monthly';
@@ -22,7 +24,10 @@ interface LbEntry {
   avatarUrl: string | null;
   university: string | null;
   role: string;
+  /** The board's score: XP since the last reset, or this month's XP. */
   points: number;
+  /** Lifetime XP, which the level badge is read from. */
+  xp: number;
 }
 
 interface LbResponse {
@@ -30,7 +35,13 @@ interface LbResponse {
   month: string;
   university: string | null;
   entries: LbEntry[];
-  me: { rank: number; points: number } | null;
+  me: { rank: number; points: number; xp: number } | null;
+  /** The requesting member's lifetime XP, ranked or not. */
+  myXp?: number;
+  /** Lifetime XP needed to be ranked at all (level 0x2). */
+  minXp?: number;
+  /** When the all-time board was last reset, if ever. */
+  since?: string | null;
   universities: string[];
 }
 
@@ -86,11 +97,22 @@ const LeaderboardPage: React.FC = () => {
     }
   }, [data?.month, lang]);
 
+  /* The all-time board counts from the last admin reset, so it says so. */
+  const sinceLabel = useMemo(() => {
+    if (!data?.since) return '';
+    const date = new Date(data.since);
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toLocaleDateString(lang === 'ar' ? 'ar' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+  }, [data?.since, lang]);
+
   const entries = data?.entries ?? [];
   const podium = entries.slice(0, 3);
   const rest = entries.slice(3);
   // Whether the current user already appears in the visible top list.
   const meInList = !!user && entries.some((e) => e.userId === user._id);
+  const ar = lang === 'ar';
+  const minXp = data?.minXp ?? LEVELS[1].minXp;
+  const firstRanked = LEVELS.find((l) => l.minXp === minXp) ?? LEVELS[1];
 
   return (
     <div className="space-y-6">
@@ -134,6 +156,11 @@ const LeaderboardPage: React.FC = () => {
             {t('leaderboard.monthlyReset')}
           </span>
         )}
+        {scope === 'overall' && sinceLabel && (
+          <span className="text-[11px] text-[#8592ad] sm:ms-auto">
+            {ar ? `منذ ${sinceLabel}` : `Since ${sinceLabel}`}
+          </span>
+        )}
       </div>
 
       {/* ── Board ── */}
@@ -165,7 +192,7 @@ const LeaderboardPage: React.FC = () => {
                 <span>{t('leaderboard.rank')}</span>
                 <span>{t('leaderboard.student')}</span>
                 <span className="hidden sm:block">{t('profile.university')}</span>
-                <span className="text-end">{t('leaderboard.points')}</span>
+                <span className="text-end">XP</span>
               </div>
 
               <div className="divide-y divide-[#263248]/60">
@@ -202,10 +229,13 @@ const LeaderboardPage: React.FC = () => {
                           initialClassName="text-sm"
                         />
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold text-[#f3f6ff] truncate">
-                            {e.displayName}
+                          <p className="flex items-center gap-2 min-w-0 text-sm font-semibold text-[#f3f6ff]">
+                            <span className="truncate" dir="auto">
+                              {e.displayName}
+                            </span>
+                            <LevelBadge xp={e.xp} lang={lang} compact className="flex-shrink-0" />
                             {isMe && (
-                              <span className="ms-2 text-[10px] font-bold text-[#00a859] uppercase">
+                              <span className="text-[10px] font-bold text-[#00a859] uppercase flex-shrink-0">
                                 {t('leaderboard.you')}
                               </span>
                             )}
@@ -223,12 +253,12 @@ const LeaderboardPage: React.FC = () => {
                         <span className="truncate">{(() => { const u = universityLabel(e.university, lang); return u.isSet && !u.isNotEnrolled ? u.text : '-'; })()}</span>
                       </div>
 
-                      {/* Points */}
+                      {/* XP */}
                       <div className="text-end">
                         <span className="text-sm font-black text-[#f3f6ff]" dir="ltr">
                           {e.points.toLocaleString('en-US')}
                         </span>
-                        <span className="text-[10px] text-[#8592ad] ms-1">{t('leaderboard.pts')}</span>
+                        <span className="text-[10px] text-[#8592ad] ms-1">XP</span>
                       </div>
                     </Link>
                     </motion.div>
@@ -256,8 +286,9 @@ const LeaderboardPage: React.FC = () => {
                     {(user?.displayName || 'U').charAt(0).toUpperCase()}
                   </span>
                 </div>
-                <p className="text-sm font-semibold text-[#f3f6ff] truncate">
-                  {t('leaderboard.yourRank')}
+                <p className="flex items-center gap-2 min-w-0 text-sm font-semibold text-[#f3f6ff]">
+                  <span className="truncate">{t('leaderboard.yourRank')}</span>
+                  <LevelBadge xp={data.me.xp} lang={lang} compact className="flex-shrink-0" />
                 </p>
               </div>
               <div className="hidden sm:block" />
@@ -265,16 +296,40 @@ const LeaderboardPage: React.FC = () => {
                 <span className="text-sm font-black text-[#f3f6ff]" dir="ltr">
                   {data.me.points.toLocaleString('en-US')}
                 </span>
-                <span className="text-[10px] text-[#8592ad] ms-1">{t('leaderboard.pts')}</span>
+                <span className="text-[10px] text-[#8592ad] ms-1">XP</span>
               </div>
             </Link>
           )}
         </div>
       )}
 
-      {/* Not yet ranked hint */}
+      {/* Not yet ranked: how to get on the board */}
       {!loading && data && !data.me && (
-        <p className="text-xs text-[#8592ad] text-center">{t('leaderboard.notRanked')}</p>
+        <p className="text-xs text-[#8592ad] text-center">
+          {(data.myXp ?? 0) < minXp ? (
+            ar ? (
+              <>
+                تظهر في لوحة المتصدرين عند بلوغ المستوى{' '}
+                <span dir="ltr" className="font-mono">
+                  {firstRanked.hex}
+                </span>{' '}
+                {firstRanked.name.ar}، أي{' '}
+                <span dir="ltr">{minXp.toLocaleString('en-US')} XP</span>. لديك الآن{' '}
+                <span dir="ltr">{(data.myXp ?? 0).toLocaleString('en-US')} XP</span>.
+              </>
+            ) : (
+              <>
+                You join the leaderboard at level{' '}
+                <span className="font-mono">{firstRanked.hex}</span> {firstRanked.name.en},{' '}
+                {minXp.toLocaleString('en-US')} XP. You have {(data.myXp ?? 0).toLocaleString('en-US')} XP so far.
+              </>
+            )
+          ) : ar ? (
+            'أكمل المزيد من المحتوى لتظهر في هذه اللوحة.'
+          ) : (
+            'Complete more content to appear on this board.'
+          )}
+        </p>
       )}
     </div>
   );

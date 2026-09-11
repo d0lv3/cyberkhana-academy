@@ -6,6 +6,7 @@ import { useLang } from '../../contexts/LangContext';
 import { universityLabel } from '../../data/iraqUniversities';
 import { profilePath } from '../../services/profiles';
 import CyberAvatar, { presetFor } from '../ui/CyberAvatar';
+import LevelBadge from '../ui/LevelBadge';
 
 export interface PodiumEntry {
   rank: number;
@@ -14,7 +15,10 @@ export interface PodiumEntry {
   displayName: string;
   avatarUrl: string | null;
   university: string | null;
+  /** The board's score in XP. */
   points: number;
+  /** Lifetime XP, for the level badge. */
+  xp: number;
 }
 
 interface TierMeta {
@@ -147,9 +151,11 @@ const PodiumCard: React.FC<{ entry: PodiumEntry; highlight?: boolean; isMe?: boo
               className="mt-3 font-bold text-[#eef2fb] truncate max-w-full"
               title={entry.displayName}
             >
-              {entry.displayName}
+              <span dir="auto">{entry.displayName}</span>
               {isMe && <span className="ms-1.5 text-[10px] font-black text-[#00a859] uppercase">•</span>}
             </p>
+
+            <LevelBadge xp={entry.xp} lang={lang} className="mt-1.5" />
 
             <p className="mt-1 inline-flex items-center gap-1 text-[11px] text-[#9aa5bf] max-w-full">
               <GraduationCap size={11} className="flex-shrink-0" />
@@ -163,9 +169,7 @@ const PodiumCard: React.FC<{ entry: PodiumEntry; highlight?: boolean; isMe?: boo
 
             <p className="mt-2 text-lg font-black" style={{ color: tier.accent }} dir="ltr">
               {entry.points.toLocaleString('en-US')}
-              <span className="text-[11px] font-semibold text-[#9aa5bf] ms-1">
-                {lang === 'ar' ? 'نقطة' : 'pts'}
-              </span>
+              <span className="text-[11px] font-semibold text-[#9aa5bf] ms-1">XP</span>
             </p>
           </div>
         </div>

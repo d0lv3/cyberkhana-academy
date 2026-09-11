@@ -3,6 +3,7 @@ import User from '../models/User';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { publicSocials } from '../utils/socials';
 import { logger } from '../utils/logger';
+import { LEADERBOARD_MIN_XP } from '../shared/xp';
 
 const router = Router();
 
@@ -15,10 +16,10 @@ const router = Router();
  *
  * Deliberately absent: email, the Google identity and photo on file, country,
  * language, role and permissions, sign-in times, suspension state, and every
- * record of what the member has studied beyond the points the leaderboard
- * already shows. The bio appears only when its owner has switched it on.
+ * record of what the member has studied beyond their XP and level. The bio
+ * appears only when its owner has switched it on.
  */
-const PUBLIC_FIELDS = 'username displayName avatarUrl bio showBio university points socials';
+const PUBLIC_FIELDS = 'username displayName avatarUrl bio showBio university points pointsRaw socials';
 
 /** 24 hex characters: an account id. A username is at most 20, so the two never collide. */
 const OBJECT_ID = /^[a-f0-9]{24}$/i;
@@ -55,13 +56,15 @@ router.get('/:handle', authenticate, async (req: AuthRequest, res) => {
     }
 
     // Standing on the all-time board, counted the way the leaderboard counts
-    // a member's own rank. No points, no rank.
+    // a member's own rank: nobody under level 0x2 is ranked.
     const points = typeof user.points === 'number' ? user.points : 0;
+    const xp = typeof user.pointsRaw === 'number' ? user.pointsRaw : 0;
     const rank =
-      points > 0
+      points > 0 && xp >= LEADERBOARD_MIN_XP
         ? (await User.countDocuments({
             isBanned: false,
             deletionScheduledFor: { $exists: false },
+            pointsRaw: { $gte: LEADERBOARD_MIN_XP },
             points: { $gt: points },
           })) + 1
         : null;
@@ -76,6 +79,8 @@ router.get('/:handle', authenticate, async (req: AuthRequest, res) => {
         university: user.university || null,
         socials: publicSocials(user.socials),
         points,
+        /** Lifetime XP, which the level is read from. */
+        xp,
         rank,
       },
     });

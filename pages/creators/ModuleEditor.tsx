@@ -84,10 +84,11 @@ const newSection = () => ({ id: uid('sec'), title: 'New Section', subtitle: '', 
 const newChapter = (): CreatorModuleChapter => ({ id: uid('ch'), title: 'New Chapter', sections: [newSection()] });
 
 /** Rough mm:ss reading/watch time so the viewer sidebar shows something sane. */
-function estimateDuration(s: { markdownContent: LocalizedMarkdown; videoId?: string }): string {
+function estimateDuration(s: { markdownContent: LocalizedMarkdown; videoId?: string; videoMinutes?: number }): string {
   const body = mdFor(s.markdownContent, 'en') || mdFor(s.markdownContent, 'ar');
   const words = body.trim().split(/\s+/).filter(Boolean).length;
-  const mins = Math.max(1, Math.round(words / 180) + (s.videoId ? 4 : 0));
+  const video = s.videoId ? (s.videoMinutes && s.videoMinutes > 0 ? s.videoMinutes : 4) : 0;
+  const mins = Math.max(1, Math.round(words / 180 + video));
   return `${mins}:00`;
 }
 
@@ -336,6 +337,8 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
           title: s.title,
           subtitle: s.subtitle || '',
           videoId: s.videoId || '',
+          // Only with a video; XP times the video from it (shared/xp.ts).
+          videoMinutes: s.videoId && s.videoMinutes ? s.videoMinutes : undefined,
           duration: estimateDuration(s),
           // 'embedded' marker keeps the viewer's hasQuiz/gating checks working
           quiz: quiz.length ? 'embedded' : null,
@@ -801,6 +804,33 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
                       dir="ltr"
                     />
                   </div>
+                  {activeSection.videoId && (
+                    <div>
+                      <label className="block text-xs font-semibold text-[#9aa5bf] mb-1.5">
+                        Video length in minutes
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={180}
+                        step={1}
+                        value={activeSection.videoMinutes ?? ''}
+                        onChange={(e) =>
+                          updateSection(selected.ci, selected.si, {
+                            videoMinutes: e.target.value
+                              ? Math.min(180, Math.max(0, Math.round(Number(e.target.value)) || 0)) || undefined
+                              : undefined,
+                          })
+                        }
+                        placeholder="e.g. 12"
+                        className={`${inputCls} max-w-[10rem]`}
+                        dir="ltr"
+                      />
+                      <p className="mt-1 text-[11px] text-[#8592ad]">
+                        Students earn XP for the time they spend watching. Without a length, the video counts as 4 minutes.
+                      </p>
+                    </div>
+                  )}
                   <div>
                     <label className="block text-xs font-semibold text-[#9aa5bf] mb-1.5">Markdown Content</label>
                     <BilingualMarkdown

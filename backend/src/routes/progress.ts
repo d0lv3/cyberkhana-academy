@@ -5,6 +5,9 @@ import { authenticate, AuthRequest } from '../middleware/auth';
 import { checkSafeJson } from '../utils/sanitize';
 import { currentMonthKey } from '../utils/time';
 import { logger } from '../utils/logger';
+import { scoreProgress } from '../utils/xpCatalog';
+import { restateUserXp } from '../utils/xpMigration';
+import { XP_FORMULA_VERSION } from '../shared/xp';
 
 const router = Router();
 
@@ -26,7 +29,8 @@ const snapshotSchema = z
        validates, and an absent key is left alone by the $set below rather
        than clearing what the server already holds. */
     enrolledModules: idArray.optional(),
-    /** Client-computed leaderboard points total (deterministic from completions). */
+    /** Sent by clients from before server-side scoring. Accepted so they still
+     *  validate, and ignored: the server scores the completions itself. */
     points: z.number().int().min(0).max(100_000_000).optional(),
     lastActivity: z
       .object({
@@ -43,7 +47,9 @@ const snapshotSchema = z
 /* ── GET /api/progress ── my snapshot. */
 router.get('/', authenticate, async (req: AuthRequest, res) => {
   try {
-    const doc = await Progress.findOne({ userId: req.user!._id }).lean();
+    const user = req.user!;
+    if (user.xpVersion !== XP_FORMULA_VERSION) await restateUserXp(user);
+    const doc = await Progress.findOne({ userId: user._id }).lean();
     res.json({
       progress: doc
         ? {
@@ -52,9 +58,12 @@ router.get('/', authenticate, async (req: AuthRequest, res) => {
             networking: doc.networking ?? [],
             enrolledPaths: doc.enrolledPaths ?? [],
             enrolledModules: doc.enrolledModules ?? [],
+            finishedModules: doc.finishedModules ?? [],
             lastActivity: doc.lastActivity ?? null,
           }
         : null,
+      /** Lifetime XP as the server scored it. */
+      xp: user.pointsRaw ?? 0,
     });
   } catch (err) {
     logger.error('progress.get_failed', { error: String(err) });
@@ -75,42 +84,54 @@ router.put('/', authenticate, async (req: AuthRequest, res) => {
     return;
   }
 
-  // `points` lives on the User (for leaderboards), not the Progress snapshot.
-  const { points, ...snapshot } = parsed.data;
+  // A total from an older client is dropped here: see `points` above.
+  const { points: _clientTotal, ...snapshot } = parsed.data;
 
   try {
-    await Progress.findOneAndUpdate(
-      { userId: req.user!._id },
+    const user = req.user!;
+    // Still in an older formula's units: restate from what was stored before
+    // this push, so the push's own gains are still booked below.
+    if (user.xpVersion !== XP_FORMULA_VERSION) await restateUserXp(user);
+
+    const progress = await Progress.findOneAndUpdate(
+      { userId: user._id },
       { $set: snapshot },
       { upsert: true, new: true }
     );
+    if (!progress) throw new Error('progress upsert returned nothing');
 
-    /* Mirror the total onto the user and book any gain into the current month.
-       The month key rolls over on the 1st, which "resets" everyone's monthly
-       standing with no scheduled job.
-
-       The client sends what it derived from the learner's completions, which is
-       the whole history and not a running score — so it cannot be taken as the
-       board standing directly. An admin reset works by raising the baseline to
-       whatever had been earned; the board shows the distance travelled since,
-       and the next push, restating the same history, adds nothing. Without that
-       subtraction the first sync after a reset would undo it. */
-    if (points !== undefined) {
-      const user = req.user!;
-      const month = currentMonthKey();
-      const standing = Math.max(0, points - (user.pointsBaseline ?? 0));
-      const delta = Math.max(0, standing - (user.points ?? 0));
-      user.pointsRaw = points;
-      user.points = standing;
-      if (user.monthlyPointsMonth !== month) {
-        user.monthlyPointsMonth = month;
-        user.monthlyPoints = 0;
-      }
-      user.monthlyPoints += delta;
-      await user.save();
+    /* Scored here from the completions, against published content only, so
+       unknown or unpublished ids count for nothing. A module seen complete is
+       remembered, which keeps its finishing bonus when a lesson is added. */
+    const finishedBefore = progress.finishedModules ?? [];
+    const { xp, finishedNow } = await scoreProgress(progress, finishedBefore);
+    const added = finishedNow.filter((key) => !finishedBefore.includes(key));
+    if (added.length) {
+      await Progress.updateOne({ _id: progress._id }, { $addToSet: { finishedModules: { $each: added } } });
     }
 
-    res.json({ ok: true });
+    /* Book any gain into the current month. The month key rolls over on the
+       1st, which "resets" everyone's monthly standing with no scheduled job.
+
+       The score is the whole history, not a running total, so it cannot be
+       taken as the board standing directly. An admin reset works by raising
+       the baseline to whatever had been earned; the board shows the distance
+       travelled since, and the next push, restating the same history, adds
+       nothing. Without that subtraction the first sync after a reset would
+       undo it. The level reads `pointsRaw`, which a reset leaves alone. */
+    const month = currentMonthKey();
+    const standing = Math.max(0, xp - (user.pointsBaseline ?? 0));
+    const delta = Math.max(0, standing - (user.points ?? 0));
+    user.pointsRaw = xp;
+    user.points = standing;
+    if (user.monthlyPointsMonth !== month) {
+      user.monthlyPointsMonth = month;
+      user.monthlyPoints = 0;
+    }
+    user.monthlyPoints += delta;
+    await user.save();
+
+    res.json({ ok: true, xp, finishedModules: [...finishedBefore, ...added] });
   } catch (err) {
     logger.error('progress.put_failed', { error: String(err) });
     res.status(500).json({ error: 'Could not save progress' });
