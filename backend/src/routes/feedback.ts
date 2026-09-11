@@ -122,6 +122,8 @@ router.get('/', authenticate, requireRole('creator', 'admin'), async (req, res) 
       entries: docs.map((d) => ({
         id: String(d._id),
         userName: d.userName,
+        // Written by an account since deleted; the studio labels it in the reader's language.
+        formerMember: Boolean(d.anonymisedAt),
         rating: d.rating,
         comment: d.comment ?? '',
         contextId: d.contextId,

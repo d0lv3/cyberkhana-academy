@@ -7,6 +7,7 @@ import { logger } from '../utils/logger';
 import { CREATOR_PERMISSIONS, effectivePermissions } from '../types';
 import { verifyStepUp } from '../middleware/reauth';
 import { currentMonthKey } from '../utils/time';
+import { purgeAccount } from '../utils/accountDeletion';
 
 const router = Router();
 
@@ -25,6 +26,8 @@ function adminUserShape(user: IUser) {
     isBanned: user.isBanned,
     createdAt: user.createdAt,
     lastLoginAt: user.lastLoginAt,
+    deletionRequestedAt: user.deletionRequestedAt,
+    deletionScheduledFor: user.deletionScheduledFor,
   };
 }
 
@@ -33,7 +36,9 @@ function escapeRegex(input: string): string {
   return input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-/* ── GET /api/admin/users?q=<search> ── newest first, capped at 100. */
+/* ── GET /api/admin/users?q=<search> ── newest first, capped at 100.
+ * Members who have asked to be deleted come first, soonest due first, and are
+ * never cut off by the cap: they are the rows an admin most needs to see. */
 router.get('/users', async (req: AuthRequest, res) => {
   try {
     const q = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 80) : '';
@@ -47,8 +52,15 @@ router.get('/users', async (req: AuthRequest, res) => {
         }
       : {};
 
-    const users = await User.find(filter).sort({ createdAt: -1 }).limit(100);
-    res.json({ users: users.map(adminUserShape) });
+    const [leaving, others] = await Promise.all([
+      User.find({ ...filter, deletionScheduledFor: { $exists: true } })
+        .sort({ deletionScheduledFor: 1 })
+        .limit(100),
+      User.find({ ...filter, deletionScheduledFor: { $exists: false } })
+        .sort({ createdAt: -1 })
+        .limit(100),
+    ]);
+    res.json({ users: [...leaving, ...others].map(adminUserShape) });
   } catch (err) {
     logger.error('admin.users_list_failed', { error: String(err) });
     res.status(500).json({ error: 'Could not load users' });
@@ -158,6 +170,63 @@ router.patch('/users/:id/ban', async (req: AuthRequest, res) => {
   } catch (err) {
     logger.error('admin.ban_change_failed', { error: String(err) });
     res.status(500).json({ error: 'Could not update ban status' });
+  }
+});
+
+/* ── DELETE /api/admin/users/:id ── delete a member's account, now.
+ *
+ * Takes the account apart exactly as an expired deletion request does
+ * (utils/accountDeletion.ts), so what goes and what stays matches the Privacy
+ * Policy either way: published content and anonymised feedback stay, the rest
+ * goes. Immediate and irreversible, so it needs a fresh Google confirmation,
+ * like a promotion or a points reset. Admins must be demoted first, as for a
+ * ban. Nothing stops the person signing up again: keeping someone out is what
+ * a ban is for. */
+const deleteUserSchema = z
+  .object({
+    credential: z.string().min(20).max(4096),
+  })
+  .strict();
+
+router.delete('/users/:id', async (req: AuthRequest, res) => {
+  const { id } = req.params;
+  if (!mongoose.isValidObjectId(id)) {
+    res.status(404).json({ error: 'User not found' });
+    return;
+  }
+  const parsed = deleteUserSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Invalid request' });
+    return;
+  }
+  if (id === String(req.user!._id)) {
+    res.status(400).json({ error: 'You cannot delete your own account here' });
+    return;
+  }
+
+  // Step-up auth BEFORE touching anything.
+  const reauth = await verifyStepUp(parsed.data.credential, req.user!);
+  if (!reauth.ok) {
+    logger.warn('admin.delete_reauth_failed', { by: String(req.user!._id), target: id });
+    res.status(reauth.status ?? 401).json({ error: reauth.error ?? 'Re-authentication required' });
+    return;
+  }
+
+  try {
+    const target = await User.findById(id);
+    if (!target) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+    if (target.role === 'admin') {
+      res.status(400).json({ error: 'Demote this admin before deleting their account' });
+      return;
+    }
+    await purgeAccount(target, 'admin', String(req.user!._id));
+    res.json({ ok: true });
+  } catch (err) {
+    logger.error('admin.user_delete_failed', { target: id, error: String(err) });
+    res.status(500).json({ error: 'Could not delete this account' });
   }
 });
 

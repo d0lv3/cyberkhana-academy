@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Search, ShieldCheck, PenTool, GraduationCap, RefreshCw, Ban, RotateCcw, KeyRound, Check, Trophy } from 'lucide-react';
+import { Users, Search, ShieldCheck, PenTool, GraduationCap, RefreshCw, Ban, RotateCcw, KeyRound, Check, Trophy, Trash2, Clock } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import EnhancedCard from '../../components/ui/EnhancedCard';
 import Avatar from '../../components/ui/Avatar';
@@ -27,6 +27,10 @@ interface AdminUser {
   isBanned: boolean;
   createdAt: string;
   lastLoginAt?: string;
+  /** Set while the member's own request to delete the account stands. */
+  deletionRequestedAt?: string;
+  /** When that request is carried out, unless they sign in before then. */
+  deletionScheduledFor?: string;
 }
 
 const ROLE_META: Record<Role, { color: string; icon: React.ElementType; label: { en: string; ar: string } }> = {
@@ -41,6 +45,8 @@ const ROLES: Role[] = ['user', 'creator', 'admin'];
 type PendingAction =
   | { kind: 'role'; target: AdminUser; role: Role }
   | { kind: 'perms'; target: AdminUser }
+  /* Irreversible, so held back like a promotion even though it grants nothing. */
+  | { kind: 'delete'; target: AdminUser }
   /* The one action here that is aimed at everybody rather than at a member,
      which is most of why it is confirmed the same way. */
   | { kind: 'resetPoints' };
@@ -152,6 +158,33 @@ const MembersPage: React.FC = () => {
     setReauthError(null);
   };
 
+  /* Deleting is for good, so it is confirmed twice, like a points reset: a
+     plain account of what goes and what stays, then a fresh Google sign-in. */
+  const askDelete = async (target: AdminUser) => {
+    const creator = target.role === 'creator';
+    const ok = await confirmDialog({
+      title: ar ? `حذف حساب ${target.displayName}؟` : `Delete ${target.displayName}'s account?`,
+      message: ar
+        ? `${
+            creator ? 'يُحذف الآن ملفه وتقدّمه ونقاطه ومسودّاته غير المنشورة' : 'يُحذف الآن ملفه وتقدّمه ونقاطه'
+          }، ولا يمكن التراجع عن ذلك. ${
+            creator ? 'وتبقى الدروس التي نشرها متاحة، وتبقى تقييماته دون اسمه.' : 'وتبقى تقييماته دون اسمه.'
+          } ويمكنه التسجيل من جديد بحساب Google نفسه، فإن أردت منعه من العودة فاحظره بدلًا من ذلك.`
+        : `${
+            creator ? 'Their profile, progress, points and unpublished drafts' : 'Their profile, progress and points'
+          } are deleted now, and this cannot be undone. ${
+            creator
+              ? 'Lessons they published stay live, and feedback they left stays without their name.'
+              : 'Feedback they left stays without their name.'
+          } They can sign up again with the same Google account; to keep someone out, ban them instead.`,
+      confirmLabel: ar ? 'حذف الحساب' : 'Delete account',
+      tone: 'danger',
+    });
+    if (!ok) return;
+    setPending({ kind: 'delete', target });
+    setReauthError(null);
+  };
+
   const togglePermsPanel = (target: AdminUser) => {
     if (permsOpenId === target.id) {
       setPermsOpenId(null);
@@ -197,6 +230,27 @@ const MembersPage: React.FC = () => {
         setReauthError(err instanceof Error ? err.message : 'Reset failed');
       } finally {
         setResetting(false);
+      }
+      return;
+    }
+
+    if (pending.kind === 'delete') {
+      const { target } = pending;
+      setSavingId(target.id);
+      try {
+        await api.delete(`/admin/users/${target.id}`, { credential });
+        setUsers((prev) => prev.filter((u) => u.id !== target.id));
+        if (permsOpenId === target.id) setPermsOpenId(null);
+        setPending(null);
+        toast(
+          'success',
+          ar ? `تم حذف حساب ${target.displayName}.` : `${target.displayName}'s account was deleted.`
+        );
+      } catch (err) {
+        // Keep the dialog open so they can retry the confirmation.
+        setReauthError(err instanceof Error ? err.message : 'Delete failed');
+      } finally {
+        setSavingId(null);
       }
       return;
     }
@@ -309,6 +363,7 @@ const MembersPage: React.FC = () => {
             {filtered.map((u, i) => {
               const meta = ROLE_META[u.role];
               const isSelf = u.id === me?._id;
+              const leaving = !!u.deletionScheduledFor;
               return (
                 <React.Fragment key={u.id}>
                 <motion.div
@@ -337,6 +392,11 @@ const MembersPage: React.FC = () => {
                           <Ban size={8} /> {ar ? 'محظور' : 'Banned'}
                         </span>
                       )}
+                      {leaving && (
+                        <span className="ms-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide bg-red-500/10 border border-red-500/30 text-red-400">
+                          <Clock size={8} /> {ar ? 'طلب الحذف' : 'Deletion requested'}
+                        </span>
+                      )}
                     </p>
                     <p className="text-[11px] text-[#8592ad] truncate" dir="ltr">
                       {u.username ? (
@@ -352,6 +412,18 @@ const MembersPage: React.FC = () => {
                       <span className="mx-1.5 text-[#354562]">·</span>
                       {u.email}
                     </p>
+                    {/* The whole story of a request, dates included, on its own
+                        line: the badge alone would not say when it goes. */}
+                    {leaving && (
+                      <p className="mt-1 flex items-start gap-1.5 text-[11px] leading-snug text-red-300">
+                        <Clock size={11} className="mt-px flex-shrink-0" />
+                        <span>
+                          {ar
+                            ? `طلب حذف حسابه في ${fmtDate(u.deletionRequestedAt)}، ويُحذف في ${fmtDate(u.deletionScheduledFor)} ما لم يسجّل الدخول قبل ذلك.`
+                            : `Asked on ${fmtDate(u.deletionRequestedAt)} to delete their account. It will be deleted on ${fmtDate(u.deletionScheduledFor)} unless they sign in before then.`}
+                        </span>
+                      </p>
+                    )}
                   </div>
 
                   {/* dates */}
@@ -436,6 +508,33 @@ const MembersPage: React.FC = () => {
                     }`}
                   >
                     {u.isBanned ? <RotateCcw size={13} /> : <Ban size={13} />}
+                  </button>
+
+                  {/* delete account */}
+                  <button
+                    onClick={() => void askDelete(u)}
+                    disabled={isSelf || savingId === u.id || u.role === 'admin'}
+                    aria-label={ar ? 'حذف الحساب' : 'Delete account'}
+                    title={
+                      isSelf
+                        ? ar
+                          ? 'لا يمكنك حذف حسابك من هنا'
+                          : "You can't delete your own account here"
+                        : u.role === 'admin'
+                        ? ar
+                          ? 'خفّض رتبة المدير قبل حذف حسابه'
+                          : 'Demote this admin before deleting their account'
+                        : leaving
+                        ? ar
+                          ? 'احذفه الآن'
+                          : 'Delete now'
+                        : ar
+                        ? 'حذف الحساب'
+                        : 'Delete account'
+                    }
+                    className="w-8 h-8 touch:w-11 touch:h-11 rounded-lg border border-[#263248] flex items-center justify-center flex-shrink-0 text-[#8592ad] transition-all hover:text-red-400 hover:border-red-500/40 hover:bg-red-500/10 disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <Trash2 size={13} />
                   </button>
                 </motion.div>
 
@@ -556,6 +655,10 @@ const MembersPage: React.FC = () => {
             ? ar
               ? 'تصفير نقاط جميع الأعضاء'
               : "Reset every member's points"
+            : pending.kind === 'delete'
+            ? ar
+              ? `حذف حساب ${pending.target.displayName} نهائيًا`
+              : `Delete ${pending.target.displayName}'s account permanently`
             : pending.kind === 'role'
             ? ar
               ? `تغيير دور ${pending.target.displayName} إلى ${ROLE_META[pending.role].label.ar}`

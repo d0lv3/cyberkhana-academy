@@ -30,7 +30,8 @@ router.get('/', authenticate, async (req: AuthRequest, res) => {
     const month = currentMonthKey();
     const sortField = scope === 'monthly' ? 'monthlyPoints' : 'points';
 
-    const filter: Record<string, unknown> = { isBanned: false };
+    // A member waiting to be deleted has left the board already.
+    const filter: Record<string, unknown> = { isBanned: false, deletionScheduledFor: { $exists: false } };
     if (university) filter.university = university;
     if (scope === 'monthly') {
       filter.monthlyPointsMonth = month;
@@ -74,6 +75,7 @@ router.get('/', authenticate, async (req: AuthRequest, res) => {
 
     const universitiesRaw = await User.distinct('university', {
       isBanned: false,
+      deletionScheduledFor: { $exists: false },
       points: { $gt: 0 },
       university: { $type: 'string', $ne: '' },
     });

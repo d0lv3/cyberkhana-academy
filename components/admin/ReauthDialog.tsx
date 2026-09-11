@@ -121,8 +121,8 @@ const ReauthDialog: React.FC<ReauthDialogProps> = ({
             </h2>
             <p className="text-sm text-[#9aa5bf] mt-1">
               {ar
-                ? 'تغيير الصلاحيات إجراء حساس. أعد تسجيل الدخول عبر Google للمتابعة.'
-                : 'Changing permissions is a sensitive action. Re-confirm with Google to continue.'}
+                ? 'هذا إجراء حساس. أعد تسجيل الدخول عبر Google للمتابعة.'
+                : 'This is a sensitive action. Re-confirm with Google to continue.'}
             </p>
           </div>
           <button

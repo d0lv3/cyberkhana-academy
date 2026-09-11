@@ -11,6 +11,7 @@ import {
   type CreatorPermission,
 } from '../types';
 import { canEditOthersBucket } from '../utils/grants';
+import { isPlainObject, isPublishedItem, type AnyItem } from '../utils/contentStatus';
 import { logger } from '../utils/logger';
 
 const router = Router();
@@ -51,14 +52,6 @@ function canWriteBucket(user: { role: string; creatorPermissions?: string[] }, b
   return bucket === 'programming-patches' && perms.includes('programming-languages');
 }
 
-type AnyItem = Record<string, unknown>;
-
-/** Lifecycle check mirroring the frontend's statusOf(): status wins, isPublished is legacy. */
-function isPublishedItem(item: AnyItem): boolean {
-  if (typeof item.status === 'string') return item.status === 'published';
-  return item.isPublished === true;
-}
-
 /** What an admin may see and edit across every author: live content plus the
  * review queue. Drafts stay private to their author — 'in_review' is the point
  * at which a creator hands the work over, so it is also the point at which it
@@ -67,10 +60,6 @@ function isPublishedItem(item: AnyItem): boolean {
 function isModeratableItem(item: AnyItem): boolean {
   if (typeof item.status === 'string') return item.status === 'published' || item.status === 'in_review';
   return item.isPublished === true;
-}
-
-function isPlainObject(v: unknown): v is AnyItem {
-  return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
 
 /* ── Author credit ──
@@ -88,7 +77,9 @@ interface PublicAuthor {
 
 async function publicAuthorsFor(ownerIds: string[]): Promise<Map<string, PublicAuthor>> {
   if (ownerIds.length === 0) return new Map();
-  const owners = await User.find({ _id: { $in: ownerIds } })
+  // An owner waiting to be deleted has no profile to link to, so their work
+  // goes out as it will once they are gone: under the name saved on it.
+  const owners = await User.find({ _id: { $in: ownerIds }, deletionScheduledFor: { $exists: false } })
     .select('displayName username avatarUrl')
     .lean();
   return new Map(
@@ -113,8 +104,8 @@ function withoutCredit(item: AnyItem): AnyItem {
 }
 
 /** The item as students receive it: credited to its owner, or to nobody when
- * the owning account no longer exists (the client then falls back to the name
- * saved on the item). */
+ * the owning account no longer exists or is waiting to be deleted (the client
+ * then falls back to the name saved on the item). */
 function credited(item: AnyItem, author: PublicAuthor | undefined): AnyItem {
   const clean = withoutCredit(item);
   return author ? { ...clean, _author: author } : clean;

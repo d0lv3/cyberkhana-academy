@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   UserCircle,
@@ -18,10 +18,12 @@ import {
   Link2,
   EyeOff,
   Eye,
+  Trash2,
 } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/EnhancedButton';
 import Input from '../components/ui/EnhancedInput';
+import { confirmDialog } from '../components/ui/ConfirmHost';
 import { useAuth } from '../contexts/AuthContext';
 import { useLang } from '../contexts/LangContext';
 import UniversityPicker from '../components/university/UniversityPicker';
@@ -39,6 +41,9 @@ import {
 
 const BIO_MAX = 500;
 const HANDLE_RE = /^[a-zA-Z0-9_]{3,20}$/;
+/** Mirrors DELETION_GRACE_DAYS in backend/src/utils/accountDeletion.ts. Only
+ *  used to show the date before asking; the server says when it really is. */
+const DELETION_GRACE_DAYS = 7;
 
 type SocialDraft = Record<SocialPlatform, string>;
 const emptySocials = (): SocialDraft =>
@@ -71,7 +76,7 @@ const Section: React.FC<{
 );
 
 const ProfilePage: React.FC = () => {
-  const { user, updateUsername, updateProfile, logout } = useAuth();
+  const { user, updateUsername, updateProfile, logout, requestAccountDeletion } = useAuth();
   const { t, lang, setLang } = useLang();
   const navigate = useNavigate();
   const ar = lang === 'ar';
@@ -95,8 +100,12 @@ const ProfilePage: React.FC = () => {
   const [handleError, setHandleError] = useState<string | null>(null);
   /* Anything else the server refuses on save (a link it will not accept). */
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   if (!user) return null;
+
+  const isAdmin = user.role === 'admin';
 
   const current = {
     displayName: user.displayName ?? '',
@@ -190,6 +199,36 @@ const ProfilePage: React.FC = () => {
     }
     setSaving(false);
     setEditing(false);
+  };
+
+  /* Nothing is deleted on this click. The account waits, signing in again
+     brings it back, and the dialog says both, with the date. */
+  const askToDelete = async () => {
+    const due = new Date(Date.now() + DELETION_GRACE_DAYS * 24 * 60 * 60 * 1000).toLocaleDateString(
+      ar ? 'ar' : 'en-US',
+      { year: 'numeric', month: 'long', day: 'numeric' }
+    );
+    const ok = await confirmDialog({
+      title: ar ? 'حذف حسابك؟' : 'Delete your account?',
+      message: ar
+        ? `سيُسجَّل خروجك من جميع الأجهزة، وسيُحذف حسابك في ${due} ما لم تسجّل الدخول مجددًا قبل ذلك.`
+        : `You will be signed out on every device, and your account will be deleted on ${due} unless you sign in again before then.`,
+      confirmLabel: ar ? 'احذف حسابي' : 'Delete my account',
+      cancelLabel: ar ? 'أبقِ حسابي' : 'Keep my account',
+      tone: 'danger',
+    });
+    if (!ok) return;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      // Signs out on success: this page goes, and the account notice takes over.
+      await requestAccountDeletion();
+    } catch (err) {
+      setDeleteError(
+        err instanceof Error ? err.message : ar ? 'تعذر إرسال طلبك.' : 'Could not send your request.'
+      );
+      setDeleting(false);
+    }
   };
 
   const memberSince = (() => {
@@ -626,6 +665,69 @@ const ProfilePage: React.FC = () => {
             {t('profile.signOut')}
           </Button>
         </div>
+      </motion.div>
+
+      {/* ── Delete account ──
+          Its own card, last on the page and away from Sign out: the one
+          control here that ends the account rather than the session. */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.36, duration: 0.4 }}
+        className="rounded-2xl border border-red-500/25 bg-red-500/[0.04] p-6"
+      >
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0 max-w-xl">
+            <h3 className="flex items-center gap-2 text-base font-bold text-[#f3f6ff]">
+              <Trash2 size={16} className="text-red-400" />
+              {ar ? 'حذف حسابك' : 'Delete your account'}
+            </h3>
+            {isAdmin ? (
+              <p className="mt-2 text-sm leading-relaxed text-[#9aa5bf]">
+                {ar
+                  ? 'لا يمكن حذف حساب مدير. يجب أن يغيّر مدير آخر دورك أولًا.'
+                  : 'Admin accounts cannot be deleted. Another admin has to change your role first.'}
+              </p>
+            ) : (
+              <>
+                <p className="mt-2 text-sm leading-relaxed text-[#9aa5bf]">
+                  {ar
+                    ? `نحتفظ بحسابك ${DELETION_GRACE_DAYS} أيام بعد طلبك تحسّبًا لتغيير رأيك، وتسجيل دخولك مجددًا خلالها يلغي الطلب. بعد ذلك يُحذف ملفك وتقدّمك ونقاطك نهائيًا.`
+                    : `We keep your account for ${DELETION_GRACE_DAYS} days after you ask, in case you change your mind, and signing in again during that time cancels the request. After that, your profile, progress and points are deleted for good.`}
+                </p>
+                <p className="mt-2 text-sm leading-relaxed text-[#9aa5bf]">
+                  {user.role === 'creator'
+                    ? ar
+                      ? 'أما التقييمات التي تركتها فتبقى، دون اسمك. وتبقى الدروس التي نشرتها على الأكاديمية كما تنص اتفاقية المُنشِئ، وتُحذف مسودّاتك.'
+                      : 'Feedback you left stays, without your name on it. Lessons you published stay on the Academy, as the Creator Agreement sets out, and your drafts are deleted.'
+                    : ar
+                    ? 'أما التقييمات التي تركتها فتبقى، دون اسمك.'
+                    : 'Feedback you left stays, without your name on it.'}
+                </p>
+              </>
+            )}
+            <Link
+              to="/privacy"
+              className="mt-2 inline-block text-xs text-[#9aa5bf] underline underline-offset-2 transition-colors hover:text-[#f3f6ff]"
+            >
+              {ar ? 'ما الذي يُحذف وما الذي يبقى' : 'What is deleted, and what stays'}
+            </Link>
+          </div>
+          <button
+            type="button"
+            onClick={() => void askToDelete()}
+            disabled={isAdmin || deleting}
+            className="flex flex-shrink-0 items-center gap-1.5 rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-2 touch:min-h-tap text-xs font-bold text-red-400 transition-all hover:border-red-500/60 hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+            {deleting ? (ar ? 'جارٍ الإرسال...' : 'Sending...') : ar ? 'احذف حسابي' : 'Delete my account'}
+          </button>
+        </div>
+        {deleteError && (
+          <p role="alert" className="mt-3 flex items-center gap-1.5 text-sm text-[#ff6b6b]">
+            <AlertCircle size={14} className="flex-shrink-0" /> {deleteError}
+          </p>
+        )}
       </motion.div>
     </div>
   );

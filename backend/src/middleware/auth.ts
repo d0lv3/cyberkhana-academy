@@ -46,6 +46,10 @@ export function clearAuthCookie(res: Response): void {
 /**
  * Verifies the JWT, then loads the user from the DB so bans and role changes
  * take effect immediately (the token itself carries only the user id).
+ *
+ * An account with a deletion request standing is turned away the same way:
+ * asking to be deleted signs the member out everywhere, and the only way back
+ * in is to sign in again, which withdraws the request (utils/accountDeletion.ts).
  */
 export const authenticate = async (
   req: AuthRequest,
@@ -68,7 +72,7 @@ export const authenticate = async (
 
   try {
     const user = await User.findById(payload.userId);
-    if (!user || user.isBanned) {
+    if (!user || user.isBanned || user.deletionScheduledFor) {
       clearAuthCookie(res);
       res.status(401).json({ error: 'Account unavailable' });
       return;

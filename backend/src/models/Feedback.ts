@@ -26,6 +26,9 @@ export interface IFeedback extends Document {
   contextSub?: string;
   /** Interface language the learner answered in. */
   lang: 'en' | 'ar';
+  /** Set when the author's account was deleted: `userName` no longer holds
+   *  their name and `userId` no longer points at anyone. */
+  anonymisedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -41,6 +44,7 @@ const FeedbackSchema = new Schema<IFeedback>(
     contextTitle: { type: String, default: '', maxlength: 300 },
     contextSub: { type: String, maxlength: 200 },
     lang: { type: String, enum: ['en', 'ar'], default: 'en' },
+    anonymisedAt: { type: Date },
   },
   { timestamps: true }
 );

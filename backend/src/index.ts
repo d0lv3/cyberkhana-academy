@@ -16,6 +16,7 @@ import userRoutes from './routes/users';
 import feedbackRoutes from './routes/feedback';
 import adminRoutes from './routes/admin';
 import uploadRoutes, { UPLOADS_DIR, LAB_RESOURCES_DIR } from './routes/uploads';
+import { startDeletionSweep } from './utils/accountDeletion';
 
 const app = express();
 
@@ -110,6 +111,8 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 });
 
 connectDatabase().then(() => {
+  // Carries out deletion requests whose 7 days are up.
+  startDeletionSweep();
   app.listen(env.port, () => {
     logger.info('server.started', {
       port: env.port,

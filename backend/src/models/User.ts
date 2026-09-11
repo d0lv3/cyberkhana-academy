@@ -57,6 +57,14 @@ export interface IUser extends Document {
   monthlyPointsMonth: string;
   isBanned: boolean;
   lastLoginAt: Date;
+  /** When the member asked for this account to be deleted. Set and cleared
+   *  together with `deletionScheduledFor`. */
+  deletionRequestedAt?: Date;
+  /** When the account goes if its owner does not come back. While this is set
+   *  every session is refused and other members cannot see the account;
+   *  signing in again before it passes clears both fields, which is how a
+   *  request is withdrawn. See utils/accountDeletion.ts. */
+  deletionScheduledFor?: Date;
   /** When this user last passed the sign-in notice under the current Terms.
    *  Stamped at sign-in, not through a dialog — see config/legal.ts. */
   termsAcceptedAt?: Date;
@@ -129,6 +137,9 @@ const UserSchema = new Schema<IUser>(
     monthlyPointsMonth: { type: String, default: '' },
     isBanned: { type: Boolean, default: false },
     lastLoginAt: { type: Date, default: Date.now },
+    // No defaults: absent means nobody has asked.
+    deletionRequestedAt: { type: Date },
+    deletionScheduledFor: { type: Date },
     // No defaults: an absent value is exactly what "has not accepted" means,
     // and every account predating these fields reads that way correctly.
     termsAcceptedAt: { type: Date },
@@ -147,5 +158,8 @@ UserSchema.index({ 'oauthProviders.discord.id': 1 }, { sparse: true });
 UserSchema.index({ isBanned: 1, points: -1 });
 UserSchema.index({ isBanned: 1, monthlyPointsMonth: 1, monthlyPoints: -1 });
 UserSchema.index({ university: 1 });
+
+// The deletion sweep: accounts whose deadline has passed.
+UserSchema.index({ deletionScheduledFor: 1 }, { sparse: true });
 
 export default mongoose.model<IUser>('User', UserSchema);

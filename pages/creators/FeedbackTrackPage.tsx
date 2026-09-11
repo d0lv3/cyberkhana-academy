@@ -28,6 +28,7 @@ const COPY = {
   all: { en: 'All', ar: 'الكل' },
   search: { en: 'Search feedback...', ar: 'ابحث في الملاحظات...' },
   noComment: { en: 'Rated without a note', ar: 'تقييم بلا ملاحظة' },
+  formerMember: { en: 'Former member', ar: 'عضو سابق' },
   noneYet: { en: 'No responses yet', ar: 'لا توجد ردود بعد' },
   noneHint: {
     en: 'Answers land here as learners finish this content.',
@@ -109,16 +110,22 @@ const FeedbackTrackPage: React.FC = () => {
     distribution: [0, 0, 0, 0, 0],
   };
 
+  /** Who wrote it, as the reader should see it: an account since deleted
+   *  answers under a label in the reader's language, not a stored name. */
+  const authorOf = (entry: FeedbackEntry) =>
+    entry.formerMember ? COPY.formerMember[lang] : entry.userName;
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return entries.filter((entry) => {
       if (ratingFilter !== null && Math.round(entry.rating) !== ratingFilter) return false;
       if (!q) return true;
-      return `${entry.comment} ${entry.contextTitle} ${entry.contextSub ?? ''} ${entry.userName}`
+      return `${entry.comment} ${entry.contextTitle} ${entry.contextSub ?? ''} ${authorOf(entry)}`
         .toLowerCase()
         .includes(q);
     });
-  }, [entries, ratingFilter, query]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entries, ratingFilter, query, lang]);
 
   if (!valid) return <Navigate to="/creators/feedback" replace />;
 
@@ -303,7 +310,7 @@ const FeedbackTrackPage: React.FC = () => {
                             comment leaves it a few words wide. */}
                         <span className="flex items-center gap-1.5 text-[#6e7a94] sm:hidden">
                           <User size={11} className="flex-shrink-0" />
-                          <span className="max-w-[9rem] truncate">{entry.userName}</span>
+                          <span className="max-w-[9rem] truncate">{authorOf(entry)}</span>
                           <span dir="ltr">{feedbackTimeAgo(entry.createdAt, lang)}</span>
                         </span>
                       </div>
@@ -312,7 +319,7 @@ const FeedbackTrackPage: React.FC = () => {
                     <div className="hidden flex-shrink-0 flex-col items-end gap-1 text-[11px] sm:flex">
                       <span className="flex items-center gap-1.5 text-[#9aa5bf]">
                         <User size={11} className="flex-shrink-0" />
-                        <span className="max-w-[10rem] truncate">{entry.userName}</span>
+                        <span className="max-w-[10rem] truncate">{authorOf(entry)}</span>
                       </span>
                       <span className="text-[#6e7a94]" dir="ltr">
                         {feedbackTimeAgo(entry.createdAt, lang)}

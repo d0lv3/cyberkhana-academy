@@ -38,6 +38,9 @@ export interface FeedbackDraft extends FeedbackContext {
 export interface FeedbackEntry {
   id: string;
   userName: string;
+  /** Written by an account that has since been deleted; `userName` is then a
+   *  placeholder, and the studio shows its own translated label instead. */
+  formerMember?: boolean;
   rating: number;
   comment: string;
   contextId: string;

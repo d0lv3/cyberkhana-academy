@@ -5,6 +5,7 @@ import { LangProvider } from './contexts/LangContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ConfirmHost from './components/ui/ConfirmHost';
 import FeedbackHost from './components/feedback/FeedbackHost';
+import AccountNoticeHost from './components/account/AccountNoticeHost';
 import ErrorBoundary from './components/ErrorBoundary';
 
 import { FullscreenLiquidLoader } from './components/ui/LiquidLogoLoader';
@@ -259,6 +260,7 @@ const App: React.FC = () => {
             </ErrorBoundary>
             <ConfirmHost />
             <FeedbackHost />
+            <AccountNoticeHost />
           </LangProvider>
         </AuthProvider>
       </HashRouter>

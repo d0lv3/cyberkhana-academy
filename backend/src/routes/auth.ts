@@ -13,6 +13,7 @@ import { env } from '../config/env';
 import { logger } from '../utils/logger';
 import { effectivePermissions } from '../types';
 import { isSocialPlatform, normalizeSocial, publicSocials } from '../utils/socials';
+import { scheduleDeletion, settleDeletionAtSignIn } from '../utils/accountDeletion';
 
 import {
   CURRENT_TERMS_VERSION,
@@ -100,34 +101,36 @@ router.post('/google', async (req, res) => {
 
     let user = await User.findOne({ 'oauthProviders.google.id': payload.sub });
     if (!user) {
-      // Link by verified email if the account already exists, else create.
+      // Link by verified email if the account already exists.
       user = await User.findOne({ email: payload.email.toLowerCase() });
-      if (user) {
-        user.oauthProviders.google = { id: payload.sub, email: payload.email };
-      } else {
-        user = new User({
-          email: payload.email,
-          displayName: payload.name || payload.email.split('@')[0],
-          avatarUrl: payload.picture,
-          oauthProviders: { google: { id: payload.sub, email: payload.email } },
-        });
-      }
+      if (user) user.oauthProviders.google = { id: payload.sub, email: payload.email };
+    }
+    if (user?.isBanned) {
+      res.status(403).json({ error: 'Account unavailable' });
+      return;
+    }
+    /* Signing in withdraws a pending deletion request. One already past its
+       deadline is carried out instead, and this becomes a first sign-in. */
+    const deletion = user ? await settleDeletionAtSignIn(user) : 'none';
+    if (!user || deletion === 'deleted') {
+      user = new User({
+        email: payload.email,
+        displayName: payload.name || payload.email.split('@')[0],
+        avatarUrl: payload.picture,
+        oauthProviders: { google: { id: payload.sub, email: payload.email } },
+      });
     }
     /* Keep the Google photo on file, refreshed every sign-in, whatever the
        member is currently displaying. Only `avatarUrl` is theirs to clear, so
        this is what makes removing a picture reversible — and it also means a
        photo changed on the Google account stops going stale here. */
     if (payload.picture) user.googlePhotoUrl = payload.picture;
-    if (user.isBanned) {
-      res.status(403).json({ error: 'Account unavailable' });
-      return;
-    }
     user.lastLoginAt = new Date();
     stampTermsAgreement(user);
     await user.save();
 
-    logger.info('auth.google_login', { userId: String(user._id) });
-    res.json(issueSession(res, user));
+    logger.info('auth.google_login', { userId: String(user._id), deletion });
+    res.json({ ...issueSession(res, user), deletionCancelled: deletion === 'cancelled' });
   } catch (err) {
     logger.warn('auth.google_failed', { error: String(err) });
     res.status(401).json({ error: 'Google sign-in failed' });
@@ -157,7 +160,9 @@ router.post('/dev-login', async (req, res) => {
 
   try {
     let user = await User.findOne({ email });
-    if (!user) {
+    // Same rule as a Google sign-in, so the grace period can be tried locally.
+    const deletion = user ? await settleDeletionAtSignIn(user) : 'none';
+    if (!user || deletion === 'deleted') {
       user = new User({
         email,
         displayName: parsed.data.displayName || 'Dev User',
@@ -170,8 +175,8 @@ router.post('/dev-login', async (req, res) => {
     stampTermsAgreement(user);
     await user.save();
 
-    logger.info('auth.dev_login', { userId: String(user._id), role: user.role });
-    res.json(issueSession(res, user));
+    logger.info('auth.dev_login', { userId: String(user._id), role: user.role, deletion });
+    res.json({ ...issueSession(res, user), deletionCancelled: deletion === 'cancelled' });
   } catch {
     res.status(500).json({ error: 'Login failed' });
   }
@@ -322,6 +327,39 @@ router.patch('/profile', authenticate, async (req: AuthRequest, res) => {
     }
     logger.warn('auth.profile_update_failed', { error: String(err) });
     res.status(500).json({ error: 'Profile update failed' });
+  }
+});
+
+/* ── POST /api/auth/request-deletion ──
+ * The member asks for their own account to be deleted. Nothing is deleted
+ * yet: from here on every session this account has is refused, other members
+ * stop seeing it, and it is deleted DELETION_GRACE_DAYS later unless they sign
+ * in again first, which withdraws the request (utils/accountDeletion.ts).
+ *
+ * Admins are refused, as they are for a ban in routes/admin.ts: the last admin
+ * leaving would leave nobody able to run the Academy, so another admin has to
+ * change their role first. */
+router.post('/request-deletion', authenticate, async (req: AuthRequest, res) => {
+  const user = req.user!;
+  if (user.role === 'admin') {
+    res.status(403).json({
+      error: 'An admin account cannot be deleted. Ask another admin to change your role first.',
+    });
+    return;
+  }
+
+  try {
+    scheduleDeletion(user);
+    await user.save();
+    clearAuthCookie(res);
+    logger.info('auth.deletion_requested', {
+      userId: String(user._id),
+      scheduledFor: user.deletionScheduledFor,
+    });
+    res.json({ ok: true, deletionScheduledFor: user.deletionScheduledFor });
+  } catch (err) {
+    logger.error('auth.deletion_request_failed', { error: String(err) });
+    res.status(500).json({ error: 'Could not record your request' });
   }
 });
 

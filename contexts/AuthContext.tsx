@@ -31,6 +31,19 @@ interface ServerUser {
   creatorAgreementAccepted?: boolean;
 }
 
+/** What a sign-in answers with. */
+interface SessionResponse {
+  user: ServerUser;
+  /** The account had a deletion request standing, and this sign-in withdrew it. */
+  deletionCancelled?: boolean;
+}
+
+/** Something to tell the member about their account, once, on whatever page
+ *  they land on (AccountNoticeHost shows it). */
+export type AccountNotice =
+  | { kind: 'deletion-scheduled'; scheduledFor: string }
+  | { kind: 'deletion-cancelled' };
+
 /** What the profile form may change in one save. */
 export type ProfilePatch = Partial<
   Pick<AcademyUser, 'displayName' | 'bio' | 'university' | 'avatarUrl' | 'showBio'>
@@ -58,6 +71,12 @@ interface AuthContextType {
   /** Save profile fields and wait for the server's answer, adopting the user
    *  it returns (social links come back normalised). Throws on refusal. */
   updateProfile: (patch: ProfilePatch) => Promise<void>;
+  /** Ask for this account to be deleted. On success the member is signed out
+   *  (the server has already ended every session) and a notice says when.
+   *  Throws with the server's reason, leaving the session as it was. */
+  requestAccountDeletion: () => Promise<void>;
+  accountNotice: AccountNotice | null;
+  dismissAccountNotice: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -70,6 +89,9 @@ const AuthContext = createContext<AuthContextType>({
   updateUser: () => {},
   updateUsername: async () => {},
   updateProfile: async () => {},
+  requestAccountDeletion: async () => {},
+  accountNotice: null,
+  dismissAccountNotice: () => {},
 });
 
 function mapServerUser(u: ServerUser): AcademyUser {
@@ -103,6 +125,7 @@ const PROFILE_FIELDS = ['displayName', 'bio', 'university', 'preferredLang', 'av
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AcademyUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [accountNotice, setAccountNotice] = useState<AccountNotice | null>(null);
 
   /* My own content is credited to whoever is signed in (see setOwnAuthor).
      Pages render behind AuthGate, which waits for the session, so this is in
@@ -151,15 +174,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const establishSession = async (serverUser: ServerUser) => {
+  const establishSession = async ({ user: serverUser, deletionCancelled }: SessionResponse) => {
     await hydrateFromServer(adopt(serverUser));
+    if (deletionCancelled) setAccountNotice({ kind: 'deletion-cancelled' });
   };
 
   const login = async () => {
     setIsLoading(true);
     try {
-      const { user: serverUser } = await api.post<{ user: ServerUser }>('/auth/dev-login', {});
-      await establishSession(serverUser);
+      await establishSession(await api.post<SessionResponse>('/auth/dev-login', {}));
     } catch (err) {
       console.error('Login failed:', err);
       setUser(null);
@@ -171,10 +194,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loginWithGoogle = async (credential: string) => {
     setIsLoading(true);
     try {
-      const { user: serverUser } = await api.post<{ user: ServerUser }>('/auth/google', {
-        credential,
-      });
-      await establishSession(serverUser);
+      await establishSession(await api.post<SessionResponse>('/auth/google', { credential }));
     } catch (err) {
       console.error('Google login failed:', err);
       setUser(null);
@@ -198,6 +218,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await api.post('/auth/logout').catch(() => {});
     forgetServerBackedCaches();
     setUser(null);
+  };
+
+  /* Sign-out's order, for the same reason, except that the server ends the
+     session itself, along with every other one this account has. What is
+     still waiting is saved first: signing in again within the grace period
+     brings the account back, and it should come back with everything in it. */
+  const requestAccountDeletion = async () => {
+    await flushPendingSync();
+    await flushPendingFeedback().catch(() => {
+      /* offline: the answer stays queued, and goes if they come back */
+    });
+    const { deletionScheduledFor } = await api.post<{ deletionScheduledFor: string }>(
+      '/auth/request-deletion'
+    );
+    setSyncEnabled(false);
+    forgetServerBackedCaches();
+    setUser(null);
+    setAccountNotice({ kind: 'deletion-scheduled', scheduledFor: deletionScheduledFor });
   };
 
   const updateUser = (patch: Partial<AcademyUser>) => {
@@ -240,6 +278,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         updateUser,
         updateUsername,
         updateProfile,
+        requestAccountDeletion,
+        accountNotice,
+        dismissAccountNotice: () => setAccountNotice(null),
       }}
     >
       {children}
