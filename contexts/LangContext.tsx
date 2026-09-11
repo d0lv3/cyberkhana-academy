@@ -134,8 +134,6 @@ const translations: Record<string, Record<Lang, string>> = {
   'profile.university': { en: 'University', ar: 'الجامعة' },
   'profile.country': { en: 'Country', ar: 'البلد' },
   'profile.memberSince': { en: 'Member since', ar: 'عضو منذ' },
-  'profile.role.admin': { en: 'Creator', ar: 'منشئ محتوى' },
-  'profile.role.user': { en: 'Student', ar: 'طالب' },
   'profile.noBio': { en: 'No bio yet.', ar: 'لا توجد نبذة بعد.' },
   'profile.notSet': { en: 'Not set', ar: 'غير محدد' },
   'profile.progressTitle': { en: 'Progress by Track', ar: 'التقدّم حسب المسار' },

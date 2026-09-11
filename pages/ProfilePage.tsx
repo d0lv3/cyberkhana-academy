@@ -32,6 +32,7 @@ import AvatarPicker from '../components/account/AvatarPicker';
 import SocialLinksRow, { SocialIcon } from '../components/profile/SocialLinks';
 import { universityLabel } from '../data/iraqUniversities';
 import { profilePath } from '../services/profiles';
+import { ROLE_META } from '../services/roles';
 import {
   SOCIAL_META,
   SOCIAL_PLATFORMS,
@@ -242,8 +243,7 @@ const ProfilePage: React.FC = () => {
     }
   })();
 
-  const roleLabel = user.role === 'admin' ? t('profile.role.admin') : t('profile.role.user');
-  const roleColor = user.role === 'admin' ? '#9fef00' : '#00a859';
+  const role = ROLE_META[user.role];
 
   /* Handle field state, resolved once so the input border and the message
      below it can never disagree about whether something is wrong. */
@@ -553,12 +553,12 @@ const ProfilePage: React.FC = () => {
                   <span
                     className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide"
                     style={{
-                      color: roleColor,
-                      backgroundColor: `${roleColor}15`,
-                      border: `1px solid ${roleColor}33`,
+                      color: role.color,
+                      backgroundColor: `${role.color}15`,
+                      border: `1px solid ${role.color}33`,
                     }}
                   >
-                    {roleLabel}
+                    {role.label[lang]}
                   </span>
                 </div>
 

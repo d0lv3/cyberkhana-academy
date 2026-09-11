@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Search, ShieldCheck, PenTool, GraduationCap, RefreshCw, Ban, RotateCcw, KeyRound, Check, Trophy, Trash2, Clock } from 'lucide-react';
+import { Users, Search, RefreshCw, Ban, RotateCcw, KeyRound, Check, Trophy, Trash2, Clock } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import EnhancedCard from '../../components/ui/EnhancedCard';
 import Avatar from '../../components/ui/Avatar';
@@ -11,8 +11,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLang } from '../../contexts/LangContext';
 import { api } from '../../services/api';
 import { CREATOR_PERMISSIONS, PERMISSION_META, type CreatorPermission } from '../../services/permissions';
-
-type Role = 'user' | 'creator' | 'admin';
+import { ROLE_META, type Role } from '../../services/roles';
 
 interface AdminUser {
   id: string;
@@ -32,12 +31,6 @@ interface AdminUser {
   /** When that request is carried out, unless they sign in before then. */
   deletionScheduledFor?: string;
 }
-
-const ROLE_META: Record<Role, { color: string; icon: React.ElementType; label: { en: string; ar: string } }> = {
-  admin: { color: '#9fef00', icon: ShieldCheck, label: { en: 'Admin', ar: 'مدير' } },
-  creator: { color: '#f3a43a', icon: PenTool, label: { en: 'Creator', ar: 'منشئ محتوى' } },
-  user: { color: '#62738f', icon: GraduationCap, label: { en: 'Student', ar: 'طالب' } },
-};
 
 const ROLES: Role[] = ['user', 'creator', 'admin'];
 
