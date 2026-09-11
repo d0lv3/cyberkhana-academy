@@ -57,14 +57,17 @@ function readable(platform: SocialPlatform, value: string): string {
   return `@${value}`;
 }
 
+/* Bare white marks, no circle behind them: the row sits in the text beside
+   the picture and should read as part of it. The hit area stays a comfortable
+   square even though nothing is drawn around the mark. */
 const BTN =
-  'flex h-9 w-9 items-center justify-center rounded-full border border-[#263248] bg-[#0e1522] ring-4 ring-[#121a2a] transition-colors hover:border-current focus:outline-none focus-visible:border-current';
+  'flex h-8 w-8 items-center justify-center rounded-md text-white/80 transition-colors hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40';
 
 /**
- * A member's links as a row of round buttons, drawn to sit against the bottom
- * of their picture. Links open in a new tab with no referrer and are marked
- * as user-supplied; Discord, which has no profile address for a username,
- * copies the name instead.
+ * A member's links as a row of white icons. Links open in a new tab with no
+ * referrer and are marked as user-supplied; Discord, which has no profile
+ * address for a username, copies the name instead. The caller places and
+ * aligns the row.
  */
 const SocialLinksRow: React.FC<{
   links: SocialLinks | undefined | null;
@@ -86,7 +89,7 @@ const SocialLinksRow: React.FC<{
   };
 
   return (
-    <ul className={`flex flex-wrap items-center justify-center gap-1.5 ${className}`}>
+    <ul className={`flex flex-wrap items-center gap-1 ${className}`}>
       {items.map(([platform, value]) => {
         const meta = SOCIAL_META[platform];
         const href = socialHref(platform, value);
@@ -101,7 +104,6 @@ const SocialLinksRow: React.FC<{
                 title={title}
                 aria-label={`${title} (${lang === 'ar' ? 'يفتح في علامة تبويب جديدة' : 'opens in a new tab'})`}
                 className={BTN}
-                style={{ color: meta.color }}
               >
                 <SocialIcon platform={platform} />
               </a>
@@ -112,7 +114,6 @@ const SocialLinksRow: React.FC<{
                 title={copied === platform ? (lang === 'ar' ? 'نُسخ' : 'Copied') : title}
                 aria-label={`${title}. ${lang === 'ar' ? 'انسخ اسم المستخدم' : 'Copy the username'}`}
                 className={BTN}
-                style={{ color: meta.color }}
               >
                 {copied === platform ? <Check size={16} aria-hidden /> : <SocialIcon platform={platform} />}
               </button>
