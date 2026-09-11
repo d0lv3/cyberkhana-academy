@@ -15,6 +15,7 @@
 
 import { api, ApiError } from './api';
 import { PUBLISHED_CACHE_KEYS, SERVER_BUCKET_BY_STORAGE_KEY, STORAGE_KEYS } from './creatorTypes';
+import { levelFor } from '../backend/src/shared/xp';
 
 /* Mirrors progressService's event name (defined locally to avoid an import
  * cycle — progressService imports this module for write-through). */
@@ -24,6 +25,24 @@ const PROGRESS_EVENT = 'academy-progress-changed';
  *  lesson is added later. Only ever written from the server's answers here;
  *  progressService reads it. */
 export const FINISHED_MODULES_KEY = 'academy-finished-modules';
+
+/** The highest level this device has celebrated. The level-up card
+ *  (components/levels/LevelUpHost.tsx) shows only when the level passes it. */
+export const LEVEL_SEEN_KEY = 'academy-level-seen';
+
+/** Levels the account already had are not news on this device: signing in
+ *  on a new one counts the server's level as celebrated, so pulling progress
+ *  down never throws a card for a level reached somewhere else. */
+function rememberLevelReached(xp: unknown): void {
+  if (typeof xp !== 'number') return;
+  try {
+    const level = levelFor(xp).level.number;
+    const seen = Number(localStorage.getItem(LEVEL_SEEN_KEY)) || 0;
+    if (level > seen) localStorage.setItem(LEVEL_SEEN_KEY, String(level));
+  } catch {
+    /* storage unavailable: at worst the card shows once */
+  }
+}
 
 let syncEnabled = false;
 
@@ -207,8 +226,9 @@ function isServerBackedKey(key: string): boolean {
 
 /** Account state that only ever lives on this device: the study streak and
  *  weekly goal, a lab's working state, which feedback prompts were answered
- *  and any answer still waiting to send, where each module was left, and the
- *  practice terminal's files. It stays through its owner's own sign-out, so
+ *  and any answer still waiting to send, the level last celebrated, where each
+ *  module was left, and the practice terminal's files. It stays through its
+ *  owner's own sign-out, so
  *  they find their streak again, and goes the moment another account signs
  *  in. */
 function isDeviceOnlyAccountKey(key: string): boolean {
@@ -218,6 +238,7 @@ function isDeviceOnlyAccountKey(key: string): boolean {
     key.startsWith('academy-lab-') ||
     key === 'academy-feedback-answered' ||
     key === 'academy-feedback-pending' ||
+    key === LEVEL_SEEN_KEY ||
     key.startsWith('academy-lecture-') ||
     (key.startsWith('academy-shell-') && key !== 'academy-shell-dock')
   );
@@ -468,7 +489,8 @@ export async function hydrateFromServer(account: { id: string; displayName: stri
 
   // My progress (all roles).
   try {
-    const { progress } = await api.get<{ progress: ProgressSnapshot | null }>('/progress');
+    const { progress, xp } = await api.get<{ progress: ProgressSnapshot | null; xp?: number }>('/progress');
+    rememberLevelReached(xp);
     const localSnap = collectProgressSnapshot();
     const hadLocal =
       localSnap.networking.length > 0 ||

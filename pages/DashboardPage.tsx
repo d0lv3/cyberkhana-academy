@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Layers,
@@ -23,6 +23,8 @@ import { useXp } from '../services/xpService';
 import { getStreak } from '../services/streakService';
 import SkillMatrix from '../components/skills/SkillMatrix';
 import { levelColor } from '../components/ui/LevelBadge';
+import LevelEmblem from '../components/levels/LevelEmblem';
+import LevelLadder from '../components/levels/LevelLadder';
 
 /** Monday-first day initials for the streak pips. */
 const WEEK_LABELS: Record<'en' | 'ar', string[]> = {
@@ -67,6 +69,17 @@ const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const { t, lang } = useLang();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  /* Sent here to see the levels (from the level-up card or the profile). */
+  useEffect(() => {
+    if ((location.state as { focus?: string } | null)?.focus !== 'levels') return;
+    const timer = window.setTimeout(
+      () => document.getElementById('levels')?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+      150
+    );
+    return () => window.clearTimeout(timer);
+  }, [location.key, location.state]);
 
   /* ── compute real content + local progress ── */
   const data = useMemo(() => {
@@ -170,19 +183,25 @@ const DashboardPage: React.FC = () => {
             </button>
           </div>
 
-          {/* Level: the ring fills toward the next level */}
+          {/* Level: the emblem, inside a ring that fills toward the next level */}
           <div className="flex items-center gap-5 self-start md:self-center">
-            <ProgressRing progress={level.fraction * 100} color={accent}>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#8592ad]">
-                {t('dashboard.level')}
-              </span>
-              <span dir="ltr" className="font-mono text-2xl font-black leading-none" style={{ color: accent }}>
-                {level.level.hex}
-              </span>
+            <ProgressRing progress={level.fraction * 100} color={accent} size={128} stroke={7}>
+              <LevelEmblem
+                level={level.level}
+                lang={lang}
+                size="lg"
+                eager
+                decorative
+                className="h-[88px] w-[88px] drop-shadow-[0_6px_16px_rgba(0,0,0,0.45)]"
+              />
             </ProgressRing>
             <div className="min-w-0">
-              <p className="text-lg font-black leading-tight" style={{ color: accent }}>
-                {level.level.name[lang]}
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[#8592ad]">{t('dashboard.level')}</p>
+              <p className="mt-0.5 flex items-baseline gap-2 text-lg font-black leading-tight">
+                <span dir="ltr" className="font-mono" style={{ color: accent }}>
+                  {level.level.hex}
+                </span>
+                <span className="text-[#f3f6ff]">{level.level.name[lang]}</span>
               </p>
               <div className="mt-1 flex items-center gap-1.5 text-[#f3f6ff]">
                 <Zap size={14} className="text-[#9fef00]" />
@@ -196,6 +215,9 @@ const DashboardPage: React.FC = () => {
                   <>
                     <span dir="ltr">{level.toNext.toLocaleString('en-US')}</span>{' '}
                     {lang === 'ar' ? 'نقطة خبرة حتى' : 'XP to'}{' '}
+                    <span dir="ltr" className="font-mono">
+                      {level.next.hex}
+                    </span>{' '}
                     <span className="font-semibold text-[#9aa5bf]">{level.next.name[lang]}</span>
                   </>
                 ) : lang === 'ar' ? (
@@ -208,6 +230,9 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
       </motion.div>
+
+      {/* ── Every level and the XP it takes ── */}
+      <LevelLadder id="levels" xp={xp} level={level} lang={lang} />
 
       {/* ── Skill Matrix ── */}
       <SkillMatrix variant="compact" />

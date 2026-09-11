@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLang } from '../contexts/LangContext';
 import { useXp } from '../services/xpService';
 import { levelColor } from './ui/LevelBadge';
+import LevelEmblem from './levels/LevelEmblem';
 
 interface HeaderProps {
   onMenuToggle: () => void;
@@ -69,6 +70,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
                   className="flex items-center gap-1 text-[11px] font-bold"
                   style={{ color: levelColor(level.level) }}
                 >
+                  <LevelEmblem level={level.level} lang={lang} decorative eager className="-my-1 h-4 w-4 flex-shrink-0" />
                   <span dir="ltr" className="font-mono">
                     {level.level.hex}
                   </span>

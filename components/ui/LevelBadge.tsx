@@ -1,5 +1,6 @@
 import React from 'react';
 import { levelFor, type Level } from '../../services/xpService';
+import LevelEmblem from '../levels/LevelEmblem';
 
 /* ─── A member's level, 0x1 Newbie to 0xD Root ───
  * One colour per level, climbing from slate through the brand greens and
@@ -28,12 +29,14 @@ interface LevelBadgeProps {
   lang: 'en' | 'ar';
   /** Only the hex number, for tight rows; the name stays in the tooltip. */
   compact?: boolean;
+  /** Off where the emblem is already shown large beside the badge. */
+  emblem?: boolean;
   className?: string;
 }
 
 /** The level for an amount of XP. The hex reads left to right inside Arabic
  *  text too, so it sits in its own inline span (see rtl-layout notes). */
-const LevelBadge: React.FC<LevelBadgeProps> = ({ xp, lang, compact = false, className = '' }) => {
+const LevelBadge: React.FC<LevelBadgeProps> = ({ xp, lang, compact = false, emblem = true, className = '' }) => {
   const { level } = levelFor(xp);
   const color = levelColor(level);
   return (
@@ -42,6 +45,7 @@ const LevelBadge: React.FC<LevelBadgeProps> = ({ xp, lang, compact = false, clas
       style={{ color, borderColor: `${color}40`, backgroundColor: `${color}14` }}
       title={`${level.hex} ${level.name[lang]}`}
     >
+      {emblem && <LevelEmblem level={level} lang={lang} decorative className="-my-1 h-4 w-4 flex-shrink-0" />}
       <span dir="ltr" className="font-mono">
         {level.hex}
       </span>

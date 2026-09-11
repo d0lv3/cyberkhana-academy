@@ -33,6 +33,9 @@ import SocialLinksRow, { SocialIcon } from '../components/profile/SocialLinks';
 import { universityLabel } from '../data/iraqUniversities';
 import { profilePath } from '../services/profiles';
 import { ROLE_META } from '../services/roles';
+import { useXp } from '../services/xpService';
+import LevelBadge, { levelColor } from '../components/ui/LevelBadge';
+import LevelEmblem from '../components/levels/LevelEmblem';
 import {
   SOCIAL_META,
   SOCIAL_PLATFORMS,
@@ -103,6 +106,8 @@ const ProfilePage: React.FC = () => {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  /* The level is public, so the profile shows it the way members see it. */
+  const { xp, level } = useXp();
 
   if (!user) return null;
 
@@ -536,15 +541,21 @@ const ProfilePage: React.FC = () => {
           ) : (
             /* ── View mode ── */
             <div className="flex items-start gap-5">
-              {/* The picture with the links pinned under it, as members see it */}
-              <div className="flex flex-shrink-0 flex-col items-center">
+              {/* The picture with the level's emblem on its corner, as members see it */}
+              <div className="relative flex-shrink-0">
                 <Avatar
                   avatarUrl={user.avatarUrl}
                   name={user.displayName}
                   className="w-20 h-20 rounded-2xl"
                   initialClassName="text-3xl"
                 />
-                <SocialLinksRow links={user.socials} lang={lang} className="relative z-10 -mt-3 max-w-[9.5rem]" />
+                <LevelEmblem
+                  level={level.level}
+                  lang={lang}
+                  decorative
+                  eager
+                  className="absolute -bottom-3 -end-3 h-11 w-11 drop-shadow-[0_4px_10px_rgba(0,0,0,0.6)]"
+                />
               </div>
 
               <div className="flex-1 min-w-0">
@@ -560,6 +571,7 @@ const ProfilePage: React.FC = () => {
                   >
                     {role.label[lang]}
                   </span>
+                  <LevelBadge xp={xp} lang={lang} emblem={false} />
                 </div>
 
                 {user.username && (
@@ -589,6 +601,9 @@ const ProfilePage: React.FC = () => {
                     {memberSince}
                   </span>
                 </div>
+
+                {/* Pulled in by the icons' own padding so the first mark lines up with the text. */}
+                <SocialLinksRow links={user.socials} lang={lang} className="mt-2 -ms-2" />
 
                 <p className="mt-3 text-sm text-[#d2d7e3] max-w-lg whitespace-pre-line">
                   {user.bio ? (
@@ -628,6 +643,80 @@ const ProfilePage: React.FC = () => {
               </div>
             </div>
           )}
+        </div>
+      </motion.div>
+
+      {/* ── Level ──
+          Public, like the XP it is read from, so it is shown here the way other
+          members see it, with how far there is to go to the next one. */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.14, duration: 0.4 }}
+        className="relative overflow-hidden rounded-2xl border border-[#263248] bg-[#121a2a] p-6"
+      >
+        <div
+          aria-hidden
+          className="absolute -top-16 -end-12 h-52 w-52 rounded-full blur-[80px]"
+          style={{ background: `${levelColor(level.level)}24` }}
+        />
+        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center">
+          <LevelEmblem
+            level={level.level}
+            lang={lang}
+            size="lg"
+            decorative
+            className="h-24 w-24 flex-shrink-0 self-center drop-shadow-[0_8px_20px_rgba(0,0,0,0.5)]"
+          />
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#8592ad]">
+              {ar ? 'مستواك' : 'Your level'}
+            </p>
+            <p className="mt-0.5 flex flex-wrap items-baseline gap-x-2 text-xl font-black leading-tight">
+              <span dir="ltr" className="font-mono" style={{ color: levelColor(level.level) }}>
+                {level.level.hex}
+              </span>
+              <span className="text-[#f3f6ff]">{level.level.name[lang]}</span>
+              <span dir="ltr" className="text-sm font-bold text-[#9aa5bf]">
+                {xp.toLocaleString('en-US')} XP
+              </span>
+            </p>
+            <div className="mt-3 h-1.5 max-w-md overflow-hidden rounded-full bg-[#0a0f18]" dir="ltr">
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{ width: `${Math.round(level.fraction * 100)}%`, background: levelColor(level.level) }}
+              />
+            </div>
+            <p className="mt-1.5 text-xs text-[#8592ad]">
+              {level.next ? (
+                <>
+                  <span dir="ltr">{level.toNext.toLocaleString('en-US')}</span> {ar ? 'نقطة خبرة حتى' : 'XP to'}{' '}
+                  <span dir="ltr" className="font-mono">
+                    {level.next.hex}
+                  </span>{' '}
+                  {level.next.name[lang]}
+                </>
+              ) : ar ? (
+                'أعلى مستوى في الأكاديمية'
+              ) : (
+                'The top level in the Academy'
+              )}
+            </p>
+            <p className="mt-3 inline-flex items-start gap-1.5 text-xs text-[#8592ad]">
+              <Eye size={12} className="mt-0.5 flex-shrink-0" />
+              {ar
+                ? 'مستواك ظاهر لبقية الأعضاء، في ملفك العام وعلى لوحة المتصدرين.'
+                : 'Your level is public: other members see it on your profile and the leaderboard.'}
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/dashboard', { state: { focus: 'levels' } })}
+            className="self-start sm:self-center"
+          >
+            {ar ? 'كل المستويات' : 'See all levels'}
+          </Button>
         </div>
       </motion.div>
 

@@ -17,7 +17,9 @@ import {
 import Avatar from '../components/ui/Avatar';
 import Button from '../components/ui/EnhancedButton';
 import LevelBadge from '../components/ui/LevelBadge';
+import LevelEmblem from '../components/levels/LevelEmblem';
 import SocialLinksRow from '../components/profile/SocialLinks';
+import { levelFor } from '../services/xpService';
 import NetworkingLessonCard from '../components/fundamentals/NetworkingLessonCard';
 import ModuleCard from '../components/fundamentals/ModuleCard';
 import PathCard from '../components/paths/PathCard';
@@ -206,15 +208,20 @@ const PublicProfilePage: React.FC = () => {
         />
 
         <div className="relative flex flex-col items-center gap-6 p-6 sm:flex-row sm:items-start sm:p-8">
-          {/* The picture, with the links they share pinned beneath it */}
-          <div className="flex flex-shrink-0 flex-col items-center">
+          {/* The picture, with their level's emblem on its corner */}
+          <div className="relative flex-shrink-0">
             <Avatar
               avatarUrl={profile.avatarUrl}
               name={profile.displayName}
               className="h-28 w-28 rounded-3xl"
               initialClassName="text-5xl"
             />
-            <SocialLinksRow links={profile.socials} lang={lang} className="relative z-10 -mt-4 max-w-[13rem]" />
+            <LevelEmblem
+              level={levelFor(xp).level}
+              lang={lang}
+              eager
+              className="absolute -bottom-4 -end-4 h-14 w-14 drop-shadow-[0_6px_14px_rgba(0,0,0,0.6)]"
+            />
           </div>
 
           <div className="min-w-0 flex-1 text-center sm:text-start">
@@ -224,7 +231,7 @@ const PublicProfilePage: React.FC = () => {
               <h1 dir="auto" className="text-2xl font-black leading-tight text-[#f3f6ff] sm:text-3xl">
                 {profile.displayName}
               </h1>
-              <LevelBadge xp={xp} lang={lang} className="text-[11px]" />
+              <LevelBadge xp={xp} lang={lang} emblem={false} className="text-[11px]" />
               {publishedCount > 0 && (
                 <span className="inline-flex items-center gap-1 rounded-md border border-[#9fef00]/30 bg-[#9fef00]/10 px-2 py-0.5 text-[11px] font-bold text-[#9fef00]">
                   <PenTool size={11} /> {ar ? 'منشئ محتوى' : 'Creator'}
@@ -247,6 +254,9 @@ const PublicProfilePage: React.FC = () => {
                 <GraduationCap size={15} className="flex-shrink-0 text-[#8592ad]" /> {uni.text}
               </p>
             )}
+            {/* Their links, in the text beside the picture. Pulled in by the
+                icons' own padding so the first mark lines up with the text. */}
+            <SocialLinksRow links={profile.socials} lang={lang} className="mt-2 justify-center sm:-ms-2 sm:justify-start" />
             {profile.bio && (
               /* The paragraph follows the page, so the bio lines up with the
                  name; the text inside keeps its own direction and punctuation. */
