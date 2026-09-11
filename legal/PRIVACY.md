@@ -1,8 +1,8 @@
 # CyberKhana Academy — Privacy Policy
 
 **Applies to:** academy.cyberkhana.tech (the "Academy")
-**Last updated:** 10 September 2026
-**Effective from:** 10 September 2026
+**Last updated:** 11 September 2026
+**Effective from:** 11 September 2026
 
 ---
 
@@ -66,7 +66,8 @@ them at any time on your profile.
 - **how much time you have spent learning**, in minutes;
 - your **points**, your monthly points, and your position on the leaderboards;
 - when you **last signed in**;
-- whether your account is **suspended**.
+- whether your account is **suspended**;
+- whether you have **asked for your account to be deleted**, and when.
 
 ### Feedback you leave
 
@@ -148,7 +149,8 @@ from the leaderboard or from anything you publish:
 
 Your **email address**, your **country**, your **language setting**, the
 **Google account** you sign in with, **when you last signed in**, **whether your
-account is suspended**, and your **learning record** beyond your points.
+account is suspended**, **whether you have asked for it to be deleted**, and
+your **learning record** beyond your points.
 
 ### Feedback — please read this one
 
@@ -199,7 +201,9 @@ Academy you understand and accept that.
 
 ## 8. How long we keep it
 
-We keep your account data for as long as your account exists.
+We keep your account data for as long as your account exists. If you ask for
+your account to be deleted, we keep it for 7 more days in case you change your
+mind, and then delete it, as section 9 explains.
 
 Server logs are kept only as long as they are useful for security and debugging.
 
@@ -207,31 +211,55 @@ Feedback and creator content are kept as described in section 9.
 
 ## 9. Deleting your account
 
-Email **support@cyberkhana.tech** and ask. There is no self-service delete
-button yet — we do it by hand, and **we will complete it within 30 days** of a
-request we can verify came from you.
+**You can delete your account yourself**, from the bottom of your profile page.
+You are signed out straight away, on every device, and your account is kept for
+**7 days** in case you change your mind. While it waits, your profile and your
+place on the leaderboards are hidden from other members.
+
+**Signing in again during those 7 days cancels the request**, and your account
+comes back exactly as you left it. If you do not sign in, it is deleted
+automatically and permanently when the 7 days are up. After that it cannot be
+recovered.
+
+Administrators can see that you have asked, and when the deletion is due, next
+to your account in the members list. If you cannot sign in, email
+**support@cyberkhana.tech** and we will delete your account for you **within 30
+days** of a request we can verify came from you.
+
+An administrator can also delete an account straight away, as the Terms of
+Service allow. That takes effect at once, with no waiting period, and deletes
+and keeps exactly what is listed below.
 
 **What is deleted:** your name, email address, profile picture, username,
 university, country, bio, social links, language preference, your public
-profile, and the link between your account and your Google identity.
+profile, and the link between your account and your Google identity; your
+learning progress, your points and your place on the leaderboards; and anything
+you wrote as a creator but had not published, such as drafts and content
+waiting for review, along with uploaded files that nothing else uses. Sharing
+between you and other creators ends. The leaderboards are worked out from the
+accounts that exist, so nobody else loses points; the members below you each
+move up a place.
 
 **What is not deleted, and why:**
 
 - **Content you published as a creator stays.** Lessons, modules and paths
-  remain on the Academy under the licence in the Creator Agreement, with your
-  authorship credit. Other creators' Paths and Modules are built out of that
-  content, and students are partway through it. Section 9 of the Creator
-  Agreement explains this in full — if you are a creator, understand it before
-  you publish, not after.
-- **Past leaderboard entries are anonymised, not removed.** Your name comes off;
-  the historical standings stay intact so other people's ranks still make sense.
-- **Feedback you left is anonymised** — the comment stays so creators keep the
-  substance, your name comes off it.
-- **Records we are required to keep**, and records of moderation decisions such
-  as a ban, are retained where we need them.
+  remain on the Academy under the licence in the Creator Agreement, still
+  carrying the name you wrote them under, but no longer linked to a profile.
+  Other creators' Paths and Modules are built out of that content, and students
+  are partway through it. Section 9 of the Creator Agreement explains this in
+  full. If you are a creator, understand it before you publish, not after.
+- **Feedback you left is anonymised.** The rating and the comment stay, so
+  creators keep the substance. Your name comes off, and nothing links it to you
+  or to the rest of your feedback any more.
+- **Server logs are not edited.** They are kept only as long as they are useful
+  for security and debugging, as section 8 says. **Records we are required to
+  keep**, and records of moderation decisions such as a ban, are retained where
+  we need them.
 
 Deleting your Academy account does not delete your Google account, and does not
-affect any account you have on the CTF platform, which is a separate service.
+affect any account you have on the CTF platform, which is a separate service. If
+you sign in again after your account has been deleted, you start again with a
+new, empty account.
 
 ## 10. Your rights over your data
 

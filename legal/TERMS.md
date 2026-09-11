@@ -1,8 +1,8 @@
 # CyberKhana Academy — Terms of Service
 
 **Applies to:** academy.cyberkhana.tech (the "Academy")
-**Last updated:** 10 September 2026
-**Effective from:** 10 September 2026
+**Last updated:** 11 September 2026
+**Effective from:** 11 September 2026
 
 ---
 
@@ -260,9 +260,12 @@ obliged to.
 
 ## 17. Suspension and closing your account
 
-We may suspend or ban your account, remove points, or restrict what you can do,
-if you break these Terms, if we believe your behaviour puts other users or the
-Academy at risk, or if the law requires it.
+We may suspend, ban or delete your account, remove points, or restrict what you
+can do, if you break these Terms, if we believe your behaviour puts other users
+or the Academy at risk, or if the law requires it. We may also delete an account
+that is a duplicate, is fake, or belongs to someone who is not allowed to use
+the Academy (see section 4). **Deleting an account is permanent:** it takes
+effect straight away and cannot be undone.
 
 For minor problems we will normally warn you first. For anything involving
 abuse, another person's data, or real harm, we may act immediately and without
@@ -272,9 +275,11 @@ warning.
 that breaks these Terms, and **withdraw creator access** from someone who
 misuses it, without ending their student account.
 
-You can stop using the Academy whenever you like, and you can ask us to delete
-your account at support@cyberkhana.tech. What happens to your data then, and
-what survives, is set out in the Privacy Policy.
+**You can delete your account yourself**, at any time, from your profile page.
+It is deleted 7 days after you ask, unless you sign in again before then, which
+cancels the request; after that it cannot be recovered. If you cannot sign in,
+ask us at support@cyberkhana.tech. What happens to your data when an account is
+deleted, and what survives, is set out in the Privacy Policy.
 
 **Sections 6, 13, 15, 18, 19, 20 and 22 continue to apply after your account
 ends.**
@@ -347,7 +352,8 @@ We may update these Terms. When we do, we will change the "Last updated" date at
 the top, and for anything significant we will announce it in the Academy.
 
 If you keep using the Academy after a change, you accept the new Terms. If you
-do not accept them, stop using the Academy and ask us to close your account.
+do not accept them, stop using the Academy and delete your account from your
+profile page.
 
 ## 24. Language
 

@@ -8,16 +8,18 @@
  * Google OAuth is implemented, exercise code never leaves the browser, the
  * leaderboard and public-profile projections (routes/leaderboard.ts,
  * routes/users.ts) exclude email and country, and the bio reaches other
- * members only when its owner has switched it on. If any of that changes,
- * this file is wrong, in both languages, and has to change with it.
+ * members only when its owner has switched it on. "Deleting your account" is
+ * what backend/src/utils/accountDeletion.ts does, grace period included. If
+ * any of that changes, this file is wrong, in both languages, and has to
+ * change with it.
  */
 import type { BilingualDoc } from './legalTypes';
 
 export const PRIVACY: BilingualDoc = {
   en: {
     title: 'Privacy Policy',
-    updated: '10 September 2026',
-    version: '2026-09-10',
+    updated: '11 September 2026',
+    version: '2026-09-11',
     intro:
       'This policy explains what CyberKhana Academy collects, what we do with it, and what you can ask us to do about it.',
     callout: {
@@ -72,7 +74,8 @@ export const PRIVACY: BilingualDoc = {
           'how much time you have spent learning, in minutes;',
           'your points, your monthly points, and your position on the leaderboards;',
           'when you last signed in;',
-          'whether your account is suspended.',
+          'whether your account is suspended;',
+          'whether you have asked for your account to be deleted, and when.',
         ],
         after: [
           'When you rate or comment on content, we store the rating, your comment, your name, which lesson it was about, and the language you wrote it in.',
@@ -127,7 +130,7 @@ export const PRIVACY: BilingualDoc = {
           'the content you have published as a creator.',
         ],
         after: [
-          'Never shown to other members: your email address, your country, your language setting, the Google account you sign in with, when you last signed in, whether your account is suspended, and your learning record beyond your points.',
+          'Never shown to other members: your email address, your country, your language setting, the Google account you sign in with, when you last signed in, whether your account is suspended, whether you have asked for it to be deleted, and your learning record beyond your points.',
           'Content you publish as a creator is visible to everyone, credited to your account: your display name, username and picture appear beside it and link to your profile.',
         ],
       },
@@ -163,25 +166,27 @@ export const PRIVACY: BilingualDoc = {
       {
         h: 'How long we keep it',
         body: [
-          'We keep your account data for as long as your account exists. Server logs are kept only as long as they are useful for security and debugging.',
+          'We keep your account data for as long as your account exists. If you ask for your account to be deleted, we keep it for 7 more days in case you change your mind, and then delete it, as described below. Server logs are kept only as long as they are useful for security and debugging.',
         ],
       },
       {
         h: 'Deleting your account',
         emphasis: true,
         body: [
-          'Email support@cyberkhana.tech and ask. There is no self-service delete button yet — we do it by hand, and we will complete it within 30 days of a request we can verify came from you.',
-          'What is deleted: your name, email address, profile picture, username, university, country, bio, social links, language preference, your public profile, and the link between your account and your Google identity.',
+          'You can delete your account yourself, from the bottom of your profile page. You are signed out straight away, on every device, and your account is kept for 7 days in case you change your mind. While it waits, your profile and your place on the leaderboards are hidden from other members.',
+          'Signing in again during those 7 days cancels the request, and your account comes back exactly as you left it. If you do not sign in, it is deleted automatically and permanently when the 7 days are up. After that it cannot be recovered.',
+          'Administrators can see that you have asked, and when the deletion is due, next to your account in the members list. If you cannot sign in, email support@cyberkhana.tech and we will delete your account for you within 30 days of a request we can verify came from you.',
+          'An administrator can also delete an account straight away, as the Terms of Service allow. That takes effect at once, with no waiting period, and deletes and keeps exactly what is listed below.',
+          'What is deleted: your name, email address, profile picture, username, university, country, bio, social links, language preference, your public profile, and the link between your account and your Google identity; your learning progress, your points and your place on the leaderboards; and anything you wrote as a creator but had not published, such as drafts and content waiting for review, along with uploaded files that nothing else uses. Sharing between you and other creators ends. The leaderboards are worked out from the accounts that exist, so nobody else loses points; the members below you each move up a place.',
           'What is not deleted, and why:',
         ],
         list: [
-          'Content you published as a creator stays. Lessons, modules and paths remain on the Academy under the licence in the Creator Agreement, with your authorship credit. Other creators’ Paths and Modules are built out of that content, and students are partway through it. If you are a creator, understand this before you publish, not after.',
-          'Past leaderboard entries are anonymised, not removed. Your name comes off; the historical standings stay intact so other people’s ranks still make sense.',
-          'Feedback you left is anonymised — the comment stays so creators keep the substance, your name comes off it.',
-          'Records we are required to keep, and records of moderation decisions such as a ban, are retained where we need them.',
+          'Content you published as a creator stays. Lessons, modules and paths remain on the Academy under the licence in the Creator Agreement, still carrying the name you wrote them under, but no longer linked to a profile. Other creators’ Paths and Modules are built out of that content, and students are partway through it. If you are a creator, understand this before you publish, not after.',
+          'Feedback you left is anonymised. The rating and the comment stay, so creators keep the substance. Your name comes off, and nothing links it to you or to the rest of your feedback any more.',
+          'Server logs are not edited. They are kept only as long as they are useful for security and debugging. Records we are required to keep, and records of moderation decisions such as a ban, are retained where we need them.',
         ],
         after: [
-          'Deleting your Academy account does not delete your Google account, and does not affect any account you have on the CTF platform, which is a separate service.',
+          'Deleting your Academy account does not delete your Google account, and does not affect any account you have on the CTF platform, which is a separate service. If you sign in again after your account has been deleted, you start again with a new, empty account.',
         ],
       },
       {
@@ -238,8 +243,8 @@ export const PRIVACY: BilingualDoc = {
 
   ar: {
     title: 'سياسة الخصوصية',
-    updated: '١٠ أيلول/سبتمبر ٢٠٢٦',
-    version: '2026-09-10',
+    updated: '١١ أيلول/سبتمبر ٢٠٢٦',
+    version: '2026-09-11',
     intro:
       'تشرح هذه السياسة ما تجمعه أكاديمية سايبر خانة، وما نفعله به، وما يمكنك أن تطلب منا فعله بشأنه.',
     callout: {
@@ -292,7 +297,8 @@ export const PRIVACY: BilingualDoc = {
           'الوقت الذي قضيته في التعلّم، بالدقائق؛',
           'نقاطك ونقاطك الشهرية وموقعك على لوحات الصدارة؛',
           'آخر مرة سجّلت فيها الدخول؛',
-          'ما إذا كان حسابك معلَّقًا.',
+          'ما إذا كان حسابك معلَّقًا؛',
+          'ما إذا كنت قد طلبت حذف حسابك، ومتى.',
         ],
         after: [
           'وعندما تقيّم محتوى أو تعلّق عليه، نخزّن التقييم وتعليقك واسمك والدرس المعني واللغة التي كتبت بها.',
@@ -347,7 +353,7 @@ export const PRIVACY: BilingualDoc = {
           'المحتوى الذي نشرته كمُنشِئ.',
         ],
         after: [
-          'ولا يظهر للأعضاء الآخرين أبدًا: بريدك الإلكتروني، وبلدك، وإعداد لغتك، وحساب Google الذي تسجّل الدخول به، ووقت آخر تسجيل دخول لك، وما إذا كان حسابك معلَّقًا، وسجلّ تعلّمك فيما عدا نقاطك.',
+          'ولا يظهر للأعضاء الآخرين أبدًا: بريدك الإلكتروني، وبلدك، وإعداد لغتك، وحساب Google الذي تسجّل الدخول به، ووقت آخر تسجيل دخول لك، وما إذا كان حسابك معلَّقًا، وما إذا كنت قد طلبت حذفه، وسجلّ تعلّمك فيما عدا نقاطك.',
           'والمحتوى الذي تنشره كمُنشِئ مرئي للجميع، ويُنسب إلى حسابك: يظهر بجانبه اسمك المعروض واسم المستخدم وصورتك، مع رابط إلى ملفك.',
         ],
       },
@@ -383,25 +389,27 @@ export const PRIVACY: BilingualDoc = {
       {
         h: 'مدة الاحتفاظ بها',
         body: [
-          'نحتفظ ببيانات حسابك ما دام حسابك قائمًا. أما سجلّات الخادم فنحتفظ بها فقط ما دامت مفيدة لأغراض الأمان وتصحيح الأعطال.',
+          'نحتفظ ببيانات حسابك ما دام حسابك قائمًا. وإذا طلبت حذف حسابك، نحتفظ به ٧ أيام أخرى تحسّبًا لتغيير رأيك، ثم نحذفه، على النحو المبيّن أدناه. أما سجلّات الخادم فنحتفظ بها فقط ما دامت مفيدة لأغراض الأمان وتصحيح الأعطال.',
         ],
       },
       {
         h: 'حذف حسابك',
         emphasis: true,
         body: [
-          'راسلنا على support@cyberkhana.tech واطلب ذلك. لا يوجد زر حذف ذاتي بعد — نحن نقوم بذلك يدويًا، وسننجزه خلال ٣٠ يومًا من طلبٍ نتحقق من صدوره عنك.',
-          'ما يُحذف: اسمك وبريدك الإلكتروني وصورتك الشخصية واسم المستخدم وجامعتك وبلدك ونبذتك وروابطك ولغتك المفضّلة وملفك العام، والرابط بين حسابك وهويتك على Google.',
+          'يمكنك حذف حسابك بنفسك من أسفل صفحة ملفك الشخصي. يُسجَّل خروجك فورًا من جميع الأجهزة، ونحتفظ بحسابك ٧ أيام تحسّبًا لتغيير رأيك. وخلال هذه المدة يُخفى ملفك وموقعك على لوحات الصدارة عن الأعضاء الآخرين.',
+          'وتسجيل دخولك مجددًا خلال هذه الأيام السبعة يلغي الطلب، فيعود حسابك كما تركته تمامًا. وإن لم تسجّل الدخول، يُحذف حسابك تلقائيًا ونهائيًا عند انقضائها، ولا يمكن استرجاعه بعد ذلك.',
+          'ويستطيع المشرفون أن يروا أنك طلبت الحذف، وموعد تنفيذه، بجانب حسابك في قائمة الأعضاء. وإذا لم تتمكن من تسجيل الدخول، فراسلنا على support@cyberkhana.tech وسنحذف حسابك خلال ٣٠ يومًا من طلبٍ نتحقق من صدوره عنك.',
+          'ويجوز للمشرف أيضًا حذف حساب فورًا، على النحو الذي تسمح به شروط الخدمة. ويسري ذلك في الحال دون مدة انتظار، ويحذف ويُبقي بالضبط ما هو مبيّن أدناه.',
+          'ما يُحذف: اسمك وبريدك الإلكتروني وصورتك الشخصية واسم المستخدم وجامعتك وبلدك ونبذتك وروابطك ولغتك المفضّلة وملفك العام، والرابط بين حسابك وهويتك على Google؛ وتقدّمك في التعلّم ونقاطك وموقعك على لوحات الصدارة؛ وكل ما كتبته كمُنشِئ ولم تنشره، كالمسودّات والمحتوى الذي ينتظر المراجعة، مع الملفات المرفوعة التي لا يستخدمها شيء آخر. وتنتهي المشاركة بينك وبين المُنشِئين الآخرين. ولوحات الصدارة تُحسب من الحسابات الموجودة، فلا يخسر أحد غيرك نقاطًا، ويتقدّم كل من كان بعدك مرتبة واحدة.',
           'وما لا يُحذف، ولماذا:',
         ],
         list: [
-          'المحتوى الذي نشرته كمُنشِئ يبقى. فالدروس والوحدات والمسارات تظلّ على الأكاديمية بموجب الترخيص الوارد في اتفاقية المُنشِئ، مع نسبة التأليف إليك. ومسارات ووحدات مُنشِئين آخرين مبنيّة على ذلك المحتوى، وهناك طلاب في منتصفه. فإن كنت مُنشِئًا، افهم هذا قبل أن تنشر لا بعده.',
-          'مشاركاتك السابقة في لوحة الصدارة تُجهَّل ولا تُحذف. يُزال اسمك، وتبقى الترتيبات التاريخية كما هي حتى تظل مراتب الآخرين منطقية.',
-          'التقييمات التي تركتها تُجهَّل — يبقى التعليق ليحتفظ المُنشِئون بمضمونه، ويُزال اسمك عنه.',
-          'السجلّات التي يلزمنا الاحتفاظ بها، وسجلّات قرارات الإشراف كالحظر، نحتفظ بها حيث نحتاج إليها.',
+          'المحتوى الذي نشرته كمُنشِئ يبقى. فالدروس والوحدات والمسارات تظلّ على الأكاديمية بموجب الترخيص الوارد في اتفاقية المُنشِئ، حاملةً الاسم الذي كتبتها به، لكن دون رابط إلى أي ملف شخصي. ومسارات ووحدات مُنشِئين آخرين مبنيّة على ذلك المحتوى، وهناك طلاب في منتصفه. فإن كنت مُنشِئًا، افهم هذا قبل أن تنشر لا بعده.',
+          'التقييمات التي تركتها تُجهَّل. يبقى التقييم والتعليق ليحتفظ المُنشِئون بمضمونهما، ويُزال اسمك، فلا يعود شيء يربطها بك أو بباقي تقييماتك.',
+          'سجلّات الخادم لا تُعدَّل، ونحتفظ بها فقط ما دامت مفيدة لأغراض الأمان وتصحيح الأعطال. والسجلّات التي يلزمنا الاحتفاظ بها، وسجلّات قرارات الإشراف كالحظر، نحتفظ بها حيث نحتاج إليها.',
         ],
         after: [
-          'وحذف حسابك في الأكاديمية لا يحذف حسابك على Google، ولا يؤثر على أي حساب لك على منصة التحديات، فهي خدمة منفصلة.',
+          'وحذف حسابك في الأكاديمية لا يحذف حسابك على Google، ولا يؤثر على أي حساب لك على منصة التحديات، فهي خدمة منفصلة. وإذا سجّلت الدخول بعد حذف حسابك، فستبدأ من جديد بحساب جديد فارغ.',
         ],
       },
       {

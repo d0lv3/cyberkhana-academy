@@ -12,12 +12,12 @@
 import type { BilingualDoc } from './legalTypes';
 
 /** Must match CURRENT_TERMS_VERSION in backend/src/config/legal.ts. */
-export const TERMS_VERSION = '2026-09-10';
+export const TERMS_VERSION = '2026-09-11';
 
 export const TERMS: BilingualDoc = {
   en: {
     title: 'Terms of Service',
-    updated: '10 September 2026',
+    updated: '11 September 2026',
     version: TERMS_VERSION,
     intro:
       'These Terms govern your use of CyberKhana Academy at academy.cyberkhana.tech (the "Academy"). By signing in or using the Academy, you agree to them.',
@@ -191,10 +191,10 @@ export const TERMS: BilingualDoc = {
       {
         h: 'Suspension and closing your account',
         body: [
-          'We may suspend or ban your account, remove points, or restrict what you can do, if you break these Terms, if we believe your behaviour puts other users or the Academy at risk, or if the law requires it.',
+          'We may suspend, ban or delete your account, remove points, or restrict what you can do, if you break these Terms, if we believe your behaviour puts other users or the Academy at risk, or if the law requires it. We may also delete an account that is a duplicate, is fake, or belongs to someone who is not allowed to use the Academy. Deleting an account is permanent: it takes effect straight away and cannot be undone.',
           'For minor problems we will normally warn you first. For anything involving abuse, another person’s data, or real harm, we may act immediately and without warning.',
           'We may also remove content — lessons, uploads, feedback or profile text — that breaks these Terms, and withdraw creator access from someone who misuses it, without ending their student account.',
-          'You can stop using the Academy whenever you like, and you can ask us to delete your account at support@cyberkhana.tech. What happens to your data then, and what survives, is set out in the Privacy Policy.',
+          'You can delete your account yourself, at any time, from your profile page. It is deleted 7 days after you ask, unless you sign in again before then, which cancels the request; after that it cannot be recovered. If you cannot sign in, ask us at support@cyberkhana.tech. What happens to your data when an account is deleted, and what survives, is set out in the Privacy Policy.',
         ],
       },
       {
@@ -247,7 +247,7 @@ export const TERMS: BilingualDoc = {
         h: 'Changes to these Terms',
         body: [
           'We may update these Terms. When we do, we will change the "Last updated" date at the top, and for anything significant we will announce it in the Academy.',
-          'If you keep using the Academy after a change, you accept the new Terms. If you do not accept them, stop using the Academy and ask us to close your account.',
+          'If you keep using the Academy after a change, you accept the new Terms. If you do not accept them, stop using the Academy and delete your account from your profile page.',
         ],
       },
       {
@@ -265,7 +265,7 @@ export const TERMS: BilingualDoc = {
 
   ar: {
     title: 'شروط الخدمة',
-    updated: '١٠ أيلول/سبتمبر ٢٠٢٦',
+    updated: '١١ أيلول/سبتمبر ٢٠٢٦',
     version: TERMS_VERSION,
     intro:
       'تحكم هذه الشروط استخدامك لأكاديمية سايبر خانة على academy.cyberkhana.tech («الأكاديمية»). وبتسجيل دخولك أو استخدامك للأكاديمية، فإنك توافق عليها.',
@@ -439,10 +439,10 @@ export const TERMS: BilingualDoc = {
       {
         h: 'التعليق وإغلاق الحساب',
         body: [
-          'يجوز لنا تعليق حسابك أو حظره أو خصم نقاط أو تقييد ما يمكنك فعله، إذا خالفت هذه الشروط، أو إذا رأينا أن سلوكك يعرّض مستخدمين آخرين أو الأكاديمية للخطر، أو إذا اقتضى القانون ذلك.',
+          'يجوز لنا تعليق حسابك أو حظره أو حذفه، أو خصم نقاط، أو تقييد ما يمكنك فعله، إذا خالفت هذه الشروط، أو إذا رأينا أن سلوكك يعرّض مستخدمين آخرين أو الأكاديمية للخطر، أو إذا اقتضى القانون ذلك. وقد نحذف كذلك حسابًا مكرّرًا أو مزيّفًا، أو حسابًا يعود إلى شخص لا يُسمح له باستخدام الأكاديمية. وحذف الحساب نهائي: يسري فورًا ولا يمكن التراجع عنه.',
           'وفي المخالفات البسيطة سننبّهك أولًا عادةً. أما في أي أمر يتعلق بالإساءة أو ببيانات شخص آخر أو بضرر حقيقي، فقد نتصرّف فورًا ودون إنذار.',
           'ويجوز لنا أيضًا حذف محتوى — دروس أو ملفات مرفوعة أو تقييمات أو نصوص ملف شخصي — يخالف هذه الشروط، وسحب صلاحية الإنشاء ممن يسيء استخدامها، دون إنهاء حسابه كطالب.',
-          'ويمكنك التوقف عن استخدام الأكاديمية متى شئت، ويمكنك أن تطلب منا حذف حسابك على support@cyberkhana.tech. وما يحدث لبياناتك حينها، وما يبقى منها، مبيّن في سياسة الخصوصية.',
+          'ويمكنك حذف حسابك بنفسك في أي وقت من صفحة ملفك الشخصي. ويُحذف بعد ٧ أيام من طلبك، ما لم تسجّل الدخول مجددًا قبل ذلك، فتسجيل الدخول يلغي الطلب؛ وبعد انقضائها لا يمكن استرجاعه. وإذا لم تتمكن من تسجيل الدخول، فاطلب ذلك منا على support@cyberkhana.tech. وما يحدث لبياناتك عند حذف الحساب، وما يبقى منها، مبيّن في سياسة الخصوصية.',
         ],
       },
       {
@@ -495,7 +495,7 @@ export const TERMS: BilingualDoc = {
         h: 'التغييرات على هذه الشروط',
         body: [
           'قد نحدّث هذه الشروط. وعندما نفعل، سنغيّر تاريخ «آخر تحديث» في الأعلى، وسنعلن عن أي تغيير جوهري داخل الأكاديمية.',
-          'واستمرارك في استخدام الأكاديمية بعد التغيير يعني قبولك للشروط الجديدة. وإن لم تقبلها، فتوقّف عن استخدام الأكاديمية واطلب منا إغلاق حسابك.',
+          'واستمرارك في استخدام الأكاديمية بعد التغيير يعني قبولك للشروط الجديدة. وإن لم تقبلها، فتوقّف عن استخدام الأكاديمية واحذف حسابك من صفحة ملفك الشخصي.',
         ],
       },
       {
