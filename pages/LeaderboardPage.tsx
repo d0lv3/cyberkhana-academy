@@ -232,7 +232,7 @@ const LeaderboardPage: React.FC = () => {
                             <span className="truncate" dir="auto">
                               {e.displayName}
                             </span>
-                            <LevelBadge xp={e.xp} lang={lang} compact className="flex-shrink-0" />
+                            <LevelBadge xp={e.xp} lang={lang} compact unframed className="flex-shrink-0" />
                             {isMe && (
                               <span className="text-[10px] font-bold text-[#00a859] uppercase flex-shrink-0">
                                 {t('leaderboard.you')}
@@ -287,7 +287,7 @@ const LeaderboardPage: React.FC = () => {
                 </div>
                 <p className="flex items-center gap-2 min-w-0 text-sm font-semibold text-[#f3f6ff]">
                   <span className="truncate">{t('leaderboard.yourRank')}</span>
-                  <LevelBadge xp={data.me.xp} lang={lang} compact className="flex-shrink-0" />
+                  <LevelBadge xp={data.me.xp} lang={lang} compact unframed className="flex-shrink-0" />
                 </p>
               </div>
               <div className="hidden sm:block" />

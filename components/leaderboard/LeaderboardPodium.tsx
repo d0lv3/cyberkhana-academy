@@ -155,7 +155,7 @@ const PodiumCard: React.FC<{ entry: PodiumEntry; highlight?: boolean; isMe?: boo
               {isMe && <span className="ms-1.5 text-[10px] font-black text-[#00a859] uppercase">•</span>}
             </p>
 
-            <LevelBadge xp={entry.xp} lang={lang} className="mt-1.5" />
+            <LevelBadge xp={entry.xp} lang={lang} unframed className="mt-1.5" />
 
             <p className="mt-1 inline-flex items-center gap-1 text-[11px] text-[#9aa5bf] max-w-full">
               <GraduationCap size={11} className="flex-shrink-0" />
