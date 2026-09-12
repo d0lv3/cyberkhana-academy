@@ -166,6 +166,15 @@
    (see DISPLAY_FONT in components/landing) so it's immune to cascade-layer
    ordering. Arabic glyphs fall through to IBM Plex automatically. */
 
+/* A large Google Identity Services button is 40px tall. Its personalised iframe
+   has a slightly taller transport canvas, so crop the canvas—not the outline—to
+   the visible pill dimensions. */
+.google-signin-surface {
+  height: 40px;
+  overflow: hidden;
+  border-radius: 9999px;
+}
+
 /* ── UTILITIES ─────────────────────────────────────────────── */
 @layer utilities {
   /* Full-height app shell.
