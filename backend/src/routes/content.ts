@@ -219,7 +219,30 @@ router.get('/published', authenticate, async (_req: AuthRequest, res) => {
             isPlainObject(patch.newLanguage) && isPublishedItem(patch.newLanguage)
               ? credited(patch.newLanguage as AnyItem, author)
               : undefined;
-          if (!publishedModules.length && !Object.keys(publishedConcepts).length && !publishedLanguage) continue;
+          /* ── Cover art ──
+             A language's cover belongs to the language, and travels when the
+             language does. A patch with no `newLanguage` of its own is a patch
+             ON A BUILT-IN one, which every student can already see, so its
+             cover reaches them even when the patch adds no lessons: that is
+             exactly the shape of a patch whose only purpose is the artwork,
+             and dropping it left Python, C and Bash drawn as placeholders for
+             everyone but the creator who uploaded them. A creator-defined
+             language is different: its cover waits for the language itself to
+             be published, along with the rest of the draft. */
+          const cover =
+            typeof patch.languageCoverSvg === 'string' && patch.languageCoverSvg
+              ? patch.languageCoverSvg
+              : undefined;
+          const coverTravels = !!cover && (!isPlainObject(patch.newLanguage) || !!publishedLanguage);
+
+          if (
+            !publishedModules.length &&
+            !Object.keys(publishedConcepts).length &&
+            !publishedLanguage &&
+            !coverTravels
+          ) {
+            continue;
+          }
 
           const merged = patchByLang.get(patch.languageSlug) ?? {
             languageSlug: patch.languageSlug,
@@ -231,9 +254,7 @@ router.get('/published', authenticate, async (_req: AuthRequest, res) => {
             merged.newConcepts[slug] = [...(merged.newConcepts[slug] ?? []), ...concepts];
           }
           if (publishedLanguage && !merged.newLanguage) merged.newLanguage = publishedLanguage;
-          if (!merged.languageCoverSvg && typeof patch.languageCoverSvg === 'string' && patch.languageCoverSvg) {
-            merged.languageCoverSvg = patch.languageCoverSvg;
-          }
+          if (!merged.languageCoverSvg && coverTravels) merged.languageCoverSvg = cover;
           patchByLang.set(patch.languageSlug, merged);
         }
       } else {
