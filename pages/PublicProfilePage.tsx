@@ -17,9 +17,7 @@ import {
 import Avatar from '../components/ui/Avatar';
 import Button from '../components/ui/EnhancedButton';
 import LevelBadge from '../components/ui/LevelBadge';
-import LevelEmblem from '../components/levels/LevelEmblem';
 import SocialLinksRow from '../components/profile/SocialLinks';
-import { levelFor } from '../services/xpService';
 import NetworkingLessonCard from '../components/fundamentals/NetworkingLessonCard';
 import ModuleCard from '../components/fundamentals/ModuleCard';
 import PathCard from '../components/paths/PathCard';
@@ -208,19 +206,12 @@ const PublicProfilePage: React.FC = () => {
         />
 
         <div className="relative flex flex-col items-center gap-6 p-6 sm:flex-row sm:items-start sm:p-8">
-          {/* The picture, with their level's emblem on its corner */}
-          <div className="relative flex-shrink-0">
+          <div className="flex-shrink-0">
             <Avatar
               avatarUrl={profile.avatarUrl}
               name={profile.displayName}
               className="h-28 w-28 rounded-3xl"
               initialClassName="text-5xl"
-            />
-            <LevelEmblem
-              level={levelFor(xp).level}
-              lang={lang}
-              eager
-              className="absolute -bottom-4 -end-4 h-14 w-14 drop-shadow-[0_6px_14px_rgba(0,0,0,0.6)]"
             />
           </div>
 
@@ -231,7 +222,8 @@ const PublicProfilePage: React.FC = () => {
               <h1 dir="auto" className="text-2xl font-black leading-tight text-[#f3f6ff] sm:text-3xl">
                 {profile.displayName}
               </h1>
-              <LevelBadge xp={xp} lang={lang} emblem={false} className="text-[11px]" />
+              {/* The emblem belongs with the level's name, not on the picture. */}
+              <LevelBadge xp={xp} lang={lang} size="md" />
               {publishedCount > 0 && (
                 <span className="inline-flex items-center gap-1 rounded-md border border-[#9fef00]/30 bg-[#9fef00]/10 px-2 py-0.5 text-[11px] font-bold text-[#9fef00]">
                   <PenTool size={11} /> {ar ? 'منشئ محتوى' : 'Creator'}

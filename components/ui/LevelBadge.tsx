@@ -31,21 +31,37 @@ interface LevelBadgeProps {
   compact?: boolean;
   /** Off where the emblem is already shown large beside the badge. */
   emblem?: boolean;
+  /** 'md' beside a heading, where the emblem carries the level on its own. */
+  size?: 'sm' | 'md';
   className?: string;
 }
 
+const SIZES = {
+  sm: { badge: 'gap-1 px-1.5 py-0.5 text-[10px]', emblem: '-my-1 h-4 w-4' },
+  md: { badge: 'gap-1.5 px-2 py-1 text-xs', emblem: '-my-1.5 h-6 w-6' },
+} as const;
+
 /** The level for an amount of XP. The hex reads left to right inside Arabic
  *  text too, so it sits in its own inline span (see rtl-layout notes). */
-const LevelBadge: React.FC<LevelBadgeProps> = ({ xp, lang, compact = false, emblem = true, className = '' }) => {
+const LevelBadge: React.FC<LevelBadgeProps> = ({
+  xp,
+  lang,
+  compact = false,
+  emblem = true,
+  size = 'sm',
+  className = '',
+}) => {
   const { level } = levelFor(xp);
   const color = levelColor(level);
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-bold leading-none whitespace-nowrap ${className}`}
+      className={`inline-flex items-center rounded-md border font-bold leading-none whitespace-nowrap ${SIZES[size].badge} ${className}`}
       style={{ color, borderColor: `${color}40`, backgroundColor: `${color}14` }}
       title={`${level.hex} ${level.name[lang]}`}
     >
-      {emblem && <LevelEmblem level={level} lang={lang} decorative className="-my-1 h-4 w-4 flex-shrink-0" />}
+      {emblem && (
+        <LevelEmblem level={level} lang={lang} decorative className={`${SIZES[size].emblem} flex-shrink-0`} />
+      )}
       <span dir="ltr" className="font-mono">
         {level.hex}
       </span>

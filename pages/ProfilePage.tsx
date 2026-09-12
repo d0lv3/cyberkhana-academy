@@ -541,20 +541,12 @@ const ProfilePage: React.FC = () => {
           ) : (
             /* ── View mode ── */
             <div className="flex items-start gap-5">
-              {/* The picture with the level's emblem on its corner, as members see it */}
-              <div className="relative flex-shrink-0">
+              <div className="flex-shrink-0">
                 <Avatar
                   avatarUrl={user.avatarUrl}
                   name={user.displayName}
                   className="w-20 h-20 rounded-2xl"
                   initialClassName="text-3xl"
-                />
-                <LevelEmblem
-                  level={level.level}
-                  lang={lang}
-                  decorative
-                  eager
-                  className="absolute -bottom-3 -end-3 h-11 w-11 drop-shadow-[0_4px_10px_rgba(0,0,0,0.6)]"
                 />
               </div>
 
@@ -571,7 +563,8 @@ const ProfilePage: React.FC = () => {
                   >
                     {role.label[lang]}
                   </span>
-                  <LevelBadge xp={xp} lang={lang} emblem={false} />
+                  {/* The emblem belongs with the level's name, not on the picture. */}
+                  <LevelBadge xp={xp} lang={lang} />
                 </div>
 
                 {user.username && (
