@@ -2,11 +2,11 @@ import React from 'react';
 
 interface PathsIconProps extends Omit<React.SVGProps<SVGSVGElement>, 'width' | 'height'> {
   size?: number;
-  /** Solid waypoints and destination flag for the selected state. */
+  /** Solid checkpoints and target centres for the selected state. */
   filled?: boolean;
 }
 
-/** A compact learning-path mark with distinct selected and unselected states. */
+/** A winding learning route with distinct selected and unselected states. */
 const PathsIcon: React.FC<PathsIconProps> = ({
   size = 24,
   filled: filledProp,
@@ -27,45 +27,74 @@ const PathsIcon: React.FC<PathsIconProps> = ({
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
+      {/* The line meets each target behind its ring, so the whole mark reads as
+          one continuous route even at the sidebar's smallest size. */}
       <path
-        d="M4.5 19.25c0-3.2 6.5-1.85 6.5-5.75s6-2 6-5"
+        d="M14.5 4.5h-9a3.75 3.75 0 0 0 0 7.5h13a3.75 3.75 0 0 1 0 7.5h-9"
+        fill="none"
         stroke="currentColor"
-        strokeWidth={filled ? 2.35 : 1.85}
+        strokeWidth={filled ? 2.15 : 1.7}
         strokeLinecap="round"
       />
 
+      {/* Checkpoints along the two bends and the middle stretch. */}
       <circle
-        cx="4.5"
-        cy="19.25"
-        r="2.25"
+        cx="1.75"
+        cy="8.25"
+        r="1.25"
         fill={filled ? 'currentColor' : 'none'}
         stroke="currentColor"
-        strokeWidth="1.7"
+        strokeWidth="1.35"
       />
       <circle
-        cx="11"
-        cy="13.5"
-        r="2"
+        cx="11.5"
+        cy="12"
+        r="1.25"
         fill={filled ? 'currentColor' : 'none'}
         stroke="currentColor"
-        strokeWidth="1.7"
+        strokeWidth="1.35"
+      />
+      <circle
+        cx="22.25"
+        cy="15.75"
+        r="1.25"
+        fill={filled ? 'currentColor' : 'none'}
+        stroke="currentColor"
+        strokeWidth="1.35"
       />
 
-      <path d="M17 8.5V3.25" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path
-        d="M17 3.5h4l-1.35 2L21 7.5h-4z"
-        fill={filled ? 'currentColor' : 'none'}
+      {/* Target endpoints echo the supplied reference. */}
+      <circle
+        cx="18"
+        cy="4.5"
+        r="3.5"
+        fill="none"
         stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinejoin="round"
+        strokeWidth={filled ? 1.8 : 1.4}
       />
       <circle
-        cx="17"
-        cy="8.5"
-        r="2"
+        cx="18"
+        cy="4.5"
+        r="1.35"
         fill={filled ? 'currentColor' : 'none'}
         stroke="currentColor"
-        strokeWidth="1.7"
+        strokeWidth="1.35"
+      />
+      <circle
+        cx="6"
+        cy="19.5"
+        r="3.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={filled ? 1.8 : 1.4}
+      />
+      <circle
+        cx="6"
+        cy="19.5"
+        r="1.35"
+        fill={filled ? 'currentColor' : 'none'}
+        stroke="currentColor"
+        strokeWidth="1.35"
       />
     </svg>
   );
