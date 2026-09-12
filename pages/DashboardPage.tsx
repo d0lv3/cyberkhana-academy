@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -24,7 +24,7 @@ import { getStreak } from '../services/streakService';
 import SkillMatrix from '../components/skills/SkillMatrix';
 import { levelColor } from '../components/ui/LevelBadge';
 import LevelEmblem from '../components/levels/LevelEmblem';
-import LevelLadder from '../components/levels/LevelLadder';
+import LevelsDropdown from '../components/levels/LevelsDropdown';
 
 /** Monday-first day initials for the streak pips. */
 const WEEK_LABELS: Record<'en' | 'ar', string[]> = {
@@ -71,15 +71,9 @@ const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  /* Sent here to see the levels (from the level-up card or the profile). */
-  useEffect(() => {
-    if ((location.state as { focus?: string } | null)?.focus !== 'levels') return;
-    const timer = window.setTimeout(
-      () => document.getElementById('levels')?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
-      150
-    );
-    return () => window.clearTimeout(timer);
-  }, [location.key, location.state]);
+  /* Sent here to see the levels (the level-up card or the profile): every
+     such arrival has its own key, and each one opens the list. */
+  const levelsRequest = (location.state as { focus?: string } | null)?.focus === 'levels' ? location.key : null;
 
   /* ── compute real content + local progress ── */
   const data = useMemo(() => {
@@ -183,8 +177,15 @@ const DashboardPage: React.FC = () => {
             </button>
           </div>
 
-          {/* Level: the emblem, inside a ring that fills toward the next level */}
-          <div className="flex items-center gap-5 self-start md:self-center">
+          {/* Level: the emblem, inside a ring that fills toward the next level.
+              Resting on it, or tapping it, lists every level. */}
+          <LevelsDropdown
+            xp={xp}
+            level={level}
+            lang={lang}
+            openRequest={levelsRequest}
+            className="-m-2 gap-5 self-start p-2 md:self-center"
+          >
             <ProgressRing progress={level.fraction * 100} color={accent} size={128} stroke={7}>
               <LevelEmblem
                 level={level.level}
@@ -227,12 +228,9 @@ const DashboardPage: React.FC = () => {
                 )}
               </p>
             </div>
-          </div>
+          </LevelsDropdown>
         </div>
       </motion.div>
-
-      {/* ── Every level and the XP it takes ── */}
-      <LevelLadder id="levels" xp={xp} level={level} lang={lang} />
 
       {/* ── Skill Matrix ── */}
       <SkillMatrix variant="compact" />
