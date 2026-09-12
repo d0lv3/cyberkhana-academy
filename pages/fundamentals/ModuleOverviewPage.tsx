@@ -61,7 +61,9 @@ const contentTypeMeta = {
 } as const;
 
 /** One number and what it counts. The row of these is the module at a glance,
- *  so each one is a tile you read from across the room rather than a caption. */
+ *  so each one is a tile you read from across the room rather than a caption.
+ *  The glyph stays unframed so it supports the number instead of becoming a
+ *  second card nested inside the stat tile. */
 const Stat: React.FC<{
   icon: React.ElementType;
   value: React.ReactNode;
@@ -69,11 +71,8 @@ const Stat: React.FC<{
   accent: string;
 }> = ({ icon: Icon, value, label, accent }) => (
   <div className="rounded-2xl border border-[#263248] bg-[#121a2a] p-4 transition-colors hover:border-[#354562] sm:p-5">
-    <span
-      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border"
-      style={{ borderColor: `${accent}40`, backgroundColor: `${accent}14`, color: accent }}
-    >
-      <Icon size={19} />
+    <span className="inline-flex h-10 w-10 items-center justify-center" style={{ color: accent }}>
+      <Icon size={28} strokeWidth={1.8} />
     </span>
     <p className="mt-3 text-2xl font-black leading-none text-[#f3f6ff] sm:text-[1.75rem]" dir="ltr">
       {value}
