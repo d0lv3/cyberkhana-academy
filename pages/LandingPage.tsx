@@ -4,7 +4,6 @@ import { Globe } from 'lucide-react';
 import HeroSection from '../components/landing/HeroSection';
 import FeaturesSection from '../components/landing/FeaturesSection';
 import ProductPreviewSection from '../components/landing/ProductPreviewSection';
-import StatsBand from '../components/landing/StatsBand';
 import CTASection from '../components/landing/CTASection';
 import LandingFooter from '../components/landing/LandingFooter';
 import BrandLogo from '../components/ui/BrandLogo';
@@ -83,9 +82,6 @@ const LandingPage: React.FC = () => {
 
       {/* See the interactive surfaces in action */}
       <ProductPreviewSection />
-
-      {/* Numbers */}
-      <StatsBand />
 
       {/* Closing CTA */}
       <CTASection onGetStarted={handleLogin} />

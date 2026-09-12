@@ -46,12 +46,6 @@ const translations: Record<string, Record<Lang, string>> = {
   'preview.practice.title': { en: 'Every module ships with its own lab', ar: 'كل وحدة تأتي بمختبرها الخاص' },
   'preview.practice.desc': { en: 'Read a concept, then immediately do it. Each module opens into an interactive lab with a real shell and a real editor, write the exploit, compile it, run it, and see exactly what it does. Hands-on, not hypothetical.', ar: 'اقرأ المفهوم ثم طبّقه فوراً. كل وحدة تفتح على مختبر تفاعلي بطرفية حقيقية ومحرّر حقيقي، اكتب الاستغلال وصرّفه ونفّذه وشاهد ما يفعله بالضبط. عمليّاً لا نظريّاً.' },
 
-  // Landing stats
-  'landing.stats.tracks': { en: 'Learning Tracks', ar: 'مسارات تعليمية' },
-  'landing.stats.lessons': { en: 'Interactive Lessons', ar: 'درسًا تفاعليًا' },
-  'landing.stats.languages': { en: 'Languages, AR & EN', ar: 'لغتان، عربي وإنجليزي' },
-  'landing.stats.handson': { en: 'Hands-on Content', ar: 'محتوى عملي' },
-
   // Closing CTA
   'cta.heading': { en: 'Start your cybersecurity journey today', ar: 'ابدأ رحلتك في الأمن السيبراني اليوم' },
   'cta.subtitle': { en: 'Join students across Iraq and the Arab world building real, practical security skills.', ar: 'انضم إلى طلاب في العراق والعالم العربي يبنون مهارات أمن عملية حقيقية.' },
