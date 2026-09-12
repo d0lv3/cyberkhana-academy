@@ -171,14 +171,39 @@ const LoginPage: React.FC = () => {
     if (!gisReady || !gsi || !host) return;
     host.innerHTML = '';
     const available = Math.round(host.clientWidth);
-    gsi.accounts.id.renderButton(host, {
+    const width = Math.min(GSI_MAX_WIDTH, Math.max(GSI_MIN_WIDTH, available || GSI_MAX_WIDTH));
+
+    /* A recognised Google account gets the personalised button, which Google
+     * draws in a cross-origin iframe. In some browser/account combinations the
+     * iframe keeps an opaque rectangular canvas around its pill-shaped inner
+     * control. Clip the entire SDK surface to the same requested pill so both
+     * the generic and personalised variants have one consistent silhouette. */
+    const surface = document.createElement('div');
+    surface.style.width = `${width}px`;
+    surface.style.maxWidth = '100%';
+    surface.style.overflow = 'hidden';
+    surface.style.borderRadius = '9999px';
+    surface.style.lineHeight = '0';
+    host.appendChild(surface);
+
+    gsi.accounts.id.renderButton(surface, {
+      type: 'standard',
       theme: 'outline',
       size: 'large',
       text: 'continue_with',
       shape: 'pill',
-      width: Math.min(GSI_MAX_WIDTH, Math.max(GSI_MIN_WIDTH, available || GSI_MAX_WIDTH)),
+      logo_alignment: 'left',
+      width,
       locale: ar ? 'ar' : 'en',
     });
+
+    // Round the iframe element too; the outer shell remains the fallback if
+    // Google changes the generated wrapper structure later.
+    const frame = surface.querySelector('iframe');
+    if (frame) {
+      frame.style.display = 'block';
+      frame.style.borderRadius = '9999px';
+    }
   }, [gisReady, ar]);
 
   // Re-runs on language switch, and once the SDK is ready.
