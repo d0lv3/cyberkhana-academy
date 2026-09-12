@@ -75,9 +75,7 @@ const SkillMatrix: React.FC<{ variant?: 'full' | 'compact'; className?: string }
       {/* Header */}
       <div className="flex items-center justify-between gap-4 px-6 pt-5 pb-4 border-b border-[#1e293b]">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-[#00a859]/12 border border-[#00a859]/25">
-            <Radar size={17} className="text-[#00a859]" />
-          </div>
+          <Radar size={28} strokeWidth={1.8} className="flex-shrink-0 text-[#00a859]" />
           <div>
             <h3 className="text-base font-bold text-[#f3f6ff] leading-tight">
               {lang === 'ar' ? 'مصفوفة المهارات' : 'Skill Matrix'}
@@ -222,15 +220,12 @@ const PillarRow: React.FC<{
     <div className="group">
       <div className="flex items-center justify-between gap-2 mb-1.5">
         <span className="inline-flex items-center gap-2 min-w-0">
-          <span
-            className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
-            style={{
-              backgroundColor: muted ? '#161f30' : `${r.pillar.color}18`,
-              border: `1px solid ${muted ? '#243047' : `${r.pillar.color}35`}`,
-            }}
-          >
-            <Icon size={13} style={{ color: muted ? '#4d5a73' : r.pillar.color }} />
-          </span>
+          <Icon
+            size={20}
+            strokeWidth={1.8}
+            className="flex-shrink-0"
+            style={{ color: muted ? '#4d5a73' : r.pillar.color }}
+          />
           <span className={`text-sm font-semibold truncate ${muted ? 'text-[#5b6884]' : 'text-[#d2d7e3]'}`}>
             {r.pillar.label[lang]}
           </span>

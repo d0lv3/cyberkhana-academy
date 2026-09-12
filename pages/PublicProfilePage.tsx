@@ -59,12 +59,7 @@ const Stat: React.FC<{ icon: React.ElementType; value: React.ReactNode; label: s
   accent,
 }) => (
   <div className="rounded-xl border border-[#263248]/70 bg-[#0a0f18]/50 p-3.5">
-    <span
-      className="inline-flex h-8 w-8 items-center justify-center rounded-lg border"
-      style={{ borderColor: `${accent}40`, backgroundColor: `${accent}14`, color: accent }}
-    >
-      <Icon size={15} />
-    </span>
+    <Icon size={25} strokeWidth={1.8} style={{ color: accent }} />
     <p className="mt-2 text-xl font-black leading-none text-[#f3f6ff]" dir="ltr">
       {value}
     </p>
@@ -223,7 +218,7 @@ const PublicProfilePage: React.FC = () => {
                 {profile.displayName}
               </h1>
               {/* The emblem belongs with the level's name, not on the picture. */}
-              <LevelBadge xp={xp} lang={lang} size="md" />
+              <LevelBadge xp={xp} lang={lang} size="md" unframed />
               {publishedCount > 0 && (
                 <span className="inline-flex items-center gap-1 rounded-md border border-[#9fef00]/30 bg-[#9fef00]/10 px-2 py-0.5 text-[11px] font-bold text-[#9fef00]">
                   <PenTool size={11} /> {ar ? 'منشئ محتوى' : 'Creator'}

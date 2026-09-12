@@ -33,12 +33,24 @@ interface LevelBadgeProps {
   emblem?: boolean;
   /** 'md' beside a heading, where the emblem carries the level on its own. */
   size?: 'sm' | 'md';
+  /** Let the level stand on its own without a chip around it. */
+  unframed?: boolean;
   className?: string;
 }
 
 const SIZES = {
-  sm: { badge: 'gap-1 px-1.5 py-0.5 text-[10px]', emblem: '-my-1 h-4 w-4' },
-  md: { badge: 'gap-1.5 px-2 py-1 text-xs', emblem: '-my-1.5 h-6 w-6' },
+  sm: {
+    framed: 'gap-1 px-1.5 py-0.5 text-[10px]',
+    unframed: 'gap-1.5 text-xs',
+    framedEmblem: '-my-1 h-4 w-4',
+    unframedEmblem: 'h-5 w-5',
+  },
+  md: {
+    framed: 'gap-1.5 px-2 py-1 text-xs',
+    unframed: 'gap-2 text-sm',
+    framedEmblem: '-my-1.5 h-6 w-6',
+    unframedEmblem: 'h-8 w-8',
+  },
 } as const;
 
 /** The level for an amount of XP. The hex reads left to right inside Arabic
@@ -49,18 +61,30 @@ const LevelBadge: React.FC<LevelBadgeProps> = ({
   compact = false,
   emblem = true,
   size = 'sm',
+  unframed = false,
   className = '',
 }) => {
   const { level } = levelFor(xp);
   const color = levelColor(level);
   return (
     <span
-      className={`inline-flex items-center rounded-md border font-bold leading-none whitespace-nowrap ${SIZES[size].badge} ${className}`}
-      style={{ color, borderColor: `${color}40`, backgroundColor: `${color}14` }}
+      className={`inline-flex items-center font-bold leading-none whitespace-nowrap ${
+        unframed ? SIZES[size].unframed : `${SIZES[size].framed} rounded-md border`
+      } ${className}`}
+      style={
+        unframed
+          ? { color }
+          : { color, borderColor: `${color}40`, backgroundColor: `${color}14` }
+      }
       title={`${level.hex} ${level.name[lang]}`}
     >
       {emblem && (
-        <LevelEmblem level={level} lang={lang} decorative className={`${SIZES[size].emblem} flex-shrink-0`} />
+        <LevelEmblem
+          level={level}
+          lang={lang}
+          decorative
+          className={`${unframed ? SIZES[size].unframedEmblem : SIZES[size].framedEmblem} flex-shrink-0`}
+        />
       )}
       <span dir="ltr" className="font-mono">
         {level.hex}

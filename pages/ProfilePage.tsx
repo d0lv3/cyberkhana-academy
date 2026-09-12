@@ -282,7 +282,11 @@ const ProfilePage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader icon={UserCircle} iconColor="#00a859" title={t('profile.title')} subtitle={t('profile.subtitle')} />
+      <PageHeader
+        iconNode={<UserCircle size={38} strokeWidth={1.7} className="flex-shrink-0 text-[#00a859]" />}
+        title={t('profile.title')}
+        subtitle={t('profile.subtitle')}
+      />
 
       {/* ── Identity card ── */}
       <motion.div
@@ -564,7 +568,7 @@ const ProfilePage: React.FC = () => {
                     {role.label[lang]}
                   </span>
                   {/* The emblem belongs with the level's name, not on the picture. */}
-                  <LevelBadge xp={xp} lang={lang} />
+                  <LevelBadge xp={xp} lang={lang} size="md" unframed />
                 </div>
 
                 {user.username && (
