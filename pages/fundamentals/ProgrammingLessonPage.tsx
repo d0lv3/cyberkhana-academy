@@ -4,7 +4,6 @@ import {
   ArrowLeft,
   BookOpen,
   Code,
-  ChevronLeft,
   ChevronRight,
   ChevronDown,
   Menu,
@@ -110,13 +109,12 @@ const ProgrammingLessonPage: React.FC = () => {
   );
 
   const concepts = mod?.concepts ?? [];
-  const currentIdx = concepts.findIndex((c) => c.slug === conceptSlug);
 
-  /* Previous and next walk the whole course, the same path the course map
-     draws: the step after a module's last one is the first of the next. */
+  /* "Next" walks the whole course, the same path the course map draws: the
+     step after a module's last one is the first of the next. Going back, or
+     anywhere else, is what the contents beside the lesson are for. */
   const steps = language ? courseSteps(language) : [];
   const stepIdx = steps.findIndex((s) => s.module.slug === moduleSlug && s.concept.slug === conceptSlug);
-  const prevStep: CourseStep | null = stepIdx > 0 ? steps[stepIdx - 1] : null;
   const nextStep: CourseStep | null =
     stepIdx >= 0 && stepIdx < steps.length - 1 ? steps[stepIdx + 1] : null;
   const here: CourseStep | null = stepIdx >= 0 ? steps[stepIdx] : null;
@@ -453,52 +451,6 @@ const ProgrammingLessonPage: React.FC = () => {
                 )}
               </div>
             )}
-
-            {/* ── Bottom nav bar ── */}
-            <div className="flex-shrink-0 flex items-center justify-between px-6 py-3 border-t border-[#263248] bg-[#121a2a]">
-              {prevStep ? (
-                <button
-                  onClick={() => goTo(prevStep)}
-                  className="flex min-w-0 items-center gap-2 text-xs text-[#9aa5bf] hover:text-[#f3f6ff] transition-colors touch:min-h-tap px-1 select-none"
-                >
-                  <ChevronLeft size={14} className="flex-shrink-0 rtl-flip" />
-                  <span className="hidden truncate sm:inline">{prevStep.concept.title[lang]}</span>
-                  <span className="sm:hidden">{lang === 'ar' ? 'السابق' : 'Previous'}</span>
-                </button>
-              ) : (
-                <div />
-              )}
-
-              <span className="text-[10px] text-[#7c8aa6]">
-                {currentIdx + 1} / {concepts.length}
-              </span>
-
-              {nextStep ? (
-                /* Crossing into the next module says so, rather than dropping
-                   the learner into a new topic under a lesson title alone. */
-                <button
-                  onClick={() => goTo(nextStep)}
-                  className="flex min-w-0 items-center gap-2 text-xs text-[#9aa5bf] hover:text-[#f3f6ff] transition-colors touch:min-h-tap px-1 select-none"
-                >
-                  <span className="hidden truncate sm:inline">
-                    {nextStep.module.id !== mod.id
-                      ? `${lang === 'ar' ? 'الوحدة التالية' : 'Next module'}: ${nextStep.module.title[lang] || nextStep.module.title.en}`
-                      : nextStep.concept.title[lang]}
-                  </span>
-                  <span className="sm:hidden">{lang === 'ar' ? 'التالي' : 'Next'}</span>
-                  <ChevronRight size={14} className="flex-shrink-0 rtl-flip" />
-                </button>
-              ) : (
-                /* The last step of the course: the way on is back to the map. */
-                <button
-                  onClick={() => navigate(`/fundamentals/programming/${langSlug}`)}
-                  className="flex items-center gap-2 text-xs font-semibold text-[#00a859] hover:text-[#9fef00] transition-colors touch:min-h-tap px-1 select-none"
-                >
-                  {lang === 'ar' ? 'خريطة المنهج' : 'Course map'}
-                  <ChevronRight size={14} className="flex-shrink-0 rtl-flip" />
-                </button>
-              )}
-            </div>
           </div>
 
           {/* Desktop: drag the boundary between reading and writing. Hidden while
