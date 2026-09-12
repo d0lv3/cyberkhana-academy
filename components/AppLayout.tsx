@@ -4,6 +4,7 @@ import Sidebar from './Sidebar';
 import Header from './Header';
 import UniversityPrompt from './university/UniversityPrompt';
 import UsernamePrompt from './account/UsernamePrompt';
+import LanguagePrompt, { useLanguageFirstRun } from './account/LanguagePrompt';
 import { skyFor, skyStyle } from './ui/sky';
 import { TOUR_SIDEBAR_EVENT } from '../services/tourService';
 
@@ -16,6 +17,8 @@ const AppLayout: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { pathname } = useLocation();
   const sky = skyFor(pathname);
+  /* Which language to say everything else in. Asked first, and on its own. */
+  const language = useLanguageFirstRun();
 
   useEffect(() => {
     localStorage.setItem(SIDEBAR_KEY, String(collapsed));
@@ -61,10 +64,18 @@ const AppLayout: React.FC = () => {
         </main>
       </div>
 
-      {/* First-run prompts. A username is mandatory and comes first; the
-          university prompt waits until one is claimed. */}
-      <UsernamePrompt />
-      <UniversityPrompt />
+      {/* First-run prompts, in the order they are put to a new member. The
+          language comes before the rest because the rest is written in it; a
+          username is then mandatory, and the university question waits until
+          one is claimed. One at a time, never stacked. */}
+      {language.needed ? (
+        <LanguagePrompt choose={language.choose} current={language.current} />
+      ) : (
+        <>
+          <UsernamePrompt />
+          <UniversityPrompt />
+        </>
+      )}
     </div>
   );
 };

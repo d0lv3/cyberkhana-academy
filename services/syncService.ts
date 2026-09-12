@@ -16,6 +16,7 @@
 import { api, ApiError } from './api';
 import { PUBLISHED_CACHE_KEYS, SERVER_BUCKET_BY_STORAGE_KEY, STORAGE_KEYS } from './creatorTypes';
 import { TOUR_SEEN_KEY } from './tourService';
+import { LANG_CHOSEN_KEY } from './languageChoice';
 import { levelFor } from '../backend/src/shared/xp';
 
 /* Mirrors progressService's event name (defined locally to avoid an import
@@ -228,8 +229,8 @@ function isServerBackedKey(key: string): boolean {
 /** Account state that only ever lives on this device: the study streak and
  *  weekly goal, a lab's working state, which feedback prompts were answered
  *  and any answer still waiting to send, the level last celebrated, whether
- *  the Academy tour was taken, where each module was left, and the practice
- *  terminal's files. It stays through its
+ *  the language question was put and the Academy tour taken, where each
+ *  module was left, and the practice terminal's files. It stays through its
  *  owner's own sign-out, so
  *  they find their streak again, and goes the moment another account signs
  *  in. */
@@ -242,6 +243,7 @@ function isDeviceOnlyAccountKey(key: string): boolean {
     key === 'academy-feedback-pending' ||
     key === LEVEL_SEEN_KEY ||
     key === TOUR_SEEN_KEY ||
+    key === LANG_CHOSEN_KEY ||
     key.startsWith('academy-lecture-') ||
     (key.startsWith('academy-shell-') && key !== 'academy-shell-dock')
   );
