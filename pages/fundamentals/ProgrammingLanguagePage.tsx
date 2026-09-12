@@ -5,6 +5,7 @@ import Button from '../../components/ui/EnhancedButton';
 import PageHeader from '../../components/ui/PageHeader';
 import EmptyState from '../../components/ui/EmptyState';
 import AuthorChip from '../../components/ui/AuthorChip';
+import ModuleActionButton from '../../components/fundamentals/ModuleActionButton';
 import { useLang } from '../../contexts/LangContext';
 import { getLanguage } from '../../data/programming';
 import { courseSteps, stepPath } from '../../data/programming/courseMap';
@@ -243,10 +244,13 @@ const ProgrammingLanguagePage: React.FC = () => {
           </div>
         </div>
         {next ? (
-          <Button size="sm" onClick={() => navigate(stepPath(langSlug, next))} leftIcon={<PlayCircle size={15} />}>
+          <ModuleActionButton
+            onClick={() => navigate(stepPath(langSlug, next))}
+            icon={<PlayCircle size={17} />}
+          >
             {doneCount === 0 ? (ar ? 'ابدأ: ' : 'Start: ') : ar ? 'تابع: ' : 'Continue: '}
             {shortTitle(next.concept.title[lang] || next.concept.title.en)}
-          </Button>
+          </ModuleActionButton>
         ) : (
           <span className="inline-flex items-center gap-1.5 text-sm font-bold text-[#00a859]">
             <Check size={16} /> {ar ? 'أكملت كل الخطوات' : 'Every step is done'}

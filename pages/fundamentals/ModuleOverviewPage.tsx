@@ -20,6 +20,7 @@ import AuthorChip from '../../components/ui/AuthorChip';
 import { creditOf } from '../../services/creatorTypes';
 import LessonMarkdown from '../../components/ui/LessonMarkdown';
 import ProgressBar from '../../components/ui/ProgressBar';
+import ModuleActionButton from '../../components/fundamentals/ModuleActionButton';
 import { useLang } from '../../contexts/LangContext';
 import { getViewableModuleBySlug } from '../../data/modulesData';
 import {
@@ -262,22 +263,13 @@ const ModuleOverviewPage: React.FC = () => {
                 play on the other. */}
             <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                {/* Glass, not a solid slab: the same translucent, blurred
-                    treatment the badges on a module tile use, so the primary
-                    action belongs to the cover it sits on rather than being
-                    stamped over it. */}
-                <button
+                <ModuleActionButton
                   onClick={goIn ? enterModule : handleEnroll}
                   disabled={isPreview && !goIn}
-                  className="group inline-flex items-center justify-center gap-2 rounded-xl border border-[#00a859]/45 bg-[#00a859]/12 px-6 py-3.5 text-sm font-bold text-[#00a859] shadow-lg shadow-[#00a859]/5 backdrop-blur-md transition-all hover:border-[#9fef00]/60 hover:bg-[#00a859]/20 hover:text-[#9fef00] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-[#00a859]/45 disabled:hover:bg-[#00a859]/12 disabled:hover:text-[#00a859]"
+                  icon={goIn ? <PlayCircle size={17} /> : <BookOpen size={17} />}
                 >
-                  {goIn ? <PlayCircle size={17} /> : <BookOpen size={17} />}
                   {ctaLabel}
-                  <ChevronRight
-                    size={15}
-                    className="rtl-flip transition-transform group-hover:translate-x-0.5"
-                  />
-                </button>
+                </ModuleActionButton>
 
                 {/* Browsing without committing is allowed: enrolling is a
                     bookmark, not a gate, so there is always a way to just go
