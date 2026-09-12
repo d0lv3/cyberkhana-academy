@@ -226,7 +226,7 @@ const PillarRow: React.FC<{
             className="flex-shrink-0"
             style={{ color: muted ? '#4d5a73' : r.pillar.color }}
           />
-          <span className={`text-sm font-semibold truncate ${muted ? 'text-[#5b6884]' : 'text-[#d2d7e3]'}`}>
+          <span className={`text-base font-semibold truncate ${muted ? 'text-[#5b6884]' : 'text-[#d2d7e3]'}`}>
             {r.pillar.label[lang]}
           </span>
         </span>
