@@ -4,7 +4,6 @@ import {
   LayoutDashboard,
   GraduationCap,
   Layers,
-  Signpost,
   Trophy,
   User,
   Pencil,
@@ -14,6 +13,7 @@ import {
   X,
 } from 'lucide-react';
 import BrandLogo from './ui/BrandLogo';
+import PathsIcon from './ui/PathsIcon';
 import { useLang } from '../contexts/LangContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useXp } from '../services/xpService';
@@ -40,7 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, mobileOpen, onMo
     { to: '/dashboard', icon: LayoutDashboard, label: t('sidebar.dashboard') },
     { to: '/fundamentals', icon: GraduationCap, label: t('sidebar.fundamentals') },
     { to: '/modules', icon: Layers, label: t('sidebar.modules') },
-    { to: '/paths', icon: Signpost, label: t('sidebar.paths') },
+    { to: '/paths', icon: PathsIcon, label: t('sidebar.paths') },
     { to: '/leaderboard', icon: Trophy, label: t('sidebar.leaderboard') },
     ...(isCreator
       ? [{ to: '/creators', icon: Pencil, label: lang === 'ar' ? 'استوديو المحتوى' : 'Content Studio' }]
@@ -87,12 +87,12 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, mobileOpen, onMo
 
                  That constrains which glyphs can live here at all. These are
                  stroked outlines, and filling one built from open paths closes
-                 it into a blob: BookOpen became a lump, Route a smear, PenTool
-                 lost its nib. Fundamentals, Paths and the Studio are drawn with
-                 a cap, a signpost and a pencil instead, shapes that survive
-                 being filled. Profile is User rather than UserCircle for the
-                 same family of reason: filling a glyph that encloses itself in
-                 a circle only produces a disc behind the person. */
+                 it into a blob: BookOpen became a lump and PenTool lost its nib.
+                 Paths therefore has a custom two-state glyph; Fundamentals and
+                 the Studio use a cap and pencil, shapes that survive being
+                 filled. Profile is User rather than UserCircle for the same
+                 reason: filling a glyph that encloses itself in a circle only
+                 produces a disc behind the person. */
               fill={isActive ? 'currentColor' : 'none'}
               onAnimationEnd={() => setNudging(null)}
               className={`flex-shrink-0 transition-colors ${

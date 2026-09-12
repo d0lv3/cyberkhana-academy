@@ -117,8 +117,7 @@ const LeaderboardPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        icon={Trophy}
-        iconColor="#f3c84b"
+        iconNode={<Trophy size={38} strokeWidth={1.7} className="flex-shrink-0 text-[#f3c84b]" />}
         title={t('leaderboard.title')}
         subtitle={t('leaderboard.subtitle')}
       />

@@ -1,4 +1,5 @@
 import React from 'react';
+import { GraduationCap } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import FundamentalsRoadmap from '../../components/fundamentals/FundamentalsRoadmap';
 import { useLang } from '../../contexts/LangContext';
@@ -16,7 +17,10 @@ const FundamentalsPage: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      <PageHeader title={t('sidebar.fundamentals')} />
+      <PageHeader
+        iconNode={<GraduationCap size={38} strokeWidth={1.7} className="flex-shrink-0 text-[#00a859]" />}
+        title={t('sidebar.fundamentals')}
+      />
       <FundamentalsRoadmap />
     </div>
   );

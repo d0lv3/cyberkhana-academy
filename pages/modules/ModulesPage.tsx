@@ -80,7 +80,11 @@ const ModulesPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader title={t('sidebar.modules')} subtitle={t('features.modules.desc')} />
+      <PageHeader
+        iconNode={<Layers size={38} strokeWidth={1.7} className="flex-shrink-0 text-[#9fef00]" />}
+        title={t('sidebar.modules')}
+        subtitle={t('features.modules.desc')}
+      />
 
       {modules.length === 0 ? (
         <EmptyState

@@ -300,8 +300,7 @@ const MembersPage: React.FC = () => {
     <div className="space-y-6">
       <ToastContainer />
       <PageHeader
-        icon={Users}
-        iconColor="#9fef00"
+        iconNode={<Users size={38} strokeWidth={1.7} className="flex-shrink-0 text-[#9fef00]" />}
         title={ar ? 'الأعضاء' : 'Members'}
         subtitle={
           ar

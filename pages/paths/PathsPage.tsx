@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Shield, Target, Globe, ShieldCheck, Lock, Sparkles } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
+import PathsIcon from '../../components/ui/PathsIcon';
 import CardArt from '../../components/fundamentals/CardArt';
 import PathCard from '../../components/paths/PathCard';
 import { useLang } from '../../contexts/LangContext';
@@ -56,7 +57,11 @@ const PathsPage: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      <PageHeader title={t('sidebar.paths')} subtitle={t('features.paths.desc')} />
+      <PageHeader
+        iconNode={<PathsIcon size={38} className="flex-shrink-0 text-[#60a5fa]" />}
+        title={t('sidebar.paths')}
+        subtitle={t('features.paths.desc')}
+      />
 
       {/* Published creator paths */}
       {publishedPaths.length > 0 && (
