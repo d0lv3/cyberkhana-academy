@@ -36,29 +36,33 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, mobileOpen, onMo
 
   const isCreator = user?.role === 'creator' || user?.role === 'admin';
 
+  /* `tour` is what the Academy tour points at. It is a name given on purpose,
+     not a class name borrowed from the styling, so moving a row or restyling
+     it never quietly breaks the tour. */
   const learnItems = [
-    { to: '/dashboard', icon: LayoutDashboard, label: t('sidebar.dashboard') },
-    { to: '/fundamentals', icon: GraduationCap, label: t('sidebar.fundamentals') },
-    { to: '/modules', icon: Layers, label: t('sidebar.modules') },
-    { to: '/paths', icon: PathsIcon, label: t('sidebar.paths') },
-    { to: '/leaderboard', icon: Trophy, label: t('sidebar.leaderboard') },
+    { to: '/dashboard', icon: LayoutDashboard, label: t('sidebar.dashboard'), tour: 'nav-dashboard' },
+    { to: '/fundamentals', icon: GraduationCap, label: t('sidebar.fundamentals'), tour: 'nav-fundamentals' },
+    { to: '/modules', icon: Layers, label: t('sidebar.modules'), tour: 'nav-modules' },
+    { to: '/paths', icon: PathsIcon, label: t('sidebar.paths'), tour: 'nav-paths' },
+    { to: '/leaderboard', icon: Trophy, label: t('sidebar.leaderboard'), tour: 'nav-leaderboard' },
     ...(isCreator
-      ? [{ to: '/creators', icon: Pencil, label: lang === 'ar' ? 'استوديو المحتوى' : 'Content Studio' }]
+      ? [{ to: '/creators', icon: Pencil, label: lang === 'ar' ? 'استوديو المحتوى' : 'Content Studio', tour: 'nav-creators' }]
       : []),
   ];
 
   const accountItems = [
-    { to: '/profile', icon: User, label: t('sidebar.profile') },
+    { to: '/profile', icon: User, label: t('sidebar.profile'), tour: 'nav-profile' },
     ...(user?.role === 'admin'
-      ? [{ to: '/admin/members', icon: Users, label: lang === 'ar' ? 'الأعضاء' : 'Members' }]
+      ? [{ to: '/admin/members', icon: Users, label: lang === 'ar' ? 'الأعضاء' : 'Members', tour: 'nav-members' }]
       : []),
   ];
 
   const renderNavItems = (items: typeof learnItems) =>
-    items.map(({ to, icon: Icon, label }) => (
+    items.map(({ to, icon: Icon, label, tour }) => (
       <NavLink
         key={to}
         to={to}
+        data-tour-id={tour}
         onClick={() => {
           setNudging(to);
           onMobileClose();
@@ -164,7 +168,10 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, mobileOpen, onMo
               </div>
             </div>
           ) : (
-            <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-[#121a2a] border border-[#263248]">
+            <div
+              data-tour-id="sidebar-level"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-[#121a2a] border border-[#263248]"
+            >
               <div className="w-8 h-8 rounded-full bg-[#0e1522] border border-[#263248] flex items-center justify-center flex-shrink-0">
                 <span className="text-sm font-black text-[#9fef00]">
                   {(user.displayName || 'U').charAt(0).toUpperCase()}

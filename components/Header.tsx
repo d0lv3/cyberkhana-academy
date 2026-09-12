@@ -1,5 +1,5 @@
 import React from 'react';
-import { LogOut, Globe, Menu } from 'lucide-react';
+import { LogOut, Globe, Menu, HelpCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import BrandLogo from './ui/BrandLogo';
 import Avatar from './ui/Avatar';
@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLang } from '../contexts/LangContext';
 import { useXp } from '../services/xpService';
 import { levelColor } from './ui/LevelBadge';
+import { startTour } from './tour/TourHost';
 
 interface HeaderProps {
   onMenuToggle: () => void;
@@ -83,6 +84,18 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
               </span>
             )}
           </Link>
+
+          {/* Show me around. The tour opens by itself once for a new member;
+              this is how anyone else asks for it, and how they ask again. */}
+          <button
+            onClick={startTour}
+            data-tour-id="header-help"
+            className="w-10 h-10 touch:w-11 touch:h-11 rounded-lg bg-[#121a2a] border border-[#263248] flex items-center justify-center text-[#8390ac] hover:text-[#00a859] hover:border-[#00a859]/40 transition-all"
+            aria-label={lang === 'ar' ? 'جولة في الأكاديمية' : 'Tour the Academy'}
+            title={lang === 'ar' ? 'جولة في الأكاديمية' : 'Tour the Academy'}
+          >
+            <HelpCircle size={16} />
+          </button>
 
           {/* Language toggle */}
           <button

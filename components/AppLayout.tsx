@@ -5,6 +5,7 @@ import Header from './Header';
 import UniversityPrompt from './university/UniversityPrompt';
 import UsernamePrompt from './account/UsernamePrompt';
 import { skyFor, skyStyle } from './ui/sky';
+import { TOUR_SIDEBAR_EVENT } from '../services/tourService';
 
 const SIDEBAR_KEY = 'academy-sidebar-collapsed';
 
@@ -19,6 +20,18 @@ const AppLayout: React.FC = () => {
   useEffect(() => {
     localStorage.setItem(SIDEBAR_KEY, String(collapsed));
   }, [collapsed]);
+
+  /* The Academy tour points at navigation rows, which on a phone live behind
+     the menu button. It asks for the drawer through a window event rather
+     than reaching in here, so the shell owns this state as it always did. */
+  useEffect(() => {
+    const onTourSidebar = (event: Event) => {
+      const wanted = (event as CustomEvent<{ open?: boolean }>).detail?.open;
+      setMobileOpen(!!wanted);
+    };
+    window.addEventListener(TOUR_SIDEBAR_EVENT, onTourSidebar);
+    return () => window.removeEventListener(TOUR_SIDEBAR_EVENT, onTourSidebar);
+  }, []);
 
   return (
     <div className="flex app-shell text-[#d2d7e3] bg-[#0d1117]">

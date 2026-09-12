@@ -7,6 +7,7 @@ import ConfirmHost from './components/ui/ConfirmHost';
 import FeedbackHost from './components/feedback/FeedbackHost';
 import AccountNoticeHost from './components/account/AccountNoticeHost';
 import LevelUpHost from './components/levels/LevelUpHost';
+import TourHost from './components/tour/TourHost';
 import ErrorBoundary from './components/ErrorBoundary';
 
 import { FullscreenLiquidLoader } from './components/ui/LiquidLogoLoader';
@@ -263,6 +264,7 @@ const App: React.FC = () => {
             <FeedbackHost />
             <AccountNoticeHost />
             <LevelUpHost />
+            <TourHost />
           </LangProvider>
         </AuthProvider>
       </HashRouter>
