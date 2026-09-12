@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Activity, Wifi, Check, PlayCircle } from 'lucide-react';
 import EmptyState from '../../components/ui/EmptyState';
@@ -10,7 +10,7 @@ import AuthorChip, { CreditGroup } from '../../components/ui/AuthorChip';
 import { useLang } from '../../contexts/LangContext';
 import { getNetworkingPath, type NetworkingUnitStop } from '../../data/networking';
 import { getFundamentalsByCategory } from '../../data/fundamentalsData';
-import { getNetworkingDone, PROGRESS_EVENT } from '../../services/progressService';
+import { useNetworkingDone } from '../../hooks/useCourseProgress';
 import { creditOf } from '../../services/creatorTypes';
 import type { NetworkingLesson } from '../../components/network-sim/types';
 
@@ -20,21 +20,6 @@ import type { NetworkingLesson } from '../../components/network-sim/types';
  * (NETWORKING PATH TRAIL) works out from these same breakpoints: keep the two
  * in step (xs is 400px in tailwind.config.js; md and xl are Tailwind's own). */
 const GRID = 'grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5';
-
-/** Finished lessons, kept current when a lesson is completed in another tab. */
-function useNetworkingDone(): Set<string> {
-  const [done, setDone] = useState(() => getNetworkingDone());
-  useEffect(() => {
-    const refresh = () => setDone(getNetworkingDone());
-    window.addEventListener(PROGRESS_EVENT, refresh);
-    window.addEventListener('storage', refresh);
-    return () => {
-      window.removeEventListener(PROGRESS_EVENT, refresh);
-      window.removeEventListener('storage', refresh);
-    };
-  }, []);
-  return done;
-}
 
 const TRAIL_DONE = '#00a859';
 const TRAIL_TODO = '#33415e';

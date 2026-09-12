@@ -34,6 +34,7 @@ import DifficultyBadge from '../../components/ui/DifficultyBadge';
 import CourseViewerSidebar, { SidebarModule } from '../../components/CourseViewerSidebar';
 import { useLang } from '../../contexts/LangContext';
 import { useScrollToTop } from '../../hooks/useScrollToTop';
+import { useTocCollapsed } from '../../hooks/useTocCollapsed';
 import { useAuth } from '../../contexts/AuthContext';
 import CourseTerminalLauncher from '../../components/terminal/CourseTerminalLauncher';
 import LabView from '../../components/labs/LabView';
@@ -178,9 +179,7 @@ const ModuleViewerPage: React.FC = () => {
     return first;
   });
   const [tocMobileOpen, setTocMobileOpen] = useState(false);
-  const [tocCollapsed, setTocCollapsed] = useState<boolean>(() => {
-    try { return localStorage.getItem('academy-toc-collapsed') === '1'; } catch { return false; }
-  });
+  const [tocCollapsed, toggleToc] = useTocCollapsed();
   const [quizStates, setQuizStates] = useState<Record<string, QuizState>>({});
 
   // Build sidebar module data (generic shape for the reusable component)
@@ -256,14 +255,6 @@ const ModuleViewerPage: React.FC = () => {
   const handleSelectLecture = (lectureId: string) => {
     setActiveLectureId(lectureId);
     setTocMobileOpen(false);
-  };
-
-  const toggleToc = () => {
-    setTocCollapsed((v) => {
-      const next = !v;
-      try { localStorage.setItem('academy-toc-collapsed', next ? '1' : '0'); } catch { /* quota */ }
-      return next;
-    });
   };
 
   const getQuestions = (lecture: Lecture): QuizQuestion[] => {

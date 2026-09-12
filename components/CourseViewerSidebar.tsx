@@ -7,15 +7,22 @@ import {
   ClipboardCheck,
   BookOpen,
   FlaskConical,
+  Trophy,
 } from 'lucide-react';
 import ProgressBar from './ui/ProgressBar';
 import { useLang } from '../contexts/LangContext';
 
 /* ─── Course contents ───
  *
- * The table of contents for a module, and the only map a student has while
+ * The table of contents for a course, and the only map a student has while
  * they are inside one. It is read far more often than it is clicked, so it is
  * built to be scanned: where am I, what is behind me, what is left.
+ *
+ * The same list serves all three kinds of course, because all three are the
+ * same shape once you stop naming the parts: an OS module's chapters, a
+ * Networking path's units and a language's modules each hold an ordered run
+ * of stops. What differs is the word above each group and the mark a stop
+ * carries, so those are what the caller passes in.
  *
  * The stops hang off a single rail that fills in behind you, the same shape
  * the Fundamentals roadmap uses one level up, so "the road so far" means the
@@ -31,15 +38,26 @@ export type SidebarLecture = {
   id: string;
   title: string;
   hasQuiz: boolean;
-  /** A lab is a stop like any other, marked so it reads as hands-on work. */
-  kind?: 'lesson' | 'lab';
+  /** A lab or a challenge is a stop like any other, marked so it reads as
+   *  hands-on work rather than something to read. */
+  kind?: 'lesson' | 'lab' | 'challenge';
 };
 
 export type SidebarModule = {
   id: string;
   title: string;
+  /** Replaces the numbered word above the title ("Unit 2"). Pass null for a
+   *  group that is not a numbered stop on the path at all, such as the
+   *  networking lessons no unit lists yet. */
+  label?: string | null;
   lectures: SidebarLecture[];
 };
+
+/** The word above each group, in both languages. */
+export type GroupNoun = { en: string; ar: string };
+
+/** Where the contents stop being a drawer and sit beside the lesson instead. */
+export type PinAt = 'md' | 'lg';
 
 interface CourseViewerSidebarProps {
   modules: SidebarModule[];
@@ -50,7 +68,31 @@ interface CourseViewerSidebarProps {
   onMobileClose: () => void;
   /** Hide the sidebar on desktop (the mobile drawer is unaffected). */
   collapsed?: boolean;
+  /** Defaults to Chapter, which is what an OS module calls its groups. */
+  groupNoun?: GroupNoun;
+  /** Heading for the drawer, matching whatever the button that opens it is
+   *  called on that page. Defaults to the OS module's own wording. */
+  title?: GroupNoun;
+  /** A lesson that already carries a second pane, a simulation or an editor,
+   *  has no room for a third column on a small laptop: those pin at 'lg' and
+   *  keep the drawer until then. Defaults to 'md'. */
+  pinAt?: PinAt;
 }
+
+/* Tailwind needs the finished class names, so both sets are written out. */
+const PIN: Record<PinAt, { pinned: string; hide: string }> = {
+  md: {
+    pinned: 'md:relative md:top-0 md:translate-x-0 md:w-80 md:flex-shrink-0',
+    hide: 'md:hidden',
+  },
+  lg: {
+    pinned: 'lg:relative lg:top-0 lg:translate-x-0 lg:w-80 lg:flex-shrink-0',
+    hide: 'lg:hidden',
+  },
+};
+
+const DEFAULT_GROUP_NOUN: GroupNoun = { en: 'Chapter', ar: 'الفصل' };
+const DEFAULT_TITLE: GroupNoun = { en: 'Course contents', ar: 'محتويات الوحدة' };
 
 /** Where the rail is lit, and where it is still ahead of you. */
 const RAIL_DONE = '#00a859';
@@ -66,9 +108,13 @@ const CourseViewerSidebar: React.FC<CourseViewerSidebarProps> = ({
   mobileOpen,
   onMobileClose,
   collapsed = false,
+  groupNoun = DEFAULT_GROUP_NOUN,
+  title = DEFAULT_TITLE,
+  pinAt = 'md',
 }) => {
   const { lang, isArabic } = useLang();
   const ar = lang === 'ar';
+  const pin = PIN[pinAt];
 
   // Which module contains the active lecture?
   const activeModuleId = useMemo(() => {
@@ -98,11 +144,18 @@ const CourseViewerSidebar: React.FC<CourseViewerSidebarProps> = ({
     setExpanded((prev) => ({ ...prev, [modId]: !prev[modId] }));
   };
 
-  const isCompleted = (id: string) => completedLectures.includes(id);
+  const done = new Set(completedLectures);
+  const isCompleted = (id: string) => done.has(id);
 
-  // Course-level stats
+  /* Course-level stats, counted against the course as it stands rather than
+     against everything the learner has ever finished. Networking keeps one
+     set of finished lessons for the whole track, so a lesson since retired
+     would otherwise push the count past the total. */
   const totalLectures = modules.reduce((sum, m) => sum + m.lectures.length, 0);
-  const completedCount = completedLectures.length;
+  const completedCount = modules.reduce(
+    (sum, m) => sum + m.lectures.filter((l) => done.has(l.id)).length,
+    0
+  );
   const progressPct = totalLectures > 0 ? Math.round((completedCount / totalLectures) * 100) : 0;
 
   const sidebarContent = (
@@ -131,6 +184,12 @@ const CourseViewerSidebar: React.FC<CourseViewerSidebarProps> = ({
           const modTotal = mod.lectures.length;
           const isModComplete = modTotal > 0 && modCompleted === modTotal;
           const isActiveModule = mod.id === activeModuleId;
+          /* "Unit 3" on the Networking path, "Module 3" inside a language,
+             "Chapter 3" in an OS module: the same word the lesson itself
+             prints above its title. A group that brought its own label keeps
+             it, and one that passed null is simply not a numbered stop. */
+          const eyebrow =
+            mod.label === undefined ? `${ar ? groupNoun.ar : groupNoun.en} ${modIdx + 1}` : mod.label;
 
           return (
             <div key={mod.id} className="border-b border-[#263248]/60">
@@ -152,9 +211,13 @@ const CourseViewerSidebar: React.FC<CourseViewerSidebarProps> = ({
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#8592ad]">
-                      {ar ? `الفصل ${modIdx + 1}` : `Chapter ${modIdx + 1}`}
-                    </span>
+                    {eyebrow ? (
+                      <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#8592ad]">
+                        {eyebrow}
+                      </span>
+                    ) : (
+                      <span />
+                    )}
                     <span
                       className={`flex items-center gap-1 text-[10px] font-semibold tabular-nums ${
                         isModComplete ? 'text-[#00a859]' : 'text-[#8592ad]'
@@ -264,6 +327,12 @@ const CourseViewerSidebar: React.FC<CourseViewerSidebarProps> = ({
                                 aria-label={ar ? 'مختبر' : 'Lab'}
                               />
                             )}
+                            {lecture.kind === 'challenge' && (
+                              <Trophy
+                                className="w-[13px] h-[13px] text-[#f3a43a]"
+                                aria-label={ar ? 'تحدي' : 'Challenge'}
+                              />
+                            )}
                             {lecture.hasQuiz && (
                               <ClipboardCheck
                                 className={`w-[13px] h-[13px] ${
@@ -291,7 +360,7 @@ const CourseViewerSidebar: React.FC<CourseViewerSidebarProps> = ({
       {/* Mobile overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 bg-black/60 z-40 md:hidden"
+          className={`fixed inset-0 bg-black/60 z-40 ${pin.hide}`}
           onClick={onMobileClose}
         />
       )}
@@ -301,15 +370,15 @@ const CourseViewerSidebar: React.FC<CourseViewerSidebarProps> = ({
         className={`
           fixed top-14 bottom-0 start-0 z-50 w-full sm:w-80 bg-[#0f1520] border-e border-[#263248]
           flex flex-col transition-transform duration-300
-          md:relative md:top-0 md:translate-x-0 md:w-80 md:flex-shrink-0
+          ${pin.pinned}
           ${mobileOpen ? 'translate-x-0' : isArabic ? 'translate-x-full' : '-translate-x-full'}
-          ${collapsed ? 'md:hidden' : ''}
+          ${collapsed ? pin.hide : ''}
         `}
       >
-        {/* Mobile header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[#263248] md:hidden">
+        {/* Drawer header, for as long as this is a drawer */}
+        <div className={`flex items-center justify-between px-4 py-3 border-b border-[#263248] ${pin.hide}`}>
           <h2 className="text-xs font-bold text-[#f3f6ff] uppercase tracking-widest">
-            {ar ? 'محتويات الوحدة' : 'Course contents'}
+            {ar ? title.ar : title.en}
           </h2>
           <button
             onClick={onMobileClose}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { BookOpen, Trophy, Youtube, Check, ChevronDown, PlayCircle } from 'lucide-react';
 import Button from '../../components/ui/EnhancedButton';
@@ -10,7 +10,7 @@ import { useLang } from '../../contexts/LangContext';
 import { getLanguage } from '../../data/programming';
 import { courseSteps, stepPath } from '../../data/programming/courseMap';
 import type { ProgrammingConcept } from '../../data/programming';
-import { getProgrammingDone, PROGRESS_EVENT } from '../../services/progressService';
+import { useProgrammingDone } from '../../hooks/useCourseProgress';
 import { conceptXp, languageXp } from '../../services/xpService';
 import { creditOf, type ContentCredit } from '../../services/creatorTypes';
 
@@ -29,23 +29,6 @@ import { creditOf, type ContentCredit } from '../../services/creatorTypes';
 
 const TRAIL_DONE = '#00a859';
 const TRAIL_TODO = '#33415e';
-
-/** Finished steps in this language, kept current when one is completed in
- *  another tab. */
-function useProgrammingDone(langSlug: string): Set<string> {
-  const [done, setDone] = useState(() => getProgrammingDone(langSlug));
-  useEffect(() => {
-    const refresh = () => setDone(getProgrammingDone(langSlug));
-    refresh();
-    window.addEventListener(PROGRESS_EVENT, refresh);
-    window.addEventListener('storage', refresh);
-    return () => {
-      window.removeEventListener(PROGRESS_EVENT, refresh);
-      window.removeEventListener('storage', refresh);
-    };
-  }, [langSlug]);
-  return done;
-}
 
 /** A title short enough to sit in a button beside the summary. */
 const shortTitle = (s: string, max = 40) => (s.length > max ? `${s.slice(0, max - 1).trimEnd()}…` : s);
