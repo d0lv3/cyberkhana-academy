@@ -10,6 +10,14 @@
  * for navigation an account may not have) or shown in the middle of the
  * screen with nothing lit, so a missing element costs a spotlight, never the
  * tour.
+ *
+ * The tour walks the main navigation one stop at a time: Dashboard, then
+ * Fundamentals, then Modules, then Paths. Each stop opens with a `requireClick`
+ * step, the nav row lit and nothing else, that only moves on once the learner
+ * actually clicks the row, the same click that carries them there. What
+ * follows is the explaining, on the page itself. The last stop is a question
+ * rather than a lecture: whether Fundamentals is worth their time or they
+ * already know it.
  */
 
 export type Localized = { en: string; ar: string };
@@ -29,10 +37,22 @@ export interface TourStep {
   optional?: boolean;
   /** The step talks about this route, so the tour goes there first. */
   route?: string;
+  /** Moves on only when the target itself is clicked, never the Next button:
+   *  the row being lit is the row the learner has to actually use. Falls back
+   *  to a normal Next button if the target never turns up, so the tour never
+   *  strands someone on a row that failed to render. */
+  requireClick?: boolean;
   title: Localized;
   body: Localized;
   /** Short supporting lines, one per bullet. */
   points?: Localized[];
+  /** The closing question, in place of a Finish button: two ways onward, one
+   *  for a learner who wants Fundamentals first and one for a learner who
+   *  reckons they already have it. */
+  branch?: {
+    a: { label: Localized; route: string };
+    b: { label: Localized; route: string };
+  };
 }
 
 export const TOUR_STEPS: TourStep[] = [
@@ -44,58 +64,20 @@ export const TOUR_STEPS: TourStep[] = [
       ar: 'أهلا بك في أكاديمية سايبر خانة',
     },
     body: {
-      en: 'This is where you learn security by doing it. Lessons are written in order, the exercises run in your browser, and everything you finish is counted toward where you are going. Two minutes here and you will know your way around.',
-      ar: 'هنا تتعلم الأمن السيبراني بالممارسة. الدروس مرتبة، والتمارين تعمل داخل متصفحك، وكل ما تنهيه يحسب في طريقك. دقيقتان وتعرف طريقك في الأكاديمية.',
+      en: 'This is where you learn security by doing it. Lessons are written in order, the exercises run in your browser, and everything you finish is counted toward where you are going. A minute here and you will know your way around.',
+      ar: 'هنا تتعلم الأمن السيبراني بالممارسة. الدروس مرتبة، والتمارين تعمل داخل متصفحك، وكل ما تنهيه يحسب في طريقك. دقيقة واحدة وتعرف طريقك في الأكاديمية.',
     },
   },
   {
-    id: 'dashboard',
+    id: 'dashboard-gate',
     target: 'nav-dashboard',
     placement: 'end',
     inNav: true,
-    route: '/dashboard',
+    requireClick: true,
     title: { en: 'Your dashboard', ar: 'لوحتك' },
     body: {
-      en: 'Home. It opens on the lesson you had last, what we suggest taking up next, and how far along you are. When you are not sure what to do, this page has already decided for you.',
-      ar: 'صفحتك الرئيسية. تفتح على آخر درس كنت فيه، وعلى ما نقترح أن تأخذه بعده، وعلى موضعك من الطريق. وحين لا تدري بماذا تبدأ، فالصفحة قررت عنك.',
-    },
-  },
-  {
-    id: 'fundamentals',
-    target: 'nav-fundamentals',
-    placement: 'end',
-    inNav: true,
-    title: { en: 'Start with Fundamentals', ar: 'ابدأ بالأساسيات' },
-    body: {
-      en: 'Three pillars everything else is built on. If you are new, this is the door: take them in order and the rest of the Academy stops being a wall of jargon.',
-      ar: 'ثلاث ركائز يقوم عليها كل ما بعدها. إن كنت مبتدئا فهذا هو الباب: خذها بالترتيب وسيتوقف باقي الأكاديمية عن كونه جدارا من المصطلحات.',
-    },
-    points: [
-      { en: 'Programming, in a real editor that runs your code', ar: 'البرمجة، في محرر حقيقي ينفذ كودك' },
-      { en: 'Networking, with packets you can watch move', ar: 'الشبكات، مع حزم تراها تتحرك' },
-      { en: 'Operating systems, at a real shell', ar: 'أنظمة التشغيل، على طرفية حقيقية' },
-    ],
-  },
-  {
-    id: 'modules',
-    target: 'nav-modules',
-    placement: 'end',
-    inNav: true,
-    title: { en: 'Modules', ar: 'الوحدات' },
-    body: {
-      en: 'One subject, start to finish. A module holds its lessons, its quizzes and usually a lab you work in, so you can take a single topic and be done with it properly.',
-      ar: 'موضوع واحد من أوله إلى آخره. تضم الوحدة دروسها واختباراتها وغالبا مختبرا تعمل فيه، فتأخذ موضوعا واحدا وتتقنه.',
-    },
-  },
-  {
-    id: 'paths',
-    target: 'nav-paths',
-    placement: 'end',
-    inNav: true,
-    title: { en: 'Career paths', ar: 'المسارات المهنية' },
-    body: {
-      en: 'Modules arranged into a job. A path puts them in the order the work itself needs, SOC analyst or penetration tester, and tracks you across all of them at once.',
-      ar: 'وحدات مرتبة على شكل مهنة. يضعها المسار بالترتيب الذي يتطلبه العمل نفسه، محلل مركز عمليات أو مختبر اختراق، ويتابع تقدمك فيها جميعا.',
+      en: 'This is home, and it already knows where you left off. Click it to see what is waiting for you there.',
+      ar: 'هذه صفحتك الرئيسية، وهي تعرف أين توقفت. اضغط عليها لترى ما ينتظرك فيها.',
     },
   },
   {
@@ -132,34 +114,92 @@ export const TOUR_STEPS: TourStep[] = [
     },
   },
   {
-    id: 'community',
-    target: 'nav-leaderboard',
+    id: 'fundamentals-gate',
+    target: 'nav-fundamentals',
     placement: 'end',
     inNav: true,
-    title: { en: 'Leaderboard and members', ar: 'المتصدرون والأعضاء' },
+    requireClick: true,
+    title: { en: 'Start with Fundamentals', ar: 'ابدأ بالأساسيات' },
     body: {
-      en: 'See where you stand against everyone else, or filter it down to your own university. Every name opens a public profile, which is how you find the people learning beside you.',
-      ar: 'انظر أين تقف بين الجميع، أو صفّ القائمة على جامعتك وحدها. وكل اسم يفتح ملفا عاما، وبه تجد من يتعلمون إلى جانبك.',
+      en: 'Three pillars everything else is built on. Click it to open the door.',
+      ar: 'ثلاث ركائز يقوم عليها كل ما بعدها. اضغط عليها لتفتح الباب.',
     },
   },
   {
-    id: 'profile',
-    target: 'nav-profile',
+    id: 'fundamentals',
+    target: 'fundamentals-roadmap',
+    placement: 'bottom',
+    title: { en: 'The road for a beginner', ar: 'طريق المبتدئ' },
+    body: {
+      en: 'This is the road map. Each pillar is a straight line of lessons, in the order that makes the next one make sense, in a real editor and a real shell rather than slides about one.',
+      ar: 'هذه خريطة الطريق. كل ركيزة سلسلة دروس مرتبة، بالترتيب الذي يجعل ما بعده مفهوما، في محرر حقيقي وطرفية حقيقية لا في شرائح عنهما.',
+    },
+    points: [
+      { en: 'Programming, in a real editor that runs your code', ar: 'البرمجة، في محرر حقيقي ينفذ كودك' },
+      { en: 'Networking, with packets you can watch move', ar: 'الشبكات، مع حزم تراها تتحرك' },
+      { en: 'Operating systems, at a real shell', ar: 'أنظمة التشغيل، على طرفية حقيقية' },
+    ],
+  },
+  {
+    id: 'modules-gate',
+    target: 'nav-modules',
     placement: 'end',
     inNav: true,
-    title: { en: 'Your profile', ar: 'ملفك الشخصي' },
+    requireClick: true,
+    title: { en: 'Modules', ar: 'الوحدات' },
     body: {
-      en: 'Your side of the Academy: the level you have reached, what you have finished, your university and your links. What you publish here is what other members see.',
-      ar: 'جانبك من الأكاديمية: المستوى الذي بلغته، وما أنهيته، وجامعتك وروابطك. وما تنشره هنا هو ما يراه بقية الأعضاء.',
+      en: 'One security subject, start to finish. Click it to see what is there.',
+      ar: 'موضوع أمني واحد من أوله إلى آخره. اضغط عليها لترى ما فيها.',
     },
   },
   {
-    id: 'finish',
-    route: '/dashboard',
-    title: { en: 'That is the whole place', ar: 'هذا هو المكان كله' },
+    id: 'modules',
+    target: 'modules-grid',
+    placement: 'top',
+    title: { en: 'Study whatever you want, on your own', ar: 'ادرس ما تريد بنفسك' },
     body: {
-      en: 'You can run this tour again whenever you like, from the question mark at the top of any page. Now the only thing left is the first lesson.',
-      ar: 'يمكنك إعادة هذه الجولة متى شئت من علامة الاستفهام أعلى أي صفحة. ولم يبق الآن إلا الدرس الأول.',
+      en: 'A module holds its lessons, its quizzes and usually a lab you work in. Pick whichever one interests you, in whatever order you like, and be done with it properly.',
+      ar: 'تضم الوحدة دروسها واختباراتها وغالبا مختبرا تعمل فيه. اختر ما يهمك، بأي ترتيب تريد، وأتقنه.',
+    },
+  },
+  {
+    id: 'paths-gate',
+    target: 'nav-paths',
+    placement: 'end',
+    inNav: true,
+    requireClick: true,
+    title: { en: 'Career paths', ar: 'المسارات المهنية' },
+    body: {
+      en: 'Modules arranged into a job, for the ones who would rather be told the order. Click it to see them.',
+      ar: 'وحدات مرتبة على شكل مهنة، لمن يفضل أن يقال له الترتيب. اضغط عليها لتراها.',
+    },
+  },
+  {
+    id: 'paths',
+    target: 'paths-grid',
+    placement: 'top',
+    title: { en: 'The structured way in', ar: 'الطريق المنظم' },
+    body: {
+      en: 'A path puts modules in the order the work itself needs, SOC analyst or penetration tester, and tracks your progress across all of them at once.',
+      ar: 'يضع المسار الوحدات بالترتيب الذي يتطلبه العمل نفسه، محلل مركز عمليات أو مختبر اختراق، ويتابع تقدمك فيها جميعا.',
+    },
+  },
+  {
+    id: 'branch',
+    title: { en: 'One last thing', ar: 'أمر أخير' },
+    body: {
+      en: 'How much do you already know? If the fundamentals are new to you, start there. If you already have them, skip ahead to a module.',
+      ar: 'كم تعرف مسبقا؟ إن كانت الأساسيات جديدة عليك فابدأ بها. وإن كانت لديك مسبقا فتخط إلى إحدى الوحدات.',
+    },
+    branch: {
+      a: {
+        label: { en: "I'm new, start with Fundamentals", ar: 'أنا جديد، ابدأ بالأساسيات' },
+        route: '/fundamentals',
+      },
+      b: {
+        label: { en: 'I know the basics, show me Modules', ar: 'أعرف الأساسيات، أرني الوحدات' },
+        route: '/modules',
+      },
     },
   },
 ];

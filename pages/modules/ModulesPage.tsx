@@ -87,11 +87,13 @@ const ModulesPage: React.FC = () => {
       />
 
       {modules.length === 0 ? (
-        <EmptyState
-          icon={Layers}
-          title={t('common.comingSoon')}
-          description={t('common.comingSoonDesc')}
-        />
+        <div data-tour-id="modules-grid">
+          <EmptyState
+            icon={Layers}
+            title={t('common.comingSoon')}
+            description={t('common.comingSoonDesc')}
+          />
+        </div>
       ) : (
         <>
           {/* ── Search + filters ── */}
@@ -198,7 +200,10 @@ const ModulesPage: React.FC = () => {
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+            <div
+              data-tour-id="modules-grid"
+              className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5"
+            >
               {filtered.map((mod, i) => (
                 <ModuleCard key={mod.id} module={mod} index={i} />
               ))}

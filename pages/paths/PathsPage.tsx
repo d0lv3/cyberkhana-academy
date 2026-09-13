@@ -65,7 +65,7 @@ const PathsPage: React.FC = () => {
 
       {/* Published creator paths */}
       {publishedPaths.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div data-tour-id="paths-grid" className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {publishedPaths.map((p, i) => (
             <PathCard key={p.id} path={p} index={i} />
           ))}
@@ -98,7 +98,7 @@ const PathsPage: React.FC = () => {
       </motion.div>
 
       {/* Preview path cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div data-tour-id="paths-grid" className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {paths.map((path, i) => (
           <motion.div
             key={path.title.en}

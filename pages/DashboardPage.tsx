@@ -15,7 +15,6 @@ import { getStreak } from '../services/streakService';
 import SkillMatrix from '../components/skills/SkillMatrix';
 import { ContinueCard, StartHereCard } from '../components/dashboard/PrimaryCard';
 import JourneyMap from '../components/dashboard/JourneyMap';
-import ProgressStrip from '../components/dashboard/ProgressStrip';
 import NextStepCard from '../components/dashboard/NextStepCard';
 import StandingCard from '../components/dashboard/StandingCard';
 
@@ -24,14 +23,13 @@ import StandingCard from '../components/dashboard/StandingCard';
  * Ordered by what the learner came for, not by what the app can measure.
  *
  *   1  the next thing to open, which is the whole point of the page
- *   2  where they stand in their own work
- *   3  what to take up after that
- *   4  the skill matrix, which is the shape of the work rather than its score
- *   5  level, XP and rank, and the smaller things around them
+ *   2  what to take up after that
+ *   3  the skill matrix, which is the shape of the work rather than its score
+ *   4  level, XP and rank, and the smaller things around them
  *
- * Somebody who has finished nothing sees the same five, with the first two
- * replaced: where to start, and what the Academy is made of. They are not
- * shown a row of zeroes and asked to feel behind on their first day.
+ * Somebody who has finished nothing sees the first of those replaced by how
+ * the Academy is made of, so they are not shown a row of zeroes and asked to
+ * feel behind on their first day.
  */
 
 /** Monday-first day initials for the streak pips. */
@@ -105,7 +103,7 @@ const DashboardPage: React.FC = () => {
         <StartHereCard tracks={journey.tracks} firstName={firstName} />
       )}
 
-      {journey.started ? <ProgressStrip journey={journey} /> : <JourneyMap />}
+      {!journey.started && <JourneyMap />}
 
       {showNext && journey.recommended && <NextStepCard target={journey.recommended} />}
 

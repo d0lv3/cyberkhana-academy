@@ -21,7 +21,9 @@ const FundamentalsPage: React.FC = () => {
         iconNode={<GraduationCap size={38} strokeWidth={1.7} className="flex-shrink-0 text-[#00a859]" />}
         title={t('sidebar.fundamentals')}
       />
-      <FundamentalsRoadmap />
+      <div data-tour-id="fundamentals-roadmap">
+        <FundamentalsRoadmap />
+      </div>
     </div>
   );
 };

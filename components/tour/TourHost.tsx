@@ -110,6 +110,10 @@ const TourHost: React.FC = () => {
   const step: TourStep | undefined = steps[index];
   const isLast = index === steps.length - 1;
   const compact = viewport.width < COMPACT_WIDTH;
+  /* A gate step needs its own target to advance. If that target never turned
+     up (see `orphan` below), falling back to a normal Next button is what
+     keeps the tour from stranding someone on a row that failed to render. */
+  const gated = !!step?.requireClick && !!target && !orphan;
 
   /* ── Opening and closing ── */
 
@@ -252,6 +256,16 @@ const TourHost: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, index, step?.target, lang]);
 
+  /* A gate step moves on only when its target is actually clicked. The
+     listener fires once and detaches with the click: the same click already
+     carries a nav row to wherever it goes, so this only has to notice it. */
+  useEffect(() => {
+    if (!open || !step?.requireClick || !target) return;
+    const onTargetClick = () => go(1);
+    target.addEventListener('click', onTargetClick, { once: true });
+    return () => target.removeEventListener('click', onTargetClick);
+  }, [open, step, target, go]);
+
   /* Follow the element while the step is up. */
   useEffect(() => {
     if (!open || !target) {
@@ -307,12 +321,15 @@ const TourHost: React.FC = () => {
       }
       if (e.key === 'ArrowRight') {
         e.preventDefault();
-        go(isArabic ? -1 : 1);
+        /* A gate step is skipped by Tab-and-Enter on the lit row itself,
+           which fires the same click the mouse would; the arrow key is not
+           a substitute for that. */
+        if (!gated) go(isArabic ? -1 : 1);
         return;
       }
       if (e.key === 'ArrowLeft') {
         e.preventDefault();
-        go(isArabic ? 1 : -1);
+        if (!gated) go(isArabic ? 1 : -1);
         return;
       }
       if (e.key === 'Tab') {
@@ -334,7 +351,7 @@ const TourHost: React.FC = () => {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [open, close, go, isArabic]);
+  }, [open, close, go, isArabic, gated]);
 
   /* Each step is a new thing to read, so the card takes focus and the live
      region says which step it is. */
@@ -414,37 +431,42 @@ const TourHost: React.FC = () => {
       }
     : null;
 
-  const finishJourney = () => {
-    /* Somebody who has not started goes where "Start Fundamentals" goes on the
-       dashboard, which is the Fundamentals page itself: the same words have to
-       mean the same thing in both places. Somebody who has started is taken
-       back to the lesson they left open. */
-    let route = '/fundamentals';
-    try {
-      const journey = getJourney();
-      if (journey.started) route = journey.resume?.route ?? journey.recommended?.route ?? route;
-    } catch {
-      /* The button still has somewhere sensible to go. */
-    }
+  /* The closing question sends the learner off itself, so the button row
+     below never renders a Next or Finish for this step. */
+  const chooseBranch = (route: string) => {
     close('finished');
     navigate(route);
   };
 
-  const finishLabel = (() => {
-    try {
-      return getJourney().started
-        ? { en: 'Continue learning', ar: 'تابع التعلم' }
-        : { en: 'Start Fundamentals', ar: 'ابدأ الأساسيات' };
-    } catch {
-      return { en: 'Start Fundamentals', ar: 'ابدأ الأساسيات' };
-    }
-  })();
-
   return (
     <div dir={isArabic ? 'rtl' : 'ltr'} data-tour-open="true">
       {/* Holds the app still underneath. The dimming itself is the spotlight's
-          shadow, so this sheet stays transparent. */}
-      <div className="fixed inset-0 z-[80]" aria-hidden />
+          shadow, so this sheet stays transparent. A gate step cuts an actual
+          hole in it over the lit element, four bands framing the gap, since
+          the row underneath has to receive a real click rather than have one
+          faked on its behalf. */}
+      {gated && lit ? (
+        <>
+          <div className="fixed z-[80]" style={{ top: 0, left: 0, right: 0, height: lit.top }} aria-hidden />
+          <div
+            className="fixed z-[80]"
+            style={{ top: lit.top + lit.height, left: 0, right: 0, bottom: 0 }}
+            aria-hidden
+          />
+          <div
+            className="fixed z-[80]"
+            style={{ top: lit.top, left: 0, width: lit.left, height: lit.height }}
+            aria-hidden
+          />
+          <div
+            className="fixed z-[80]"
+            style={{ top: lit.top, left: lit.left + lit.width, right: 0, height: lit.height }}
+            aria-hidden
+          />
+        </>
+      ) : (
+        <div className="fixed inset-0 z-[80]" aria-hidden />
+      )}
 
       {/* The one bright thing. Nothing is drawn over the element: the dark is
           a shadow cast outward from this box, so what is lit stays crisp. */}
@@ -577,15 +599,10 @@ const TourHost: React.FC = () => {
                 {isArabic ? 'السابق' : 'Back'}
               </button>
             )}
-            {isLast ? (
-              <button
-                type="button"
-                onClick={finishJourney}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-[#9fef00] px-4 py-2 text-xs font-black text-[#0d1117] transition-colors hover:bg-[#8dd900] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9fef00]/60 touch:min-h-tap"
-              >
-                {finishLabel[lang]}
-                <ChevronRight size={14} className="rtl-flip" />
-              </button>
+            {step.branch ? null : gated ? (
+              <span className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-[#354562] px-3 py-2 text-xs font-semibold text-[#8592ad]">
+                {isArabic ? 'اضغط عليها للمتابعة' : 'Click it to continue'}
+              </span>
             ) : (
               <button
                 type="button"
@@ -598,6 +615,26 @@ const TourHost: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* The closing question: two ways onward instead of one Finish. */}
+        {step.branch && (
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+            <button
+              type="button"
+              onClick={() => chooseBranch(step.branch!.a.route)}
+              className="flex-1 rounded-lg border border-[#263248] bg-[#1a2332] px-4 py-2.5 text-xs font-bold text-[#d2d7e3] transition-colors hover:border-[#354562] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9fef00]/60 touch:min-h-tap"
+            >
+              {step.branch.a.label[lang]}
+            </button>
+            <button
+              type="button"
+              onClick={() => chooseBranch(step.branch!.b.route)}
+              className="flex-1 rounded-lg bg-[#9fef00] px-4 py-2.5 text-xs font-black text-[#0d1117] transition-colors hover:bg-[#8dd900] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9fef00]/60 touch:min-h-tap"
+            >
+              {step.branch.b.label[lang]}
+            </button>
+          </div>
+        )}
 
         {/* Closing the card is the same as saying no to the tour, and says so. */}
         <button
