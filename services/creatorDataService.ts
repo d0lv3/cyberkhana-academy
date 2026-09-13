@@ -282,6 +282,28 @@ export function deleteProgrammingLanguage(slug: string): void {
   saveAllProgrammingPatches(patches);
 }
 
+/**
+ * Hide (or restore) a BUILT-IN language from the public catalog. Admin-only —
+ * the server independently rejects this for anyone else. Unlike a creator's
+ * own language, a built-in can't be deleted (its lessons ship in the bundle),
+ * so this is what "delete" means for one: gone from every student's catalog,
+ * brought back the same way, its content untouched either way.
+ */
+export function setBuiltinLanguageHidden(langSlug: string, hidden: boolean): void {
+  const patches = getCreatorProgrammingPatches();
+  const patch = ensurePatch(patches, langSlug);
+  patch.languageHidden = hidden;
+  saveAllProgrammingPatches(patches);
+}
+
+/** Is this built-in language hidden right now — by me or by another admin?
+ *  Reads the same merged view the public catalog does, not just my own
+ *  patches, so the studio never shows a language as visible when someone
+ *  else has already hidden it. */
+export function isBuiltinLanguageHidden(langSlug: string): boolean {
+  return !!getAllVisiblePatches().find((p) => p.languageSlug === langSlug)?.languageHidden;
+}
+
 /** Build a bare catalog entry from a language definition (modules merge in later). */
 function languageToCatalogEntry(def: CreatorProgrammingLanguage, coverSvg?: string): ProgrammingLanguage {
   return {
@@ -372,6 +394,8 @@ function getAllVisiblePatches(): ProgrammingPatch[] {
         Object.entries(patch.newConcepts).map(([slug, list]) => [slug, [...list]])
       ),
       languageCoverSvg: patch.languageCoverSvg,
+      newLanguage: patch.newLanguage,
+      languageHidden: patch.languageHidden,
     });
   }
   for (const patch of remote) {
@@ -385,12 +409,20 @@ function getAllVisiblePatches(): ProgrammingPatch[] {
           Object.entries(patch.newConcepts ?? {}).map(([slug, list]) => [slug, [...list]])
         ),
         languageCoverSvg: patch.languageCoverSvg,
+        newLanguage: patch.newLanguage,
+        languageHidden: patch.languageHidden,
       });
       continue;
     }
     // Own cover art wins; fall back to a published one if the creator set none.
     if (!target.languageCoverSvg && patch.languageCoverSvg) {
       target.languageCoverSvg = patch.languageCoverSvg;
+    }
+    // A built-in's metadata override and hidden flag are admin-set and global
+    // by nature (see ProgrammingPatch.languageHidden) — own wins, same as cover.
+    if (!target.newLanguage && patch.newLanguage) target.newLanguage = patch.newLanguage;
+    if (target.languageHidden === undefined && patch.languageHidden !== undefined) {
+      target.languageHidden = patch.languageHidden;
     }
     const ownModuleIds = new Set(target.newModules.map((m) => m.id));
     target.newModules.push(...(patch.newModules ?? []).filter((m) => !ownModuleIds.has(m.id)));
@@ -413,17 +445,34 @@ function getAllVisiblePatches(): ProgrammingPatch[] {
  *    built-in's metadata only; its concepts still come from the static course, so
  *    editing a module title never freezes or duplicates its lesson list.
  *
- * Either way, only published entries reach students.
+ * A patch's `newLanguage` reusing the built-in's own SLUG is the same idea one
+ * level up: an admin's override of the language's own name, color and
+ * description. It applies as soon as it is saved, with no draft stage of its
+ * own — `languageHidden` is what an admin has instead, to pull a built-in out
+ * of the catalog without touching its content or its lessons' URLs.
+ *
+ * Modules and lessons stay gated on `status === 'published'`, same as ever.
+ * Pass `includeHidden` for the admin studio, which has to see a hidden
+ * built-in to bring it back; the public catalog (`getProgrammingLanguages`)
+ * never does.
  */
-export function mergeProgrammingLanguages(staticLanguages: ProgrammingLanguage[]): ProgrammingLanguage[] {
+export function mergeProgrammingLanguages(
+  staticLanguages: ProgrammingLanguage[],
+  opts: { includeHidden?: boolean } = {}
+): ProgrammingLanguage[] {
   const patches = getAllVisiblePatches();
 
-  return staticLanguages.map((lang) => {
+  const merged = staticLanguages.map((lang) => {
     const patch = patches.find((p) => p.languageSlug === lang.slug);
-    if (!patch) return lang;
+    if (!patch) return { lang, hidden: false };
 
     // Creator-overridden cover art (cosmetic, applies regardless of publish state).
     const coverSvg = patch.languageCoverSvg ?? lang.coverSvg;
+
+    // An admin's override of THIS built-in's own name/color/description —
+    // never a different language, and never in place of its modules.
+    const langOverride =
+      patch.newLanguage && patch.newLanguage.slug === lang.slug ? patch.newLanguage : undefined;
 
     /** Apply this module's published patch concepts: overrides first, then additions. */
     const withPatchConcepts = (mod: ProgrammingModule): ProgrammingModule => {
@@ -461,12 +510,20 @@ export function mergeProgrammingLanguages(staticLanguages: ProgrammingLanguage[]
       .filter((m) => !existingModuleIds.has(m.id))
       .map(withPatchConcepts);
 
-    return {
+    const withOverride: ProgrammingLanguage = {
       ...lang,
+      ...(langOverride && {
+        name: langOverride.name,
+        color: langOverride.color || lang.color,
+        description: langOverride.description,
+      }),
       coverSvg,
       modules: [...mergedModules, ...additionalModules].sort((a, b) => a.order - b.order),
     };
+    return { lang: withOverride, hidden: !!patch.languageHidden };
   });
+
+  return merged.filter((m) => opts.includeHidden || !m.hidden).map((m) => m.lang);
 }
 
 /* ═══════════════════════════════════════════════

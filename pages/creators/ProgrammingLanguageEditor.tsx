@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Code, ShieldCheck } from 'lucide-react';
+import { Code, ShieldCheck, Lock } from 'lucide-react';
 import CreatorLayout from '../../components/creators/CreatorLayout';
 import BilingualInput from '../../components/creators/BilingualInput';
 import EnhancedCard from '../../components/ui/EnhancedCard';
 import { useToast } from '../../hooks/useToast';
 import { useAuth } from '../../contexts/AuthContext';
-import { getProgrammingLanguages } from '../../data/programming';
+import { getProgrammingLanguages, programmingLanguages, isBuiltinLanguage } from '../../data/programming';
 import {
   getCreatorLanguageBySlug,
+  getCreatorProgrammingPatches,
   saveProgrammingLanguage,
   saveProgrammingAsAdmin,
 } from '../../services/creatorDataService';
@@ -45,6 +46,12 @@ const ProgrammingLanguageEditor: React.FC = () => {
    * authorises the write itself, by role or by grant. */
   const isAdminEdit = searchParams.get('admin') === '1' || searchParams.get('shared') === '1';
   const viaShare = searchParams.get('shared') === '1';
+  /* A built-in language (Python, C, C++, Bash): the first save writes an
+   * override that replaces its name/color/description everywhere. Its
+   * modules and lessons are edited individually from the list, same as a
+   * built-in module or concept. */
+  const isBuiltinEdit =
+    searchParams.get('builtin') === '1' && user?.role === 'admin' && !!editSlug && isBuiltinLanguage(editSlug);
 
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
@@ -62,7 +69,28 @@ const ProgrammingLanguageEditor: React.FC = () => {
 
     let def: CreatorProgrammingLanguage | undefined;
 
-    if (isAdminEdit) {
+    if (isBuiltinEdit) {
+      // An admin's own override, if one already exists, else the built-in's
+      // current values — editing starts from what is actually live.
+      const override = getCreatorProgrammingPatches().find((p) => p.languageSlug === editSlug)?.newLanguage;
+      const builtin = programmingLanguages.find((l) => l.slug === editSlug);
+      def =
+        override ??
+        (builtin
+          ? {
+              slug: builtin.slug,
+              name: builtin.name,
+              color: builtin.color,
+              description: builtin.description,
+              isCreatorContent: true,
+              isPublished: true,
+              status: 'published',
+              authorName: 'CyberKhana',
+              createdAt: '',
+              updatedAt: '',
+            }
+          : undefined);
+    } else if (isAdminEdit) {
       // Another author's language: the list page hands it over, since it lives
       // in their bucket rather than mine.
       try {
@@ -92,7 +120,7 @@ const ProgrammingLanguageEditor: React.FC = () => {
     setDescAr(def.description?.ar ?? '');
     setStatus(statusOf(def));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editSlug, isAdminEdit]);
+  }, [editSlug, isAdminEdit, isBuiltinEdit]);
 
   // Auto-slug for new languages.
   useEffect(() => {
@@ -174,10 +202,22 @@ const ProgrammingLanguageEditor: React.FC = () => {
       backLabel="Programming"
       onSave={handleSave}
       isSaving={isSaving}
-      status={status}
-      onStatusChange={setStatus}
+      {...(isBuiltinEdit ? {} : { status, onStatusChange: setStatus })}
     >
       <ToastContainer />
+
+      {/* ── Built-in copy-on-write banner ── */}
+      {isBuiltinEdit && (
+        <div className="flex items-start gap-3 rounded-lg border border-[#9fef00]/30 bg-[#9fef00]/10 px-4 py-3 mb-4 max-w-2xl">
+          <Lock size={16} className="text-[#9fef00] mt-0.5 flex-shrink-0" />
+          <div className="text-xs text-[#d2d7e3]">
+            <span className="font-bold text-[#9fef00]">Editing a built-in language</span>, saving
+            replaces its name, accent and description for every student right away. Its modules and
+            lessons are edited individually from the list, and whether it shows in the catalog at
+            all is the eye icon next to it there, not this page.
+          </div>
+        </div>
+      )}
 
       {/* ── Editing on someone else's behalf ── */}
       {adminCtx && (

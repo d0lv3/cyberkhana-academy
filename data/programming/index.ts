@@ -12,10 +12,22 @@ export const programmingLanguages: ProgrammingLanguage[] = staticLanguages;
 
 const staticSlugs = new Set(staticLanguages.map((l) => l.slug));
 
+/** Is this slug one of the built-in languages (vs. creator-authored)? */
+export const isBuiltinLanguage = (slug: string): boolean => staticSlugs.has(slug);
+
 /** All languages: static + published creator-defined languages, each with
- * creator patches (published modules/concepts/covers) merged in. */
+ * creator patches (published modules/concepts/covers) merged in. A built-in
+ * an admin has hidden is left out, same as an unpublished creator language. */
 export const getProgrammingLanguages = (): ProgrammingLanguage[] =>
   mergeProgrammingLanguages([...staticLanguages, ...getVisibleCreatorLanguages(staticSlugs)]);
+
+/** Every language, hidden built-ins included — the admin studio's view, so a
+ *  hidden one can still be found and brought back. Not for student-facing
+ *  pages; use `getProgrammingLanguages` there. */
+export const getAllProgrammingLanguagesForAdmin = (): ProgrammingLanguage[] =>
+  mergeProgrammingLanguages([...staticLanguages, ...getVisibleCreatorLanguages(staticSlugs)], {
+    includeHidden: true,
+  });
 
 export const getLanguage = (slug: string): ProgrammingLanguage | undefined =>
   getProgrammingLanguages().find((l) => l.slug === slug);

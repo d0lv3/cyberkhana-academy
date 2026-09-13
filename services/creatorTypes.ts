@@ -267,8 +267,18 @@ export interface ProgrammingPatch {
   newConcepts: Record<string, CreatorProgrammingConcept[]>;
   /** Creator override for the language card's cover art (SVG markup or image URL). */
   languageCoverSvg?: string;
-  /** Present when this patch DEFINES a creator-authored language. */
+  /** Present when this patch DEFINES a creator-authored language, OR when it
+   *  overrides a BUILT-IN one's name/color/description (an admin edit, reusing
+   *  the built-in's own slug — the slug and modules never move). Unlike a
+   *  creator's own new language, a built-in override applies as soon as it is
+   *  saved: there is no draft stage to hide it, since `languageHidden` already
+   *  covers that. */
   newLanguage?: CreatorProgrammingLanguage;
+  /** Admin-only: hides a BUILT-IN language from every student, regardless of
+   *  `newLanguage`'s status — a built-in has no "draft" of its own visibility,
+   *  only visible or hidden. Ignored for creator-authored languages, whose
+   *  visibility is already governed by `newLanguage.status`. */
+  languageHidden?: boolean;
 }
 
 /* ── Unified content item (for the studio overview / recent activity) ── */

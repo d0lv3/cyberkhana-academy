@@ -40,6 +40,11 @@ const ADMIN_ITEM_BUCKETS: ContentBucketKey[] = [
   'networking-units',
 ];
 
+/** The languages that ship in the bundle (data/programming/index.ts on the
+ *  client) — kept in sync here since only an admin may redefine or hide one
+ *  of these through a patch, never a permitted creator. */
+const BUILTIN_PROGRAMMING_SLUGS = new Set(['python', 'c', 'cpp', 'bash']);
+
 function isAdminItemBucket(value: string): value is ContentBucketKey {
   return (ADMIN_ITEM_BUCKETS as readonly string[]).includes(value);
 }
@@ -189,6 +194,7 @@ router.get('/published', authenticate, async (_req: AuthRequest, res) => {
         newConcepts: Record<string, AnyItem[]>;
         newLanguage?: AnyItem;
         languageCoverSvg?: string;
+        languageHidden?: boolean;
       }
     >();
 
@@ -214,9 +220,14 @@ router.get('/published', authenticate, async (_req: AuthRequest, res) => {
               if (pub.length) publishedConcepts[modSlug] = pub;
             }
           }
-          // Creator-defined language: published ones reach every student.
+          // Creator-defined language: published ones reach every student. An
+          // admin's override of a BUILT-IN one is different: it reuses the
+          // built-in's own slug rather than defining a new one, and applies
+          // as soon as it is saved, with no draft stage of its own — the
+          // same reasoning as the cover art just below.
+          const isBuiltinSlug = BUILTIN_PROGRAMMING_SLUGS.has(patch.languageSlug);
           const publishedLanguage =
-            isPlainObject(patch.newLanguage) && isPublishedItem(patch.newLanguage)
+            isPlainObject(patch.newLanguage) && (isBuiltinSlug || isPublishedItem(patch.newLanguage))
               ? credited(patch.newLanguage as AnyItem, author)
               : undefined;
           /* ── Cover art ──
@@ -234,12 +245,18 @@ router.get('/published', authenticate, async (_req: AuthRequest, res) => {
               ? patch.languageCoverSvg
               : undefined;
           const coverTravels = !!cover && (!isPlainObject(patch.newLanguage) || !!publishedLanguage);
+          // Admin-only, and travels the same unconditional way: a patch whose
+          // only content is "hide Python" still has to reach every student.
+          const hiddenFlag = isBuiltinSlug && typeof patch.languageHidden === 'boolean'
+            ? patch.languageHidden
+            : undefined;
 
           if (
             !publishedModules.length &&
             !Object.keys(publishedConcepts).length &&
             !publishedLanguage &&
-            !coverTravels
+            !coverTravels &&
+            hiddenFlag === undefined
           ) {
             continue;
           }
@@ -255,6 +272,9 @@ router.get('/published', authenticate, async (_req: AuthRequest, res) => {
           }
           if (publishedLanguage && !merged.newLanguage) merged.newLanguage = publishedLanguage;
           if (!merged.languageCoverSvg && coverTravels) merged.languageCoverSvg = cover;
+          if (merged.languageHidden === undefined && hiddenFlag !== undefined) {
+            merged.languageHidden = hiddenFlag;
+          }
           patchByLang.set(patch.languageSlug, merged);
         }
       } else {
@@ -307,6 +327,24 @@ router.put('/:bucket', authenticate, requireRole('creator', 'admin'), async (req
   if (problem) {
     res.status(400).json({ error: problem });
     return;
+  }
+
+  // A built-in language's own name/color/description and its visibility are
+  // an admin's call, never a permitted creator's — the same permission that
+  // lets a creator add a module to Python does not let them rewrite Python.
+  if (bucket === 'programming-patches' && req.user!.role !== 'admin') {
+    for (const item of items as unknown[]) {
+      if (!isPlainObject(item)) continue;
+      const slug = item.languageSlug;
+      if (
+        typeof slug === 'string' &&
+        BUILTIN_PROGRAMMING_SLUGS.has(slug) &&
+        (item.newLanguage !== undefined || item.languageHidden !== undefined)
+      ) {
+        res.status(403).json({ error: 'Only an admin may redefine or hide a built-in language' });
+        return;
+      }
+    }
   }
 
   try {

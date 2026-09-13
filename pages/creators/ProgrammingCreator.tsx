@@ -10,7 +10,7 @@ import { confirmDialog } from '../../components/ui/ConfirmHost';
 import { useLang } from '../../contexts/LangContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { hasPerm } from '../../services/permissions';
-import { getProgrammingLanguages } from '../../data/programming';
+import { getProgrammingLanguages, getAllProgrammingLanguagesForAdmin, isBuiltinLanguage } from '../../data/programming';
 import {
   getCreatorProgrammingPatches,
   getCreatorLanguages,
@@ -20,6 +20,8 @@ import {
   saveProgrammingModule,
   saveProgrammingLanguage,
   saveProgrammingLanguageCoverSvg,
+  setBuiltinLanguageHidden,
+  isBuiltinLanguageHidden,
   fetchAllModeratableProgrammingForAdmin,
   type AdminProgrammingPatch,
 } from '../../services/creatorDataService';
@@ -269,8 +271,10 @@ const ProgrammingCreator: React.FC = () => {
   };
 
   // Catalog languages (static + published creator languages) + my own DRAFT
-  // languages, which the public merge hides until published.
-  const publishedLanguages = getProgrammingLanguages();
+  // languages, which the public merge hides until published. Admins see the
+  // full studio view, hidden built-ins included, so one can still be found
+  // and brought back; everyone else sees exactly what students see.
+  const publishedLanguages = isAdmin ? getAllProgrammingLanguagesForAdmin() : getProgrammingLanguages();
   const listedSlugs = new Set(publishedLanguages.map((l) => l.slug));
   const draftLanguages: ProgrammingLanguage[] = getCreatorLanguages()
     .filter((d) => !listedSlugs.has(d.slug))
@@ -294,6 +298,28 @@ const ProgrammingCreator: React.FC = () => {
     if (!def) return;
     const next = statusOf(def) === 'published' ? 'draft' : 'published';
     saveProgrammingLanguage({ ...def, status: next, isPublished: next === 'published' });
+    setRefreshKey((k) => k + 1);
+  };
+
+  /** Is this built-in language hidden from students right now? */
+  const isBuiltinHidden = (slug: string) => isBuiltinLanguageHidden(slug);
+
+  const handleToggleBuiltinVisibility = async (slug: string, name: string) => {
+    const hidden = isBuiltinHidden(slug);
+    if (!hidden) {
+      // Going hidden is the consequential direction — every student loses
+      // this language right away, so it asks first. Bringing it back does not.
+      const ok = await confirmDialog({
+        title: uiLang === 'ar' ? `إخفاء ${name}؟` : `Hide ${name}?`,
+        message:
+          uiLang === 'ar'
+            ? 'ستختفي هذه اللغة عن كل الطلاب فورًا. محتواها يبقى كما هو، ويمكنك إعادة نشرها في أي وقت من هنا.'
+            : 'This language disappears from every student’s catalog right away. Its content is untouched, and you can bring it back any time from here.',
+        confirmLabel: uiLang === 'ar' ? 'إخفاء' : 'Hide',
+      });
+      if (!ok) return;
+    }
+    setBuiltinLanguageHidden(slug, !hidden);
     setRefreshKey((k) => k + 1);
   };
 
@@ -539,6 +565,11 @@ const ProgrammingCreator: React.FC = () => {
                           <Lock size={10} /> {uiLang === 'ar' ? 'قريباً' : 'Coming Soon'}
                         </span>
                       )}
+                      {isBuiltinLanguage(lang.slug) && isAdmin && isBuiltinHidden(lang.slug) && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-red-400">
+                          <EyeOff size={10} /> {uiLang === 'ar' ? 'مخفية عن الطلاب' : 'Hidden from students'}
+                        </span>
+                      )}
                     </h2>
                     <p className="text-xs text-[#8592ad]">
                       {lang.available
@@ -550,9 +581,11 @@ const ProgrammingCreator: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {/* Another author's published language: admin edit only */}
+                  {/* Another author's published language: admin edit only.
+                      A built-in's foreign override is handled by the
+                      built-in block below instead, alongside hide/show. */}
                   {(() => {
-                    if (ownLanguageDef(lang.slug) || !isAdmin) return null;
+                    if (ownLanguageDef(lang.slug) || !isAdmin || isBuiltinLanguage(lang.slug)) return null;
                     const foreignLang = publishedRows.find(
                       (r): r is Extract<PublishedRow, { kind: 'language' }> =>
                         r.kind === 'language' &&
@@ -576,8 +609,65 @@ const ProgrammingCreator: React.FC = () => {
                       </div>
                     );
                   })()}
+                  {/* Built-in language: an admin's edit + hide/show, never a
+                      permitted creator's. Kept apart from the "own creator
+                      language" block below, whose delete would wipe the
+                      whole patch — modules and concept overrides included. */}
+                  {(() => {
+                    if (!isAdmin || !isBuiltinLanguage(lang.slug)) return null;
+                    const hidden = isBuiltinHidden(lang.slug);
+                    // Someone else already overrode this built-in's metadata:
+                    // edit goes to that same override, in place, rather than
+                    // starting a second, competing one of my own.
+                    const foreignLang = publishedRows.find(
+                      (r): r is Extract<PublishedRow, { kind: 'language' }> =>
+                        r.kind === 'language' &&
+                        r.entry.languageSlug === lang.slug &&
+                        r.entry.ownerId !== user?._id
+                    );
+                    return (
+                      <div className="flex items-center gap-1.5" dir="ltr">
+                        {foreignLang && (
+                          <span className="hidden md:inline text-[10px] font-medium text-[#7c8aa6]">
+                            {foreignLang.entry.ownerName}
+                          </span>
+                        )}
+                        <button
+                          onClick={() => handleToggleBuiltinVisibility(lang.slug, lang.name)}
+                          title={
+                            hidden
+                              ? uiLang === 'ar'
+                                ? 'نشر للطلاب'
+                                : 'Publish to students'
+                              : uiLang === 'ar'
+                                ? 'إخفاء عن الطلاب'
+                                : 'Hide from students'
+                          }
+                          className={`w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md transition-all ${
+                            hidden
+                              ? 'text-red-400 hover:text-[#00a859] hover:bg-[#00a859]/10'
+                              : 'text-[#8592ad] hover:text-red-400 hover:bg-red-500/10'
+                          }`}
+                        >
+                          {hidden ? <Eye size={13} /> : <EyeOff size={13} />}
+                        </button>
+                        <button
+                          onClick={() =>
+                            foreignLang
+                              ? editForeignLanguage(foreignLang.entry)
+                              : navigate(`/creators/programming/edit-language/${lang.slug}?builtin=1`)
+                          }
+                          title={uiLang === 'ar' ? 'تعديل (مشرف)' : 'Edit as admin'}
+                          className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#8592ad] hover:text-[#f3a43a] hover:bg-[#f3a43a]/10 transition-all"
+                        >
+                          <Edit3 size={13} />
+                        </button>
+                      </div>
+                    );
+                  })()}
                   {/* Own creator language: lifecycle + edit + delete */}
                   {(() => {
+                    if (isBuiltinLanguage(lang.slug)) return null;
                     const def = ownLanguageDef(lang.slug);
                     if (!def || !canLanguages) return null;
                     return (
