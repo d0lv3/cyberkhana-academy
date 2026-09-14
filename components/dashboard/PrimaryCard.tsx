@@ -236,7 +236,8 @@ export const ContinueCard: React.FC<{
           level={level}
           lang={lang}
           openRequest={levelsRequest}
-          className="justify-self-start lg:justify-self-end"
+          hero
+          className="h-full justify-self-start lg:flex lg:items-start lg:justify-self-end"
         />
       </div>
     </HeroShell>

@@ -19,9 +19,13 @@ const LevelSummary: React.FC<{
   lang: 'en' | 'ar';
   openRequest?: string | null;
   className?: string;
-}> = ({ xp, level, lang, openRequest, className = '' }) => {
+  /** Enlarged treatment used in the returning learner's hero. */
+  hero?: boolean;
+}> = ({ xp, level, lang, openRequest, className = '', hero = false }) => {
   const ar = lang === 'ar';
   const accent = levelColor(level.level);
+  const ringSize = hero ? 148 : 112;
+  const ringStroke = hero ? 9 : 7;
 
   return (
     <div data-tour-id="dashboard-level" className={className}>
@@ -30,37 +34,43 @@ const LevelSummary: React.FC<{
         level={level}
         lang={lang}
         openRequest={openRequest}
-        className="-m-2 gap-5 p-2"
+        className={
+          hero
+            ? '-m-3 flex-col items-start gap-4 p-3 xs:flex-row xs:items-center xs:gap-6'
+            : '-m-2 gap-5 p-2'
+        }
       >
-        <ProgressRing progress={level.fraction * 100} color={accent} size={112} stroke={7}>
+        <ProgressRing progress={level.fraction * 100} color={accent} size={ringSize} stroke={ringStroke}>
           <LevelEmblem
             level={level.level}
             lang={lang}
             size="lg"
             eager
             decorative
-            className="h-[76px] w-[76px] drop-shadow-[0_6px_16px_rgba(0,0,0,0.45)]"
+            className={`drop-shadow-[0_6px_16px_rgba(0,0,0,0.45)] ${
+              hero ? 'h-[102px] w-[102px]' : 'h-[76px] w-[76px]'
+            }`}
           />
         </ProgressRing>
 
         <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[#8592ad]">
+          <p className={`${hero ? 'text-xs' : 'text-[10px]'} font-bold uppercase tracking-wider text-[#8592ad]`}>
             {ar ? 'المستوى' : 'Level'}
           </p>
-          <p className="mt-0.5 flex items-baseline gap-2 text-lg font-black leading-tight">
+          <p className={`mt-0.5 flex items-baseline gap-2 font-black leading-tight ${hero ? 'text-2xl' : 'text-lg'}`}>
             <span dir="ltr" className="font-mono" style={{ color: accent }}>
               {level.level.hex}
             </span>
             <span className="text-[#f3f6ff]">{level.level.name[lang]}</span>
           </p>
           <div className="mt-1 flex items-center gap-1.5 text-[#f3f6ff]">
-            <Zap size={14} className="text-[#9fef00]" />
-            <span className="text-base font-black" dir="ltr">
+            <Zap size={hero ? 17 : 14} className="text-[#9fef00]" />
+            <span className={`${hero ? 'text-xl' : 'text-base'} font-black`} dir="ltr">
               {xp.toLocaleString('en-US')}
             </span>
-            <span className="text-xs font-semibold text-[#8592ad]">XP</span>
+            <span className={`${hero ? 'text-sm' : 'text-xs'} font-semibold text-[#8592ad]`}>XP</span>
           </div>
-          <p className="mt-1 text-xs text-[#8592ad]">
+          <p className={`mt-1 text-[#8592ad] ${hero ? 'text-sm' : 'text-xs'}`}>
             {level.next ? (
               <>
                 <span dir="ltr">{level.toNext.toLocaleString('en-US')}</span>{' '}
