@@ -97,7 +97,13 @@ const DashboardPage: React.FC = () => {
             {t('dashboard.welcome')}
             {t('punct.comma')} <span className="font-semibold text-[#d2d7e3]">{firstName}</span>
           </p>
-          <ContinueCard target={hero} path={journey.path} />
+          <ContinueCard
+            target={hero}
+            path={journey.path}
+            xp={xp}
+            level={level}
+            levelsRequest={levelsRequest}
+          />
         </>
       ) : (
         <StartHereCard tracks={journey.tracks} firstName={firstName} />
@@ -113,7 +119,12 @@ const DashboardPage: React.FC = () => {
       </div>
 
       {/* ── The record of it ── */}
-      <StandingCard xp={xp} level={level} levelsRequest={levelsRequest} />
+      <StandingCard
+        xp={xp}
+        level={level}
+        levelsRequest={levelsRequest}
+        showLevel={!journey.started || !hero}
+      />
 
       {/* ── Everything else ── */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

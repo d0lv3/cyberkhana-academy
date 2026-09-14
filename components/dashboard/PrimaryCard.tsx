@@ -2,12 +2,13 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Code2, Compass, GraduationCap, Network, Play, Terminal } from 'lucide-react';
-import ProgressRing from '../ui/ProgressRing';
 import { startTour } from '../tour/TourHost';
 import { useLang } from '../../contexts/LangContext';
 import type { Journey, JourneyTarget } from '../../services/journeyService';
 import type { TrackProgress } from '../../services/progressService';
+import type { LevelProgress } from '../../services/xpService';
 import { TARGET_META } from './targetMeta';
+import LevelSummary from './LevelSummary';
 
 /* ─── The top of the dashboard ───
  *
@@ -149,9 +150,18 @@ export const StartHereCard: React.FC<{ tracks: TrackProgress[]; firstName: strin
 
 /* ── Something already underway ── */
 
-export const ContinueCard: React.FC<{ target: JourneyTarget; path: Journey['path'] }> = ({
+export const ContinueCard: React.FC<{
+  target: JourneyTarget;
+  path: Journey['path'];
+  xp: number;
+  level: LevelProgress;
+  levelsRequest: string | null;
+}> = ({
   target,
   path,
+  xp,
+  level,
+  levelsRequest,
 }) => {
   const { lang } = useLang();
   const navigate = useNavigate();
@@ -162,7 +172,7 @@ export const ContinueCard: React.FC<{ target: JourneyTarget; path: Journey['path
 
   return (
     <HeroShell>
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
         <div className="min-w-0">
           <p className="text-eyebrow text-[#00a859]">{ar ? 'تابع التعلم' : 'Continue learning'}</p>
 
@@ -218,17 +228,16 @@ export const ContinueCard: React.FC<{ target: JourneyTarget; path: Journey['path
           </div>
         </div>
 
-        {/* How far through the thing being resumed, at a glance. */}
-        {target.progress && target.progress.total > 0 && (
-          <ProgressRing progress={pct} size={132} stroke={8} color={meta.color} className="hidden lg:block">
-            <span className="text-2xl font-black text-[#f3f6ff]" dir="ltr">
-              {pct}%
-            </span>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#8592ad]">
-              {ar ? 'من هذه الوحدة' : 'of this course'}
-            </span>
-          </ProgressRing>
-        )}
+        {/* The linear bar already says how far through the course this learner
+            is. The top-right belongs to their level instead of repeating that
+            same percentage in a second shape. */}
+        <LevelSummary
+          xp={xp}
+          level={level}
+          lang={lang}
+          openRequest={levelsRequest}
+          className="justify-self-start lg:justify-self-end"
+        />
       </div>
     </HeroShell>
   );

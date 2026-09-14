@@ -104,10 +104,10 @@ export const TOUR_STEPS: TourStep[] = [
   },
   {
     id: 'standing',
-    target: 'dashboard-standing',
-    placement: 'top',
+    target: 'dashboard-level',
+    placement: 'bottom',
     route: '/dashboard',
-    title: { en: 'XP, level and rank', ar: 'الخبرة والمستوى والترتيب' },
+    title: { en: 'XP and level', ar: 'الخبرة والمستوى' },
     body: {
       en: 'Finished work earns XP, XP raises your level, and your level is what other members see. It is a record of the learning, not the point of it: nobody was ever hired for a number.',
       ar: 'ما تنهيه يكسبك نقاط خبرة، والنقاط ترفع مستواك، ومستواك هو ما يراه بقية الأعضاء. وهو سجل للتعلم لا غايته: فما وظف أحد من أجل رقم.',

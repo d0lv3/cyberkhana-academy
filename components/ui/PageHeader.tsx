@@ -51,12 +51,12 @@ const PageHeader: React.FC<PageHeaderProps> = ({
           {iconNode
             ? iconNode
             : Icon && (
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: `${iconColor}15`, border: `1px solid ${iconColor}30` }}
-                >
-                  <Icon size={24} style={{ color: iconColor }} />
-                </div>
+                <Icon
+                  size={38}
+                  strokeWidth={1.7}
+                  className="flex-shrink-0"
+                  style={{ color: iconColor }}
+                />
               )}
           <div className="min-w-0">
             {badge && (
