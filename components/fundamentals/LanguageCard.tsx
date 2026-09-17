@@ -1,8 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import ImageCard from '../ui/ImageCard';
 import { Code, Lock } from 'lucide-react';
 import CardArt from './CardArt';
+import { coverImageSrc } from '../../data/fundamentalsData';
 import { useLang } from '../../contexts/LangContext';
 import type { ProgrammingLanguage } from '../../data/programming/types';
 
@@ -29,7 +30,6 @@ function glyphFor(language: ProgrammingLanguage): string {
  */
 const LanguageCard: React.FC<{ language: ProgrammingLanguage; index?: number }> = ({
   language,
-  index = 0,
 }) => {
   const { lang, t } = useLang();
   const navigate = useNavigate();
@@ -39,10 +39,11 @@ const LanguageCard: React.FC<{ language: ProgrammingLanguage; index?: number }> 
   const open = () => language.available && navigate(`/fundamentals/programming/${language.slug}`);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 18 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.06 + index * 0.05, duration: 0.4 }}
+    <ImageCard
+      src={coverImageSrc(language.coverSvg)}
+      alt={language.name}
+      imageClassName={language.available ? 'transition-transform duration-500 group-hover:scale-[1.04]' : 'opacity-60'}
+      fallback={<CardArt kind="code" color={language.color} glyph={glyphFor(language)} className={language.available ? 'transition-transform duration-500 group-hover:scale-[1.04]' : 'opacity-60'} />}
       role="button"
       tabIndex={language.available ? 0 : -1}
       onClick={open}
@@ -59,14 +60,6 @@ const LanguageCard: React.FC<{ language: ProgrammingLanguage; index?: number }> 
       }`}
       style={{ ['--c' as string]: language.color }}
     >
-      <CardArt
-        kind="code"
-        color={language.color}
-        glyph={glyphFor(language)}
-        svg={language.coverSvg}
-        className={language.available ? 'transition-transform duration-500 group-hover:scale-[1.04]' : 'opacity-60'}
-      />
-
       {/* Readability scrims */}
       <div className="absolute inset-0 bg-gradient-to-t from-[#080c14] via-[#080c14]/55 to-transparent" />
       <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-[#080c14]/70 to-transparent" />
@@ -116,7 +109,7 @@ const LanguageCard: React.FC<{ language: ProgrammingLanguage; index?: number }> 
           </p>
         )}
       </div>
-    </motion.div>
+    </ImageCard>
   );
 };
 
