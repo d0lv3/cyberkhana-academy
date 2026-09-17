@@ -10,6 +10,37 @@ interface LiquidLogoLoaderProps {
   fillMs?: number;
 }
 
+/* ── Wave geometry ──
+ *
+ * The surface is a run of alternating humps that scrolls sideways, and two
+ * numbers have to agree about it.
+ *
+ * The scroll distance must be a whole number of humps, or the pattern jumps
+ * when it resets. One up and one down is the period, so that is 80.
+ *
+ * And the path has to be wider than the mark by at least the distance it
+ * travels, on the side it travels toward. It was not: it ran from -40 to 160,
+ * 200 wide, and slid 80 to the left, so by the end of every cycle it covered
+ * only as far as x=80 and the last 40 units of a 120 wide mark held no liquid
+ * at all. The fill drained off the right of the logo and snapped back, once
+ * every 2.1 seconds, and it was worst exactly when the mark was fullest,
+ * because that is where the mark is widest.
+ */
+const HUMP = 40;
+const PERIOD = HUMP * 2;
+/** A hump of slack on the trailing side, and the travel plus a hump on the leading one. */
+const WAVE_FROM = -HUMP;
+const WAVE_TO = 120 + PERIOD + HUMP;
+const HUMPS = (WAVE_TO - WAVE_FROM) / HUMP;
+
+/** The surface line: one quadratic hump, then reflections of it all the way. */
+const surface = (y: number, lift: number): string =>
+  `M${WAVE_FROM},${y} q${HUMP / 2},${lift} ${HUMP},0${` t${HUMP},0`.repeat(HUMPS - 1)}`;
+
+/** The same line, closed into the body of liquid hanging below it. */
+const body = (y: number, lift: number): string =>
+  `${surface(y, lift)} L${WAVE_TO},320 L${WAVE_FROM},320 Z`;
+
 /**
  * The CyberKhana mark, animated as if it were a glass being filled with green
  * liquid — a rising, waving level that loops. Used as the app's loading state
@@ -62,34 +93,29 @@ const LiquidLogoLoader: React.FC<LiquidLogoLoaderProps> = ({ size = 96, classNam
 
         {/* Rising liquid level */}
         <g className={fill ? 'liquid-fill' : 'liquid-rise'}>
-          {/* darker back wave for depth */}
-          <path
-            className="liquid-wave-slow"
-            d="M-40,30 q20,7 40,0 t40,0 t40,0 t40,0 t40,0 L160,320 L-40,320 Z"
-            fill="#0b7a45"
-            opacity="0.85"
-          />
+          {/* darker back wave for depth, leading with a trough so the two
+              surfaces never move as one sheet */}
+          <path className="liquid-wave-slow" d={body(30, 7)} fill="#0b7a45" opacity="0.85" />
           {/* bright front wave (the surface) */}
-          <path
-            className="liquid-wave"
-            d="M-40,26 q20,-6 40,0 t40,0 t40,0 t40,0 t40,0 L160,320 L-40,320 Z"
-            fill={`url(#${gradId})`}
-          />
+          <path className="liquid-wave" d={body(26, -6)} fill={`url(#${gradId})`} />
           {/* thin highlight line riding the surface */}
           <path
             className="liquid-wave"
-            d="M-40,26 q20,-6 40,0 t40,0 t40,0 t40,0 t40,0"
+            d={surface(26, -6)}
             fill="none"
             stroke="#b6ffd4"
             strokeWidth="1.4"
             opacity="0.55"
           />
-        </g>
 
-        {/* Rising bubbles */}
-        <circle className="liquid-bubble" cx="46" cy="86" r="2.4" fill="#c9ffe1" style={{ animationDelay: '0.2s' }} />
-        <circle className="liquid-bubble" cx="70" cy="90" r="1.8" fill="#c9ffe1" style={{ animationDelay: '1.1s' }} />
-        <circle className="liquid-bubble" cx="60" cy="82" r="1.4" fill="#c9ffe1" style={{ animationDelay: '1.9s' }} />
+          {/* Rising bubbles. Inside the liquid, not beside it: they used to sit
+              at a fixed height in the mark while the level moved past them, so
+              for most of the loop they were rising through an empty glass. They
+              now travel with the level and stay under the surface. */}
+          <circle className="liquid-bubble" cx="46" cy="86" r="2.4" fill="#c9ffe1" style={{ animationDelay: '0.2s' }} />
+          <circle className="liquid-bubble" cx="70" cy="90" r="1.8" fill="#c9ffe1" style={{ animationDelay: '1.1s' }} />
+          <circle className="liquid-bubble" cx="60" cy="82" r="1.4" fill="#c9ffe1" style={{ animationDelay: '1.9s' }} />
+        </g>
       </g>
     </svg>
   );
