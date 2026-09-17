@@ -18,6 +18,11 @@ import { displayFamily, labelFamily, labelTracking } from '../ui/displayFont';
  * they would be otherwise. The labels are not scaled with them, which is the
  * trade that keeps a stop readable at that size.
  *
+ * Three sizes stack up to whatever an emblem finally measures on screen, and
+ * they are worth keeping apart: how far the whole scene is scaled to fit the
+ * page, how big a cube is within the scene, and how big the emblem is on the
+ * cube. Only the first is forced on us; the other two are choices.
+ *
  * Alternating sides is what makes the height work at all: two stops in a row
  * are on opposite sides of the scene, so their label stacks and emblems can
  * overlap vertically without ever touching. The only pair that has to clear
@@ -58,7 +63,7 @@ const ISLANDS: IslandDef[] = [
     route: '/fundamentals/programming',
     cx: SIDE_L,
     cy: 68,
-    scale: 0.6,
+    scale: 0.7,
     title: { en: 'Programming', ar: 'البرمجة' },
   },
   {
@@ -70,7 +75,7 @@ const ISLANDS: IslandDef[] = [
     route: '/fundamentals/operating-systems',
     cx: SIDE_R,
     cy: 198,
-    scale: 0.6,
+    scale: 0.7,
     title: { en: 'Operating Systems', ar: 'أنظمة التشغيل' },
   },
   {
@@ -82,7 +87,7 @@ const ISLANDS: IslandDef[] = [
     route: '/fundamentals/networking',
     cx: SIDE_L,
     cy: 328,
-    scale: 0.6,
+    scale: 0.7,
     title: { en: 'Networking', ar: 'الشبكات' },
   },
   {
@@ -94,7 +99,7 @@ const ISLANDS: IslandDef[] = [
     route: '/fundamentals/cybersecurity-101',
     cx: SIDE_R,
     cy: 462,
-    scale: 0.7,
+    scale: 0.78,
     title: { en: 'Cybersecurity', ar: 'الأمن السيبراني' },
     isGoal: true,
   },
@@ -104,6 +109,19 @@ const ISLANDS: IslandDef[] = [
 const W = 96;
 const H = 55;
 const D = 52;
+
+/* How big an emblem is drawn on the cube it stands on.
+ *
+ * It used to be the cube's own scale, which quietly tied the icon to the land
+ * under it: the cube is sized so four stops fit one screen, and the emblem was
+ * paying that bill without owing it. An emblem is about 48 wide against a top
+ * face of 96, so at the cube's scale it covered half the face and read as a
+ * detail on the island rather than as the thing the island is about.
+ *
+ * At this multiplier it covers roughly two thirds, which is as far as it goes
+ * before the widest of them (the monitor) starts to hang over the face's
+ * edges. */
+const EMBLEM_SCALE = 1.35;
 
 /* Trails between consecutive stops, derived from the positions above rather
  * than hand-drawn, so moving an island can never leave its road behind. Each
@@ -362,7 +380,7 @@ const Island: React.FC<{
         )}
 
         {/* 3D emblem seated on the top face */}
-        <g transform={`scale(${island.scale})`}>
+        <g transform={`scale(${island.scale * EMBLEM_SCALE})`}>
           <Emblem k={island.key} color={c} />
         </g>
 
@@ -463,13 +481,18 @@ const FundamentalsRoadmap: React.FC = () => {
 
         {/* The whole road, in one screen. The height cap is what guarantees it:
             it leaves room for the app header, the page's own padding, the title
-            and the strapline, and preserveAspectRatio scales the scene down to
-            whatever is left. Two stops per row keep that scaling mild enough
-            that the labels survive it. */}
+            and the strapline, and preserveAspectRatio scales the scene to
+            whatever is left.
+
+            The width cap sits above where the height cap bites on an ordinary
+            laptop, so height is what decides the size there and the scene is
+            drawn as large as one screen allows. It still earns its place on a
+            tall monitor, where height would otherwise let the road grow until
+            it was the only thing in the room. */}
         <svg
           viewBox={`0 0 ${SCENE_W} ${SCENE_H}`}
           preserveAspectRatio="xMidYMid meet"
-          className="relative mx-auto block h-auto w-full max-w-[720px] max-h-[calc(100vh-14rem)]"
+          className="relative mx-auto block h-auto w-full max-w-[880px] max-h-[calc(100vh-14rem)]"
         >
           <defs>
             <filter id="island-blur" x="-60%" y="-60%" width="220%" height="220%">
