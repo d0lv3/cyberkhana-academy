@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Code, Monitor, Wifi, ShieldCheck, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { useLang } from '../../contexts/LangContext';
 import { getTrackProgress, type TrackKey } from '../../services/progressService';
 import { displayFamily, labelFamily, labelTracking } from '../ui/displayFont';
@@ -36,7 +36,6 @@ interface IslandDef {
   key: string;
   step: number;
   trackKey: TrackKey | null;
-  icon: React.ElementType;
   color: string;
   route: string;
   cx: number;
@@ -58,7 +57,6 @@ const ISLANDS: IslandDef[] = [
     key: 'programming',
     step: 1,
     trackKey: 'programming',
-    icon: Code,
     color: '#9fef00',
     route: '/fundamentals/programming',
     cx: SIDE_L,
@@ -70,7 +68,6 @@ const ISLANDS: IslandDef[] = [
     key: 'operating-systems',
     step: 2,
     trackKey: 'os',
-    icon: Monitor,
     color: '#f3a43a',
     route: '/fundamentals/operating-systems',
     cx: SIDE_R,
@@ -82,7 +79,6 @@ const ISLANDS: IslandDef[] = [
     key: 'networking',
     step: 3,
     trackKey: 'networking',
-    icon: Wifi,
     color: '#60a5fa',
     route: '/fundamentals/networking',
     cx: SIDE_L,
@@ -94,7 +90,6 @@ const ISLANDS: IslandDef[] = [
     key: 'cybersecurity',
     step: 4,
     trackKey: null,
-    icon: ShieldCheck,
     color: '#00a859',
     route: '/fundamentals/cybersecurity-101',
     cx: SIDE_R,
@@ -122,6 +117,14 @@ const D = 52;
  * before the widest of them (the monitor) starts to hang over the face's
  * edges. */
 const EMBLEM_SCALE = 1.35;
+
+/* The same emblem on the phone's card.
+ *
+ * Not a second opinion about size, a restatement of the one above at the
+ * card's scale: the card's top face is 34 half-wide against the scene cube's
+ * 96, so an emblem keeping the same share of the face is 34/96 of the size it
+ * is drawn there. */
+const MOBILE_EMBLEM = (34 / 96) * EMBLEM_SCALE;
 
 /* Trails between consecutive stops, derived from the positions above rather
  * than hand-drawn, so moving an island can never leave its road behind. Each
@@ -176,7 +179,35 @@ const blend = (hex: string, target: string, t: number): string => {
  * rim light (bright top edge → dim bottom), a gradient extrusion for real
  * thickness, a soft colored halo, and a neon bloom on the glyph.
  */
-const Emblem: React.FC<{ k: string; color: string }> = ({ k, color }) => {
+/* The two filters every emblem needs, rendered once for the whole page.
+ *
+ * They used to live in the scene's own <defs>, which was fine while the scene
+ * was the only thing drawing emblems. The phone's list draws them too now, and
+ * a filter referenced from a <defs> inside a display:none element is not
+ * something to rely on. A zero-sized svg that is always in the document is. */
+const EmblemFilters: React.FC = () => (
+  <svg width="0" height="0" className="absolute" aria-hidden focusable="false">
+    <defs>
+      <filter id="island-blur" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur stdDeviation="9" />
+      </filter>
+      <filter id="emblem-glow" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur stdDeviation="2.6" result="b" />
+        <feMerge>
+          <feMergeNode in="b" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+    </defs>
+  </svg>
+);
+
+/* `ns` namespaces this emblem's gradient ids. The scene and the phone's list
+ * are both in the document at once, only one of them with a size, and two
+ * <linearGradient> elements sharing an id is a coin toss over which one a
+ * url(#…) resolves to. They happen to be identical, which is exactly the kind
+ * of accident that stops being true later. */
+const Emblem: React.FC<{ k: string; color: string; ns?: string }> = ({ k, color, ns = '' }) => {
   const faceA = blend(color, '#0b1220', 0.74); // lit top of the face
   const faceMid = blend(color, '#070b14', 0.86);
   const faceB = blend(color, '#04070e', 0.93); // shaded bottom
@@ -186,10 +217,11 @@ const Emblem: React.FC<{ k: string; color: string }> = ({ k, color }) => {
   const rimLo = blend(color, '#0b1220', 0.42); // bottom edge — dim
   const spec = blend(color, '#ffffff', 0.82); // pale highlights
   const glyph = blend(color, '#ffffff', 0.42); // glowing accent
-  const faceId = `face-${k}`;
-  const rimId = `rim-${k}`;
-  const sideId = `side-${k}`;
-  const sphId = `sph-${k}`;
+  const faceId = `${ns}face-${k}`;
+  const rimId = `${ns}rim-${k}`;
+  const sideId = `${ns}side-${k}`;
+  const sphId = `${ns}sph-${k}`;
+  const glowId = 'emblem-glow';
   const dx = 5;
   const dy = 9;
 
@@ -221,15 +253,36 @@ const Emblem: React.FC<{ k: string; color: string }> = ({ k, color }) => {
       <ellipse cx={0} cy={18} rx={40} ry={9} fill="#03050b" opacity={0.5} filter="url(#island-blur)" />
 
       {k === 'cybersecurity' && (() => {
-        const shield = 'M-40,-66 Q0,-77 40,-66 L40,-24 Q40,9 0,30 Q-40,9 -40,-24 Z';
+        /* A heater shield, not the tall pentagon it was. That one stood 107
+           units against the other three emblems' 86 and was the only one
+           taller than it was wide, so the goal island read as oversized
+           rather than as the end of the road. This one is 78 by 77, a shade
+           narrower than its neighbours; the emphasis comes from the island
+           under it, its beacon ring and the road arriving there.
+
+           It was also the plainest of the four, a flat plate with a tick,
+           while the others carry window dots, screen content and lit spheres.
+           The crest seam, the lit half and the inset rim are the detail that
+           was missing, and they are what make it read as forged rather than
+           cut out. */
+        const shield = 'M-39,-50 Q0,-60 39,-50 L39,-18 Q39,6 0,22 Q-39,6 -39,-18 Z';
+        /* An inset rim a little inside the edge, like the terraced contour on
+           the cube's own top face. */
+        const inner = 'M-30,-42 Q0,-50 30,-42 L30,-17 Q30,2 0,14 Q-30,2 -30,-17 Z';
+        /* The half the light reaches. The face gradient runs top-left to
+           bottom-right, so this is the side that catches it. */
+        const lit = 'M0,-55 Q-19.5,-55 -39,-50 L-39,-18 Q-39,6 0,22 Z';
         return (
           <>
             <path d={shield} transform={`translate(${dx},${dy})`} fill={`url(#${sideId})`} />
             <path d={shield} fill={`url(#${faceId})`} stroke={`url(#${rimId})`} strokeWidth={2.6} strokeLinejoin="round" />
+            <path d={lit} fill={spec} opacity={0.07} />
+            <path d="M0,-55 L0,22" stroke={spec} strokeWidth={1.1} opacity={0.16} />
+            <path d={inner} fill="none" stroke={rimLo} strokeOpacity={0.5} strokeWidth={1.1} />
             {/* top specular sweep */}
-            <path d="M-31,-58 Q0,-68 31,-58" fill="none" stroke={spec} strokeWidth={2.4} strokeLinecap="round" opacity={0.22} />
-            <g filter="url(#emblem-glow)">
-              <path d="M-15,-26 l11,13 l22,-27" fill="none" stroke={glyph} strokeWidth={6} strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M-28,-44 Q0,-52 28,-44" fill="none" stroke={spec} strokeWidth={2.2} strokeLinecap="round" opacity={0.24} />
+            <g filter={`url(#${glowId})`}>
+              <path d="M-14,-18 l9,10 l19,-21" fill="none" stroke={glyph} strokeWidth={5.5} strokeLinecap="round" strokeLinejoin="round" />
             </g>
           </>
         );
@@ -247,7 +300,7 @@ const Emblem: React.FC<{ k: string; color: string }> = ({ k, color }) => {
           <rect x={-39} y={-65} width={78} height={46} rx={4} fill="#05080f" opacity={0.8} />
           <rect x={-39} y={-65} width={78} height={46} rx={4} fill="none" stroke={rimLo} strokeOpacity={0.5} strokeWidth={1} />
           {/* glowing content */}
-          <g filter="url(#emblem-glow)">
+          <g filter={`url(#${glowId})`}>
             <rect x={-32} y={-57} width={48} height={5.5} rx={2.5} fill={glyph} opacity={0.9} />
             <rect x={-32} y={-46} width={30} height={5.5} rx={2.5} fill={glyph} opacity={0.5} />
             <circle cx={24} cy={-31} r={6} fill={glyph} opacity={0.75} />
@@ -270,7 +323,7 @@ const Emblem: React.FC<{ k: string; color: string }> = ({ k, color }) => {
             <circle cx={-24} cy={-58} r={3} fill={spec} opacity={0.38} />
             <circle cx={-14} cy={-58} r={3} fill={spec} opacity={0.26} />
             {/* </> — glowing neon glyph */}
-            <g filter="url(#emblem-glow)">
+            <g filter={`url(#${glowId})`}>
               <path d="M-12,-40 L-28,-26 L-12,-12" fill="none" stroke={glyph} strokeWidth={5.5} strokeLinecap="round" strokeLinejoin="round" />
               <path d="M12,-40 L28,-26 L12,-12" fill="none" stroke={glyph} strokeWidth={5.5} strokeLinecap="round" strokeLinejoin="round" />
               <path d="M5,-46 L-5,-6" fill="none" stroke={color} strokeWidth={5.5} strokeLinecap="round" />
@@ -298,7 +351,7 @@ const Emblem: React.FC<{ k: string; color: string }> = ({ k, color }) => {
         return (
           <>
             {/* glowing mesh links */}
-            <g filter="url(#emblem-glow)">
+            <g filter={`url(#${glowId})`}>
               {nodes.slice(1).map(([x, y], i) => (
                 <line key={`l${i}`} x1={c0[0]} y1={c0[1]} x2={x} y2={y} stroke={color} strokeWidth={2.4} strokeLinecap="round" opacity={0.85} />
               ))}
@@ -457,6 +510,8 @@ const FundamentalsRoadmap: React.FC = () => {
 
   return (
     <>
+      <EmblemFilters />
+
       {/* ── Desktop / tablet: the floating-islands scene ──
           No frame and no background of its own. A bordered panel made the
           journey read as one more widget sitting on the page, when it is the
@@ -494,20 +549,6 @@ const FundamentalsRoadmap: React.FC = () => {
           preserveAspectRatio="xMidYMid meet"
           className="relative mx-auto block h-auto w-full max-w-[880px] max-h-[calc(100vh-14rem)]"
         >
-          <defs>
-            <filter id="island-blur" x="-60%" y="-60%" width="220%" height="220%">
-              <feGaussianBlur stdDeviation="9" />
-            </filter>
-            {/* Neon bloom for emblem glyphs (blur + crisp original) */}
-            <filter id="emblem-glow" x="-60%" y="-60%" width="220%" height="220%">
-              <feGaussianBlur stdDeviation="2.6" result="b" />
-              <feMerge>
-                <feMergeNode in="b" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-
           {/* Ambient stars, kept off the centre line so they never read as
               part of the road itself */}
           {[
@@ -558,7 +599,6 @@ const FundamentalsRoadmap: React.FC = () => {
 
         {ISLANDS.map((island, i) => {
           const pct = pctOf(island.trackKey);
-          const Icon = island.icon;
           const c = island.color;
           return (
             <div key={island.key}>
@@ -573,33 +613,23 @@ const FundamentalsRoadmap: React.FC = () => {
                     : 'border-[#263248] bg-[#121a2a] hover:border-[#354562]'
                 }`}
               >
-                {/* Mini land cube.
-                    The glyph is the point of the row, so it is drawn on the
-                    face at about two thirds of its width, the same proportion
-                    the scene's emblems keep, and it overlaps the face rather
-                    than hovering above it. A foreignObject lays its content
-                    out in user units, so the icon's own size is in viewBox
-                    units and the viewBox transform scales it like everything
-                    else here. */}
+                {/* Mini land cube, carrying the scene's own emblem.
+                    It used to carry a flat stand-in icon instead, which made
+                    the phone a different drawing of the same four things: the
+                    stage you recognise on a laptop was not the stage you
+                    recognise here. MOBILE_EMBLEM is set so the emblem covers
+                    the same fraction of this smaller face that it covers of
+                    the scene's, so the card is a miniature rather than a
+                    variant. */}
                 <svg width="72" height="69" viewBox="-50 -42 100 96" className="flex-shrink-0">
                   <polygon points="-34,0 0,20 0,38 -34,18" fill="#0f1726" />
                   <polygon points="0,20 34,0 34,18 0,38" fill="#141f36" />
                   <polygon points="0,-20 34,0 0,20 -34,0" fill="#16223b" />
                   <polygon points="0,-20 34,0 0,20 -34,0" fill={c} opacity={0.16} />
                   <polygon points="0,-20 34,0 0,20 -34,0" fill="none" stroke={c} strokeWidth={1.4} strokeOpacity={0.85} />
-                  <foreignObject x="-24" y="-40" width="48" height="48">
-                    <div
-                      style={{
-                        display: 'flex',
-                        height: '100%',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: c,
-                      }}
-                    >
-                      <Icon size={44} />
-                    </div>
-                  </foreignObject>
+                  <g transform={`scale(${MOBILE_EMBLEM})`}>
+                    <Emblem k={island.key} color={c} ns="m-" />
+                  </g>
                 </svg>
 
                 <div className="min-w-0 flex-1">
