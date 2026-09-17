@@ -573,16 +573,31 @@ const FundamentalsRoadmap: React.FC = () => {
                     : 'border-[#263248] bg-[#121a2a] hover:border-[#354562]'
                 }`}
               >
-                {/* Mini land cube */}
-                <svg width="60" height="56" viewBox="-50 -42 100 96" className="flex-shrink-0">
+                {/* Mini land cube.
+                    The glyph is the point of the row, so it is drawn on the
+                    face at about two thirds of its width, the same proportion
+                    the scene's emblems keep, and it overlaps the face rather
+                    than hovering above it. A foreignObject lays its content
+                    out in user units, so the icon's own size is in viewBox
+                    units and the viewBox transform scales it like everything
+                    else here. */}
+                <svg width="72" height="69" viewBox="-50 -42 100 96" className="flex-shrink-0">
                   <polygon points="-34,0 0,20 0,38 -34,18" fill="#0f1726" />
                   <polygon points="0,20 34,0 34,18 0,38" fill="#141f36" />
                   <polygon points="0,-20 34,0 0,20 -34,0" fill="#16223b" />
                   <polygon points="0,-20 34,0 0,20 -34,0" fill={c} opacity={0.16} />
                   <polygon points="0,-20 34,0 0,20 -34,0" fill="none" stroke={c} strokeWidth={1.4} strokeOpacity={0.85} />
-                  <foreignObject x="-13" y="-40" width="26" height="26">
-                    <div style={{ display: 'flex', justifyContent: 'center', color: c }}>
-                      <Icon size={20} />
+                  <foreignObject x="-24" y="-40" width="48" height="48">
+                    <div
+                      style={{
+                        display: 'flex',
+                        height: '100%',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: c,
+                      }}
+                    >
+                      <Icon size={44} />
                     </div>
                   </foreignObject>
                 </svg>
