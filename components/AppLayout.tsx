@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import MobileNav from './MobileNav';
 import Header from './Header';
 import UniversityPrompt from './university/UniversityPrompt';
 import UsernamePrompt from './account/UsernamePrompt';
 import LanguagePrompt, { useLanguageFirstRun } from './account/LanguagePrompt';
 import { skyFor, skyStyle } from './ui/sky';
-import { TOUR_SIDEBAR_EVENT } from '../services/tourService';
 
 const SIDEBAR_KEY = 'academy-sidebar-collapsed';
 
@@ -14,7 +14,6 @@ const AppLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(() => {
     return localStorage.getItem(SIDEBAR_KEY) === 'true';
   });
-  const [mobileOpen, setMobileOpen] = useState(false);
   const { pathname } = useLocation();
   const sky = skyFor(pathname);
   /* Which language to say everything else in. Asked first, and on its own. */
@@ -24,28 +23,14 @@ const AppLayout: React.FC = () => {
     localStorage.setItem(SIDEBAR_KEY, String(collapsed));
   }, [collapsed]);
 
-  /* The Academy tour points at navigation rows, which on a phone live behind
-     the menu button. It asks for the drawer through a window event rather
-     than reaching in here, so the shell owns this state as it always did. */
-  useEffect(() => {
-    const onTourSidebar = (event: Event) => {
-      const wanted = (event as CustomEvent<{ open?: boolean }>).detail?.open;
-      setMobileOpen(!!wanted);
-    };
-    window.addEventListener(TOUR_SIDEBAR_EVENT, onTourSidebar);
-    return () => window.removeEventListener(TOUR_SIDEBAR_EVENT, onTourSidebar);
-  }, []);
-
   return (
     <div className="flex app-shell text-[#d2d7e3] bg-[#0d1117]">
-      <Sidebar
-        collapsed={collapsed}
-        onToggle={() => setCollapsed(!collapsed)}
-        mobileOpen={mobileOpen}
-        onMobileClose={() => setMobileOpen(false)}
-      />
+      {/* Two navigations, one per pointer. The column belongs to a mouse and a
+          wide screen; the bar belongs to a thumb. Neither is a smaller copy of
+          the other, and only one is ever mounted with a size. */}
+      <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        <Header onMenuToggle={() => setMobileOpen(true)} />
+        <Header />
         {/* overflow-x-hidden, not auto: a child that outgrows the phone should
             scroll inside its own box, never pan the whole shell sideways and
             take the header with it. */}
@@ -58,7 +43,11 @@ const AppLayout: React.FC = () => {
           }`}
           style={sky ? skyStyle(sky) : undefined}
         >
-          <div className="max-w-7xl mx-auto min-w-0 pb-[env(safe-area-inset-bottom,0px)]">
+          {/* Room at the foot for the phone's nav bar, which is fixed and
+              would otherwise sit on top of the last thing on the page. The
+              home indicator's inset is inside that reservation on a phone and
+              is all of it on a desktop, where there is no bar. */}
+          <div className="max-w-7xl mx-auto min-w-0 pb-[calc(4.25rem+env(safe-area-inset-bottom,0px))] md:pb-[env(safe-area-inset-bottom,0px)]">
             <Outlet />
           </div>
         </main>
@@ -76,6 +65,8 @@ const AppLayout: React.FC = () => {
           <UniversityPrompt />
         </>
       )}
+
+      <MobileNav />
     </div>
   );
 };

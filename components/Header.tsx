@@ -1,5 +1,5 @@
 import React from 'react';
-import { LogOut, Globe, Menu, HelpCircle } from 'lucide-react';
+import { LogOut, Globe, HelpCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import BrandLogo from './ui/BrandLogo';
 import Avatar from './ui/Avatar';
@@ -9,11 +9,7 @@ import { useXp } from '../services/xpService';
 import { levelColor } from './ui/LevelBadge';
 import { startTour } from './tour/TourHost';
 
-interface HeaderProps {
-  onMenuToggle: () => void;
-}
-
-const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
+const Header: React.FC = () => {
   const { user, logout } = useAuth();
   const { lang, setLang } = useLang();
   const { xp, level } = useXp();
@@ -21,15 +17,10 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
   return (
     <header className="flex-shrink-0 bg-[#0d1117]/95 border-b border-[#1e293b] backdrop-blur-md sticky top-0 z-30">
       <div className="flex items-center justify-between h-14 px-4 sm:px-6">
-        {/* Left: hamburger (mobile) + logo */}
+        {/* Left: the logo. No menu button any more — the phone's navigation
+            is a bar along the bottom, always out and always in reach, so there
+            is nothing here to open. */}
         <div className="flex items-center gap-3">
-          <button
-            onClick={onMenuToggle}
-            className="md:hidden w-10 h-10 touch:w-11 touch:h-11 rounded-lg bg-[#121a2a] border border-[#263248] flex items-center justify-center text-[#8390ac] hover:text-[#d2d7e3] transition-all"
-            aria-label="Open menu"
-          >
-            <Menu size={18} />
-          </button>
           <Link to="/dashboard" aria-label="CyberKhana Academy" className="md:hidden inline-flex items-center justify-center touch:min-h-tap touch:min-w-tap">
             <BrandLogo variant="mark" loading="eager" className="h-7 w-7 object-contain" />
           </Link>
@@ -107,11 +98,14 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
             <Globe size={16} />
           </button>
 
-          {/* Logout */}
+          {/* Logout. Desktop only: a phone's header was carrying four 44px
+              controls across 375px, and this one is the only destructive thing
+              among them. On a phone it lives at the foot of the More sheet,
+              a deliberate step away from anything it could be mistaken for. */}
           <button
             onClick={logout}
             aria-label="Log out"
-            className="w-10 h-10 touch:w-11 touch:h-11 rounded-lg bg-[#121a2a] border border-[#263248] flex items-center justify-center text-[#8390ac] hover:text-red-400 hover:border-red-500/30 transition-all"
+            className="hidden md:flex w-10 h-10 touch:w-11 touch:h-11 rounded-lg bg-[#121a2a] border border-[#263248] items-center justify-center text-[#8390ac] hover:text-red-400 hover:border-red-500/30 transition-all"
           >
             <LogOut size={16} className="rtl-flip" />
           </button>

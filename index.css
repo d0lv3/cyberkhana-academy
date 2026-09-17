@@ -356,8 +356,17 @@
     50%       { box-shadow: 0 0 0 8px rgba(0,168,89,0); }
   }
 
+  /* A bottom sheet arrives from the bottom. `slideIn` drops in from above,
+     which is right for a menu hanging off a control and wrong for a panel
+     that is meant to read as the screen's own lower edge coming up. */
+  @keyframes sheetRise {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+
   .animate-modal-enter { animation: modalEnter 0.3s ease-out; }
   .animate-slideIn     { animation: slideIn 0.3s ease-out; }
+  .animate-sheet-rise  { animation: sheetRise 0.26s cubic-bezier(0.32, 0.72, 0, 1); }
   .animate-float       { animation: float 3s ease-in-out infinite; }
   .animate-pulse-green { animation: pulse-green 2s infinite; }
 
@@ -438,6 +447,7 @@
   .animate-float,
   .animate-pulse-green,
   .animate-slideIn,
+  .animate-sheet-rise,
   .animate-modal-enter,
   .tour-cursor-pulse {
     animation: none !important;

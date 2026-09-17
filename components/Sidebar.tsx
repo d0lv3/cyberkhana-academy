@@ -10,7 +10,6 @@ import {
   Users,
   ChevronLeft,
   ChevronRight,
-  X,
 } from 'lucide-react';
 import BrandLogo from './ui/BrandLogo';
 import PathsIcon from './ui/PathsIcon';
@@ -20,14 +19,19 @@ import { useXp } from '../services/xpService';
 import { levelColor } from './ui/LevelBadge';
 import LevelEmblem from './levels/LevelEmblem';
 
+/* ─── The desktop navigation column ───
+ *
+ * Desktop only, and deliberately so. A phone gets MobileNav, a bar across the
+ * bottom of the screen, rather than a narrow copy of this one hidden behind a
+ * menu button.
+ */
+
 interface SidebarProps {
   collapsed: boolean;
   onToggle: () => void;
-  mobileOpen: boolean;
-  onMobileClose: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, mobileOpen, onMobileClose }) => {
+const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
   const { t, lang } = useLang();
   const { user } = useAuth();
   const { xp, level } = useXp();
@@ -63,10 +67,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, mobileOpen, onMo
         key={to}
         to={to}
         data-tour-id={tour}
-        onClick={() => {
-          setNudging(to);
-          onMobileClose();
-        }}
+        onClick={() => setNudging(to)}
         title={collapsed ? label : undefined}
         className={({ isActive }) =>
           [
@@ -128,14 +129,6 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, mobileOpen, onMo
             className="h-8 w-auto max-w-[140px] object-contain"
           />
         )}
-        {/* Mobile close button */}
-        <button
-          onClick={onMobileClose}
-          className="md:hidden w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#8592ad] hover:text-[#d2d7e3] hover:bg-[#182235] transition-all"
-          aria-label="Close menu"
-        >
-          <X size={18} />
-        </button>
       </div>
 
       {/* Nav */}
@@ -212,52 +205,29 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle, mobileOpen, onMo
   );
 
   return (
-    <>
-      {/* Mobile overlay */}
-      {mobileOpen && (
-        <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
-          onClick={onMobileClose}
-        />
-      )}
+    <aside
+      className={`
+        hidden md:flex flex-col flex-shrink-0 h-screen sticky top-0 z-20 bg-[#0d1117] border-e border-[#1e293b]
+        transition-all duration-300 ease-in-out
+        ${collapsed ? 'w-[68px]' : 'w-60'}
+      `}
+    >
+      {sidebarContent}
 
-      {/* Mobile slide-out drawer */}
-      <aside
-        className={`
-          fixed top-0 start-0 h-screen z-50 flex flex-col bg-[#0d1117] border-e border-[#1e293b]
-          transition-transform duration-300 ease-in-out w-64
-          md:hidden
-          ${mobileOpen ? 'translate-x-0' : lang === 'ar' ? 'translate-x-full' : '-translate-x-full'}
-        `}
+      {/* Floating collapse/expand toggle — rides the sidebar's inner
+          (content-facing) edge, overhanging the page by half its width. That
+          overhang is why the <aside> carries a z-index: `sticky` makes it a
+          stacking context, so this button's own z-index is spent inside the
+          sidebar, and without one the page's background paints over it. */}
+      <button
+        onClick={onToggle}
+        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        className="absolute top-[68px] -end-3 z-40 flex h-6 w-6 items-center justify-center rounded-full border border-[#263248] bg-[#121a2a] text-[#8592ad] shadow-md shadow-black/40 transition-all duration-200 hover:scale-110 hover:border-[#00a859]/60 hover:bg-[#0e1626] hover:text-[#00a859] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00a859]/50"
       >
-        {sidebarContent}
-      </aside>
-
-      {/* Desktop sidebar */}
-      <aside
-        className={`
-          hidden md:flex flex-col flex-shrink-0 h-screen sticky top-0 z-20 bg-[#0d1117] border-e border-[#1e293b]
-          transition-all duration-300 ease-in-out
-          ${collapsed ? 'w-[68px]' : 'w-60'}
-        `}
-      >
-        {sidebarContent}
-
-        {/* Floating collapse/expand toggle — rides the sidebar's inner
-            (content-facing) edge, overhanging the page by half its width. That
-            overhang is why the <aside> carries a z-index: `sticky` makes it a
-            stacking context, so this button's own z-index is spent inside the
-            sidebar, and without one the page's background paints over it. */}
-        <button
-          onClick={onToggle}
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          className="absolute top-[68px] -end-3 z-40 flex h-6 w-6 items-center justify-center rounded-full border border-[#263248] bg-[#121a2a] text-[#8592ad] shadow-md shadow-black/40 transition-all duration-200 hover:scale-110 hover:border-[#00a859]/60 hover:bg-[#0e1626] hover:text-[#00a859] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00a859]/50"
-        >
-          {collapsed ? <ChevronRight size={14} className="rtl-flip" /> : <ChevronLeft size={14} className="rtl-flip" />}
-        </button>
-      </aside>
-    </>
+        {collapsed ? <ChevronRight size={14} className="rtl-flip" /> : <ChevronLeft size={14} className="rtl-flip" />}
+      </button>
+    </aside>
   );
 };
 

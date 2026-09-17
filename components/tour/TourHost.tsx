@@ -8,9 +8,7 @@ import { getJourney } from '../../services/journeyService';
 import {
   hasSeenTour,
   markTourSeen,
-  navIsDrawer,
   prefersReducedMotion,
-  requestTourSidebar,
 } from '../../services/tourService';
 import { TOUR_STEPS, type TourStep } from './tourSteps';
 
@@ -126,16 +124,12 @@ const TourHost: React.FC = () => {
     setOpen(true);
   }, []);
 
-  const close = useCallback(
-    (outcome: 'finished' | 'skipped') => {
-      markTourSeen(outcome);
-      setOpen(false);
-      setTarget(null);
-      setRect(null);
-      requestTourSidebar(false);
-    },
-    []
-  );
+  const close = useCallback((outcome: 'finished' | 'skipped') => {
+    markTourSeen(outcome);
+    setOpen(false);
+    setTarget(null);
+    setRect(null);
+  }, []);
 
   useEffect(() => {
     trigger = () => begin();
@@ -181,14 +175,12 @@ const TourHost: React.FC = () => {
     [steps.length]
   );
 
-  /* The step says where it belongs and whether it lives in the navigation.
-     Both are settled before anything is measured: a card about the dashboard
-     that opened over the leaderboard would be a lie, and on a phone there is
-     nothing to point at until the drawer is open. */
+  /* The step says where it belongs, and it gets there before anything is
+     measured: a card about the dashboard that opened over the leaderboard
+     would be a lie. */
   useEffect(() => {
     if (!open || !step) return;
     if (step.route && location.pathname !== step.route) navigate(step.route);
-    requestTourSidebar(!!step.inNav && navIsDrawer());
   }, [open, step, location.pathname, navigate]);
 
   /* Find the step's element, and keep looking for a little while. */
@@ -207,9 +199,9 @@ const TourHost: React.FC = () => {
     const look = () => {
       if (cancelled) return;
       /* A tour id can be on screen more than once: the navigation is rendered
-         twice, as the phone's drawer and as the desktop column, and only one
-         of the two has a size at any width. The one being shown is the one to
-         point at. */
+         twice, as the phone's bottom bar and as the desktop column, and only
+         one of the two has a size at any width. The one being shown is the one
+         to point at. */
       const found = Array.from(
         document.querySelectorAll<HTMLElement>(`[data-tour-id="${step.target}"]`)
       ).find((candidate) => {

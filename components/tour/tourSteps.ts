@@ -29,9 +29,6 @@ export interface TourStep {
   /** Where the card would rather sit. `start`/`end` are logical, so they
    *  follow the reading direction. */
   placement?: 'bottom' | 'top' | 'start' | 'end';
-  /** Lives in the navigation, which is a drawer on a phone and has to be
-   *  opened before there is anything to point at. */
-  inNav?: boolean;
   /** Drop the step when the target never appears, rather than showing it
    *  centred. For navigation only some accounts have. */
   optional?: boolean;
@@ -72,7 +69,6 @@ export const TOUR_STEPS: TourStep[] = [
     id: 'dashboard-gate',
     target: 'nav-dashboard',
     placement: 'end',
-    inNav: true,
     requireClick: true,
     title: { en: 'Your dashboard', ar: 'لوحتك' },
     body: {
@@ -117,7 +113,6 @@ export const TOUR_STEPS: TourStep[] = [
     id: 'fundamentals-gate',
     target: 'nav-fundamentals',
     placement: 'end',
-    inNav: true,
     requireClick: true,
     title: { en: 'Start with Fundamentals', ar: 'ابدأ بالأساسيات' },
     body: {
@@ -144,7 +139,6 @@ export const TOUR_STEPS: TourStep[] = [
     id: 'modules-gate',
     target: 'nav-modules',
     placement: 'end',
-    inNav: true,
     requireClick: true,
     title: { en: 'Modules', ar: 'الوحدات' },
     body: {
@@ -166,7 +160,6 @@ export const TOUR_STEPS: TourStep[] = [
     id: 'paths-gate',
     target: 'nav-paths',
     placement: 'end',
-    inNav: true,
     requireClick: true,
     title: { en: 'Career paths', ar: 'المسارات المهنية' },
     body: {
