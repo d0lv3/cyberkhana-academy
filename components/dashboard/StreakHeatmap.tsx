@@ -28,9 +28,21 @@ const WEEKDAYS: Record<'en' | 'ar', string[]> = {
   ar: ['ن', 'ث', 'ر', 'خ', 'ج', 'س', 'ح'],
 };
 
-/** Four filled steps plus the empty one. The first is deliberately faint: a
- *  day with one activity is progress, but it is not a day that counted. */
-const LEVELS = ['#0d1420', '#124a30', '#11703f', '#00a859', '#9fef00'];
+/* ── The shades ──
+ * An empty day is a solid tile, not a hole. A month is mostly empty when
+ * somebody starts, and a grid that only exists where it is filled has no
+ * shape to fill in: the squares you have not earned yet are the point.
+ */
+
+/** A day that happened and went unused. Light enough to read as a tile
+ *  against the card behind it. */
+const EMPTY = '#232d40';
+/** A day that has not happened. Present, clearly not yet. */
+const FUTURE = '#161d2a';
+
+/** Four filled steps above empty. The first is deliberately dim: one
+ *  activity is progress, but it is not a day that counted. */
+const LEVELS = [EMPTY, '#1b6340', '#158a4e', '#00a859', '#9fef00'];
 
 /** Which shade a count earns. The daily goal is where it becomes
  *  unmistakably "done", so that is where the bright greens start. */
@@ -40,6 +52,15 @@ function levelFor(count: number): number {
   if (count < DAILY_ACTIVITY_GOAL) return 2;
   if (count <= 5) return 3;
   return 4;
+}
+
+/** A date that stays readable on its own tile: dark on the two brightest
+ *  greens, light on the deep ones, and barely there on an unused day. */
+function dateColor(level: number, isFuture: boolean): string {
+  if (isFuture) return '#2b3549';
+  if (level >= 3) return '#06210e';
+  if (level >= 1) return '#dbffe9';
+  return '#55637f';
 }
 
 /** How far back the record goes, as a count of whole months. */
@@ -100,16 +121,15 @@ const StreakHeatmap: React.FC<StreakHeatmapProps> = ({ days, lang }) => {
     'flex h-7 w-7 items-center justify-center rounded-lg border border-[#263248] bg-[#0d1420] text-[#9aa5bf] transition-colors hover:border-[#00a859]/40 hover:text-[#00a859] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-[#263248] disabled:hover:text-[#9aa5bf]';
 
   return (
-    <div>
+    /* Capped, because the cells are square and a seven-column grid given a
+       whole wide card turns into 90px tiles that swallow everything else on
+       it. At this width they land near 57px: big enough to read and to tap,
+       small enough that the month stays one part of the card. */
+    <div className="max-w-[28rem]">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <div className="min-w-0">
-          <p className="truncate text-sm font-bold text-[#f3f6ff]">
-            {MONTHS[lang][view.month]} <span dir="ltr">{view.year}</span>
-          </p>
-          <p className="mt-0.5 text-[11px] text-[#7c8aa6]">
-            {activeDaysLabel(ar, view.active)}
-          </p>
-        </div>
+        <p className="min-w-0 truncate text-sm font-bold text-[#f3f6ff]">
+          {MONTHS[lang][view.month]} <span dir="ltr">{view.year}</span>
+        </p>
 
         <div className="flex flex-shrink-0 items-center gap-1.5">
           <button
@@ -133,7 +153,7 @@ const StreakHeatmap: React.FC<StreakHeatmapProps> = ({ days, lang }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
+      <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
         {WEEKDAYS[lang].map((d, i) => (
           <div
             key={i}
@@ -155,23 +175,13 @@ const StreakHeatmap: React.FC<StreakHeatmapProps> = ({ days, lang }) => {
                 ? `${cell.key}: ${cell.count} نشاط`
                 : `${cell.key}: ${cell.count} ${cell.count === 1 ? 'activity' : 'activities'}`
             }
-            className="flex aspect-square items-center justify-center rounded-md text-[11px] font-bold tabular-nums transition-colors sm:rounded-lg sm:text-xs"
+            className="flex aspect-square items-center justify-center rounded-[7px] text-[11px] font-bold tabular-nums transition-colors sm:rounded-[10px] sm:text-xs"
             style={{
-              backgroundColor: cell.isFuture ? 'transparent' : LEVELS[levelFor(cell.count)],
-              border: cell.isToday
-                ? '1.5px solid #f3a43a'
-                : cell.isFuture
-                ? '1px solid #161f31'
-                : '1px solid rgba(255,255,255,0.05)',
-              /* A dark number on the two brightest greens, a light one on the
-                 rest, so the date stays readable at every shade. */
-              color: cell.isFuture
-                ? '#2b364d'
-                : levelFor(cell.count) >= 3
-                ? '#07230f'
-                : cell.count > 0
-                ? '#d6ffe6'
-                : '#3f4c67',
+              backgroundColor: cell.isFuture ? FUTURE : LEVELS[levelFor(cell.count)],
+              /* Drawn inside the tile rather than as a border, so marking
+                 today cannot nudge the grid by a pixel. */
+              boxShadow: cell.isToday ? 'inset 0 0 0 2px #f3a43a' : undefined,
+              color: dateColor(levelFor(cell.count), cell.isFuture),
             }}
           >
             <span dir="ltr">{cell.day}</span>
@@ -179,17 +189,17 @@ const StreakHeatmap: React.FC<StreakHeatmapProps> = ({ days, lang }) => {
         ))}
       </div>
 
-      {/* Legend, so the shading means something without hovering. */}
-      <div className="mt-3 flex items-center justify-end gap-1.5" dir="ltr">
-        <span className="text-[9px] text-[#4a5773]">{ar ? 'أقل' : 'Less'}</span>
-        {LEVELS.map((c) => (
-          <span
-            key={c}
-            className="h-2.5 w-2.5 rounded-[3px]"
-            style={{ backgroundColor: c, border: '1px solid rgba(255,255,255,0.05)' }}
-          />
-        ))}
-        <span className="text-[9px] text-[#4a5773]">{ar ? 'أكثر' : 'More'}</span>
+      {/* What the month came to, and what the shading means, under the grid
+          where a caption belongs rather than competing with the month. */}
+      <div className="mt-3.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <p className="text-[11px] text-[#7c8aa6]">{activeDaysLabel(ar, view.active)}</p>
+        <div className="flex items-center gap-1" dir="ltr">
+          <span className="me-0.5 text-[9px] text-[#4a5773]">{ar ? 'أقل' : 'Less'}</span>
+          {LEVELS.map((c) => (
+            <span key={c} className="h-3 w-3 rounded-[4px]" style={{ backgroundColor: c }} />
+          ))}
+          <span className="ms-0.5 text-[9px] text-[#4a5773]">{ar ? 'أكثر' : 'More'}</span>
+        </div>
       </div>
     </div>
   );
