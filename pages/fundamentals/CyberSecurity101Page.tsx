@@ -165,7 +165,7 @@ const CyberSecurity101Page: React.FC = () => {
               {lang === 'ar' ? 'القمة' : 'THE SUMMIT'}
             </p>
             <h1 className="text-2xl sm:text-3xl font-black text-[#f3f6ff]">
-              {lang === 'ar' ? 'الأمن السيبراني 101' : 'CyberSecurity 101'}
+              {lang === 'ar' ? 'الأمن السيبراني 101' : 'Cyber Security 101'}
             </h1>
             <p className="mt-2 max-w-2xl text-sm text-[#9aa5bf]">
               {lang === 'ar'

@@ -9,7 +9,7 @@ import { displayFamily, labelFamily, labelTracking } from '../ui/displayFont';
 /* ─── Fundamentals Roadmap ───
  * The Fundamentals hub as a journey: three floating land cubes (Programming,
  * Operating Systems, Networking) leading down to the goal island,
- * Cybersecurity 101. Hand-drawn isometric SVG, no chart library. Each cube
+ * Cyber Security 101. Hand-drawn isometric SVG, no chart library. Each cube
  * carries a chunky, extruded 3D emblem seated on its top face.
  *
  * The road zigzags straight down: one stop to a row, alternating sides, the
@@ -90,7 +90,7 @@ const ISLANDS: IslandDef[] = [
     cx: SIDE_R,
     cy: 462,
     scale: 0.7,
-    title: { en: 'Cybersecurity', ar: 'الأمن السيبراني' },
+    title: { en: 'Cyber Security 101', ar: 'الأمن السيبراني 101' },
     isGoal: true,
   },
 ];
@@ -237,36 +237,70 @@ const Emblem: React.FC<{ k: string; color: string; ns?: string }> = ({ k, color,
       <ellipse cx={0} cy={18} rx={40} ry={9} fill="#03050b" opacity={0.5} filter="url(#island-blur)" />
 
       {k === 'cybersecurity' && (() => {
-        /* A heater shield, not the tall pentagon it was. That one stood 107
-           units against the other three emblems' 86 and was the only one
-           taller than it was wide, so the goal island read as oversized
-           rather than as the end of the road. This one is 78 by 77, a shade
-           narrower than its neighbours; the emphasis comes from the island
-           under it, its beacon ring and the road arriving there.
-
-           It was also the plainest of the four, a flat plate with a tick,
-           while the others carry window dots, screen content and lit spheres.
-           The crest seam, the lit half and the inset rim are the detail that
-           was missing, and they are what make it read as forged rather than
-           cut out. */
-        const shield = 'M-39,-50 Q0,-60 39,-50 L39,-18 Q39,6 0,22 Q-39,6 -39,-18 Z';
-        /* An inset rim a little inside the edge, like the terraced contour on
-           the cube's own top face. */
-        const inner = 'M-30,-42 Q0,-50 30,-42 L30,-17 Q30,2 0,14 Q-30,2 -30,-17 Z';
-        /* The half the light reaches. The face gradient runs top-left to
-           bottom-right, so this is the side that catches it. */
-        const lit = 'M0,-55 Q-19.5,-55 -39,-50 L-39,-18 Q-39,6 0,22 Z';
+        /* A padlock, not a shield.
+         *
+         * The shield was the one emblem that named a feeling rather than a
+         * thing. Its three neighbours are objects you could pick up: a code
+         * card, a monitor, a cluster of linked nodes. A shield with a tick on
+         * it is a badge saying "secure", and a badge among objects reads as
+         * the odd one out however well it is drawn.
+         *
+         * A lock is the object the other three are about. It also has the one
+         * silhouette in the set you can still name at 35px on a phone, because
+         * the shackle breaks the outline where the others are all square or
+         * round, and it survives being drawn in this chunky extruded style the
+         * way a thin outline glyph would not.
+         *
+         * 80 by 80, which puts it inside the family (the widest of the others
+         * is 96) without the shield's old habit of towering over them.
+         */
+        const shackle =
+          'M-28,-20 L-28,-32 A28,22 0 0 1 28,-32 L28,-20 L16,-20 L16,-32 A16,12 0 0 0 -16,-32 L-16,-20 Z';
+        const shell =
+          'M-30,-20 L30,-20 Q40,-20 40,-10 L40,16 Q40,26 30,26 L-30,26 Q-40,26 -40,16 L-40,-10 Q-40,-20 -30,-20 Z';
         return (
           <>
-            <path d={shield} transform={`translate(${dx},${dy})`} fill={`url(#${sideId})`} />
-            <path d={shield} fill={`url(#${faceId})`} stroke={`url(#${rimId})`} strokeWidth={2.6} strokeLinejoin="round" />
-            <path d={lit} fill={spec} opacity={0.07} />
-            <path d="M0,-55 L0,22" stroke={spec} strokeWidth={1.1} opacity={0.16} />
-            <path d={inner} fill="none" stroke={rimLo} strokeOpacity={0.5} strokeWidth={1.1} />
-            {/* top specular sweep */}
-            <path d="M-28,-44 Q0,-52 28,-44" fill="none" stroke={spec} strokeWidth={2.2} strokeLinecap="round" opacity={0.24} />
+            {/* Depth first, offset behind the whole silhouette */}
+            <path d={shackle} transform={`translate(${dx},${dy})`} fill={`url(#${sideId})`} />
+            <path d={shell} transform={`translate(${dx},${dy})`} fill={`url(#${sideId})`} />
+
+            {/* The shackle sits behind the shell, so the shell's top edge
+                reads as passing in front of the legs. */}
+            <path
+              d={shackle}
+              fill={`url(#${faceId})`}
+              stroke={`url(#${rimId})`}
+              strokeWidth={2.2}
+              strokeLinejoin="round"
+            />
+            <path
+              d={shell}
+              fill={`url(#${faceId})`}
+              stroke={`url(#${rimId})`}
+              strokeWidth={2.6}
+              strokeLinejoin="round"
+            />
+
+            {/* Light along the shell's top edge and the shackle's crown */}
+            <rect x={-30} y={-16} width={60} height={3} rx={1.5} fill={spec} opacity={0.17} />
+            <path
+              d="M-21,-40 A21,15 0 0 1 21,-40"
+              fill="none"
+              stroke={spec}
+              strokeWidth={2}
+              strokeLinecap="round"
+              opacity={0.26}
+            />
+
+            {/* The seam where a real lock's shell closes, kept clear of the
+                keyhole so it never reads as part of it. */}
+            <path d="M-38,19 L38,19" stroke={rimLo} strokeOpacity={0.45} strokeWidth={1} />
+
+            {/* The keyhole, lit from inside. The one part that is allowed to
+                be the island's own colour at full strength. */}
             <g filter={`url(#${glowId})`}>
-              <path d="M-14,-18 l9,10 l19,-21" fill="none" stroke={glyph} strokeWidth={5.5} strokeLinecap="round" strokeLinejoin="round" />
+              <circle cx={0} cy={-4} r={6.4} fill={glyph} />
+              <path d="M-3.4,-1 L3.4,-1 L5.6,13 L-5.6,13 Z" fill={glyph} />
             </g>
           </>
         );
@@ -513,8 +547,8 @@ const FundamentalsRoadmap: React.FC = () => {
           </p>
           <p className="mt-1 max-w-md text-sm leading-snug text-[#9aa5bf]">
             {lang === 'ar'
-              ? 'ثلاث مراحل، ثم الهدف: الأمن السيبراني.'
-              : 'Three stages, then the goal: Cybersecurity.'}
+              ? 'ثلاث مراحل، ثم الهدف: الأمن السيبراني 101.'
+              : 'Three stages, then the goal: Cyber Security 101.'}
           </p>
         </div>
 
@@ -572,8 +606,8 @@ const FundamentalsRoadmap: React.FC = () => {
             so it leads the list instead. */}
         <p className="mb-4 text-sm leading-snug text-[#9aa5bf]">
           {lang === 'ar'
-            ? 'ثلاث مراحل، ثم الهدف: الأمن السيبراني.'
-            : 'Three stages, then the goal: Cybersecurity.'}
+            ? 'ثلاث مراحل، ثم الهدف: الأمن السيبراني 101.'
+            : 'Three stages, then the goal: Cyber Security 101.'}
         </p>
 
         {ISLANDS.map((island, i) => {
