@@ -38,6 +38,23 @@ const WEEK_LABELS: Record<'en' | 'ar', string[]> = {
   ar: ['ن', 'ث', 'ر', 'خ', 'ج', 'س', 'ح'],
 };
 
+/** The nudge under the weekly bar: how many activities today still owes.
+ *  `started` is false when nothing is done yet, so neither language says
+ *  "more" before there is anything to be more than. Arabic counts one, two
+ *  and many differently, so each is written out rather than left a numeral. */
+function remainingCopy(ar: boolean, remaining: number, started: boolean): string {
+  if (ar) {
+    const counts: Record<number, string> = {
+      1: started ? 'نشاطا واحدا آخر' : 'نشاطا واحدا',
+      2: started ? 'نشاطين آخرين' : 'نشاطين',
+      3: started ? 'ثلاثة أنشطة أخرى' : 'ثلاثة أنشطة',
+    };
+    return `أكمل ${counts[remaining] ?? `${remaining} أنشطة`} اليوم للحفاظ على التتابع.`;
+  }
+  const noun = remaining === 1 ? 'activity' : 'activities';
+  return `Finish ${remaining}${started ? ' more' : ''} ${noun} today to keep the streak alive.`;
+}
+
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const { t, lang } = useLang();
@@ -179,8 +196,29 @@ const DashboardPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Weekly goal */}
+            {/* Today's activities. A day only joins the streak once three
+                are finished, so the learner can see how close that is. */}
             <div className="mt-6">
+              <div className="mb-1.5 flex items-center justify-between text-xs" dir="ltr">
+                <span className="text-[#9aa5bf]">{ar ? 'نشاط اليوم' : 'Today'}</span>
+                <span className={`font-bold ${streak.todayDone ? 'text-[#00a859]' : 'text-[#f3a43a]'}`}>
+                  {Math.min(streak.todayCount, streak.dailyGoal)}/{streak.dailyGoal}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5" dir="ltr">
+                {Array.from({ length: streak.dailyGoal }, (_, i) => (
+                  <div
+                    key={i}
+                    className={`h-2 flex-1 rounded-full transition-colors duration-500 ${
+                      i < streak.todayCount ? 'bg-[#00a859]' : 'bg-[#0a0f18]'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Weekly goal */}
+            <div className="mt-5">
               <div className="mb-1.5 flex items-center justify-between text-xs" dir="ltr">
                 <span className="text-[#9aa5bf]">{ar ? 'هدف الأسبوع' : 'Weekly goal'}</span>
                 <span className="font-bold text-[#00a859]">
@@ -204,9 +242,7 @@ const DashboardPage: React.FC = () => {
                   ? ar
                     ? 'تم التسجيل اليوم، أحسنت.'
                     : 'Today is logged, nice work.'
-                  : ar
-                  ? 'أكمل درسا واحدا اليوم للحفاظ على التتابع.'
-                  : 'Finish one lesson today to keep the streak alive.'}
+                  : remainingCopy(ar, streak.dailyGoal - streak.todayCount, streak.todayCount > 0)}
               </p>
             </div>
           </div>

@@ -226,8 +226,9 @@ function isServerBackedKey(key: string): boolean {
   return CREATOR_KEYS.includes(key) || isProgressKey(key) || key === 'academy-module-preview';
 }
 
-/** Account state that only ever lives on this device: the study streak and
- *  weekly goal, a lab's working state, which feedback prompts were answered
+/** Account state that only ever lives on this device: the study streak, the
+ *  day's activity tally feeding it and the weekly goal, a lab's working
+ *  state, which feedback prompts were answered
  *  and any answer still waiting to send, the level last celebrated, whether
  *  the language question was put and the Academy tour taken, where each
  *  module was left, and the practice terminal's files. It stays through its
@@ -237,6 +238,7 @@ function isServerBackedKey(key: string): boolean {
 function isDeviceOnlyAccountKey(key: string): boolean {
   return (
     key === 'academy-study-days' ||
+    key === 'academy-day-activity' ||
     key === 'academy-weekly-goal' ||
     key.startsWith('academy-lab-') ||
     key === 'academy-feedback-answered' ||

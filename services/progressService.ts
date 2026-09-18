@@ -16,7 +16,7 @@ import { getProgrammingLanguages } from '../data/programming';
 import { getNetworkingLessons } from '../data/networking';
 import { getFundamentalsByCategory, getMergedFundamentalModules } from '../data/fundamentalsData';
 import { buildCatalogIndex } from '../data/pathCatalog';
-import { recordStudyDay } from './streakService';
+import { recordActivityCredit } from './streakService';
 import { queueProgressPush, FINISHED_MODULES_KEY } from './syncService';
 import type { PathStep } from './creatorTypes';
 
@@ -65,6 +65,9 @@ export function markProgrammingDone(langSlug: string, conceptId: string): Set<st
   const set = readSet(progKey(langSlug));
   if (!set.has(conceptId)) {
     set.add(conceptId);
+    // Credited before the write, so the change event it fires already
+    // carries today's new streak.
+    recordActivityCredit(`prog:${langSlug}:${conceptId}`);
     writeSet(progKey(langSlug), set);
   }
   return new Set(set);
@@ -85,6 +88,7 @@ export function markNetworkingDone(lessonId: string): Set<string> {
   const set = readSet(NET_KEY);
   if (!set.has(lessonId)) {
     set.add(lessonId);
+    recordActivityCredit(`net:${lessonId}`);
     writeSet(NET_KEY, set);
   }
   return new Set(set);
@@ -107,6 +111,7 @@ export function markOSLectureDone(slug: string, lectureId: string): string[] {
   const set = readSet(osKey(slug));
   if (!set.has(lectureId)) {
     set.add(lectureId);
+    recordActivityCredit(`os:${slug}:${lectureId}`);
     writeSet(osKey(slug), set);
   }
   return [...set];
@@ -142,8 +147,9 @@ export function recordActivity(activity: Omit<LastActivity, 'at'>): void {
   } catch {
     /* quota — non-critical */
   }
-  // Opening any lesson counts toward today's study streak.
-  recordStudyDay();
+  // Note: this does NOT touch the study streak. Opening a lesson only says
+  // where the learner was; the streak is paid by finishing things, which the
+  // mark*Done functions above credit.
   emitProgressChange();
   queueProgressPush();
 }

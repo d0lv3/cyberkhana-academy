@@ -1,21 +1,36 @@
 /**
  * Study streak & weekly goal.
  *
- * Stores the set of days the learner was active, as local 'YYYY-MM-DD'
- * strings in localStorage (`academy-study-days`). Days are recorded by
- * recordActivity() in progressService, so opening any lesson counts.
+ * A day joins the streak once the learner FINISHES three activities on it:
+ * three programming concepts, three module lectures, three networking
+ * lessons, or any mix of them. Opening a lesson is deliberately not enough.
+ * progressService credits an activity from inside its mark*Done guards, so
+ * only a genuine first-time completion ever counts.
+ *
+ * Two keys back this:
+ *   academy-study-days   → local 'YYYY-MM-DD' strings for days that qualified
+ *   academy-day-activity → the running day's distinct activity ids
+ *
+ * Crediting ids rather than bumping a plain counter is what keeps a day
+ * honest: resetting progress and redoing the same lesson cannot pay twice.
  *
  * Dates are handled in the LEARNER'S local timezone on purpose: a streak is a
  * human habit, so "today" has to mean their today, not UTC's.
  */
 
 const STUDY_DAYS_KEY = 'academy-study-days';
+const DAY_ACTIVITY_KEY = 'academy-day-activity';
 const WEEKLY_GOAL_KEY = 'academy-weekly-goal';
 
+/** How many finished activities a day needs before it joins the streak. */
+export const DAILY_ACTIVITY_GOAL = 3;
 /** How many study days a week counts as hitting the goal. */
 export const DEFAULT_WEEKLY_GOAL = 5;
 /** Keep roughly a year of history; enough for any streak, bounded storage. */
 const MAX_DAYS_KEPT = 400;
+/** Ids remembered for the running day. The day has long since qualified by
+ *  the time this bites, so the oldest are dropped rather than grown. */
+const MAX_DAY_IDS = 50;
 
 /** Local calendar day as 'YYYY-MM-DD' (not UTC — see module note). */
 function dayKey(d: Date): string {
@@ -52,13 +67,73 @@ function writeDays(days: Set<string>): void {
   }
 }
 
-/** Mark today as a study day. Idempotent, so it's safe to call on every lesson. */
-export function recordStudyDay(): void {
-  const days = readDays();
+/* ── the running day's tally ── */
+
+interface DayActivity {
+  /** The day these ids belong to. Anything older is spent. */
+  day: string;
+  ids: string[];
+}
+
+function readDayActivity(): DayActivity {
   const today = dayKey(new Date());
-  if (days.has(today)) return;
-  days.add(today);
+  try {
+    const raw = localStorage.getItem(DAY_ACTIVITY_KEY);
+    const parsed = raw ? (JSON.parse(raw) as Partial<DayActivity> | null) : null;
+    // Yesterday's tally does not carry over: a new day starts at zero.
+    if (parsed && parsed.day === today && Array.isArray(parsed.ids)) {
+      return { day: today, ids: parsed.ids.filter((id): id is string => typeof id === 'string') };
+    }
+  } catch {
+    /* unreadable — start the day over */
+  }
+  return { day: today, ids: [] };
+}
+
+function writeDayActivity(activity: DayActivity): void {
+  try {
+    localStorage.setItem(DAY_ACTIVITY_KEY, JSON.stringify(activity));
+  } catch {
+    /* quota — non-critical */
+  }
+}
+
+/** Today's count, treating an already-qualified day as full. Days logged
+ *  before this tally existed carry no ids, and must not read as empty. */
+function countToday(days: Set<string>): number {
+  const count = readDayActivity().ids.length;
+  if (count >= DAILY_ACTIVITY_GOAL) return count;
+  return days.has(dayKey(new Date())) ? DAILY_ACTIVITY_GOAL : count;
+}
+
+/** Distinct activities finished today. */
+export function getTodayActivityCount(): number {
+  return countToday(readDays());
+}
+
+/**
+ * Credit one finished activity toward today, logging the day as a study day
+ * once the goal is met.
+ *
+ * `id` identifies the item ('net:tcp-handshake'), so calling this twice for
+ * the same lesson is a no-op. Returns true only on the call that completes
+ * the day, which lets a caller celebrate the moment the streak ticks over.
+ */
+export function recordActivityCredit(id: string): boolean {
+  const activity = readDayActivity();
+  if (activity.ids.includes(id)) return false;
+
+  activity.ids.push(id);
+  if (activity.ids.length > MAX_DAY_IDS) activity.ids.shift();
+  writeDayActivity(activity);
+
+  if (activity.ids.length < DAILY_ACTIVITY_GOAL) return false;
+
+  const days = readDays();
+  if (days.has(activity.day)) return false;
+  days.add(activity.day);
   writeDays(days);
+  return true;
 }
 
 export function getWeeklyGoal(): number {
@@ -83,8 +158,12 @@ export interface StreakInfo {
   current: number;
   /** Best run ever recorded. */
   longest: number;
-  /** Has the learner studied today? */
+  /** Has the learner hit today's activity goal? */
   todayDone: boolean;
+  /** Activities finished today, toward `dailyGoal`. */
+  todayCount: number;
+  /** Activities a day needs before it counts. */
+  dailyGoal: number;
   /** Distinct study days in the current week. */
   daysThisWeek: number;
   weeklyGoal: number;
@@ -145,6 +224,8 @@ export function getStreak(): StreakInfo {
     current,
     longest,
     todayDone,
+    todayCount: countToday(days),
+    dailyGoal: DAILY_ACTIVITY_GOAL,
     daysThisWeek: week.filter((d) => d.done).length,
     weeklyGoal: getWeeklyGoal(),
     week,
