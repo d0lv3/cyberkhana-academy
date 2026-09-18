@@ -33,6 +33,8 @@ interface AdminUser {
   deletionRequestedAt?: string;
   /** When that request is carried out, unless they sign in before then. */
   deletionScheduledFor?: string;
+  /** Total XP: what the content came to, plus anything awarded. */
+  xp?: number;
   /** All-time board standing. */
   points?: number;
   /** The part of it an admin gave or took by hand, signed. */

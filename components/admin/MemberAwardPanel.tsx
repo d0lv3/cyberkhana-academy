@@ -19,11 +19,13 @@ import {
  * for itself. They share a panel because they are the same act: saying
  * something about a member that their finished lessons do not.
  *
- * Points are an adjustment, not a total. The number shown as "standing" is
- * what the leaderboard reads, and the adjustment is the part of it an admin
- * put there; the rest is earned and changes on its own as the member studies.
- * Sending a negative is how an award is taken back, so there is no separate
- * undo to get wrong.
+ * An award is XP like any other: it raises the member's level and their
+ * profile total, not only their place on the board. The three figures shown
+ * are the same number seen from three sides, so an admin can tell at a glance
+ * what an award did: the total, the part of it that counts on the board (the
+ * rest sits below the last reset), and the part an admin put there. Sending a
+ * negative is how an award is taken back, so there is no separate undo to get
+ * wrong.
  *
  * Tags are saved as a set, not one at a time. What the panel shows is what the
  * profile will show, which makes the Save button mean something precise and
@@ -33,6 +35,8 @@ import {
 export interface AwardTarget {
   id: string;
   displayName: string;
+  /** Total XP, which the level is read from. */
+  xp?: number;
   /** What the leaderboard reads. */
   points?: number;
   /** The part of that an admin put there, signed. */
@@ -86,11 +90,11 @@ const MemberAwardPanel: React.FC<MemberAwardPanelProps> = ({ user, ar, onUpdated
         'success',
         parsed > 0
           ? ar
-            ? `أُضيفت ${parsed} نقطة إلى ${updated.displayName}.`
-            : `Gave ${updated.displayName} ${parsed} points.`
+            ? `أُضيفت ${parsed} نقطة خبرة إلى ${updated.displayName}.`
+            : `Gave ${updated.displayName} ${parsed} XP.`
           : ar
-            ? `خُصمت ${Math.abs(parsed)} نقطة من ${updated.displayName}.`
-            : `Took ${Math.abs(parsed)} points from ${updated.displayName}.`
+            ? `خُصمت ${Math.abs(parsed)} نقطة خبرة من ${updated.displayName}.`
+            : `Took ${Math.abs(parsed)} XP from ${updated.displayName}.`
       );
     } catch (err) {
       toast('error', err instanceof Error ? err.message : 'Award failed');
@@ -131,9 +135,12 @@ const MemberAwardPanel: React.FC<MemberAwardPanelProps> = ({ user, ar, onUpdated
       <div>
         <div className="mb-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <p className="text-[11px] font-bold uppercase tracking-wide text-[#8592ad]">
-            {ar ? 'النقاط' : 'Points'}
+            {ar ? 'الخبرة' : 'XP'}
           </p>
           <p className="text-[11px] text-[#8592ad]" dir="ltr">
+            <span className="font-mono text-[#d2d7e3]">{(user.xp ?? 0).toLocaleString('en-US')}</span>{' '}
+            {ar ? 'إجمالًا' : 'total'}
+            {' · '}
             <span className="font-mono text-[#d2d7e3]">{(user.points ?? 0).toLocaleString('en-US')}</span>{' '}
             {ar ? 'على اللوحة' : 'on the board'}
             {!!user.pointsAdjustment && (
@@ -143,7 +150,7 @@ const MemberAwardPanel: React.FC<MemberAwardPanelProps> = ({ user, ar, onUpdated
                   {user.pointsAdjustment > 0 ? '+' : ''}
                   {user.pointsAdjustment.toLocaleString('en-US')}
                 </span>{' '}
-                {ar ? 'يدويًا' : 'by hand'}
+                {ar ? 'ممنوحة' : 'awarded'}
               </>
             )}
           </p>
@@ -198,8 +205,8 @@ const MemberAwardPanel: React.FC<MemberAwardPanelProps> = ({ user, ar, onUpdated
         </div>
         <p className="mt-1.5 text-[10px] leading-relaxed text-[#7c8aa6]">
           {ar
-            ? 'يُضاف المقدار إلى ما كسبه العضو، ويبقى بعد كل مزامنة. أرسل قيمة سالبة للتراجع.'
-            : 'Added on top of what they earned, and it survives every sync. Send a negative to take it back.'}
+            ? 'خبرة كأي خبرة: ترفع المستوى وإجمالي الملف، لا الترتيب وحده، وتبقى بعد كل مزامنة. أرسل قيمة سالبة للتراجع.'
+            : 'XP like any other: it raises their level and their profile total, not just the board, and it survives every sync. Send a negative to take it back.'}
         </p>
       </div>
 

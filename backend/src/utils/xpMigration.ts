@@ -26,7 +26,14 @@ export async function restateUserXp(user: IUser): Promise<void> {
   const setAside = oldTotal > 0 ? Math.min(1, Math.max(0, (user.pointsBaseline ?? 0) / oldTotal)) : 0;
   const pointsBaseline = Math.round(xp * setAside);
   const points = Math.max(0, xp - pointsBaseline);
-  const update: Partial<IUser> = { pointsRaw: xp, pointsBaseline, points, xpVersion: XP_FORMULA_VERSION };
+  /* An admin's award is XP, and rescoring the content cannot see it. */
+  const total = xp + (user.pointsAdjustment ?? 0);
+  const update: Partial<IUser> = {
+    pointsRaw: total,
+    pointsBaseline,
+    points: Math.max(0, total - pointsBaseline),
+    xpVersion: XP_FORMULA_VERSION,
+  };
   if (user.monthlyPointsMonth === currentMonthKey()) {
     const monthShare = oldTotal > 0 ? (user.monthlyPoints ?? 0) / oldTotal : 0;
     update.monthlyPoints = Math.min(points, Math.max(0, Math.round(xp * monthShare)));

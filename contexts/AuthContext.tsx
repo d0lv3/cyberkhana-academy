@@ -9,6 +9,7 @@ import {
   forgetServerBackedCaches,
 } from '../services/syncService';
 import { setOwnAuthor } from '../services/creatorDataService';
+import { setAwardedXp } from '../services/xpService';
 import { flushPendingFeedback } from '../services/feedbackService';
 
 interface ServerUser {
@@ -27,6 +28,7 @@ interface ServerUser {
   showBio?: boolean;
   socials?: AcademyUser['socials'];
   tags?: AcademyUser['tags'];
+  xpAward?: number;
   createdAt: string;
   termsAccepted?: boolean;
   creatorAgreementAccepted?: boolean;
@@ -112,6 +114,7 @@ function mapServerUser(u: ServerUser): AcademyUser {
     showBio: u.showBio ?? false,
     socials: u.socials ?? {},
     tags: u.tags ?? [],
+    xpAward: u.xpAward ?? 0,
     completedModulesCount: 0,
     completedLessonsCount: 0,
     totalLearningTimeMinutes: 0,
@@ -156,6 +159,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(next);
     return account;
   };
+
+  /* Hand the awarded XP to the scorer whenever the session changes. One place
+     rather than every sign-in path, and it covers signing out too: null means
+     zero, so the next account on this device does not inherit an award. */
+  useEffect(() => {
+    setAwardedXp(user?.xpAward ?? 0);
+  }, [user?.xpAward]);
 
   // Restore the session from the httpOnly cookie on boot.
   useEffect(() => {

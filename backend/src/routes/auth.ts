@@ -45,6 +45,10 @@ function publicUser(user: IUser) {
        something the Academy says about a member, not something they say about
        themselves. */
     tags: user.tags ?? [],
+    /* XP an admin awarded. The browser scores the content it has cached so a
+       finished lesson counts at once, and it cannot see this from any content,
+       so it is handed over and added on top (services/xpService.ts). */
+    xpAward: user.pointsAdjustment ?? 0,
     socials: publicSocials(user.socials),
     createdAt: user.createdAt,
     termsAccepted: hasAcceptedCurrentTerms(user),

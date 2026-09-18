@@ -29,6 +29,7 @@ function adminUserShape(user: IUser) {
     lastLoginAt: user.lastLoginAt,
     deletionRequestedAt: user.deletionRequestedAt,
     deletionScheduledFor: user.deletionScheduledFor,
+    xp: user.pointsRaw ?? 0,
     points: user.points ?? 0,
     pointsAdjustment: user.pointsAdjustment ?? 0,
     tags: user.tags ?? [],
@@ -300,8 +301,9 @@ router.patch('/users/:id/permissions', async (req: AuthRequest, res) => {
  *
  * Everyone's standing goes to zero. Nobody's learning does: a completed module
  * stays completed, and the certificates, progress bars and skill matrix built
- * on those completions are untouched. This empties the board, it does not
- * un-teach anyone.
+ * on those completions are untouched. Levels do not move either, and an award
+ * an admin handed out stays in the member's XP. This empties the board, it
+ * does not un-teach anyone or take anything back.
  *
  * It works by moving each learner's baseline up to what they had earned rather
  * than by writing a zero, because a zero would not survive. Points are derived
@@ -350,7 +352,6 @@ router.post('/points/reset', async (req: AuthRequest, res) => {
         $set: {
           pointsRaw: raw,
           pointsBaseline: raw,
-          pointsAdjustment: 0,
           points: 0,
           monthlyPoints: 0,
           monthlyPointsMonth: currentMonthKey(),
@@ -376,11 +377,12 @@ router.post('/points/reset', async (req: AuthRequest, res) => {
  * in the channel. A negative amount takes them back, which is also how a
  * mistake is undone, so this needs no separate correction route.
  *
- * It lands in `pointsAdjustment` rather than in the stored total because the
- * total is derived: the client recomputes it from the learner's completions
- * and pushes it on every sync, so a number written straight into `points`
- * would survive until that member next opened a tab and no longer. The
- * adjustment sits outside that calculation and is added back on every push.
+ * It is XP like any other: it counts toward the level, the profile total and
+ * the board, not the board alone. It is recorded in `pointsAdjustment` as well
+ * as added to the total, because the total is restated from the member's
+ * completions on every sync and the award has to be added back each time; a
+ * number written only into the total would survive until that member next
+ * opened a tab and no longer.
  *
  * No step-up confirmation, unlike a promotion. This is targeted at one
  * account, is undone by sending the negative, and hands out no capability the
@@ -417,10 +419,10 @@ router.post('/users/:id/points', async (req: AuthRequest, res) => {
 
     const before = target.points ?? 0;
     target.pointsAdjustment = (target.pointsAdjustment ?? 0) + parsed.data.amount;
-    /* Restate the standing the same way a sync would, so the board is right
-       immediately rather than at this member's next visit. */
-    const earned = (target.pointsRaw ?? 0) - (target.pointsBaseline ?? 0);
-    target.points = Math.max(0, earned + target.pointsAdjustment);
+    /* Into the total as well, so the level and the profile move now rather
+       than at this member's next sync. The sync recomputes the same figure. */
+    target.pointsRaw = Math.max(0, (target.pointsRaw ?? 0) + parsed.data.amount);
+    target.points = Math.max(0, target.pointsRaw - (target.pointsBaseline ?? 0));
 
     /* A gain counts toward this month as any other gain does. A deduction is
        not taken back out of the monthly board: that board is a record of what

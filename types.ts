@@ -26,6 +26,9 @@ export interface AcademyUser {
   /** Labels an admin put on this account, shown on the public profile.
    *  Server-managed — PATCH /auth/profile rejects them. */
   tags?: import('./backend/src/shared/tags').MemberTag[];
+  /** XP an admin awarded by hand. Part of the member's total, and added to
+   *  whatever the cached content scores (services/xpService.ts). */
+  xpAward?: number;
   /** Agreement to the current Terms, stamped by the server at sign-in. */
   termsAccepted?: boolean;
   /** Explicit acceptance of the current Creator Agreement. Gates the Studio. */

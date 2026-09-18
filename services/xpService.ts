@@ -111,9 +111,37 @@ export interface XpState {
   stopsTotal: number;
 }
 
+/* ── XP an admin awarded ──
+ *
+ * The browser scores the content it has cached, which is what lets a finished
+ * lesson count the moment it is finished. An award is in no content, so it
+ * cannot be scored here: the session carries the figure and AuthContext hands
+ * it over, and it is added to whatever the content came to.
+ *
+ * It lives in a module variable rather than in storage because it belongs to
+ * the session, not the device. Signing out clears it, so the next account does
+ * not inherit it. */
+let awardedXp = 0;
+
+/** Set from the session. Tells anything showing XP to read it again. */
+export function setAwardedXp(value: unknown): void {
+  const next = typeof value === 'number' && Number.isFinite(value) ? Math.round(value) : 0;
+  if (next === awardedXp) return;
+  awardedXp = next;
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(PROGRESS_EVENT));
+}
+
+export function getAwardedXp(): number {
+  return awardedXp;
+}
+
 export function getXpState(): XpState {
   const score = scoreGroups(getXpGroups(), (group) => group.done, getFinishedModules());
-  return { xp: score.xp, level: levelFor(score.xp), stopsDone: score.stopsDone, stopsTotal: score.stopsTotal };
+  /* One total, the same one the server keeps: what the content is worth plus
+     what was awarded. The level reads it, so an award raises a level here
+     exactly as it does on the server. */
+  const xp = Math.max(0, score.xp + awardedXp);
+  return { xp, level: levelFor(xp), stopsDone: score.stopsDone, stopsTotal: score.stopsTotal };
 }
 
 /**

@@ -39,7 +39,8 @@ export interface IUser extends Document {
   completedModulesCount: number;
   completedLessonsCount: number;
   totalLearningTimeMinutes: number;
-  /** All-time leaderboard standing, in XP: `pointsRaw` minus `pointsBaseline`, never below zero. */
+  /** All-time leaderboard standing, in XP: `pointsRaw` minus `pointsBaseline`,
+   *  never below zero. */
   points: number;
   /** Lifetime XP, scored by the server from the learner's completions
    *  (utils/xpCatalog.ts); whatever total a client sends is ignored. The level
@@ -56,12 +57,15 @@ export interface IUser extends Document {
   pointsBaseline: number;
   /** When the baseline was last moved. */
   pointsResetAt?: Date;
-  /** Points an admin gave or took by hand, signed and cumulative. Added on top
-   *  of what the learner earned, for the things the Academy cannot see: running
-   *  a workshop, winning a CTF, helping in the channel. It sits outside
-   *  `pointsRaw` on purpose, because that is the client's derived total and
-   *  every sync restates it; anything written into it would be gone by the
-   *  next push. */
+  /** XP an admin gave or took by hand, signed and cumulative, for the things
+   *  the Academy cannot see: running a workshop, winning a CTF, helping in the
+   *  channel.
+   *
+   *  It is XP like any other, so it is INSIDE `pointsRaw` and counts toward the
+   *  level and the profile total, not only the board. It is also kept here on
+   *  its own, because `pointsRaw` is restated from the content on every sync
+   *  and the award has to be added back each time. A leaderboard reset leaves
+   *  it alone: resetting the board must not take XP off anyone. */
   pointsAdjustment: number;
   /** Labels an admin put on this account, shown on its public profile. */
   tags?: MemberTag[];
