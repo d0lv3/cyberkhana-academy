@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Check, Flame, Target, Zap } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -13,8 +13,8 @@ import StreakHeatmap from './StreakHeatmap';
 /* ─── The daily streak ───
  *
  * Three things, in the order they matter to somebody glancing at the page:
- * how long the run is and how far it is from the goal they set, the year
- * behind it as a wall of squares, and what today still needs.
+ * how long the run is and how far it is from the goal they set, the month
+ * behind it as a calendar they can page through, and what today still needs.
  *
  * The ring fills toward the goal rather than showing the streak itself,
  * because a streak has no ceiling to measure against and a goal does. The
@@ -30,28 +30,6 @@ const WEEK_LABELS: Record<'en' | 'ar', string[]> = {
 
 const RING_R = 52;
 const RING_C = 2 * Math.PI * RING_R;
-
-/** How much of the year the heat map can show. A full 53 columns needs about
- *  740px; a phone gets a season instead. Chosen here rather than by rendering
- *  all three and hiding two, which would build 700 cells to throw most away. */
-function weeksForWidth(): number {
-  if (typeof window === 'undefined') return 53;
-  if (window.innerWidth >= 1024) return 53;
-  if (window.innerWidth >= 640) return 30;
-  return 17;
-}
-
-function useHeatmapWeeks(): number {
-  const [weeks, setWeeks] = useState(weeksForWidth);
-  useEffect(() => {
-    // Setting the same number is a no-op re-render, so resize spam is cheap.
-    const onResize = () => setWeeks(weeksForWidth());
-    onResize();
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
-  return weeks;
-}
 
 /** Days left, agreeing with Arabic's number rules: one, two, a few (3 to 10)
  *  and many each take a different form. */
@@ -87,7 +65,6 @@ const StreakCard: React.FC<{ streak: StreakInfo }> = ({ streak }) => {
   const goal = user?.streakGoal ?? null;
   const [saving, setSaving] = useState<number | null>(null);
   const [picking, setPicking] = useState(false);
-  const weeks = useHeatmapWeeks();
 
   const fraction = goalFraction(current, goal);
   const reachedGoal = goal !== null && current >= goal;
@@ -255,7 +232,7 @@ const StreakCard: React.FC<{ streak: StreakInfo }> = ({ streak }) => {
           <p className="mb-2.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#7c8aa6]">
             {ar ? 'سجل النشاط' : 'Activity'}
           </p>
-          <StreakHeatmap days={days} lang={lang} weeks={weeks} />
+          <StreakHeatmap days={days} lang={lang} />
         </div>
 
         {/* ── This week, and what today still needs ── */}
