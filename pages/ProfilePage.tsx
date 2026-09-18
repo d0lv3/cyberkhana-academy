@@ -36,6 +36,7 @@ import { ROLE_META } from '../services/roles';
 import { useXp } from '../services/xpService';
 import LevelBadge, { levelColor } from '../components/ui/LevelBadge';
 import LevelEmblem from '../components/levels/LevelEmblem';
+import MemberTags from '../components/ui/MemberTags';
 import {
   SOCIAL_META,
   SOCIAL_PLATFORMS,
@@ -578,6 +579,10 @@ const ProfilePage: React.FC = () => {
                     </span>
                   </p>
                 )}
+
+                {/* Shown here as well as on the public profile, so a member can
+                    see what others see without visiting their own page. */}
+                <MemberTags tags={user.tags} className="mt-2" />
 
                 <div className="mt-2 flex flex-col gap-1.5 text-sm text-[#9aa5bf] min-w-0">
                   {/* An email address is a single unbreakable token, so on a

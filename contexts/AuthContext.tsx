@@ -26,6 +26,7 @@ interface ServerUser {
   bio?: string;
   showBio?: boolean;
   socials?: AcademyUser['socials'];
+  tags?: AcademyUser['tags'];
   createdAt: string;
   termsAccepted?: boolean;
   creatorAgreementAccepted?: boolean;
@@ -110,6 +111,7 @@ function mapServerUser(u: ServerUser): AcademyUser {
     bio: u.bio,
     showBio: u.showBio ?? false,
     socials: u.socials ?? {},
+    tags: u.tags ?? [],
     completedModulesCount: 0,
     completedLessonsCount: 0,
     totalLearningTimeMinutes: 0,

@@ -120,7 +120,11 @@ router.put('/', authenticate, async (req: AuthRequest, res) => {
        nothing. Without that subtraction the first sync after a reset would
        undo it. The level reads `pointsRaw`, which a reset leaves alone. */
     const month = currentMonthKey();
-    const standing = Math.max(0, xp - (user.pointsBaseline ?? 0));
+    /* The board standing: what they have earned since the last reset, plus
+       whatever an admin has handed them by hand. The adjustment has to be
+       applied here rather than written into the stored total, because this
+       line runs on every sync and would overwrite it if it were. */
+    const standing = Math.max(0, xp - (user.pointsBaseline ?? 0) + (user.pointsAdjustment ?? 0));
     const delta = Math.max(0, standing - (user.points ?? 0));
     user.pointsRaw = xp;
     user.points = standing;

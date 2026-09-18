@@ -2,6 +2,7 @@ import { Router } from 'express';
 import User from '../models/User';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { publicSocials } from '../utils/socials';
+import { cleanTags } from '../shared/tags';
 import { logger } from '../utils/logger';
 import { LEADERBOARD_MIN_XP } from '../shared/xp';
 
@@ -18,8 +19,12 @@ const router = Router();
  * language, role and permissions, sign-in times, suspension state, and every
  * record of what the member has studied beyond their XP and level. The bio
  * appears only when its owner has switched it on.
+ *
+ * Tags are here because their whole purpose is to be seen by other members:
+ * an admin put them on the account to say something about it in public.
  */
-const PUBLIC_FIELDS = 'username displayName avatarUrl bio showBio university points pointsRaw socials';
+const PUBLIC_FIELDS =
+  'username displayName avatarUrl bio showBio university points pointsRaw socials tags';
 
 /** 24 hex characters: an account id. A username is at most 20, so the two never collide. */
 const OBJECT_ID = /^[a-f0-9]{24}$/i;
@@ -78,6 +83,7 @@ router.get('/:handle', authenticate, async (req: AuthRequest, res) => {
         bio: user.showBio && user.bio ? user.bio : null,
         university: user.university || null,
         socials: publicSocials(user.socials),
+        tags: cleanTags(user.tags),
         points,
         /** Lifetime XP, which the level is read from. */
         xp,

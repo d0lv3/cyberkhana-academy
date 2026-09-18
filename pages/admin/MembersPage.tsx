@@ -1,11 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Search, RefreshCw, Ban, RotateCcw, KeyRound, Check, Trophy, Trash2, Clock } from 'lucide-react';
+import { Users, Search, RefreshCw, Ban, RotateCcw, KeyRound, Check, Trophy, Trash2, Clock, Award } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
 import EnhancedCard from '../../components/ui/EnhancedCard';
 import Avatar from '../../components/ui/Avatar';
 import { confirmDialog } from '../../components/ui/ConfirmHost';
 import ReauthDialog from '../../components/admin/ReauthDialog';
+import MemberAwardPanel from '../../components/admin/MemberAwardPanel';
+import MemberTags from '../../components/ui/MemberTags';
+import type { MemberTag } from '../../backend/src/shared/tags';
 import { useToast } from '../../hooks/useToast';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLang } from '../../contexts/LangContext';
@@ -30,6 +33,12 @@ interface AdminUser {
   deletionRequestedAt?: string;
   /** When that request is carried out, unless they sign in before then. */
   deletionScheduledFor?: string;
+  /** All-time board standing. */
+  points?: number;
+  /** The part of it an admin gave or took by hand, signed. */
+  pointsAdjustment?: number;
+  /** Labels shown on this member's public profile. */
+  tags?: MemberTag[];
 }
 
 const ROLES: Role[] = ['user', 'creator', 'admin'];
@@ -55,6 +64,8 @@ const MembersPage: React.FC = () => {
   const [query, setQuery] = useState('');
   const [savingId, setSavingId] = useState<string | null>(null);
   /** Which creator's permission panel is open, and the toggles being edited. */
+  /** Which member's points-and-tags panel is open. */
+  const [awardOpenId, setAwardOpenId] = useState<string | null>(null);
   const [permsOpenId, setPermsOpenId] = useState<string | null>(null);
   const [permsDraft, setPermsDraft] = useState<CreatorPermission[]>([]);
   /** A privilege change awaiting a fresh Google confirmation. Both role and
@@ -404,6 +415,10 @@ const MembersPage: React.FC = () => {
                       <span className="mx-1.5 text-[#354562]">·</span>
                       {u.email}
                     </p>
+                    {/* Visible on the row, not just inside the panel: an admin
+                        scanning the list should see who is tagged without
+                        opening anyone. */}
+                    <MemberTags tags={u.tags} size="sm" className="mt-1" />
                     {/* The whole story of a request, dates included, on its own
                         line: the badge alone would not say when it goes. */}
                     {leaving && (
@@ -455,6 +470,20 @@ const MembersPage: React.FC = () => {
                       </option>
                     ))}
                   </select>
+
+                  {/* points and tags */}
+                  <button
+                    onClick={() => setAwardOpenId((id) => (id === u.id ? null : u.id))}
+                    disabled={savingId === u.id}
+                    title={ar ? 'النقاط والوسوم' : 'Points and tags'}
+                    className={`w-8 h-8 touch:w-11 touch:h-11 rounded-lg border flex items-center justify-center flex-shrink-0 transition-all disabled:opacity-30 ${
+                      awardOpenId === u.id
+                        ? 'border-[#00a859]/50 text-[#00a859] bg-[#00a859]/10'
+                        : 'border-[#263248] text-[#8592ad] hover:text-[#00a859] hover:border-[#00a859]/40 hover:bg-[#00a859]/10'
+                    }`}
+                  >
+                    <Award size={13} />
+                  </button>
 
                   {/* creator permissions */}
                   {u.role === 'creator' && (
@@ -531,6 +560,20 @@ const MembersPage: React.FC = () => {
                 </motion.div>
 
                 {/* Creator permissions panel */}
+                {awardOpenId === u.id && (
+                  <MemberAwardPanel
+                    user={u}
+                    ar={ar}
+                    toast={toast}
+                    onClose={() => setAwardOpenId(null)}
+                    onUpdated={(updated) =>
+                      setUsers((prev) =>
+                        prev.map((x) => (x.id === updated.id ? { ...x, ...updated } : x))
+                      )
+                    }
+                  />
+                )}
+
                 {permsOpenId === u.id && u.role === 'creator' && (
                   <div className="px-5 pb-4 pt-1 bg-[#0b1019]">
                     <p className="text-[11px] text-[#8592ad] mb-3">

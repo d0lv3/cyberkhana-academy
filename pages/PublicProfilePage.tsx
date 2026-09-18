@@ -17,6 +17,7 @@ import {
 import Avatar from '../components/ui/Avatar';
 import Button from '../components/ui/EnhancedButton';
 import LevelBadge from '../components/ui/LevelBadge';
+import MemberTags from '../components/ui/MemberTags';
 import SocialLinksRow from '../components/profile/SocialLinks';
 import NetworkingLessonCard from '../components/fundamentals/NetworkingLessonCard';
 import ModuleCard from '../components/fundamentals/ModuleCard';
@@ -236,6 +237,9 @@ const PublicProfilePage: React.FC = () => {
                 </span>
               </p>
             )}
+            {/* What the Academy says about them, which is the one thing on this
+                card they did not write themselves. */}
+            <MemberTags tags={profile.tags} className="mt-2.5 justify-center sm:justify-start" />
             {uni.isSet && !uni.isNotEnrolled && (
               <p className="mt-3 inline-flex items-center gap-1.5 text-sm text-[#9aa5bf]">
                 <GraduationCap size={15} className="flex-shrink-0 text-[#8592ad]" /> {uni.text}

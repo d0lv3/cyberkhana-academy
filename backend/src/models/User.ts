@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import type { MemberTag } from '../shared/tags';
 import type { UserRole } from '../types';
 import { SOCIAL_PLATFORMS, type SocialLinks } from '../utils/socials';
 
@@ -55,6 +56,15 @@ export interface IUser extends Document {
   pointsBaseline: number;
   /** When the baseline was last moved. */
   pointsResetAt?: Date;
+  /** Points an admin gave or took by hand, signed and cumulative. Added on top
+   *  of what the learner earned, for the things the Academy cannot see: running
+   *  a workshop, winning a CTF, helping in the channel. It sits outside
+   *  `pointsRaw` on purpose, because that is the client's derived total and
+   *  every sync restates it; anything written into it would be gone by the
+   *  next push. */
+  pointsAdjustment: number;
+  /** Labels an admin put on this account, shown on its public profile. */
+  tags?: MemberTag[];
   /** Points earned during `monthlyPointsMonth`; the monthly leaderboard reads these. */
   monthlyPoints: number;
   /** Month bucket for `monthlyPoints`, as 'YYYY-MM' (UTC). Stale months count as 0. */
@@ -139,6 +149,13 @@ const UserSchema = new Schema<IUser>(
     xpVersion: { type: Number },
     pointsBaseline: { type: Number, default: 0 },
     pointsResetAt: { type: Date },
+    pointsAdjustment: { type: Number, default: 0 },
+    // `_id: false`: a tag is a value, not a thing with an identity. Mongoose
+    // would otherwise mint an ObjectId for every chip on every profile.
+    tags: {
+      type: [new Schema({ label: String, color: String }, { _id: false })],
+      default: undefined,
+    },
     monthlyPoints: { type: Number, default: 0 },
     monthlyPointsMonth: { type: String, default: '' },
     isBanned: { type: Boolean, default: false },

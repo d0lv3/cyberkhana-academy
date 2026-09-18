@@ -5,6 +5,7 @@
 
 import { api } from './api';
 import type { SocialLinks } from './socials';
+import type { MemberTag } from '../backend/src/shared/tags';
 
 export interface PublicProfile {
   id: string;
@@ -15,6 +16,8 @@ export interface PublicProfile {
   bio: string | null;
   university: string | null;
   socials: SocialLinks;
+  /** Labels an admin put on the account. Absent from servers before tags. */
+  tags?: MemberTag[];
   /** All-time board score: XP since the last leaderboard reset. */
   points: number;
   /** Lifetime XP, which the level is read from. Absent from servers before XP. */

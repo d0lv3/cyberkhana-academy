@@ -23,6 +23,9 @@ export interface AcademyUser {
   completedLessonsCount: number;
   totalLearningTimeMinutes: number;
   createdAt: string;
+  /** Labels an admin put on this account, shown on the public profile.
+   *  Server-managed — PATCH /auth/profile rejects them. */
+  tags?: import('./backend/src/shared/tags').MemberTag[];
   /** Agreement to the current Terms, stamped by the server at sign-in. */
   termsAccepted?: boolean;
   /** Explicit acceptance of the current Creator Agreement. Gates the Studio. */

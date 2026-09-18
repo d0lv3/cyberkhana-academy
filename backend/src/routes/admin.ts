@@ -7,6 +7,7 @@ import { logger } from '../utils/logger';
 import { CREATOR_PERMISSIONS, effectivePermissions } from '../types';
 import { verifyStepUp } from '../middleware/reauth';
 import { currentMonthKey } from '../utils/time';
+import { cleanTags, TAG_MAX } from '../shared/tags';
 import { purgeAccount } from '../utils/accountDeletion';
 
 const router = Router();
@@ -28,6 +29,9 @@ function adminUserShape(user: IUser) {
     lastLoginAt: user.lastLoginAt,
     deletionRequestedAt: user.deletionRequestedAt,
     deletionScheduledFor: user.deletionScheduledFor,
+    points: user.points ?? 0,
+    pointsAdjustment: user.pointsAdjustment ?? 0,
+    tags: user.tags ?? [],
   };
 }
 
@@ -346,6 +350,7 @@ router.post('/points/reset', async (req: AuthRequest, res) => {
         $set: {
           pointsRaw: raw,
           pointsBaseline: raw,
+          pointsAdjustment: 0,
           points: 0,
           monthlyPoints: 0,
           monthlyPointsMonth: currentMonthKey(),
@@ -362,6 +367,136 @@ router.post('/points/reset', async (req: AuthRequest, res) => {
   } catch (err) {
     logger.error('admin.points_reset_failed', { error: String(err) });
     res.status(500).json({ error: 'Could not reset points' });
+  }
+});
+
+/* ── POST /api/admin/users/:id/points ── give or take points by hand.
+ *
+ * For what the Academy cannot see: running a workshop, winning a CTF, helping
+ * in the channel. A negative amount takes them back, which is also how a
+ * mistake is undone, so this needs no separate correction route.
+ *
+ * It lands in `pointsAdjustment` rather than in the stored total because the
+ * total is derived: the client recomputes it from the learner's completions
+ * and pushes it on every sync, so a number written straight into `points`
+ * would survive until that member next opened a tab and no longer. The
+ * adjustment sits outside that calculation and is added back on every push.
+ *
+ * No step-up confirmation, unlike a promotion. This is targeted at one
+ * account, is undone by sending the negative, and hands out no capability the
+ * member did not have. Banning, which is closer in weight, does not ask for
+ * one either. */
+const awardSchema = z
+  .object({
+    /* Whole points. Bounded well inside what the leaderboard can hold, so a
+       slipped keyboard cannot put someone at the top for ever. */
+    amount: z.number().int().min(-100_000).max(100_000).refine((n) => n !== 0, 'Nothing to award'),
+    /** Why, for the log. Never shown to the member. */
+    reason: z.string().max(200).optional(),
+  })
+  .strict();
+
+router.post('/users/:id/points', async (req: AuthRequest, res) => {
+  const { id } = req.params;
+  if (!mongoose.isValidObjectId(id)) {
+    res.status(404).json({ error: 'User not found' });
+    return;
+  }
+  const parsed = awardSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Invalid award' });
+    return;
+  }
+
+  try {
+    const target = await User.findById(id);
+    if (!target) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    const before = target.points ?? 0;
+    target.pointsAdjustment = (target.pointsAdjustment ?? 0) + parsed.data.amount;
+    /* Restate the standing the same way a sync would, so the board is right
+       immediately rather than at this member's next visit. */
+    const earned = (target.pointsRaw ?? 0) - (target.pointsBaseline ?? 0);
+    target.points = Math.max(0, earned + target.pointsAdjustment);
+
+    /* A gain counts toward this month as any other gain does. A deduction is
+       not taken back out of the monthly board: that board is a record of what
+       happened during the month, and it resets on its own on the 1st. */
+    const month = currentMonthKey();
+    if (target.monthlyPointsMonth !== month) {
+      target.monthlyPointsMonth = month;
+      target.monthlyPoints = 0;
+    }
+    target.monthlyPoints += Math.max(0, target.points - before);
+
+    await target.save();
+
+    logger.info('admin.points_awarded', {
+      by: String(req.user!._id),
+      target: id,
+      amount: parsed.data.amount,
+      reason: parsed.data.reason,
+      standing: target.points,
+    });
+    res.json({ user: adminUserShape(target) });
+  } catch (err) {
+    logger.error('admin.points_award_failed', { error: String(err) });
+    res.status(500).json({ error: 'Could not award points' });
+  }
+});
+
+/* ── PUT /api/admin/users/:id/tags ── set the labels on an account.
+ *
+ * The whole set at once rather than add/remove, because that is how the studio
+ * edits them and it makes the request idempotent: what you send is what the
+ * profile shows. An empty array clears them.
+ *
+ * The body is passed through `cleanTags` rather than validated and stored: the
+ * colour is snapped to the palette, labels are trimmed and de-duplicated, and
+ * the set is capped. The schema below is only there to keep something
+ * enormous from reaching it. */
+const tagsSchema = z
+  .object({
+    tags: z
+      .array(z.object({ label: z.string().max(200), color: z.string().max(40) }).strict())
+      .max(TAG_MAX * 4),
+  })
+  .strict();
+
+router.put('/users/:id/tags', async (req: AuthRequest, res) => {
+  const { id } = req.params;
+  if (!mongoose.isValidObjectId(id)) {
+    res.status(404).json({ error: 'User not found' });
+    return;
+  }
+  const parsed = tagsSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Invalid tags' });
+    return;
+  }
+
+  try {
+    const target = await User.findById(id);
+    if (!target) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+    const tags = cleanTags(parsed.data.tags);
+    target.tags = tags.length ? tags : undefined;
+    await target.save();
+
+    logger.info('admin.tags_changed', {
+      by: String(req.user!._id),
+      target: id,
+      tags: tags.map((t) => t.label),
+    });
+    res.json({ user: adminUserShape(target) });
+  } catch (err) {
+    logger.error('admin.tags_change_failed', { error: String(err) });
+    res.status(500).json({ error: 'Could not update tags' });
   }
 });
 

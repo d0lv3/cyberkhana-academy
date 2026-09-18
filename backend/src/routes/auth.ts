@@ -41,6 +41,10 @@ function publicUser(user: IUser) {
     country: user.country,
     bio: user.bio,
     showBio: Boolean(user.showBio),
+    /* Read-only here: PATCH /auth/profile does not take them, because a tag is
+       something the Academy says about a member, not something they say about
+       themselves. */
+    tags: user.tags ?? [],
     socials: publicSocials(user.socials),
     createdAt: user.createdAt,
     termsAccepted: hasAcceptedCurrentTerms(user),
