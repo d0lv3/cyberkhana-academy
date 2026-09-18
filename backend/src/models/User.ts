@@ -67,6 +67,17 @@ export interface IUser extends Document {
    *  and the award has to be added back each time. A leaderboard reset leaves
    *  it alone: resetting the board must not take XP off anyone. */
   pointsAdjustment: number;
+  /** XP paid for reaching streak breakpoints (shared/streak.ts). Like an
+   *  admin's award it is XP like any other, INSIDE `pointsRaw`, and kept on
+   *  its own because that total is restated from the content on every sync
+   *  and would otherwise wipe it. A leaderboard reset leaves it alone. */
+  streakPoints: number;
+  /** Breakpoints already paid for, in days, so each one pays once ever. A
+   *  streak that breaks and is rebuilt past the same rung is not paid twice. */
+  streakAwarded: number[];
+  /** The breakpoint this learner is aiming at, one of STREAK_GOALS. Unset
+   *  until they choose, which is what the card asks them to do. */
+  streakGoal?: number;
   /** Labels an admin put on this account, shown on its public profile. */
   tags?: MemberTag[];
   /** Points earned during `monthlyPointsMonth`; the monthly leaderboard reads these. */
@@ -154,6 +165,9 @@ const UserSchema = new Schema<IUser>(
     pointsBaseline: { type: Number, default: 0 },
     pointsResetAt: { type: Date },
     pointsAdjustment: { type: Number, default: 0 },
+    streakPoints: { type: Number, default: 0 },
+    streakAwarded: { type: [Number], default: [] },
+    streakGoal: { type: Number },
     // `_id: false`: a tag is a value, not a thing with an identity. Mongoose
     // would otherwise mint an ObjectId for every chip on every profile.
     tags: {

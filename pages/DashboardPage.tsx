@@ -11,7 +11,7 @@ import { hasSimulation } from '../components/network-sim/types';
 import { getOSModuleDoneCount } from '../services/progressService';
 import { useJourney } from '../services/journeyService';
 import { useXp } from '../services/xpService';
-import { getStreak } from '../services/streakService';
+import { useStreak } from '../services/streakService';
 import SkillMatrix from '../components/skills/SkillMatrix';
 import { ContinueCard, StartHereCard } from '../components/dashboard/PrimaryCard';
 import JourneyMap from '../components/dashboard/JourneyMap';
@@ -48,7 +48,9 @@ const DashboardPage: React.FC = () => {
   const journey = useJourney();
   const { xp, level } = useXp();
 
-  const streak = useMemo(() => getStreak(), []);
+  /* Live: the days arrive from the server after a push, so a value read once
+     at mount would sit stale until the next navigation. */
+  const streak = useStreak();
 
   /* The featured card follows whatever is actually published: the first
      networking lesson that ships a simulation, or nothing at all. */

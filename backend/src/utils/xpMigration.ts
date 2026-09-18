@@ -26,8 +26,9 @@ export async function restateUserXp(user: IUser): Promise<void> {
   const setAside = oldTotal > 0 ? Math.min(1, Math.max(0, (user.pointsBaseline ?? 0) / oldTotal)) : 0;
   const pointsBaseline = Math.round(xp * setAside);
   const points = Math.max(0, xp - pointsBaseline);
-  /* An admin's award is XP, and rescoring the content cannot see it. */
-  const total = xp + (user.pointsAdjustment ?? 0);
+  /* An admin's award and the streak's payouts are XP, and rescoring the
+     content cannot see either: both are held on the account for this. */
+  const total = xp + (user.pointsAdjustment ?? 0) + (user.streakPoints ?? 0);
   const update: Partial<IUser> = {
     pointsRaw: total,
     pointsBaseline,

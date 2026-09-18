@@ -17,6 +17,12 @@ export interface IProgress extends Document {
    *  server when it first sees one complete. The finishing bonus stays once
    *  earned, so a lesson added to a module later takes nothing away. */
   finishedModules: string[];
+  /** Local 'YYYY-MM-DD' → how many activities the server saw finished that
+   *  day. Written only when a push brings completions the server had not seen
+   *  before, never because a client said so: streak points are XP, and XP has
+   *  to be earned in front of the server. Three in a day makes it a study day
+   *  (shared/streak.ts), and the count is what shades the heat map. */
+  studyDays: Record<string, number>;
   lastActivity: {
     kind: 'programming' | 'networking' | 'os';
     route: string;
@@ -37,6 +43,7 @@ const ProgressSchema = new Schema<IProgress>(
     enrolledPaths: { type: [String], default: [] },
     enrolledModules: { type: [String], default: [] },
     finishedModules: { type: [String], default: [] },
+    studyDays: { type: Schema.Types.Mixed, default: {} },
     lastActivity: { type: Schema.Types.Mixed, default: null },
   },
   { timestamps: true, minimize: false }

@@ -135,12 +135,32 @@ export function getAwardedXp(): number {
   return awardedXp;
 }
 
+/* ── XP the streak has paid ──
+ *
+ * Held here for the same reason as an award, and carried the same way: the
+ * server decides when a streak breakpoint is reached, because it is the only
+ * side that can vouch for the days behind it (backend/src/utils/studyDays.ts).
+ * No content scores it, so the session hands it over. */
+let streakXp = 0;
+
+/** Set from the session. Tells anything showing XP to read it again. */
+export function setStreakXp(value: unknown): void {
+  const next = typeof value === 'number' && Number.isFinite(value) ? Math.round(value) : 0;
+  if (next === streakXp) return;
+  streakXp = next;
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(PROGRESS_EVENT));
+}
+
+export function getStreakXp(): number {
+  return streakXp;
+}
+
 export function getXpState(): XpState {
   const score = scoreGroups(getXpGroups(), (group) => group.done, getFinishedModules());
-  /* One total, the same one the server keeps: what the content is worth plus
-     what was awarded. The level reads it, so an award raises a level here
-     exactly as it does on the server. */
-  const xp = Math.max(0, score.xp + awardedXp);
+  /* One total, the same one the server keeps: what the content is worth, plus
+     what was awarded, plus what the streak has paid. The level reads it, so
+     either of those raises a level here exactly as it does on the server. */
+  const xp = Math.max(0, score.xp + awardedXp + streakXp);
   return { xp, level: levelFor(xp), stopsDone: score.stopsDone, stopsTotal: score.stopsTotal };
 }
 

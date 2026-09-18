@@ -18,6 +18,7 @@ import { PUBLISHED_CACHE_KEYS, SERVER_BUCKET_BY_STORAGE_KEY, STORAGE_KEYS } from
 import { TOUR_SEEN_KEY } from './tourService';
 import { LANG_CHOSEN_KEY } from './languageChoice';
 import { levelFor } from '../backend/src/shared/xp';
+import { dayKeyOf } from '../backend/src/shared/streak';
 
 /* Mirrors progressService's event name (defined locally to avoid an import
  * cycle — progressService imports this module for write-through). */
@@ -32,12 +33,29 @@ export const FINISHED_MODULES_KEY = 'academy-finished-modules';
  *  (components/levels/LevelUpHost.tsx) shows only when the level passes it. */
 export const LEVEL_SEEN_KEY = 'academy-level-seen';
 
-/** The longest streak milestone this device has celebrated, in days. The
- *  milestone card (components/levels/StreakMilestoneHost.tsx) shows only when
- *  a longer one is earned, so rebuilding a streak to a tier already reached
- *  passes quietly. It sits beside the streak itself and never leaves the
- *  device. */
+/** Streak breakpoints this device has already celebrated, as a JSON array of
+ *  day counts. The server decides what has been PAID; this only decides what
+ *  has been SHOWN, so a card is not thrown twice for the same rung. */
 export const STREAK_SEEN_KEY = 'academy-streak-seen';
+
+/** The days the server has recorded, as 'YYYY-MM-DD' → activity count. Only
+ *  ever written from the server's answers here, because the server is the one
+ *  that records a day (backend/src/utils/studyDays.ts); streakService reads it
+ *  as a cache so the card draws before the first pull lands. */
+export const STUDY_DAYS_KEY = 'academy-study-days';
+
+/** Fired when a push comes back having been paid for a breakpoint, so the
+ *  celebration lands on whatever page the learner is on. */
+export const STREAK_AWARD_EVENT = 'academy-streak-awarded';
+
+export interface StreakAwardDetail {
+  /** Breakpoints paid by that push, in days. */
+  days: number[];
+  /** XP they came to. */
+  xp: number;
+  /** The streak that earned them. */
+  streak: number;
+}
 
 /** Levels the account already had are not news on this device: signing in
  *  on a new one counts the server's level as celebrated, so pulling progress
@@ -112,6 +130,12 @@ export interface ProgressSnapshot {
   enrolledModules?: string[];
   /** Sent by the server only: never pushed, because the server records it. */
   finishedModules?: string[];
+  /** Sent by the server only: it records the days, so a client cannot claim
+   *  one. Kept locally as a cache so the streak card draws before the pull. */
+  studyDays?: Record<string, number>;
+  /** The pusher's own calendar day, so the streak turns over at their
+   *  midnight. The server holds it to a day either side of its own. */
+  day?: string;
   lastActivity: unknown | null;
 }
 
@@ -119,6 +143,11 @@ export interface ProgressSnapshot {
 interface PushResult {
   xp?: number;
   finishedModules?: string[];
+  studyDays?: Record<string, number>;
+  streak?: number;
+  /** Breakpoints this push paid for, in days, so the card can celebrate them. */
+  streakAwarded?: number[];
+  streakXpGained?: number;
 }
 
 /** Keep the server's list of finished modules, adding to what is cached. */
@@ -135,10 +164,64 @@ function rememberFinishedModules(keys: unknown): void {
   window.dispatchEvent(new Event(PROGRESS_EVENT));
 }
 
+/** The device's own calendar day, which is the one a streak turns over on. */
+function localDayKey(): string {
+  return dayKeyOf(new Date());
+}
+
+/** Keep the server's record of the days. It replaces rather than merges: the
+ *  server counted them, and a local copy has no standing beside it. */
+function cacheStudyDays(days: unknown): void {
+  if (!days || typeof days !== 'object' || Array.isArray(days)) return;
+  const clean: Record<string, number> = {};
+  for (const [key, count] of Object.entries(days as Record<string, unknown>)) {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(key) && typeof count === 'number' && count > 0) clean[key] = count;
+  }
+  try {
+    localStorage.setItem(STUDY_DAYS_KEY, JSON.stringify(clean));
+  } catch {
+    return;
+  }
+  window.dispatchEvent(new Event(PROGRESS_EVENT));
+}
+
+/** Breakpoints the account was already paid for before this device saw it.
+ *  Marked as shown without showing anything, the same way a level reached
+ *  elsewhere is: arriving on a new browser is not an occasion. */
+function rememberStreakAwards(days: unknown): void {
+  if (!Array.isArray(days)) return;
+  try {
+    const seen = readArray<number>(STREAK_SEEN_KEY);
+    const merged = setUnion(
+      seen,
+      days.filter((d): d is number => typeof d === 'number')
+    );
+    if (merged.length !== seen.length) {
+      localStorage.setItem(STREAK_SEEN_KEY, JSON.stringify(merged));
+    }
+  } catch {
+    /* storage unavailable: at worst a card shows once */
+  }
+}
+
+/** Tell the app a breakpoint was just paid, so its card can be thrown. */
+function announceStreakAward(result: PushResult): void {
+  const detail: StreakAwardDetail = {
+    days: result.streakAwarded ?? [],
+    xp: result.streakXpGained ?? 0,
+    streak: result.streak ?? 0,
+  };
+  window.dispatchEvent(new CustomEvent<StreakAwardDetail>(STREAK_AWARD_EVENT, { detail }));
+}
+
 /** Push the snapshot, then keep what the server worked out from it. */
 async function pushProgress(): Promise<void> {
   const result = await api.put<PushResult>('/progress', collectProgressSnapshot());
   rememberFinishedModules(result?.finishedModules);
+  /* The server has just recounted the days from what it received; its answer
+     replaces the cache rather than merging, because it is the record. */
+  cacheStudyDays(result?.studyDays);
+  if (result?.streakAwarded?.length) announceStreakAward(result);
 }
 
 /** Builds the full snapshot from the academy-* localStorage keys. */
@@ -171,6 +254,7 @@ export function collectProgressSnapshot(): ProgressSnapshot {
     networking: readArray<string>('academy-net'),
     enrolledPaths: readArray<string>('academy-paths-enrolled'),
     enrolledModules: readArray<string>('academy-modules-enrolled'),
+    day: localDayKey(),
     lastActivity,
   };
 }
@@ -222,7 +306,10 @@ function isProgressKey(key: string): boolean {
     key === 'academy-paths-enrolled' ||
     key === 'academy-modules-enrolled' ||
     key === 'academy-last-activity' ||
-    key === FINISHED_MODULES_KEY
+    key === FINISHED_MODULES_KEY ||
+    /* The server records the days now, so this is its cache like any other
+       and is hydrated back on the next sign-in. */
+    key === STUDY_DAYS_KEY
   );
 }
 
@@ -245,9 +332,6 @@ function isServerBackedKey(key: string): boolean {
  *  in. */
 function isDeviceOnlyAccountKey(key: string): boolean {
   return (
-    key === 'academy-study-days' ||
-    key === 'academy-day-activity' ||
-    key === 'academy-weekly-goal' ||
     key.startsWith('academy-lab-') ||
     key === 'academy-feedback-answered' ||
     key === 'academy-feedback-pending' ||
@@ -399,7 +483,7 @@ export function forgetServerBackedCaches(): void {
 
 /* ── hydration ── */
 
-function setUnion(a: string[], b: string[]): string[] {
+function setUnion<T>(a: T[], b: T[]): T[] {
   return [...new Set([...a, ...b])];
 }
 
@@ -505,8 +589,17 @@ export async function hydrateFromServer(account: { id: string; displayName: stri
 
   // My progress (all roles).
   try {
-    const { progress, xp } = await api.get<{ progress: ProgressSnapshot | null; xp?: number }>('/progress');
+    const { progress, xp, streakAwarded } = await api.get<{
+      progress: ProgressSnapshot | null;
+      xp?: number;
+      streakAwarded?: number[];
+    }>('/progress');
     rememberLevelReached(xp);
+    /* The server's days, and the rungs it has already paid. Both are taken as
+       old news on arrival, for the reason rememberLevelReached exists: a
+       streak earned on another device is not something to celebrate here. */
+    cacheStudyDays(progress?.studyDays);
+    rememberStreakAwards(streakAwarded);
     const localSnap = collectProgressSnapshot();
     const hadLocal =
       localSnap.networking.length > 0 ||

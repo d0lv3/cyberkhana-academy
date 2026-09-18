@@ -1,42 +1,50 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { Flame, X } from 'lucide-react';
+import { Flame, X, Zap } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLang } from '../../contexts/LangContext';
-import { STREAK_SEEN_KEY } from '../../services/syncService';
-import { PROGRESS_EVENT } from '../../services/progressService';
-import { getStreak, STREAK_TIERS, type StreakTier } from '../../services/streakService';
+import {
+  STREAK_AWARD_EVENT,
+  STREAK_SEEN_KEY,
+  type StreakAwardDetail,
+} from '../../services/syncService';
+import { STREAK_BREAKPOINTS, breakpointFor } from '../../services/streakService';
 
-/* ─── The streak milestone card ───
+/* ─── The streak reward card ───
  *
- * Shown once, wherever the learner is, when their streak reaches a tier
- * longer than any this device has celebrated. Mounted at the app root beside
- * the level-up card, and deliberately behind it: passing a level and a
- * milestone on the same day should not stack two cards on top of each other,
- * so this one waits for the next render after the level card is gone.
+ * Shown once, wherever the learner is, when the server pays a streak
+ * breakpoint. The server decides that, because it is the only side that can
+ * vouch for the days behind it, and it says so in its answer to a push: the
+ * sync service turns that into STREAK_AWARD_EVENT and this catches it.
  *
- * Only ever an improvement on the best already seen, so rebuilding a streak
- * to a tier reached before passes quietly. Like the level card, the first
- * reading on a device is taken as already celebrated: arriving on a new
- * browser with a long streak behind you is not news.
+ * It also catches up at mount, from the rungs the session says have been
+ * paid, so a payment made while the tab was closed or the answer was lost is
+ * not silently missed. The first reading on a device marks everything as seen
+ * without showing anything: arriving on a new browser with a long streak
+ * already behind you is not an occasion.
+ *
+ * Mounted at the app root beside the level-up card and deliberately below it,
+ * so passing a level and a breakpoint at once does not stack two cards.
  */
 
-function readSeen(): number | null {
+function readSeen(): number[] | null {
   try {
     const raw = localStorage.getItem(STREAK_SEEN_KEY);
     if (raw === null) return null;
-    const n = Number(raw);
-    return Number.isFinite(n) && n >= 0 ? n : null;
+    const parsed = JSON.parse(raw) as unknown;
+    return Array.isArray(parsed) ? parsed.filter((n): n is number => typeof n === 'number') : null;
   } catch {
     return null;
   }
 }
 
-function writeSeen(days: number): void {
+function markSeen(days: number[]): void {
   try {
-    localStorage.setItem(STREAK_SEEN_KEY, String(days));
+    const seen = readSeen() ?? [];
+    const merged = [...new Set([...seen, ...days])].sort((a, b) => a - b);
+    localStorage.setItem(STREAK_SEEN_KEY, JSON.stringify(merged));
   } catch {
-    /* storage unavailable: at worst the card shows again, which is harmless */
+    /* storage unavailable: at worst the card shows again */
   }
 }
 
@@ -52,78 +60,91 @@ const EMBERS = [
   { left: '90%', size: 2, rise: 300, duration: 4.2, delay: 0.6 },
 ];
 
-/** The tier a streak of `days` has just earned, if any. */
-function earnedTier(days: number): StreakTier | null {
-  let found: StreakTier | null = null;
-  for (const tier of STREAK_TIERS) if (days >= tier.days) found = tier;
-  return found;
+interface Shown {
+  /** The highest rung this card is for. */
+  days: number;
+  /** XP it paid, including any lower rung cleared at the same time. */
+  xp: number;
+  /** The streak that earned it. */
+  streak: number;
 }
 
 const StreakMilestoneHost: React.FC = () => {
   const { user, isLoading } = useAuth();
   const { lang } = useLang();
   const reduceMotion = useReducedMotion();
-  const [tier, setTier] = useState<StreakTier | null>(null);
-  const [streakDays, setStreakDays] = useState(0);
+  const [shown, setShown] = useState<Shown | null>(null);
   const returnFocus = useRef<HTMLElement | null>(null);
   const ar = lang === 'ar';
 
-  const check = useCallback(() => {
-    if (!user || isLoading) return;
-    const { current } = getStreak();
-    const earned = earnedTier(current);
-    if (!earned) return;
+  const open = useCallback((days: number[], xp: number, streak: number) => {
+    if (!days.length) return;
+    const highest = Math.max(...days);
+    markSeen(days);
+    returnFocus.current = document.activeElement as HTMLElement | null;
+    setShown({ days: highest, xp, streak });
+  }, []);
 
+  /* Paid just now, on whatever page the learner is on. */
+  useEffect(() => {
+    const onAward = (e: Event) => {
+      const detail = (e as CustomEvent<StreakAwardDetail>).detail;
+      if (!detail?.days?.length) return;
+      if (readSeen() === null) {
+        // Nothing has been seen on this device yet; take it as known.
+        markSeen(detail.days);
+        return;
+      }
+      const fresh = detail.days.filter((d) => !(readSeen() ?? []).includes(d));
+      if (fresh.length) open(fresh, detail.xp, detail.streak);
+    };
+    window.addEventListener(STREAK_AWARD_EVENT, onAward);
+    return () => window.removeEventListener(STREAK_AWARD_EVENT, onAward);
+  }, [open]);
+
+  /* Paid earlier, and never shown here. */
+  useEffect(() => {
+    if (!user || isLoading) return;
+    const paid = user.streakAwarded ?? [];
+    if (!paid.length) return;
     const seen = readSeen();
     if (seen === null) {
-      // First reading on this device: nothing here was earned in front of us.
-      writeSeen(earned.days);
+      markSeen(paid);
       return;
     }
-    if (earned.days <= seen) return;
-
-    writeSeen(earned.days);
-    returnFocus.current = document.activeElement as HTMLElement | null;
-    setStreakDays(current);
-    setTier(earned);
-  }, [user, isLoading]);
-
-  /* Checked on mount and again whenever progress is written, so the card can
-     land on the lesson page the moment the third activity tips the day over
-     rather than waiting for the dashboard. */
-  useEffect(() => {
-    check();
-    window.addEventListener(PROGRESS_EVENT, check);
-    return () => window.removeEventListener(PROGRESS_EVENT, check);
-  }, [check]);
+    const fresh = paid.filter((d) => !seen.includes(d));
+    if (!fresh.length) return;
+    const xp = fresh.reduce((sum, d) => sum + (breakpointFor(d)?.points ?? 0), 0);
+    open(fresh, xp, Math.max(...fresh));
+  }, [user, isLoading, open]);
 
   // Signed out while it was open: it belonged to that session.
   useEffect(() => {
-    if (!user) setTier(null);
+    if (!user) setShown(null);
   }, [user]);
 
   const dismiss = useCallback(() => {
-    setTier(null);
+    setShown(null);
     returnFocus.current?.focus?.();
   }, []);
 
   useEffect(() => {
-    if (!tier) return;
+    if (!shown) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') dismiss();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [tier, dismiss]);
+  }, [shown, dismiss]);
 
-  const next = tier ? STREAK_TIERS[STREAK_TIERS.indexOf(tier) + 1] ?? null : null;
-  const color = tier?.color ?? '#f3a43a';
+  const next = shown ? STREAK_BREAKPOINTS.find((b) => b.days > shown.days) ?? null : null;
+  const color = shown && shown.days >= 365 ? '#f3c84b' : '#9fef00';
 
   return (
     <AnimatePresence>
-      {tier && (
+      {shown && (
         <motion.div
-          key="streak-milestone"
+          key="streak-reward"
           className="fixed inset-0 z-[74] flex items-center justify-center p-4"
           dir={ar ? 'rtl' : 'ltr'}
           initial={{ opacity: 0 }}
@@ -136,8 +157,8 @@ const StreakMilestoneHost: React.FC = () => {
           <motion.div
             role="dialog"
             aria-modal="true"
-            aria-labelledby="streak-milestone-title"
-            aria-describedby="streak-milestone-body"
+            aria-labelledby="streak-reward-title"
+            aria-describedby="streak-reward-body"
             className="relative w-full max-w-[25rem] overflow-hidden rounded-[28px] border"
             style={{
               borderColor: `${color}59`,
@@ -150,7 +171,6 @@ const StreakMilestoneHost: React.FC = () => {
             exit={{ opacity: 0, y: 12, scale: 0.97 }}
             transition={{ type: 'spring', stiffness: 260, damping: 24, delay: 0.08 }}
           >
-            {/* A faint grid, fading out from behind the flame. */}
             <div
               aria-hidden
               className="pointer-events-none absolute inset-0 opacity-[0.09]"
@@ -163,7 +183,6 @@ const StreakMilestoneHost: React.FC = () => {
               }}
             />
 
-            {/* Rays turning slowly behind the flame, in the tier's colour. */}
             <div aria-hidden className="pointer-events-none absolute left-1/2 top-[148px] h-0 w-0">
               <motion.div
                 className="absolute -left-[260px] -top-[260px] h-[520px] w-[520px] rounded-full"
@@ -214,10 +233,9 @@ const StreakMilestoneHost: React.FC = () => {
                 style={{ borderColor: `${color}4d`, backgroundColor: `${color}1a`, color }}
               >
                 <Flame size={13} />
-                {ar ? 'وسام تتابع' : 'Streak milestone'}
+                {ar ? 'محطة تتابع' : 'Streak reward'}
               </motion.span>
 
-              {/* The streak length in a ring of its tier's colour. */}
               <motion.div
                 className="relative mt-6 flex h-40 w-40 items-center justify-center"
                 initial={reduceMotion ? { opacity: 0 } : { scale: 0.3, rotate: -14, opacity: 0 }}
@@ -235,10 +253,10 @@ const StreakMilestoneHost: React.FC = () => {
                 >
                   <Flame size={26} style={{ color }} />
                   <span dir="ltr" className="mt-1 text-5xl font-black leading-none text-white">
-                    {streakDays}
+                    {shown.streak}
                   </span>
                   <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#e0b892]">
-                    {ar ? 'يوم' : streakDays === 1 ? 'day' : 'days'}
+                    {ar ? 'يوم' : shown.streak === 1 ? 'day' : 'days'}
                   </span>
                 </div>
               </motion.div>
@@ -250,24 +268,20 @@ const StreakMilestoneHost: React.FC = () => {
                 className="flex flex-col items-center"
               >
                 <p className="mt-5 text-sm text-[#e8c9a8]">
-                  {ar ? 'وصل تتابعك إلى وسام' : 'Your streak earned'}
+                  {ar ? `تتابع ${shown.days} يوما` : `${shown.days} day streak`}
                 </p>
-                <h2 id="streak-milestone-title" className="mt-1.5 text-4xl font-black text-white">
-                  {tier.name[lang]}
+                <h2
+                  id="streak-reward-title"
+                  dir="ltr"
+                  className="mt-1.5 flex items-center gap-2 text-4xl font-black"
+                  style={{ color }}
+                >
+                  <Zap size={28} />+{shown.xp.toLocaleString('en-US')} XP
                 </h2>
-                <p id="streak-milestone-body" className="mt-3 text-sm text-[#f0dcc6]">
-                  {ar ? (
-                    <>
-                      <span dir="ltr" className="font-bold text-white">
-                        {streakDays}
-                      </span>{' '}
-                      يوما متتاليا من التعلّم.
-                    </>
-                  ) : (
-                    <>
-                      <span className="font-bold text-white">{streakDays}</span> days of learning in a row.
-                    </>
-                  )}
+                <p id="streak-reward-body" className="mt-3 text-sm text-[#f0dcc6]">
+                  {ar
+                    ? 'أضيفت إلى رصيدك، وتحتسب في مستواك وترتيبك.'
+                    : 'Added to your total. It counts toward your level and your rank.'}
                 </p>
               </motion.div>
 
@@ -281,25 +295,28 @@ const StreakMilestoneHost: React.FC = () => {
                   <div className="flex items-center gap-3">
                     <span
                       aria-hidden
-                      className="h-9 w-9 flex-shrink-0 rounded-full border-2"
-                      style={{ borderColor: `${next.color}80`, backgroundColor: `${next.color}1f` }}
-                    />
+                      className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border-2 border-white/15 text-[#e0b892]"
+                    >
+                      <Flame size={15} />
+                    </span>
                     <div className="min-w-0 flex-1">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-[#c9a483]">
-                        {ar ? 'الوسام التالي' : 'Next badge'}
+                        {ar ? 'المحطة التالية' : 'Next reward'}
                       </p>
-                      <p className="truncate text-sm font-bold text-white">{next.name[lang]}</p>
+                      {/* Every rung past the first is 14 days or more, and
+                          Arabic takes the accusative singular from eleven up. */}
+                      <p className="truncate text-sm font-bold text-white">
+                        {next.days} {ar ? 'يوما' : 'days'}
+                      </p>
                     </div>
-                    {/* Every badge past the first sits at 14 days or more, and
-                        Arabic takes the accusative singular from eleven up. */}
                     <p className="flex-shrink-0 text-xs font-bold text-white" dir="ltr">
-                      {next.days} {ar ? 'يوما' : 'days'}
+                      +{next.points.toLocaleString('en-US')} XP
                     </p>
                   </div>
                 ) : (
                   <p className="text-center text-sm text-[#f0dcc6]">
                     {ar
-                      ? 'سنة كاملة من التعلّم المتصل. لا وسام بعد هذا.'
+                      ? 'سنة كاملة من التعلّم المتصل. لا محطة بعد هذه.'
                       : 'A full year of unbroken learning. There is nothing past this one.'}
                   </p>
                 )}

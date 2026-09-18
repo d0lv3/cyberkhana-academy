@@ -9,7 +9,7 @@ import {
   forgetServerBackedCaches,
 } from '../services/syncService';
 import { setOwnAuthor } from '../services/creatorDataService';
-import { setAwardedXp } from '../services/xpService';
+import { setAwardedXp, setStreakXp } from '../services/xpService';
 import { flushPendingFeedback } from '../services/feedbackService';
 
 interface ServerUser {
@@ -29,6 +29,9 @@ interface ServerUser {
   socials?: AcademyUser['socials'];
   tags?: AcademyUser['tags'];
   xpAward?: number;
+  streakXp?: number;
+  streakGoal?: number | null;
+  streakAwarded?: number[];
   createdAt: string;
   termsAccepted?: boolean;
   creatorAgreementAccepted?: boolean;
@@ -53,6 +56,8 @@ export type ProfilePatch = Partial<
 > & {
   /** Each platform mapped to what was typed; '' clears that link. */
   socials?: Record<string, string>;
+  /** The streak breakpoint being aimed at, set from the dashboard card. */
+  streakGoal?: number;
 };
 
 interface AuthContextType {
@@ -115,6 +120,9 @@ function mapServerUser(u: ServerUser): AcademyUser {
     socials: u.socials ?? {},
     tags: u.tags ?? [],
     xpAward: u.xpAward ?? 0,
+    streakXp: u.streakXp ?? 0,
+    streakGoal: u.streakGoal ?? null,
+    streakAwarded: u.streakAwarded ?? [],
     completedModulesCount: 0,
     completedLessonsCount: 0,
     totalLearningTimeMinutes: 0,
@@ -165,7 +173,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
      zero, so the next account on this device does not inherit an award. */
   useEffect(() => {
     setAwardedXp(user?.xpAward ?? 0);
-  }, [user?.xpAward]);
+    setStreakXp(user?.streakXp ?? 0);
+  }, [user?.xpAward, user?.streakXp]);
 
   // Restore the session from the httpOnly cookie on boot.
   useEffect(() => {

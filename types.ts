@@ -29,6 +29,14 @@ export interface AcademyUser {
   /** XP an admin awarded by hand. Part of the member's total, and added to
    *  whatever the cached content scores (services/xpService.ts). */
   xpAward?: number;
+  /** XP the streak has paid for reaching breakpoints. Part of the total the
+   *  same way xpAward is, and decided by the server, which is the only side
+   *  that can vouch for the days behind it. */
+  streakXp?: number;
+  /** The streak breakpoint this member is aiming at, or null until they pick. */
+  streakGoal?: number | null;
+  /** Breakpoints already paid for, in days. */
+  streakAwarded?: number[];
   /** Agreement to the current Terms, stamped by the server at sign-in. */
   termsAccepted?: boolean;
   /** Explicit acceptance of the current Creator Agreement. Gates the Studio. */

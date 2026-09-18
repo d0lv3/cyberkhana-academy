@@ -13,6 +13,7 @@ import { env } from '../config/env';
 import { logger } from '../utils/logger';
 import { effectivePermissions } from '../types';
 import { isSocialPlatform, normalizeSocial, publicSocials } from '../utils/socials';
+import { isStreakGoal } from '../shared/streak';
 import { scheduleDeletion, settleDeletionAtSignIn } from '../utils/accountDeletion';
 
 import {
@@ -49,6 +50,11 @@ function publicUser(user: IUser) {
        finished lesson counts at once, and it cannot see this from any content,
        so it is handed over and added on top (services/xpService.ts). */
     xpAward: user.pointsAdjustment ?? 0,
+    /* The streak's payouts, handed over for the same reason as xpAward: the
+       browser scores content it has cached and cannot see these. */
+    streakXp: user.streakPoints ?? 0,
+    streakGoal: user.streakGoal ?? null,
+    streakAwarded: user.streakAwarded ?? [],
     socials: publicSocials(user.socials),
     createdAt: user.createdAt,
     termsAccepted: hasAcceptedCurrentTerms(user),
@@ -257,6 +263,9 @@ const profileSchema = z
     /* Each platform mapped to what the member typed ('' clears it). Every value goes
      * through normalizeSocial below; the shape is all that is checked here. */
     socials: z.record(z.string().max(20), z.string().max(300)).optional(),
+    /* Which rung they are aiming at (shared/streak.ts). It only sets what the
+     * card counts toward: every rung pays when reached, goal or not. */
+    streakGoal: z.number().int().refine(isStreakGoal, 'Not a streak goal').optional(),
   })
   .strict();
 
