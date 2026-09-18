@@ -32,6 +32,13 @@ export const FINISHED_MODULES_KEY = 'academy-finished-modules';
  *  (components/levels/LevelUpHost.tsx) shows only when the level passes it. */
 export const LEVEL_SEEN_KEY = 'academy-level-seen';
 
+/** The longest streak milestone this device has celebrated, in days. The
+ *  milestone card (components/levels/StreakMilestoneHost.tsx) shows only when
+ *  a longer one is earned, so rebuilding a streak to a tier already reached
+ *  passes quietly. It sits beside the streak itself and never leaves the
+ *  device. */
+export const STREAK_SEEN_KEY = 'academy-streak-seen';
+
 /** Levels the account already had are not news on this device: signing in
  *  on a new one counts the server's level as celebrated, so pulling progress
  *  down never throws a card for a level reached somewhere else. */
@@ -229,7 +236,8 @@ function isServerBackedKey(key: string): boolean {
 /** Account state that only ever lives on this device: the study streak, the
  *  day's activity tally feeding it and the weekly goal, a lab's working
  *  state, which feedback prompts were answered
- *  and any answer still waiting to send, the level last celebrated, whether
+ *  and any answer still waiting to send, the level and streak milestone last
+ *  celebrated, whether
  *  the language question was put and the Academy tour taken, where each
  *  module was left, and the practice terminal's files. It stays through its
  *  owner's own sign-out, so
@@ -244,6 +252,7 @@ function isDeviceOnlyAccountKey(key: string): boolean {
     key === 'academy-feedback-answered' ||
     key === 'academy-feedback-pending' ||
     key === LEVEL_SEEN_KEY ||
+    key === STREAK_SEEN_KEY ||
     key === TOUR_SEEN_KEY ||
     key === LANG_CHOSEN_KEY ||
     key.startsWith('academy-lecture-') ||

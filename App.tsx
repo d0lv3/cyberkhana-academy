@@ -8,6 +8,7 @@ import ConfirmHost from './components/ui/ConfirmHost';
 import FeedbackHost from './components/feedback/FeedbackHost';
 import AccountNoticeHost from './components/account/AccountNoticeHost';
 import LevelUpHost from './components/levels/LevelUpHost';
+import StreakMilestoneHost from './components/levels/StreakMilestoneHost';
 import TourHost from './components/tour/TourHost';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -266,6 +267,7 @@ const App: React.FC = () => {
               <FeedbackHost />
               <AccountNoticeHost />
               <LevelUpHost />
+              <StreakMilestoneHost />
               <TourHost />
             </PwaProvider>
           </LangProvider>

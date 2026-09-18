@@ -32,6 +32,69 @@ const MAX_DAYS_KEPT = 400;
  *  the time this bites, so the oldest are dropped rather than grown. */
 const MAX_DAY_IDS = 50;
 
+/* ── milestones ──
+ * A second ladder beside the XP levels, earned by turning up rather than by
+ * finishing content, which is why it is named and coloured separately. The
+ * colours climb the same way the level ones do, from mint through the brand
+ * greens and blues to gold, so the top of this ladder also looks rare.
+ */
+
+export interface StreakTier {
+  /** The streak length that earns it. */
+  days: number;
+  name: { en: string; ar: string };
+  color: string;
+}
+
+export const STREAK_TIERS: StreakTier[] = [
+  { days: 5, name: { en: 'Spark', ar: 'شرارة' }, color: '#6ee7b7' },
+  { days: 14, name: { en: 'Steady', ar: 'ثبات' }, color: '#00a859' },
+  { days: 30, name: { en: 'Committed', ar: 'ملتزم' }, color: '#9fef00' },
+  { days: 60, name: { en: 'Devoted', ar: 'مواظب' }, color: '#2dd4bf' },
+  { days: 90, name: { en: 'Unstoppable', ar: 'لا يُوقف' }, color: '#60a5fa' },
+  { days: 120, name: { en: 'Iron Will', ar: 'إرادة حديد' }, color: '#a78bfa' },
+  { days: 180, name: { en: 'Machine', ar: 'آلة' }, color: '#f472b6' },
+  { days: 365, name: { en: 'Immortal', ar: 'خالد' }, color: '#f3c84b' },
+];
+
+export interface TierProgress {
+  /** Highest tier earned, or null before the first one. */
+  current: StreakTier | null;
+  /** The one being worked toward, or null once the ladder is finished. */
+  next: StreakTier | null;
+  /** How far from the current tier to the next, 0 to 1; 1 at the top. */
+  fraction: number;
+  /** Days still needed for `next`; 0 at the top. */
+  toNext: number;
+}
+
+/** Where a streak of `days` stands on the ladder. */
+export function tierFor(days: number): TierProgress {
+  const safe = Math.max(0, Math.floor(Number.isFinite(days) ? days : 0));
+
+  let index = -1;
+  for (let i = STREAK_TIERS.length - 1; i >= 0; i--) {
+    if (safe >= STREAK_TIERS[i].days) {
+      index = i;
+      break;
+    }
+  }
+
+  const current = index >= 0 ? STREAK_TIERS[index] : null;
+  const next = STREAK_TIERS[index + 1] ?? null;
+  if (!next) return { current, next: null, fraction: 1, toNext: 0 };
+
+  // Progress runs from the tier just earned, so each span fills from empty.
+  const from = current ? current.days : 0;
+  const span = next.days - from;
+  return {
+    current,
+    next,
+    fraction: span > 0 ? Math.min(1, Math.max(0, (safe - from) / span)) : 0,
+    toNext: Math.max(0, next.days - safe),
+  };
+}
+
 /** Local calendar day as 'YYYY-MM-DD' (not UTC — see module note). */
 function dayKey(d: Date): string {
   const y = d.getFullYear();
@@ -164,6 +227,8 @@ export interface StreakInfo {
   todayCount: number;
   /** Activities a day needs before it counts. */
   dailyGoal: number;
+  /** Where the current streak stands on the milestone ladder. */
+  tier: TierProgress;
   /** Distinct study days in the current week. */
   daysThisWeek: number;
   weeklyGoal: number;
@@ -226,6 +291,7 @@ export function getStreak(): StreakInfo {
     todayDone,
     todayCount: countToday(days),
     dailyGoal: DAILY_ACTIVITY_GOAL,
+    tier: tierFor(current),
     daysThisWeek: week.filter((d) => d.done).length,
     weeklyGoal: getWeeklyGoal(),
     week,

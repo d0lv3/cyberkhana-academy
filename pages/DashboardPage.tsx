@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Layers, Network, ChevronRight, Play, Flame, Check } from 'lucide-react';
+import { Layers, Network, ChevronRight, Play } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLang } from '../contexts/LangContext';
 import { modulePath } from '../data/fundamentalsData';
@@ -17,6 +17,7 @@ import { ContinueCard, StartHereCard } from '../components/dashboard/PrimaryCard
 import JourneyMap from '../components/dashboard/JourneyMap';
 import NextStepCard from '../components/dashboard/NextStepCard';
 import StandingCard from '../components/dashboard/StandingCard';
+import StreakCard from '../components/dashboard/StreakCard';
 
 /* ─── The dashboard ───
  *
@@ -31,29 +32,6 @@ import StandingCard from '../components/dashboard/StandingCard';
  * the Academy is made of, so they are not shown a row of zeroes and asked to
  * feel behind on their first day.
  */
-
-/** Monday-first day initials for the streak pips. */
-const WEEK_LABELS: Record<'en' | 'ar', string[]> = {
-  en: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
-  ar: ['ن', 'ث', 'ر', 'خ', 'ج', 'س', 'ح'],
-};
-
-/** The nudge under the weekly bar: how many activities today still owes.
- *  `started` is false when nothing is done yet, so neither language says
- *  "more" before there is anything to be more than. Arabic counts one, two
- *  and many differently, so each is written out rather than left a numeral. */
-function remainingCopy(ar: boolean, remaining: number, started: boolean): string {
-  if (ar) {
-    const counts: Record<number, string> = {
-      1: started ? 'نشاطا واحدا آخر' : 'نشاطا واحدا',
-      2: started ? 'نشاطين آخرين' : 'نشاطين',
-      3: started ? 'ثلاثة أنشطة أخرى' : 'ثلاثة أنشطة',
-    };
-    return `أكمل ${counts[remaining] ?? `${remaining} أنشطة`} اليوم للحفاظ على التتابع.`;
-  }
-  const noun = remaining === 1 ? 'activity' : 'activities';
-  return `Finish ${remaining}${started ? ' more' : ''} ${noun} today to keep the streak alive.`;
-}
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -145,107 +123,14 @@ const DashboardPage: React.FC = () => {
 
       {/* ── Everything else ── */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Streak & weekly goal */}
+        {/* Streak, milestones and what today still needs */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25, duration: 0.4 }}
-          className="overflow-hidden rounded-2xl border border-[#263248] bg-[#121a2a] lg:col-span-2"
+          className="lg:col-span-2"
         >
-          <div className="flex items-center justify-between border-b border-[#263248] px-6 py-4">
-            <h2 className="flex items-center gap-2 text-base font-bold text-[#f3f6ff]">
-              <Flame size={17} className={streak.current > 0 ? 'text-[#f3a43a]' : 'text-[#7c8aa6]'} />
-              {ar ? 'التتابع اليومي' : 'Daily streak'}
-            </h2>
-            <span className="text-xs text-[#8592ad]" dir="ltr">
-              {ar ? 'الأطول' : 'best'} {streak.longest}
-            </span>
-          </div>
-
-          <div className="p-4 sm:p-6">
-            <div className="flex min-w-0 flex-wrap items-center gap-4 sm:gap-6">
-              {/* Current streak */}
-              <div className="flex items-baseline gap-2" dir="ltr">
-                <span className="text-3xl font-black text-[#f3f6ff] sm:text-4xl">{streak.current}</span>
-                <span className="text-sm text-[#9aa5bf]">
-                  {streak.current === 1 ? (ar ? 'يوم' : 'day') : ar ? 'أيام' : 'days'}
-                </span>
-              </div>
-
-              {/* Week pips, Monday-first. Seven 32px pips plus their gaps come
-                  to 260px, which does not fit a 320px phone, so they step down
-                  below xs. */}
-              <div className="flex items-center gap-1 xs:gap-1.5" dir="ltr">
-                {streak.week.map((d, di) => (
-                  <div
-                    key={d.key}
-                    title={d.key}
-                    className={`flex h-7 w-7 items-center justify-center rounded-lg border text-[10px] font-bold transition-colors xs:h-8 xs:w-8 ${
-                      d.done
-                        ? 'border-[#00a859]/40 bg-[#00a859]/15 text-[#00a859]'
-                        : d.isToday
-                        ? 'border-[#f3a43a]/40 bg-[#f3a43a]/10 text-[#f3a43a]'
-                        : d.isFuture
-                        ? 'border-[#1c2740] bg-[#0d1420] text-[#33415e]'
-                        : 'border-[#263248] bg-[#0d1420] text-[#7c8aa6]'
-                    }`}
-                  >
-                    {d.done ? <Check size={13} /> : WEEK_LABELS[lang][di]}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Today's activities. A day only joins the streak once three
-                are finished, so the learner can see how close that is. */}
-            <div className="mt-6">
-              <div className="mb-1.5 flex items-center justify-between text-xs" dir="ltr">
-                <span className="text-[#9aa5bf]">{ar ? 'نشاط اليوم' : 'Today'}</span>
-                <span className={`font-bold ${streak.todayDone ? 'text-[#00a859]' : 'text-[#f3a43a]'}`}>
-                  {Math.min(streak.todayCount, streak.dailyGoal)}/{streak.dailyGoal}
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5" dir="ltr">
-                {Array.from({ length: streak.dailyGoal }, (_, i) => (
-                  <div
-                    key={i}
-                    className={`h-2 flex-1 rounded-full transition-colors duration-500 ${
-                      i < streak.todayCount ? 'bg-[#00a859]' : 'bg-[#0a0f18]'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Weekly goal */}
-            <div className="mt-5">
-              <div className="mb-1.5 flex items-center justify-between text-xs" dir="ltr">
-                <span className="text-[#9aa5bf]">{ar ? 'هدف الأسبوع' : 'Weekly goal'}</span>
-                <span className="font-bold text-[#00a859]">
-                  {streak.daysThisWeek}/{streak.weeklyGoal}
-                </span>
-              </div>
-              <div className="h-2 overflow-hidden rounded-full bg-[#0a0f18]" dir="ltr">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-[#00a859] to-[#9fef00] transition-all duration-700"
-                  style={{
-                    width: `${Math.min(100, Math.round((streak.daysThisWeek / streak.weeklyGoal) * 100))}%`,
-                  }}
-                />
-              </div>
-              <p className="mt-2 text-[11px] text-[#8592ad]">
-                {streak.daysThisWeek >= streak.weeklyGoal
-                  ? ar
-                    ? 'أنجزت هدف هذا الأسبوع.'
-                    : "You've hit this week's goal."
-                  : streak.todayDone
-                  ? ar
-                    ? 'تم التسجيل اليوم، أحسنت.'
-                    : 'Today is logged, nice work.'
-                  : remainingCopy(ar, streak.dailyGoal - streak.todayCount, streak.todayCount > 0)}
-              </p>
-            </div>
-          </div>
+          <StreakCard streak={streak} />
         </motion.div>
 
         <div className="space-y-6">
