@@ -23,11 +23,20 @@ const PILLAR_SHORT: Record<PillarId, { en: string; ar: string }> = {
   fundamentals: { en: 'Fundamentals', ar: 'الأساسيات' },
 };
 
-/* ── Radar geometry ── */
+/* ── Radar geometry ──
+ * The viewBox is far wider than the ring: the labels ride outside it and the
+ * longest of them ("Fundamentals") reaches well past the axis, so the box has
+ * to carry that overhang or it gets clipped. */
+const VIEW_BOX = '-44 16 488 320';
 const CX = 200;
-const CY = 180;
+const CY = 176;
 const R = 108; // pixel radius of the 100% ring
-const LABEL_R = R + 24; // labels sit OUTSIDE the ring so they never touch the shape
+
+/* Labels sit OUTSIDE the ring so they never touch the shape. Arabic rides a
+ * little wider and a little larger: its words are short and its glyphs taller,
+ * so the offset that reads as roomy in English reads as cramped in Arabic. */
+const LABEL_R: Record<'en' | 'ar', number> = { en: R + 30, ar: R + 36 };
+const LABEL_SIZE: Record<'en' | 'ar', number> = { en: 15, ar: 16 };
 
 /** Point for a 0-100 data value along an axis (clamped to the ring). */
 const polar = (value: number, angleDeg: number) => {
@@ -91,8 +100,16 @@ const SkillMatrix: React.FC<{ variant?: 'full' | 'compact'; className?: string }
 
       <div className="flex flex-col lg:flex-row">
         {/* ── Radar ── */}
-        <div className="flex-shrink-0 flex items-center justify-center p-4 lg:p-5">
-          <svg viewBox="0 0 400 380" className="w-full max-w-[360px] h-auto" aria-hidden>
+        <div className="flex-shrink-0 flex items-center justify-center p-4 lg:w-[420px] lg:p-5">
+          {/* direction:ltr because text-anchor is start/end: under the Arabic
+              page direction those two swap and every side label leans back
+              over the ring instead of away from it. */}
+          <svg
+            viewBox={VIEW_BOX}
+            className="w-full max-w-[380px] h-auto overflow-visible"
+            style={{ direction: 'ltr' }}
+            aria-hidden
+          >
             <defs>
               <radialGradient id="sm-fill" cx="50%" cy="50%" r="50%">
                 <stop offset="0%" stopColor="#00a859" stopOpacity="0.45" />
@@ -122,7 +139,7 @@ const SkillMatrix: React.FC<{ variant?: 'full' | 'compact'; className?: string }
             {ratings.map((r, i) => {
               const ang = angleFor(i);
               const outer = polar(100, ang);
-              const labelPt = polarPx(LABEL_R, ang);
+              const labelPt = polarPx(LABEL_R[lang], ang);
               const cos = Math.cos((ang * Math.PI) / 180);
               const anchor = Math.abs(cos) < 0.3 ? 'middle' : cos > 0 ? 'start' : 'end';
               const muted = !r.hasContent;
@@ -141,7 +158,8 @@ const SkillMatrix: React.FC<{ variant?: 'full' | 'compact'; className?: string }
                     y={labelPt.y}
                     textAnchor={anchor}
                     dominantBaseline="middle"
-                    className="text-[11px] font-bold"
+                    fontSize={LABEL_SIZE[lang]}
+                    className="font-bold"
                     fill={muted ? '#4d5a73' : r.pillar.color}
                   >
                     {PILLAR_SHORT[r.pillar.id][lang]}
