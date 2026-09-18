@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import MobileNav from './MobileNav';
@@ -23,6 +23,9 @@ const AppLayout: React.FC = () => {
     localStorage.setItem(SIDEBAR_KEY, String(collapsed));
   }, [collapsed]);
 
+  const mainRef = useRef<HTMLElement>(null);
+  useEffect(() => { mainRef.current?.scrollTo({ top: 0, left: 0 }); }, [pathname]);
+
   return (
     <div className="flex app-shell text-[#d2d7e3] bg-[#0d1117]">
       {/* Two navigations, one per pointer. The column belongs to a mouse and a
@@ -38,7 +41,8 @@ const AppLayout: React.FC = () => {
             it covers the whole scroll area and sits behind the sidebar's
             collapse handle. See ui/sky.ts for why it is not a layer. */}
         <main
-          className={`relative flex-1 overflow-y-auto overflow-x-hidden scroll-contain p-4 sm:p-6 md:p-8 ${
+          ref={mainRef}
+          className={`app-main relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden scroll-contain p-4 sm:p-6 md:p-8 ${
             sky ? `page-sky ${sky.ground} ${sky.desktopOnly ? 'page-sky-desktop' : ''}` : ''
           }`}
           style={sky ? skyStyle(sky) : undefined}
@@ -47,7 +51,7 @@ const AppLayout: React.FC = () => {
               would otherwise sit on top of the last thing on the page. The
               home indicator's inset is inside that reservation on a phone and
               is all of it on a desktop, where there is no bar. */}
-          <div className="max-w-7xl mx-auto min-w-0 pb-[calc(4.25rem+env(safe-area-inset-bottom,0px))] md:pb-[env(safe-area-inset-bottom,0px)]">
+          <div className="max-w-7xl mx-auto min-w-0 mobile-nav-clearance md:pb-[env(safe-area-inset-bottom,0px)]">
             <Outlet />
           </div>
         </main>

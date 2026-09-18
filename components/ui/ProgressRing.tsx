@@ -23,7 +23,7 @@ const ProgressRing: React.FC<{
   return (
     <div className={`relative flex-shrink-0 ${className}`} style={{ width: size, height: size }}>
       {/* Drawn from the top: the SVG is rotated, not the maths. */}
-      <svg width={size} height={size} className="-rotate-90">
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="h-full w-full -rotate-90">
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#1a2332" strokeWidth={stroke} />
         <circle
           cx={size / 2}

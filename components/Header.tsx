@@ -15,7 +15,7 @@ const Header: React.FC = () => {
   const { xp, level } = useXp();
 
   return (
-    <header className="flex-shrink-0 bg-[#0d1117]/95 border-b border-[#1e293b] backdrop-blur-md sticky top-0 z-30">
+    <header className="app-header flex-shrink-0 bg-[#0d1117]/95 border-b border-[#1e293b] backdrop-blur-md sticky top-0 z-30">
       <div className="flex items-center justify-between h-14 px-4 sm:px-6">
         {/* Left: the logo. No menu button any more — the phone's navigation
             is a bar along the bottom, always out and always in reach, so there

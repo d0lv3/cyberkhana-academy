@@ -343,15 +343,15 @@ const ModuleViewerPage: React.FC = () => {
   const isLastLecture = allLectures.findIndex((l) => l.lecture.id === activeLectureId) === allLectures.length - 1;
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-[#0d1117] text-[#d2d7e3]">
+    <div className="lesson-shell fixed inset-0 z-40 flex flex-col bg-[#0d1117] text-[#d2d7e3]">
 
       {/* ── HEADER ── */}
       <header className="flex-shrink-0 h-14 border-b border-[#263248] bg-[#121a2a] px-4 md:px-6 flex items-center justify-between z-20">
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="text-[#9aa5bf] hover:text-[#f3f6ff] transition-colors inline-flex items-center justify-center touch:min-h-tap touch:min-w-tap -ms-2">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          <button aria-label={lang === 'ar' ? 'رجوع' : 'Back'} onClick={() => navigate(-1)} className="text-[#9aa5bf] hover:text-[#f3f6ff] transition-colors inline-flex items-center justify-center touch:min-h-tap touch:min-w-tap -ms-2">
             <ArrowLeft className="w-5 h-5 rtl-flip" />
           </button>
-          <button className="md:hidden text-[#9aa5bf] hover:text-[#f3f6ff]" onClick={() => setTocMobileOpen(true)}>
+          <button aria-label={lang === 'ar' ? 'محتويات المنهج' : 'Course contents'} className="md:hidden inline-flex min-h-tap min-w-tap shrink-0 items-center justify-center text-[#9aa5bf] hover:text-[#f3f6ff]" onClick={() => setTocMobileOpen(true)}>
             <Menu className="w-5 h-5" />
           </button>
           <button
@@ -397,7 +397,7 @@ const ModuleViewerPage: React.FC = () => {
             <p className="text-[10px] text-[#8592ad] font-semibold uppercase tracking-wider">Progress</p>
             <p className="text-sm font-bold text-[#f3f6ff]">{completedCount}<span className="text-[#8592ad]">/{totalLectures}</span></p>
           </div>
-          <div className="w-28"><ProgressBar value={progressPct} color="neon" size="sm" /></div>
+          <div className="w-20 sm:w-28"><ProgressBar value={progressPct} color="neon" size="sm" /></div>
         </div>
       </header>
 

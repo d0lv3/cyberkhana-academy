@@ -190,11 +190,11 @@ const ProgrammingLessonPage: React.FC = () => {
   const isDone = completed.has(concept.id);
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-[#0d1117] text-[#d2d7e3]">
+    <div className="lesson-shell fixed inset-0 z-40 flex flex-col bg-[#0d1117] text-[#d2d7e3]">
 
       {/* ── HEADER ── */}
       <header className="flex-shrink-0 h-14 border-b border-[#263248] bg-[#121a2a] px-4 md:px-6 flex items-center justify-between z-20">
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <button
             onClick={() => navigate(`/fundamentals/programming/${langSlug}`)}
             title={lang === 'ar' ? 'خريطة المنهج' : 'Course map'}
@@ -204,7 +204,7 @@ const ProgrammingLessonPage: React.FC = () => {
             <ArrowLeft className="w-5 h-5 rtl-flip" />
           </button>
           <button
-            className="lg:hidden text-[#9aa5bf] hover:text-[#f3f6ff] transition-colors"
+            className="lg:hidden inline-flex min-h-tap min-w-tap shrink-0 items-center justify-center text-[#9aa5bf] hover:text-[#f3f6ff] transition-colors"
             onClick={() => setTocMobileOpen(true)}
             title={lang === 'ar' ? 'محتويات المنهج' : 'Course contents'}
             aria-label={lang === 'ar' ? 'محتويات المنهج' : 'Course contents'}
@@ -245,7 +245,7 @@ const ProgrammingLessonPage: React.FC = () => {
           </div>
 
           {/* Mobile title */}
-          <h1 className="md:hidden text-sm font-bold text-[#f3f6ff] truncate max-w-[200px]">
+          <h1 className="md:hidden text-sm font-bold text-[#f3f6ff] truncate min-w-0">
             {concept.title[lang]}
           </h1>
 
@@ -261,7 +261,7 @@ const ProgrammingLessonPage: React.FC = () => {
           )}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           {/* Put the workspace away and read. Desktop only: on a phone the two
               panes are already tabs, so there is nothing to minimise. */}
           <button
@@ -296,29 +296,31 @@ const ProgrammingLessonPage: React.FC = () => {
       {/* ── MOBILE TAB SWITCHER ── */}
       <div className="md:hidden flex border-b border-[#263248] bg-[#121a2a]">
         <button
-          onClick={() => setMobileTab('content')}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 text-xs font-semibold uppercase tracking-wider transition-colors ${
+          aria-pressed={mobileTab === 'content'}
+            onClick={() => setMobileTab('content')}
+          className={`min-h-12 flex-1 flex items-center justify-center gap-2 py-3 text-xs font-semibold uppercase tracking-wider transition-colors ${
             mobileTab === 'content'
               ? 'text-[#00a859] border-b-2 border-[#00a859]'
               : 'text-[#8592ad]'
           }`}
         >
-          <BookOpen size={14} /> Content
+          <BookOpen size={14} /> {lang === 'ar' ? 'المحتوى' : 'Content'}
         </button>
         <button
-          onClick={() => setMobileTab('code')}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 text-xs font-semibold uppercase tracking-wider transition-colors ${
+          aria-pressed={mobileTab === 'code'}
+            onClick={() => setMobileTab('code')}
+          className={`min-h-12 flex-1 flex items-center justify-center gap-2 py-3 text-xs font-semibold uppercase tracking-wider transition-colors ${
             mobileTab === 'code'
               ? 'text-[#00a859] border-b-2 border-[#00a859]'
               : 'text-[#8592ad]'
           }`}
         >
-          <Code size={14} /> Editor
+          <Code size={14} /> {lang === 'ar' ? 'المحرر' : 'Editor'}
         </button>
       </div>
 
       {/* ── BODY ── */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="min-h-0 flex-1 flex overflow-hidden">
 
         {/* ── The course, and where you are in it ──
              Pinned from a large screen only: the lesson and the workspace are
@@ -345,7 +347,7 @@ const ProgrammingLessonPage: React.FC = () => {
              The split is measured here rather than across the whole body, so
              the share a reader chose stays a share of what they work in,
              whether or not the contents are beside it. ── */}
-        <div ref={bodyRef} className="min-w-0 flex-1 flex overflow-hidden">
+        <div ref={bodyRef} className="min-w-0 min-h-0 flex-1 flex overflow-hidden">
 
           {/* ── LEFT: Markdown. Takes whatever the workspace is not using, which
                is the whole screen once the workspace is put away. ── */}
@@ -387,7 +389,7 @@ const ProgrammingLessonPage: React.FC = () => {
                 </div>
               )}
               <article
-                className={`mx-auto px-6 py-8 md:px-8 md:py-10 ${codeOpen ? 'max-w-2xl' : 'max-w-4xl'}`}
+                className={`mx-auto px-4 py-6 sm:px-6 md:px-8 md:py-10 ${codeOpen ? 'max-w-2xl' : 'max-w-4xl'}`}
               >
                 {/* Where this step sits in the course */}
                 {here && (
@@ -409,7 +411,7 @@ const ProgrammingLessonPage: React.FC = () => {
 
             {/* ── Lesson completion strip (lessons only — challenges complete by passing tests) ── */}
             {!isChallenge && (
-              <div className="flex-shrink-0 px-6 py-3 border-t border-[#263248] bg-[#0e1626]">
+              <div className="lesson-actions flex-shrink-0 px-4 sm:px-6 py-3 border-t border-[#263248] bg-[#0e1626]">
                 {isDone ? (
                   <div className="flex items-center justify-between gap-3">
                     <span className="flex items-center gap-2 text-sm font-semibold text-[#00a859]">
@@ -471,10 +473,10 @@ const ProgrammingLessonPage: React.FC = () => {
           <div
             /* The width only applies to the desktop split; on a phone the pane is
                whichever tab is showing, and takes the screen. */
-            style={codeOpen ? { flexBasis: `${codePct}%` } : undefined}
+            style={{ '--workspace-width': `${codePct}%` } as React.CSSProperties}
             className={`
               flex-col overflow-hidden border-[#263248] md:border-s
-              ${codeOpen ? 'md:flex md:flex-shrink-0 md:min-w-0' : 'md:hidden'}
+              ${codeOpen ? 'md:basis-[var(--workspace-width)] md:flex md:flex-shrink-0 md:min-w-0' : 'md:hidden'}
               ${mobileTab === 'code' ? 'flex w-full' : 'hidden'}
             `}
           >

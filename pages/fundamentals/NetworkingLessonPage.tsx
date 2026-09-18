@@ -188,11 +188,11 @@ const NetworkingLessonPage: React.FC = () => {
   })();
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-[#0d1117] text-[#d2d7e3]">
+    <div className="lesson-shell fixed inset-0 z-40 flex flex-col bg-[#0d1117] text-[#d2d7e3]">
 
       {/* ── HEADER ── */}
       <header className="flex-shrink-0 h-14 border-b border-[#263248] bg-[#121a2a] px-4 md:px-6 flex items-center justify-between z-20">
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           {/* Out of the lesson, not back one lesson. The track is walked by
               replacing the entry rather than stacking on it, so history has
               nothing useful to step back to anyway. */}
@@ -205,7 +205,7 @@ const NetworkingLessonPage: React.FC = () => {
             <ArrowLeft className="w-5 h-5 rtl-flip" />
           </button>
           <button
-            className="lg:hidden text-[#9aa5bf] hover:text-[#f3f6ff] transition-colors"
+            className="lg:hidden inline-flex min-h-tap min-w-tap shrink-0 items-center justify-center text-[#9aa5bf] hover:text-[#f3f6ff] transition-colors"
             onClick={() => setTocMobileOpen(true)}
             title={ar ? 'محتويات المسار' : 'Course contents'}
             aria-label={ar ? 'محتويات المسار' : 'Course contents'}
@@ -250,7 +250,7 @@ const NetworkingLessonPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           {/* Tags (desktop) */}
           <div className="hidden md:flex items-center gap-1.5">
             {lesson.tags.slice(0, 4).map((tag) => (
@@ -295,8 +295,9 @@ const NetworkingLessonPage: React.FC = () => {
       {showSim && (
         <div className="md:hidden flex border-b border-[#263248] bg-[#121a2a]">
           <button
+            aria-pressed={mobileTab === 'content'}
             onClick={() => setMobileTab('content')}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 text-xs font-semibold uppercase tracking-wider transition-colors ${
+            className={`min-h-12 flex-1 flex items-center justify-center gap-2 py-3 text-xs font-semibold uppercase tracking-wider transition-colors ${
               mobileTab === 'content'
                 ? 'text-[#00a859] border-b-2 border-[#00a859]'
                 : 'text-[#8592ad]'
@@ -305,8 +306,9 @@ const NetworkingLessonPage: React.FC = () => {
             <BookOpen size={14} /> {lang === 'ar' ? 'المحتوى' : 'Content'}
           </button>
           <button
+            aria-pressed={mobileTab === 'simulation'}
             onClick={() => setMobileTab('simulation')}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 text-xs font-semibold uppercase tracking-wider transition-colors ${
+            className={`min-h-12 flex-1 flex items-center justify-center gap-2 py-3 text-xs font-semibold uppercase tracking-wider transition-colors ${
               mobileTab === 'simulation'
                 ? 'text-[#00a859] border-b-2 border-[#00a859]'
                 : 'text-[#8592ad]'
@@ -318,7 +320,7 @@ const NetworkingLessonPage: React.FC = () => {
       )}
 
       {/* ── BODY ── */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="min-h-0 flex-1 flex overflow-hidden">
 
         {/* ── The track, and where you are on it ──
              Pinned from a large screen only: a lesson with a simulation beside
@@ -345,7 +347,7 @@ const NetworkingLessonPage: React.FC = () => {
              The split is measured here rather than across the whole body, so
              the share a reader chose stays a share of what they read in,
              whether or not the contents are beside it. ── */}
-        <div ref={bodyRef} className="min-w-0 flex-1 flex overflow-hidden">
+        <div ref={bodyRef} className="min-w-0 min-h-0 flex-1 flex overflow-hidden">
 
           {/* ── Markdown content. Takes whatever the simulation is not using, which
                is the whole screen when there is no simulation at all. ── */}
@@ -357,7 +359,7 @@ const NetworkingLessonPage: React.FC = () => {
             `}
           >
             <article
-              className={`mx-auto px-6 py-8 md:px-8 md:py-10 ${
+              className={`mx-auto px-4 py-6 sm:px-6 md:px-8 md:py-10 ${
                 splitView ? 'max-w-2xl' : 'max-w-4xl'
               }`}
             >
@@ -476,10 +478,10 @@ const NetworkingLessonPage: React.FC = () => {
               <div
                 /* The width only applies to the desktop split; on a phone the
                    pane is whichever tab is showing, and takes the screen. */
-                style={simOpen ? { flexBasis: `${simPct}%` } : undefined}
+                style={{ '--workspace-width': `${simPct}%` } as React.CSSProperties}
                 className={`
                   flex-col overflow-hidden border-[#263248] md:border-s
-                  ${simOpen ? 'md:flex md:flex-shrink-0 md:min-w-0' : 'md:hidden'}
+                  ${simOpen ? 'md:basis-[var(--workspace-width)] md:flex md:flex-shrink-0 md:min-w-0' : 'md:hidden'}
                   ${mobileTab === 'simulation' ? 'flex w-full' : 'hidden'}
                 `}
               >

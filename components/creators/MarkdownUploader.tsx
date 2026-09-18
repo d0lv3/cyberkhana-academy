@@ -139,7 +139,7 @@ const MarkdownUploader: React.FC<MarkdownUploaderProps> = ({
   return (
     <div className="flex flex-col gap-2">
       {/* Mode tabs */}
-      <div className="flex items-center gap-1 bg-[#0b1019] rounded-lg p-1 w-fit">
+      <div className="creator-toolbar flex flex-wrap max-w-full items-center gap-1 bg-[#0b1019] rounded-lg p-1 w-fit">
         <button
           type="button"
           onClick={() => setMode('editor')}

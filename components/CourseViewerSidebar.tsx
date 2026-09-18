@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   CheckCircle2,
   ChevronDown,
@@ -115,6 +115,39 @@ const CourseViewerSidebar: React.FC<CourseViewerSidebarProps> = ({
   const { lang, isArabic } = useLang();
   const ar = lang === 'ar';
   const pin = PIN[pinAt];
+  const panelRef = useRef<HTMLElement>(null);
+  const closeRef = useRef(onMobileClose);
+  closeRef.current = onMobileClose;
+  const [pinned, setPinned] = useState(() => window.matchMedia(`(min-width: ${pinAt === 'lg' ? 1024 : 768}px)`).matches);
+
+  useEffect(() => {
+    const query = window.matchMedia(`(min-width: ${pinAt === 'lg' ? 1024 : 768}px)`);
+    const update = () => { setPinned(query.matches); if (query.matches) closeRef.current(); };
+    update();
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, [pinAt]);
+
+  useEffect(() => {
+    if (!mobileOpen || pinned) return;
+    const trigger = document.activeElement as HTMLElement | null;
+    const panel = panelRef.current!;
+    panel.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closeRef.current();
+      if (event.key !== 'Tab') return;
+      const targets = [...panel.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], [tabindex="0"]')].filter(el => el.getClientRects().length);
+      const first = targets[0], last = targets[targets.length - 1];
+      if (!first) { event.preventDefault(); return; }
+      if (event.shiftKey && (document.activeElement === first || document.activeElement === panel)) {
+        event.preventDefault(); last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault(); first.focus();
+      }
+    };
+    panel.addEventListener('keydown', onKey);
+    return () => { panel.removeEventListener('keydown', onKey); trigger?.focus({ preventScroll: true }); };
+  }, [mobileOpen, pinned]);
 
   // Which module contains the active lecture?
   const activeModuleId = useMemo(() => {
@@ -367,8 +400,14 @@ const CourseViewerSidebar: React.FC<CourseViewerSidebarProps> = ({
 
       {/* Sidebar panel */}
       <aside
+        ref={panelRef}
+        inert={!pinned && !mobileOpen}
+        role={!pinned && mobileOpen ? 'dialog' : undefined}
+        aria-modal={!pinned && mobileOpen ? true : undefined}
+        aria-label={ar ? title.ar : title.en}
+        tabIndex={-1}
         className={`
-          fixed top-14 bottom-0 start-0 z-50 w-full sm:w-80 bg-[#0f1520] border-e border-[#263248]
+          fixed top-[calc(3.5rem+env(safe-area-inset-top,0px))] bottom-0 start-0 z-50 w-full sm:w-80 bg-[#0f1520] border-e border-[#263248] pb-safe
           flex flex-col transition-transform duration-300
           ${pin.pinned}
           ${mobileOpen ? 'translate-x-0' : isArabic ? 'translate-x-full' : '-translate-x-full'}
@@ -382,7 +421,8 @@ const CourseViewerSidebar: React.FC<CourseViewerSidebarProps> = ({
           </h2>
           <button
             onClick={onMobileClose}
-            className="text-[#9aa5bf] hover:text-[#f3f6ff] transition-colors"
+            aria-label={ar ? 'إغلاق المحتويات' : 'Close course contents'}
+            className="inline-flex min-h-tap min-w-tap items-center justify-center text-[#9aa5bf] hover:text-[#f3f6ff] transition-colors"
           >
             <X className="w-5 h-5" />
           </button>

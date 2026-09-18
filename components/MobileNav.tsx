@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import MobileSheet from './ui/MobileSheet';
 import {
   LayoutDashboard,
   GraduationCap,
@@ -65,7 +66,6 @@ const MobileNav: React.FC = () => {
   const { xp, level } = useXp();
   const { pathname } = useLocation();
   const [moreOpen, setMoreOpen] = useState(false);
-  const closeRef = useRef<HTMLButtonElement>(null);
 
   const ar = lang === 'ar';
   const isCreator = user?.role === 'creator' || user?.role === 'admin';
@@ -120,16 +120,6 @@ const MobileNav: React.FC = () => {
     setMoreOpen(false);
   }, [pathname]);
 
-  useEffect(() => {
-    if (!moreOpen) return;
-    closeRef.current?.focus();
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setMoreOpen(false);
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [moreOpen]);
-
   /* More is the current tab whenever the page you are on came out of it, so
      the bar is never showing nothing selected. */
   const moreIsCurrent = moreOpen || overflow.some((item) => holds(pathname, item.to));
@@ -144,29 +134,10 @@ const MobileNav: React.FC = () => {
   return (
     <>
       {/* ── More ── */}
-      {moreOpen && (
-        <div
-          className="fixed inset-0 z-50 md:hidden"
-          role="dialog"
-          aria-modal="true"
-          aria-label={ar ? 'المزيد' : 'More'}
-        >
-          {/* The page behind is covered rather than locked. Nothing scrolls
-              the document here — the shell is exactly one screen tall and the
-              page scrolls inside <main> — so a backdrop that eats the touch
-              is the whole of what a scroll lock would have bought. */}
-          <button
-            type="button"
-            aria-label={ar ? 'إغلاق' : 'Close'}
-            onClick={() => setMoreOpen(false)}
-            className="absolute inset-0 w-full bg-black/60 backdrop-blur-sm animate-fade-in"
-          />
-
-          <div className="absolute inset-x-0 bottom-0 max-h-[82vh] overflow-y-auto rounded-t-2xl border-t border-[#263248] bg-[#0d1117] pb-safe animate-sheet-rise">
+      <MobileSheet open={moreOpen} onClose={() => setMoreOpen(false)} label={ar ? 'المزيد' : 'More'}>
             <div className="flex items-center justify-between px-5 pt-4 pb-2">
               <p className="text-sm font-bold text-[#f3f6ff]">{ar ? 'المزيد' : 'More'}</p>
               <button
-                ref={closeRef}
                 type="button"
                 onClick={() => setMoreOpen(false)}
                 aria-label={ar ? 'إغلاق' : 'Close'}
@@ -227,6 +198,7 @@ const MobileNav: React.FC = () => {
                 <NavLink
                   key={to}
                   to={to}
+                  onClick={() => setMoreOpen(false)}
                   data-tour-id={tour}
                   className={({ isActive }) =>
                     [
@@ -255,13 +227,11 @@ const MobileNav: React.FC = () => {
                 <span className="truncate">{ar ? 'تسجيل الخروج' : 'Log out'}</span>
               </button>
             </nav>
-          </div>
-        </div>
-      )}
+      </MobileSheet>
 
       {/* ── The bar ── */}
       <nav
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-[#1e293b] bg-[#0d1117]/95 pb-safe backdrop-blur-md md:hidden"
+        className="mobile-bottom-nav fixed inset-x-0 bottom-0 z-40 border-t border-[#1e293b] bg-[#0d1117]/95 pb-safe backdrop-blur-md md:hidden"
         aria-label={ar ? 'التنقل الرئيسي' : 'Primary'}
       >
         <div className="grid grid-cols-5">

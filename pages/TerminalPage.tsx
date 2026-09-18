@@ -31,24 +31,24 @@ const TerminalPage: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-[#0a0e14]">
-      <div className="flex items-center justify-between border-b border-[#263248] bg-[#0d1117] px-4 py-2.5">
-        <div className="flex items-center gap-3">
+    <div className="lesson-shell fixed inset-0 flex flex-col bg-[#0a0e14]">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#263248] bg-[#0d1117] px-4 py-2.5">
+        <div className="flex min-w-0 items-center gap-3">
           <a
             href="#/dashboard"
             title="CyberKhana Academy"
             aria-label="CyberKhana Academy home"
-            className="flex items-center transition-opacity hover:opacity-80"
+            className="flex min-h-tap min-w-tap items-center justify-center transition-opacity hover:opacity-80"
           >
             <BrandLogo variant="mark" loading="eager" className="h-7 w-7 object-contain" />
           </a>
           <span className="h-5 w-px bg-[#263248]" aria-hidden />
-          <div className="flex items-center gap-2 text-sm font-semibold text-[#c9d3e0]">
+          <div className="flex min-w-0 items-center gap-2 text-sm font-semibold text-[#c9d3e0]">
             <TerminalSquare size={15} className="text-[#00c766]" />
-            <span dir="ltr">{firstName}@cyberkhana, practice shell</span>
+            <span dir="ltr" className="truncate">{firstName}@cyberkhana, practice shell</span>
           </div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="coding-toolbar flex w-full sm:w-auto items-center justify-end gap-4">
           <button
             onClick={() => setSplit((s) => !s)}
             title={split ? 'Back to one terminal' : 'Split into two terminals for the nc reverse-shell demo'}

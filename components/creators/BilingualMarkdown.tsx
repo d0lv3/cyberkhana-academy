@@ -17,7 +17,7 @@ interface BilingualMarkdownProps {
 const BilingualMarkdown: React.FC<BilingualMarkdownProps> = ({ value, onChange, lang, onLangChange }) => {
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-1 bg-[#0b1019] rounded-lg p-1 w-fit">
+      <div className="creator-toolbar flex flex-wrap max-w-full items-center gap-1 bg-[#0b1019] rounded-lg p-1 w-fit">
         {(['en', 'ar'] as const).map((l) => (
           <button
             key={l}

@@ -511,7 +511,7 @@ const ProgrammingCreator: React.FC = () => {
         )}
 
         {(canLanguages || canProgramming) && (
-          <div className="flex justify-between items-start gap-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
             <p className="text-sm text-[#9aa5bf] max-w-lg">
               {canLanguages
                 ? uiLang === 'ar'
@@ -545,7 +545,7 @@ const ProgrammingCreator: React.FC = () => {
             {/* Language header */}
             <div className="h-1" style={{ backgroundColor: lang.color }} />
             <div className="px-5 py-4 border-b border-[#263248]">
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div
                     className="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-black"
@@ -580,7 +580,7 @@ const ProgrammingCreator: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {/* Another author's published language: admin edit only.
                       A built-in's foreign override is handled by the
                       built-in block below instead, alongside hide/show. */}

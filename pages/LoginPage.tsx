@@ -288,7 +288,7 @@ const LoginPage: React.FC = () => {
                   : 'rgba(38,50,72,0.65)',
               }}
             >
-              <div className="relative rounded-[15px] bg-[#0f1624]/95 backdrop-blur-sm p-7 sm:p-8 overflow-hidden">
+              <div className="relative rounded-[15px] bg-[#0f1624]/95 backdrop-blur-sm p-5 sm:p-8 overflow-hidden">
                 {/* inner glow following the cursor */}
                 <div
                   className="pointer-events-none absolute inset-0 transition-opacity duration-300"

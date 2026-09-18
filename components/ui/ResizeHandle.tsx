@@ -125,7 +125,7 @@ const ResizeHandle: React.FC<ResizeHandleProps> = ({
       className={`group relative flex-shrink-0 touch-none bg-[#0b1019] transition-colors hover:bg-[#132033] focus:bg-[#132033] focus:outline-none ${
         vertical
           ? 'w-1.5 cursor-col-resize border-y border-[#151d2e]'
-          : 'h-1.5 cursor-row-resize border-x border-[#151d2e]'
+          : 'h-1.5 touch:h-6 cursor-row-resize border-x border-[#151d2e]'
       }`}
     >
       {/* The grip: a short bar, brightening on hover so the handle is findable. */}

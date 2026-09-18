@@ -537,7 +537,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
       )}
 
       {/* ── Tabs ── */}
-      <div className="flex items-center gap-1 rounded-xl border border-[#263248] bg-[#0b1019] p-1">
+      <div className="creator-section-tabs grid grid-cols-3 sm:flex items-stretch gap-1 rounded-xl border border-[#263248] bg-[#0b1019] p-1">
         <button
           type="button"
           onClick={() => setTab('details')}

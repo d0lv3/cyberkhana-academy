@@ -43,7 +43,7 @@ const HeroShell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
       }}
     />
     <div aria-hidden className="absolute -top-24 -end-10 h-72 w-72 rounded-full bg-[#00a859]/10 blur-[90px]" />
-    <div className="relative z-10 p-6 sm:p-8">{children}</div>
+    <div className="relative z-10 p-4 sm:p-8">{children}</div>
   </motion.section>
 );
 
@@ -99,7 +99,7 @@ export const StartHereCard: React.FC<{ tracks: TrackProgress[]; firstName: strin
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <button
               onClick={() => navigate('/fundamentals')}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#9fef00] px-5 py-3 text-sm font-black text-[#0d1117] transition-all hover:bg-[#8dd900] hover:shadow-[0_0_20px_rgba(159,239,0,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9fef00]/60 touch:min-h-tap"
+              className="inline-flex w-full sm:w-auto justify-center items-center gap-2 rounded-xl bg-[#9fef00] px-5 py-3 text-sm font-black text-[#0d1117] transition-all hover:bg-[#8dd900] hover:shadow-[0_0_20px_rgba(159,239,0,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9fef00]/60 touch:min-h-tap"
             >
               {ar ? 'ابدأ الأساسيات' : 'Start Fundamentals'}
               <ArrowRight size={16} className="rtl-flip" />
@@ -206,7 +206,7 @@ export const ContinueCard: React.FC<{
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <button
               onClick={() => navigate(target.route)}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#9fef00] px-5 py-3 text-sm font-black text-[#0d1117] transition-all hover:bg-[#8dd900] hover:shadow-[0_0_20px_rgba(159,239,0,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9fef00]/60 touch:min-h-tap"
+              className="inline-flex w-full sm:w-auto justify-center items-center gap-2 rounded-xl bg-[#9fef00] px-5 py-3 text-sm font-black text-[#0d1117] transition-all hover:bg-[#8dd900] hover:shadow-[0_0_20px_rgba(159,239,0,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9fef00]/60 touch:min-h-tap"
             >
               <Play size={15} />
               {ar ? 'تابع' : 'Continue'}

@@ -66,7 +66,7 @@ const PodiumCard: React.FC<{ entry: PodiumEntry; highlight?: boolean; isMe?: boo
     <Link
       to={to}
       aria-label={entry.displayName}
-      className="group relative block rounded-2xl pt-6 transition-transform hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00a859]/60"
+      className="podium-card group relative block rounded-2xl pt-6 transition-transform hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00a859]/60"
     >
       {/* Crown floats above the #1 card */}
       {rank === 1 && (
@@ -95,7 +95,7 @@ const PodiumCard: React.FC<{ entry: PodiumEntry; highlight?: boolean; isMe?: boo
 
       {/* Rank badge */}
       <div
-        className="absolute left-1/2 -translate-x-1/2 top-3 z-30 w-7 h-7 rounded-lg flex items-center justify-center text-sm font-black shadow-sm"
+        className="podium-rank absolute left-1/2 -translate-x-1/2 top-3 z-30 w-7 h-7 rounded-lg flex items-center justify-center text-sm font-black shadow-sm"
         style={{ backgroundColor: tier.accent, color: '#11161f' }}
       >
         {rank}
@@ -111,7 +111,7 @@ const PodiumCard: React.FC<{ entry: PodiumEntry; highlight?: boolean; isMe?: boo
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, delay: highlight ? 0 : 0.1 }}
-        className={`relative w-full ${height} drop-shadow-[0_10px_28px_rgba(0,0,0,0.4)]`}
+        className={`podium-shield relative w-full ${height} drop-shadow-[0_10px_28px_rgba(0,0,0,0.4)]`}
       >
         {/* Frame (tier color) */}
         <div className="absolute inset-0" style={{ clipPath: SHIELD, backgroundColor: tier.accent, opacity: 0.85 }} />
@@ -125,9 +125,9 @@ const PodiumCard: React.FC<{ entry: PodiumEntry; highlight?: boolean; isMe?: boo
           className="absolute inset-[2px] overflow-hidden bg-[#121a2a]"
           style={{ clipPath: SHIELD }}
         >
-          <div className="relative z-10 h-full flex flex-col items-center justify-center px-3 sm:px-4 text-center min-w-0 w-full">
+          <div className="podium-content relative z-10 h-full flex flex-col items-center justify-center px-3 sm:px-4 text-center min-w-0 w-full">
             <div
-              className="rounded-full bg-[#0e1522] flex items-center justify-center overflow-hidden"
+              className="podium-avatar rounded-full bg-[#0e1522] flex items-center justify-center overflow-hidden"
               style={{
                 width: highlight ? 84 : 64,
                 height: highlight ? 84 : 64,
@@ -148,7 +148,7 @@ const PodiumCard: React.FC<{ entry: PodiumEntry; highlight?: boolean; isMe?: boo
             </div>
 
             <p
-              className="mt-3 font-bold text-[#eef2fb] truncate max-w-full"
+              className="podium-name mt-3 font-bold text-[#eef2fb] truncate max-w-full"
               title={entry.displayName}
             >
               <span dir="auto">{entry.displayName}</span>
@@ -167,7 +167,7 @@ const PodiumCard: React.FC<{ entry: PodiumEntry; highlight?: boolean; isMe?: boo
               </span>
             </p>
 
-            <p className="mt-2 text-lg font-black" style={{ color: tier.accent }} dir="ltr">
+            <p className="podium-score mt-2 text-lg font-black" style={{ color: tier.accent }} dir="ltr">
               {entry.points.toLocaleString('en-US')}
               <span className="text-[11px] font-semibold text-[#9aa5bf] ms-1">XP</span>
             </p>
@@ -190,7 +190,7 @@ const LeaderboardPodium: React.FC<{ top: PodiumEntry[]; currentUserId?: string }
   return (
     <section className="overflow-visible">
       {/* Mobile shows 1 → 2 → 3; desktop reorders to 2 · 1 · 3 with #1 raised. */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-3 items-end max-w-3xl mx-auto">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 items-end max-w-3xl mx-auto">
         <div className="order-2 sm:order-1">
           {second && <PodiumCard entry={second} isMe={isMe(second)} />}
         </div>

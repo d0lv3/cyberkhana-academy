@@ -226,7 +226,7 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
     <div ref={shellRef} className="flex flex-col h-full" dir="ltr">
 
       {/* ── Toolbar ── */}
-      <div className="flex items-center justify-between px-3 py-2 bg-[#0b1019] border border-[#151d2e] rounded-t-lg">
+      <div className="coding-toolbar flex flex-wrap items-center justify-between gap-2 px-3 py-2 bg-[#0b1019] border border-[#151d2e] rounded-t-lg">
         <div className="flex items-center gap-2">
           {/* File tab */}
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#080c14] border border-[#151d2e]">

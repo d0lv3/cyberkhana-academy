@@ -28,7 +28,7 @@ const LevelSummary: React.FC<{
   const ringStroke = hero ? 9 : 7;
 
   return (
-    <div data-tour-id="dashboard-level" className={className}>
+    <div data-tour-id="dashboard-level" className={`${hero ? 'level-summary-hero' : ''} ${className}`}>
       <LevelsDropdown
         xp={xp}
         level={level}
@@ -40,7 +40,7 @@ const LevelSummary: React.FC<{
             : '-m-2 gap-5 p-2'
         }
       >
-        <ProgressRing progress={level.fraction * 100} color={accent} size={ringSize} stroke={ringStroke}>
+        <ProgressRing className="level-summary-ring" progress={level.fraction * 100} color={accent} size={ringSize} stroke={ringStroke}>
           <LevelEmblem
             level={level.level}
             lang={lang}

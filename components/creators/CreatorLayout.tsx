@@ -40,7 +40,7 @@ const CreatorLayout: React.FC<CreatorLayoutProps> = ({
   const { t } = useLang();
 
   return (
-    <div className="space-y-6">
+    <div className="creator-layout min-w-0 space-y-6">
       {/* Header. Stacked below sm: the action cluster (preview + status +
           save) is close to a phone's full width on its own, so keeping it
           beside the title could only push something off-screen. */}
@@ -58,8 +58,8 @@ const CreatorLayout: React.FC<CreatorLayoutProps> = ({
             <span className="hidden sm:inline">{backLabel ?? t('studio.backDefault')}</span>
           </button>
           <div className="min-w-0 self-center sm:self-auto">
-            <h1 className="text-lg sm:text-2xl font-bold text-[#f3f6ff] truncate">{title}</h1>
-            {subtitle && <p className="text-sm text-[#8592ad] mt-0.5 truncate">{subtitle}</p>}
+            <h1 className="text-lg sm:text-2xl font-bold text-[#f3f6ff] break-words">{title}</h1>
+            {subtitle && <p className="text-sm text-[#8592ad] mt-0.5">{subtitle}</p>}
           </div>
         </div>
 

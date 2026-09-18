@@ -47,7 +47,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
       )}
 
       <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-4 min-w-0">
+        <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0">
           {iconNode
             ? iconNode
             : Icon && (
@@ -65,11 +65,11 @@ const PageHeader: React.FC<PageHeaderProps> = ({
               </span>
             )}
             <h1 className="text-2xl sm:text-3xl font-black text-[#f3f6ff]">{title}</h1>
-            {subtitle && <p className="text-[#9aa5bf] mt-1.5 max-w-2xl">{subtitle}</p>}
+            {subtitle && <p className="text-sm sm:text-base leading-relaxed text-[#9aa5bf] mt-1.5 max-w-2xl">{subtitle}</p>}
           </div>
         </div>
 
-        {children && <div className="flex-shrink-0">{children}</div>}
+        {children && <div className="w-full min-w-0 sm:w-auto sm:flex-shrink-0">{children}</div>}
       </div>
     </motion.div>
   );
