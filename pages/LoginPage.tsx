@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Globe, AlertTriangle } from 'lucide-react';
 import BrandLogo from '../components/ui/BrandLogo';
+import PwaInstallBanner from '../components/PwaInstallBanner';
 import { useAuth } from '../contexts/AuthContext';
 import { useLang } from '../contexts/LangContext';
 
@@ -244,6 +245,7 @@ const LoginPage: React.FC = () => {
       </header>
 
       {/* Centered auth */}
+      <PwaInstallBanner className="relative z-10 mx-4 mb-6" />
       <main className="relative z-10 flex-1 flex items-center justify-center px-6 pb-16">
         <div className="w-full max-w-[400px]">
           {/* Brand + heading */}

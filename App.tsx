@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { HashRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { MotionConfig } from 'framer-motion';
 import { LangProvider } from './contexts/LangContext';
+import { PwaProvider } from './contexts/PwaContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ConfirmHost from './components/ui/ConfirmHost';
 import FeedbackHost from './components/feedback/FeedbackHost';
@@ -257,14 +258,16 @@ const App: React.FC = () => {
       <HashRouter>
         <AuthProvider>
           <LangProvider>
-            <ErrorBoundary>
-              <AppRoutes />
-            </ErrorBoundary>
-            <ConfirmHost />
-            <FeedbackHost />
-            <AccountNoticeHost />
-            <LevelUpHost />
-            <TourHost />
+            <PwaProvider>
+              <ErrorBoundary>
+                <AppRoutes />
+              </ErrorBoundary>
+              <ConfirmHost />
+              <FeedbackHost />
+              <AccountNoticeHost />
+              <LevelUpHost />
+              <TourHost />
+            </PwaProvider>
           </LangProvider>
         </AuthProvider>
       </HashRouter>

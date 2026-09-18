@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import MobileNav from './MobileNav';
 import Header from './Header';
+import PwaInstallBanner from './PwaInstallBanner';
 import UniversityPrompt from './university/UniversityPrompt';
 import UsernamePrompt from './account/UsernamePrompt';
 import LanguagePrompt, { useLanguageFirstRun } from './account/LanguagePrompt';
@@ -52,6 +53,7 @@ const AppLayout: React.FC = () => {
               home indicator's inset is inside that reservation on a phone and
               is all of it on a desktop, where there is no bar. */}
           <div className="max-w-7xl mx-auto min-w-0 mobile-nav-clearance md:pb-[env(safe-area-inset-bottom,0px)]">
+            {!language.needed && <PwaInstallBanner className="mb-5" />}
             <Outlet />
           </div>
         </main>

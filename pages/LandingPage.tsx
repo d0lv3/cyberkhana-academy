@@ -7,6 +7,7 @@ import ProductPreviewSection from '../components/landing/ProductPreviewSection';
 import CTASection from '../components/landing/CTASection';
 import LandingFooter from '../components/landing/LandingFooter';
 import BrandLogo from '../components/ui/BrandLogo';
+import PwaInstallBanner from '../components/PwaInstallBanner';
 import Button from '../components/ui/EnhancedButton';
 import { useLang } from '../contexts/LangContext';
 import { SHELL } from '../components/landing/shell';
@@ -75,6 +76,7 @@ const LandingPage: React.FC = () => {
       </nav>
 
       {/* Hero with live product showcase */}
+      <PwaInstallBanner className="mx-4 mt-20" />
       <HeroSection onGetStarted={handleLogin} onLogin={handleLogin} />
 
       {/* Three pillars */}
