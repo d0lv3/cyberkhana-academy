@@ -323,8 +323,8 @@ const MembersPage: React.FC = () => {
       />
 
       {/* toolbar */}
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative min-w-0 basis-full sm:basis-auto sm:flex-1 sm:max-w-sm">
           <Search
             size={15}
             className="absolute start-3.5 top-1/2 -translate-y-1/2 text-[#7c8aa6] pointer-events-none"
@@ -341,7 +341,7 @@ const MembersPage: React.FC = () => {
         </div>
         <button
           onClick={() => void load()}
-          className="w-10 h-10 rounded-lg bg-[#121a2a] border border-[#263248] flex items-center justify-center text-[#8390ac] hover:text-[#00a859] hover:border-[#00a859]/40 transition-all flex-shrink-0"
+          className="w-11 h-11 rounded-lg bg-[#121a2a] border border-[#263248] flex items-center justify-center text-[#8390ac] hover:text-[#00a859] hover:border-[#00a859]/40 transition-all flex-shrink-0"
           title={ar ? 'تحديث' : 'Refresh'}
         >
           <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
@@ -375,7 +375,7 @@ const MembersPage: React.FC = () => {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: Math.min(i * 0.03, 0.3), duration: 0.3 }}
-                  className={`flex flex-wrap items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3.5 min-w-0 ${u.isBanned ? 'opacity-50' : ''}`}
+                  className={`grid grid-cols-[2.5rem_minmax(0,1fr)] items-start gap-3 sm:gap-4 px-4 sm:px-5 py-4 min-w-0 xl:grid-cols-[2.5rem_minmax(0,1fr)_auto] ${u.isBanned ? 'opacity-50' : ''}`}
                 >
                   {/* avatar */}
                   <Avatar
@@ -387,7 +387,7 @@ const MembersPage: React.FC = () => {
 
                   {/* identity */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-[#f3f6ff] truncate">
+                    <p className="break-words text-sm font-semibold leading-relaxed text-[#f3f6ff]">
                       {u.displayName}
                       {isSelf && (
                         <span className="text-[#8592ad] font-normal"> {ar ? '(أنت)' : '(you)'}</span>
@@ -403,7 +403,7 @@ const MembersPage: React.FC = () => {
                         </span>
                       )}
                     </p>
-                    <p className="text-[11px] text-[#8592ad] truncate" dir="ltr">
+                    <p className="mt-0.5 flex flex-col gap-0.5 break-all text-[11px] text-[#8592ad]" dir="ltr">
                       {u.username ? (
                         <span className="font-mono text-[#9aa5bf]">@{u.username}</span>
                       ) : (
@@ -414,8 +414,7 @@ const MembersPage: React.FC = () => {
                           {ar ? 'بلا معرّف' : 'no username'}
                         </span>
                       )}
-                      <span className="mx-1.5 text-[#354562]">·</span>
-                      {u.email}
+                      <span>{u.email}</span>
                     </p>
                     {/* Visible on the row, not just inside the panel: an admin
                         scanning the list should see who is tagged without
@@ -433,21 +432,22 @@ const MembersPage: React.FC = () => {
                         </span>
                       </p>
                     )}
+                    {/* dates */}
+                    <div className="mt-2 flex flex-wrap gap-x-3 gap-y-0.5">
+                      <p className="text-[10px] text-[#7c8aa6]">
+                        {ar ? 'انضم' : 'Joined'} {fmtDate(u.createdAt)}
+                      </p>
+                      <p className="text-[10px] text-[#7c8aa6]">
+                        {ar ? 'آخر دخول' : 'Last login'} {fmtDate(u.lastLoginAt)}
+                      </p>
+                    </div>
                   </div>
 
-                  {/* dates */}
-                  <div className="hidden md:block text-end flex-shrink-0">
-                    <p className="text-[10px] text-[#7c8aa6]">
-                      {ar ? 'انضم' : 'Joined'} {fmtDate(u.createdAt)}
-                    </p>
-                    <p className="text-[10px] text-[#7c8aa6]">
-                      {ar ? 'آخر دخول' : 'Last login'} {fmtDate(u.lastLoginAt)}
-                    </p>
-                  </div>
+                  <div className="col-span-2 flex min-w-0 flex-wrap items-center gap-2 border-t border-[#263248]/60 pt-3 xl:col-span-1 xl:border-0 xl:pt-0">
 
                   {/* role pill */}
                   <span
-                    className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold flex-shrink-0"
+                    className="hidden 2xl:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold flex-shrink-0"
                     style={{
                       color: meta.color,
                       backgroundColor: `${meta.color}15`,
@@ -460,11 +460,12 @@ const MembersPage: React.FC = () => {
 
                   {/* role select */}
                   <select
+                    aria-label={ar ? `دور ${u.displayName}` : `Role for ${u.displayName}`}
                     value={u.role}
                     disabled={isSelf || savingId === u.id}
                     onChange={(e) => void changeRole(u, e.target.value as Role)}
                     title={isSelf ? (ar ? 'لا يمكنك تغيير دورك' : "You can't change your own role") : undefined}
-                    className="bg-[#0a0f18] border border-[#263248] rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+                    className="min-h-11 min-w-0 basis-full sm:basis-auto bg-[#0a0f18] border border-[#263248] rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     {ROLES.map((r) => (
                       <option key={r} value={r}>
@@ -559,6 +560,7 @@ const MembersPage: React.FC = () => {
                   >
                     <Trash2 size={13} />
                   </button>
+                  </div>
                 </motion.div>
 
                 {/* Creator permissions panel */}

@@ -201,7 +201,7 @@ const PublicProfilePage: React.FC = () => {
           style={{ background: 'radial-gradient(90% 120% at 0% 0%, rgba(0,168,89,0.14) 0%, transparent 60%)' }}
         />
 
-        <div className="relative flex flex-col items-center gap-6 p-6 sm:flex-row sm:items-start sm:p-8">
+        <div className="relative flex flex-col items-center gap-5 p-4 sm:flex-row sm:items-start sm:gap-6 sm:p-8">
           <div className="flex-shrink-0">
             <Avatar
               avatarUrl={profile.avatarUrl}
@@ -211,11 +211,11 @@ const PublicProfilePage: React.FC = () => {
             />
           </div>
 
-          <div className="min-w-0 flex-1 text-center sm:text-start">
+          <div className="w-full min-w-0 flex-1 text-center sm:text-start">
             <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
               {/* dir="auto" on anything a member wrote: an English name in the
                   Arabic interface keeps its own direction and punctuation. */}
-              <h1 dir="auto" className="text-2xl font-black leading-tight text-[#f3f6ff] sm:text-3xl">
+              <h1 dir="auto" className="w-full break-words text-2xl font-black leading-tight text-[#f3f6ff] sm:text-3xl">
                 {profile.displayName}
               </h1>
               {/* The emblem belongs with the level's name, not on the picture. */}
@@ -231,7 +231,7 @@ const PublicProfilePage: React.FC = () => {
                  page. Both dir and font-mono stay on the inline span: on the
                  paragraph either one (index.css left-aligns .font-mono blocks in
                  Arabic) would push the handle to the far edge. */
-              <p className="mt-1 text-sm text-[#00a859]">
+              <p className="mt-1 break-words text-sm text-[#00a859]">
                 <span dir="ltr" className="font-mono">
                   @{profile.username}
                 </span>
@@ -251,7 +251,7 @@ const PublicProfilePage: React.FC = () => {
             {profile.bio && (
               /* The paragraph follows the page, so the bio lines up with the
                  name; the text inside keeps its own direction and punctuation. */
-              <p className="mx-auto mt-4 max-w-2xl whitespace-pre-line text-sm leading-relaxed text-[#d2d7e3] sm:mx-0">
+              <p className="mx-auto mt-4 max-w-2xl break-words whitespace-pre-line text-sm leading-relaxed text-[#d2d7e3] sm:mx-0">
                 <span dir="auto">{profile.bio}</span>
               </p>
             )}

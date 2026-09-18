@@ -297,7 +297,7 @@ const ProfilePage: React.FC = () => {
         className="relative overflow-hidden rounded-2xl border border-[#263248] bg-[#121a2a]"
       >
         <div className="absolute -top-20 -right-10 w-64 h-64 bg-[#00a859]/10 rounded-full blur-[90px]" />
-        <div className="relative z-10 p-6 sm:p-7">
+        <div className="relative z-10 p-4 sm:p-7">
           {editing ? (
             /* ── Edit mode ──
                Takes the full width of the card rather than a column beside the
@@ -545,7 +545,7 @@ const ProfilePage: React.FC = () => {
             </div>
           ) : (
             /* ── View mode ── */
-            <div className="flex items-start gap-5">
+            <div className="grid min-w-0 grid-cols-1 items-start gap-4 sm:grid-cols-[auto_minmax(0,1fr)] sm:gap-5 xl:grid-cols-[auto_minmax(0,1fr)_auto]">
               <div className="flex-shrink-0">
                 <Avatar
                   avatarUrl={user.avatarUrl}
@@ -555,9 +555,9 @@ const ProfilePage: React.FC = () => {
                 />
               </div>
 
-              <div className="flex-1 min-w-0">
+              <div className="min-w-0">
                 <div className="flex items-center gap-3 flex-wrap">
-                  <h2 className="text-xl font-black text-[#f3f6ff]">{user.displayName}</h2>
+                  <h2 dir="auto" className="w-full break-words text-xl font-black text-[#f3f6ff]">{user.displayName}</h2>
                   <span
                     className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide"
                     style={{
@@ -573,7 +573,7 @@ const ProfilePage: React.FC = () => {
                 </div>
 
                 {user.username && (
-                  <p className="mt-1 text-sm text-[#00a859]">
+                  <p className="mt-1 break-words text-sm text-[#00a859]">
                     <span dir="ltr" className="font-mono">
                       @{user.username}
                     </span>
@@ -591,23 +591,25 @@ const ProfilePage: React.FC = () => {
                     <Mail size={14} className="text-[#8592ad] shrink-0" />
                     <span className="truncate" title={user.email}>{user.email}</span>
                   </span>
-                  <span className="inline-flex items-center gap-2">
-                    <GraduationCap size={14} className="text-[#8592ad]" />
-                    {(() => {
-                      const uni = universityLabel(user.university, lang);
-                      return uni.isSet ? uni.text : <span className="text-[#8592ad]">{t('profile.notSet')}</span>;
-                    })()}
+                  <span className="flex items-start gap-2">
+                    <GraduationCap size={14} className="mt-0.5 shrink-0 text-[#8592ad]" />
+                    <span className="min-w-0 break-words">
+                      {(() => {
+                        const uni = universityLabel(user.university, lang);
+                        return uni.isSet ? uni.text : <span className="text-[#8592ad]">{t('profile.notSet')}</span>;
+                      })()}
+                    </span>
                   </span>
-                  <span className="inline-flex items-center gap-2">
-                    <CalendarDays size={14} className="text-[#8592ad]" /> {t('profile.memberSince')}{' '}
-                    {memberSince}
+                  <span className="flex items-start gap-2">
+                    <CalendarDays size={14} className="mt-0.5 shrink-0 text-[#8592ad]" />
+                    <span>{t('profile.memberSince')} {memberSince}</span>
                   </span>
                 </div>
 
                 {/* Pulled in by the icons' own padding so the first mark lines up with the text. */}
                 <SocialLinksRow links={user.socials} lang={lang} className="mt-2 -ms-2" />
 
-                <p className="mt-3 text-sm text-[#d2d7e3] max-w-lg whitespace-pre-line">
+                <p className="mt-3 break-words text-sm leading-relaxed text-[#d2d7e3] max-w-lg whitespace-pre-line">
                   {user.bio ? (
                     <span dir="auto">{user.bio}</span>
                   ) : (
@@ -628,7 +630,7 @@ const ProfilePage: React.FC = () => {
                 )}
               </div>
 
-              <div className="flex flex-shrink-0 flex-col items-stretch gap-2">
+              <div className="flex min-w-0 flex-col gap-2 border-t border-[#263248] pt-4 sm:col-start-2 sm:flex-row sm:flex-wrap xl:col-start-auto xl:flex-col xl:border-0 xl:pt-0">
                 <Button variant="outline" size="sm" onClick={startEdit} leftIcon={<Pencil size={14} />}>
                   {t('profile.edit')}
                 </Button>
@@ -655,7 +657,7 @@ const ProfilePage: React.FC = () => {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.14, duration: 0.4 }}
-        className="relative overflow-hidden rounded-2xl border border-[#263248] bg-[#121a2a] p-6"
+        className="relative overflow-hidden rounded-2xl border border-[#263248] bg-[#121a2a] p-4 sm:p-6"
       >
         <div
           aria-hidden
@@ -727,11 +729,11 @@ const ProfilePage: React.FC = () => {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.28, duration: 0.4 }}
-        className="rounded-2xl border border-[#263248] bg-[#121a2a] p-6"
+        className="rounded-2xl border border-[#263248] bg-[#121a2a] p-4 sm:p-6"
       >
         <h3 className="text-base font-bold text-[#f3f6ff] mb-5">{t('profile.preferences')}</h3>
 
-        <div className="flex items-center justify-between py-3 border-b border-[#1e293b]">
+        <div className="flex flex-wrap items-center justify-between gap-3 py-3 border-b border-[#1e293b]">
           <span className="inline-flex items-center gap-2 text-sm text-[#d2d7e3]">
             <Globe size={16} className="text-[#8592ad]" /> {t('profile.language')}
           </span>
@@ -751,7 +753,7 @@ const ProfilePage: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 pt-4 min-w-0">
-          <span className="text-sm text-[#9aa5bf]">{user.email}</span>
+          <span dir="ltr" className="min-w-0 break-all text-sm text-[#9aa5bf]">{user.email}</span>
           <Button variant="outline" size="sm" onClick={logout} leftIcon={<LogOut size={14} />}>
             {t('profile.signOut')}
           </Button>
@@ -765,7 +767,7 @@ const ProfilePage: React.FC = () => {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.36, duration: 0.4 }}
-        className="rounded-2xl border border-red-500/25 bg-red-500/[0.04] p-6"
+        className="rounded-2xl border border-red-500/25 bg-red-500/[0.04] p-4 sm:p-6"
       >
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0 max-w-xl">

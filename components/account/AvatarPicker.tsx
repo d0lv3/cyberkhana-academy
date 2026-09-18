@@ -52,7 +52,7 @@ const AvatarPicker: React.FC<AvatarPickerProps> = ({
   return (
     <div className="space-y-4">
       {/* Preview + the destructive action, kept out of the grid */}
-      <div className="flex items-center gap-4">
+      <div className="grid grid-cols-[4rem_minmax(0,1fr)] items-center gap-4 sm:grid-cols-[4rem_minmax(0,1fr)_auto]">
         <Avatar
           avatarUrl={value}
           name={displayName}
@@ -73,7 +73,7 @@ const AvatarPicker: React.FC<AvatarPickerProps> = ({
           <button
             type="button"
             onClick={() => onChange('')}
-            className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-lg border border-[#263248] px-2.5 py-1.5 touch:min-h-tap text-xs font-semibold text-[#8592ad] transition-colors hover:border-red-400/45 hover:text-red-400"
+            className="col-span-2 inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#263248] px-2.5 py-1.5 touch:min-h-tap text-xs font-semibold text-[#8592ad] transition-colors hover:border-red-400/45 hover:text-red-400 sm:col-span-1"
           >
             <Trash2 size={13} /> {ar ? 'إزالة' : 'Remove'}
           </button>
