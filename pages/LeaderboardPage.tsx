@@ -23,7 +23,6 @@ interface LbEntry {
   displayName: string;
   avatarUrl: string | null;
   university: string | null;
-  role: string;
   /** The board's score: XP since the last reset, or this month's XP. */
   points: number;
   /** Lifetime XP, which the level badge is read from. */

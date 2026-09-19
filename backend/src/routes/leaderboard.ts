@@ -51,7 +51,7 @@ router.get('/', authenticate, async (req: AuthRequest, res) => {
     const docs = await User.find(filter)
       .sort({ [sortField]: -1, updatedAt: 1 })
       .limit(limit)
-      .select('displayName username avatarUrl university role points monthlyPoints pointsRaw')
+      .select('displayName username avatarUrl university points monthlyPoints pointsRaw')
       .lean();
 
     const entries = docs.map((u, i) => ({
@@ -62,7 +62,6 @@ router.get('/', authenticate, async (req: AuthRequest, res) => {
       displayName: u.displayName,
       avatarUrl: u.avatarUrl ?? null,
       university: u.university || null,
-      role: u.role,
       points: scope === 'monthly' ? u.monthlyPoints ?? 0 : u.points ?? 0,
       // Lifetime XP, which the row's level badge is read from.
       xp: u.pointsRaw ?? 0,
