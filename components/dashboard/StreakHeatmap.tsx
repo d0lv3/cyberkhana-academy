@@ -4,9 +4,9 @@ import { DAILY_ACTIVITY_GOAL, dayKeyOf, type StudyDays } from '../../backend/src
 
 /* ─── The month in squares ───
  *
- * A calendar month at a time, big enough to read the date in the square and
- * to tap one on a phone. A year of them at once was a wall of specks: the
- * shape of it was pretty and nothing in it was legible.
+ * A calendar month at a time, kept to the density a contribution grid reads
+ * at while still leaving room for the date inside the square. A year of them
+ * at once was a wall of specks: pretty from a distance, illegible up close.
  *
  * It opens on this month and steps back through the record. Forward stops at
  * the current month, because there is nothing to show in a month that has not
@@ -123,9 +123,9 @@ const StreakHeatmap: React.FC<StreakHeatmapProps> = ({ days, lang }) => {
   return (
     /* Capped, because the cells are square and a seven-column grid given a
        whole wide card turns into 90px tiles that swallow everything else on
-       it. At this width they land near 57px: big enough to read and to tap,
-       small enough that the month stays one part of the card. */
-    <div className="max-w-[28rem]">
+       it. At this width they land near 31px, which is the density a
+       contribution grid reads at while still leaving room for the date. */
+    <div className="max-w-[15rem]">
       <div className="mb-3 flex items-center justify-between gap-2">
         <p className="min-w-0 truncate text-sm font-bold text-[#f3f6ff]">
           {MONTHS[lang][view.month]} <span dir="ltr">{view.year}</span>
@@ -153,7 +153,7 @@ const StreakHeatmap: React.FC<StreakHeatmapProps> = ({ days, lang }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+      <div className="grid grid-cols-7 gap-1">
         {WEEKDAYS[lang].map((d, i) => (
           <div
             key={i}
@@ -175,12 +175,12 @@ const StreakHeatmap: React.FC<StreakHeatmapProps> = ({ days, lang }) => {
                 ? `${cell.key}: ${cell.count} نشاط`
                 : `${cell.key}: ${cell.count} ${cell.count === 1 ? 'activity' : 'activities'}`
             }
-            className="flex aspect-square items-center justify-center rounded-[7px] text-[11px] font-bold tabular-nums transition-colors sm:rounded-[10px] sm:text-xs"
+            className="flex aspect-square items-center justify-center rounded-[6px] text-[10px] font-semibold tabular-nums transition-colors"
             style={{
               backgroundColor: cell.isFuture ? FUTURE : LEVELS[levelFor(cell.count)],
               /* Drawn inside the tile rather than as a border, so marking
                  today cannot nudge the grid by a pixel. */
-              boxShadow: cell.isToday ? 'inset 0 0 0 2px #f3a43a' : undefined,
+              boxShadow: cell.isToday ? 'inset 0 0 0 1.5px #f3a43a' : undefined,
               color: dateColor(levelFor(cell.count), cell.isFuture),
             }}
           >
@@ -196,7 +196,7 @@ const StreakHeatmap: React.FC<StreakHeatmapProps> = ({ days, lang }) => {
         <div className="flex items-center gap-1" dir="ltr">
           <span className="me-0.5 text-[9px] text-[#4a5773]">{ar ? 'أقل' : 'Less'}</span>
           {LEVELS.map((c) => (
-            <span key={c} className="h-3 w-3 rounded-[4px]" style={{ backgroundColor: c }} />
+            <span key={c} className="h-2.5 w-2.5 rounded-[3px]" style={{ backgroundColor: c }} />
           ))}
           <span className="ms-0.5 text-[9px] text-[#4a5773]">{ar ? 'أكثر' : 'More'}</span>
         </div>
