@@ -1,0 +1,47 @@
+<!doctype html><meta charset="utf-8"><script>
+(function () {
+  var out = [];
+  function send(msg) { parent.postMessage(msg, '*'); }
+
+  addEventListener('message', function (event) {
+    var artifact = event.data && event.data.artifact;
+    var stdin = (event.data && event.data.stdin) || '';
+    if (typeof artifact !== 'string') return;
+
+    var cursor = 0;
+    var Module = {
+      noInitialRun: true,
+      print: function (line) { out.push(line); },
+      // A program's own cerr is output, not a failure of the runner, so both
+      // streams land in the same place and in the order they were written.
+      printErr: function (line) { out.push(line); },
+      stdin: function () {
+        if (cursor >= stdin.length) return null;
+        return stdin.charCodeAt(cursor++) & 0xff;
+      },
+      quit: function () {},
+    };
+
+    try {
+      // The artifact is Emscripten's MODULARIZE output: defining createProgram.
+      (0, eval)(artifact);
+      createProgram(Module).then(function (instance) {
+        var code = 0;
+        try {
+          code = instance.callMain([]) || 0;
+        } catch (err) {
+          if (err && err.name === 'ExitStatus') code = err.status;
+          else throw err;
+        }
+        send({ done: true, output: out.join('\n'), exitCode: code });
+      }).catch(function (err) {
+        send({ done: true, output: out.join('\n'), error: String((err && err.message) || err) });
+      });
+    } catch (err) {
+      send({ done: true, output: out.join('\n'), error: String((err && err.message) || err) });
+    }
+  });
+
+  send({ ready: true });
+})();
+</script>

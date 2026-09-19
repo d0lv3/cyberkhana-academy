@@ -14,6 +14,8 @@
  * teaching course is `while (true) {}` and nothing polite will interrupt it.
  */
 
+import bootstrapHtml from './sandboxBootstrap.html?raw';
+
 const TIMEOUT_MS = 10_000;
 
 export interface RunOutcome {
@@ -22,56 +24,18 @@ export interface RunOutcome {
   timedOut: boolean;
 }
 
-/* The sandbox's whole program. It evaluates the artifact, wires the three
-   stdio hooks, runs main, and reports back. Kept as a string because a
-   sandboxed srcdoc document cannot load a module from our origin. */
-const BOOTSTRAP = `<!doctype html><meta charset="utf-8"><script>
-(function () {
-  var out = [];
-  function send(msg) { parent.postMessage(msg, '*'); }
+/* The sandbox's whole program: it evaluates the artifact, wires the three
+   stdio hooks, runs main, and reports back. It lives in its own file, and
+   not as a string here, because the Content Security Policy has to name it.
+   A sandboxed srcdoc document inherits the page's policy but not its origin,
+   so `script-src 'self'` can never match anything it loads — this script has
+   to be inline, and inline means the policy needs its hash. vite.config.ts
+   reads this same file and hashes it at build time, so the two cannot drift:
+   edit the bootstrap and the hash that admits it is recomputed with it.
 
-  addEventListener('message', function (event) {
-    var artifact = event.data && event.data.artifact;
-    var stdin = (event.data && event.data.stdin) || '';
-    if (typeof artifact !== 'string') return;
-
-    var cursor = 0;
-    var Module = {
-      noInitialRun: true,
-      print: function (line) { out.push(line); },
-      // A program's own cerr is output, not a failure of the runner, so both
-      // streams land in the same place and in the order they were written.
-      printErr: function (line) { out.push(line); },
-      stdin: function () {
-        if (cursor >= stdin.length) return null;
-        return stdin.charCodeAt(cursor++) & 0xff;
-      },
-      quit: function () {},
-    };
-
-    try {
-      // The artifact is Emscripten's MODULARIZE output: defining createProgram.
-      (0, eval)(artifact);
-      createProgram(Module).then(function (instance) {
-        var code = 0;
-        try {
-          code = instance.callMain([]) || 0;
-        } catch (err) {
-          if (err && err.name === 'ExitStatus') code = err.status;
-          else throw err;
-        }
-        send({ done: true, output: out.join('\\n'), exitCode: code });
-      }).catch(function (err) {
-        send({ done: true, output: out.join('\\n'), error: String((err && err.message) || err) });
-      });
-    } catch (err) {
-      send({ done: true, output: out.join('\\n'), error: String((err && err.message) || err) });
-    }
-  });
-
-  send({ ready: true });
-})();
-<\/script>`;
+   Line endings are normalised because the hash is taken over these exact
+   bytes and a checkout on Windows may not store them the way it built them. */
+const BOOTSTRAP = bootstrapHtml.replace(/\r\n/g, '\n');
 
 /** Compile output in, program output back. Never rejects; failures are data. */
 export function runArtifact(artifact: string, stdin = ''): Promise<RunOutcome> {
