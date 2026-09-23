@@ -185,7 +185,8 @@ function contentSecurityPolicy(): Plugin {
         "media-src 'self' data: blob:",
         // The Python sandbox, and the C/C++ toolchain's own workers.
         "worker-src 'self' blob:",
-        `frame-src 'self' ${GOOGLE_SIGN_IN}`,
+        // Course videos use YouTube iframes, including the built-in Linux lessons.
+        `frame-src 'self' ${GOOGLE_SIGN_IN} https://www.youtube.com`,
         `connect-src ${[...new Set(connect)].join(' ')}`,
         "manifest-src 'self'",
       ].join('; ');
