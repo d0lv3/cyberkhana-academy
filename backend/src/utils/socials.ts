@@ -62,6 +62,13 @@ interface PlainRule {
 }
 
 const first = (s: string[]) => s[0] ?? null;
+const YOUTUBE_RESERVED_PATHS = new Set(['watch', 'playlist', 'shorts', 'live', 'embed', 'feed', 'results', 'channel', 'c', 'user']);
+
+const youtubePath = (s: string[]): string | null => {
+  if (s.length === 2 && ['channel', 'c', 'user'].includes(s[0])) return `${s[0]}/${s[1]}`;
+  if (s.length === 1 && !YOUTUBE_RESERVED_PATHS.has(s[0])) return s[0];
+  return null;
+};
 
 const RULES: Record<SocialPlatform, HandleRule | UrlRule | PlainRule> = {
   github: {
@@ -96,10 +103,9 @@ const RULES: Record<SocialPlatform, HandleRule | UrlRule | PlainRule> = {
   youtube: {
     kind: 'handle',
     hosts: ['youtube.com'],
-    // Stored with its prefix: "@handle", or "channel/<id>" for older channels.
-    fromPath: (s) =>
-      s[0]?.startsWith('@') ? s[0] : s[0] === 'channel' && s[1] ? `channel/${s[1]}` : null,
-    valid: /^(?:@[A-Za-z0-9._-]{3,30}|channel\/UC[A-Za-z0-9_-]{22})$/,
+    // Preserve explicit handles and older /channel, /c, /user, and bare paths.
+    fromPath: youtubePath,
+    valid: /^(?:@[A-Za-z0-9._-]{3,30}|channel\/UC[A-Za-z0-9_-]{22}|(?:c\/|user\/)?[A-Za-z0-9._-]{3,100})$/,
   },
   instagram: {
     kind: 'handle',
@@ -184,7 +190,11 @@ export function normalizeSocial(platform: SocialPlatform, raw: string): Result {
     });
     handle = rule.fromPath(segments);
   } else {
-    handle = platform === 'youtube' ? (input.startsWith('@') ? input : `@${input}`) : input.replace(/^@/, '');
+    if (platform === 'youtube') {
+      handle = /^UC[A-Za-z0-9_-]{22}$/.test(input) ? `channel/${input}` : input;
+    } else {
+      handle = input.replace(/^@/, '');
+    }
   }
 
   if (handle && platform === 'linkedin') handle = encodeURIComponent(handle).replace(/%25/g, '%');

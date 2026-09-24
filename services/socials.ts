@@ -37,7 +37,7 @@ export const SOCIAL_META: Record<
   x: { label: 'X', placeholder: '@username', color: '#e5e9f0' },
   tryhackme: { label: 'TryHackMe', placeholder: 'tryhackme.com/p/username', color: '#ff5c5c' },
   hackthebox: { label: 'Hack The Box', placeholder: 'app.hackthebox.com/profile/…', color: '#9fef00' },
-  youtube: { label: 'YouTube', placeholder: '@channel', color: '#ff4d4d' },
+  youtube: { label: 'YouTube', placeholder: 'youtube.com/your-channel or @handle', color: '#ff4d4d' },
   instagram: { label: 'Instagram', placeholder: '@username', color: '#e1306c' },
   telegram: { label: 'Telegram', placeholder: 't.me/username', color: '#26a5e4' },
   discord: { label: 'Discord', placeholder: 'username', color: '#8b93ff' },
@@ -65,6 +65,13 @@ interface PlainRule {
 }
 
 const first = (s: string[]) => s[0] ?? null;
+const YOUTUBE_RESERVED_PATHS = new Set(['watch', 'playlist', 'shorts', 'live', 'embed', 'feed', 'results', 'channel', 'c', 'user']);
+
+const youtubePath = (s: string[]): string | null => {
+  if (s.length === 2 && ['channel', 'c', 'user'].includes(s[0])) return `${s[0]}/${s[1]}`;
+  if (s.length === 1 && !YOUTUBE_RESERVED_PATHS.has(s[0])) return s[0];
+  return null;
+};
 
 const RULES: Record<SocialPlatform, HandleRule | UrlRule | PlainRule> = {
   github: {
@@ -93,9 +100,8 @@ const RULES: Record<SocialPlatform, HandleRule | UrlRule | PlainRule> = {
   youtube: {
     kind: 'handle',
     hosts: ['youtube.com'],
-    fromPath: (s) =>
-      s[0]?.startsWith('@') ? s[0] : s[0] === 'channel' && s[1] ? `channel/${s[1]}` : null,
-    valid: /^(?:@[A-Za-z0-9._-]{3,30}|channel\/UC[A-Za-z0-9_-]{22})$/,
+    fromPath: youtubePath,
+    valid: /^(?:@[A-Za-z0-9._-]{3,30}|channel\/UC[A-Za-z0-9_-]{22}|(?:c\/|user\/)?[A-Za-z0-9._-]{3,100})$/,
   },
   instagram: { kind: 'handle', hosts: ['instagram.com'], fromPath: first, valid: /^[A-Za-z0-9._]{1,30}$/ },
   telegram: {
@@ -179,7 +185,11 @@ export function normalizeSocial(platform: SocialPlatform, raw: string): SocialCh
       });
     handle = rule.fromPath(segments);
   } else {
-    handle = platform === 'youtube' ? (input.startsWith('@') ? input : `@${input}`) : input.replace(/^@/, '');
+    if (platform === 'youtube') {
+      handle = /^UC[A-Za-z0-9_-]{22}$/.test(input) ? `channel/${input}` : input;
+    } else {
+      handle = input.replace(/^@/, '');
+    }
   }
 
   if (handle && platform === 'linkedin') handle = encodeURIComponent(handle).replace(/%25/g, '%');
