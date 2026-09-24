@@ -1,6 +1,6 @@
 // Cache only the public offline notice. Lessons, credentials, API responses,
 // and user progress always use the network and are never stored by this worker.
-const CACHE = 'academy-offline-v1';
+const CACHE = 'academy-offline-v2';
 const OFFLINE = '/offline.html';
 
 self.addEventListener('install', event => {

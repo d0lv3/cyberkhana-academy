@@ -145,14 +145,14 @@ try {
   assert.equal(manifest.short_name, 'Cyberkhana Academy');
   assert.equal(manifest.display, 'standalone');
   for (const icon of manifest.icons) {
-    const bytes = await readFile(path.join(dist, icon.src));
+    const bytes = await readFile(path.join(dist, new URL(icon.src, 'https://localhost').pathname));
     assert.equal(`${bytes.readUInt32BE(16)}x${bytes.readUInt32BE(20)}`, icon.sizes);
     assert(!icon.src.includes('academy'));
   }
   const installability = await cdp.send('Page.getInstallabilityErrors');
   assert.deepEqual(installability.installabilityErrors, []);
   const cached = await page.evaluate(async () => {
-    const cache = await caches.open('academy-offline-v1');
+    const cache = await caches.open('academy-offline-v2');
     return (await cache.keys()).map(request => new URL(request.url).pathname).sort();
   });
   assert.deepEqual(cached, ['/assets/brand/favicon-192.png', '/offline.html', '/offline.js']);
