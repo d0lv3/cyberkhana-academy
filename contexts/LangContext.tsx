@@ -18,13 +18,13 @@ const translations: Record<string, Record<Lang, string>> = {
   // Hero
   'hero.badge': { en: 'Hands-on Cybersecurity Academy', ar: 'أكاديمية الأمن السيبراني العملية' },
   'hero.headline': { en: 'Learn Cybersecurity.\nFrom the Ground Up.', ar: 'تعلّم الأمن السيبراني.\nمن الصفر.' },
-  'hero.subtitle': { en: 'A state-of-the-art cybersecurity learning platform, where cybersecurity speaks Arabic.', ar: 'منصة تعليم أمن سيبراني متطورة، عندما يتحدث الأمن السيبراني العربية.' },
+  'hero.subtitle': { en: 'A state-of-the-art cybersecurity learning platform, where cybersecurity speaks Arabic.', ar: 'منصة متطورة لتعلّم الأمن السيبراني بلغتك العربية.' },
   'hero.learn': { en: 'Learn', ar: 'تعلّم' },
   'hero.cta': { en: 'Start Learning', ar: 'ابدأ التعلم' },
   'hero.cta.login': { en: 'I Have An Account', ar: 'لدي حساب' },
 
   // Features
-  'features.heading': { en: 'Structured Around How You Actually Learn', ar: 'مبنية على الطريقة الصحيحة للتعلّم' },
+  'features.heading': { en: 'Structured Around How You Actually Learn', ar: 'مصممة وفق الطريقة التي تتعلم بها فعلاً' },
   'features.subtitle': { en: 'A guided roadmap from core fundamentals to job-ready skills.', ar: 'خارطة طريق موجّهة من الأساسيات إلى مهارات سوق العمل.' },
   'features.fundamentals.title': { en: 'Fundamentals', ar: 'الأساسيات' },
   'features.fundamentals.desc': { en: 'Master the three pillars: Programming, Networking, and Operating Systems. Build the foundation every cybersecurity professional needs.', ar: 'أتقن الركائز الثلاث: البرمجة، الشبكات، وأنظمة التشغيل. ابنِ الأساس الذي يحتاجه كل محترف أمن سيبراني.' },
@@ -34,17 +34,17 @@ const translations: Record<string, Record<Lang, string>> = {
   'features.paths.desc': { en: 'Structured sequences of modules organized by career track. SOC Analyst, Penetration Tester, and more.', ar: 'تسلسلات منظمة من الوحدات حسب التخصص المهني. محلل SOC، مختبر اختراق، والمزيد.' },
 
   // Product preview — "See it in action"
-  'preview.heading': { en: 'See it in action', ar: 'شاهدها أثناء العمل' },
-  'preview.subtitle': { en: 'No slides, no passive videos. Every lesson runs in a real, interactive environment, right in your browser.', ar: 'لا شرائح ولا فيديوهات سلبية. كل درس يعمل في بيئة تفاعلية حقيقية، داخل متصفحك مباشرة.' },
+  'preview.heading': { en: 'See it in action', ar: 'شاهد المنصة أثناء العمل' },
+  'preview.subtitle': { en: 'No slides, no passive videos. Every lesson runs in a real, interactive environment, right in your browser.', ar: 'لا شرائح عرض ولا فيديوهات للمشاهدة فقط. كل درس يجري في بيئة تفاعلية حقيقية داخل متصفحك.' },
   'preview.lab.tag': { en: 'In-browser Labs', ar: 'مختبرات داخل المتصفح' },
   'preview.lab.title': { en: 'Write & run real code', ar: 'اكتب ونفّذ كودًا حقيقيًا' },
   'preview.lab.desc': { en: 'Open a lesson and start typing. Execute Python, Bash, and more in-browser, instant feedback, zero setup.', ar: 'افتح درسًا وابدأ الكتابة. نفّذ بايثون وباش والمزيد داخل المتصفح، نتائج فورية وبدون أي إعداد.' },
   'preview.sim.tag': { en: 'Interactive Simulations', ar: 'محاكاة تفاعلية' },
   'preview.sim.title': { en: 'Visualize how networks really work', ar: 'تصوّر كيف تعمل الشبكات فعلاً' },
-  'preview.sim.desc': { en: 'Watch packets travel, NAT translate, and protocols negotiate, step by step, on a live topology.', ar: 'شاهد الحزم تنتقل وNAT يترجم والبروتوكولات تتفاوض، خطوة بخطوة على طوبولوجيا حية.' },
+  'preview.sim.desc': { en: 'Watch packets travel, NAT translate, and protocols negotiate, step by step, on a live topology.', ar: 'شاهد انتقال حزم البيانات وترجمة عناوين الشبكة (NAT) وتفاوض البروتوكولات، خطوة بخطوة على مخطط شبكة تفاعلي.' },
   'preview.practice.tag': { en: 'Practice As You Go', ar: 'تدرّب أثناء تعلّمك' },
   'preview.practice.title': { en: 'Every module ships with its own lab', ar: 'كل وحدة تأتي بمختبرها الخاص' },
-  'preview.practice.desc': { en: 'Read a concept, then immediately do it. Each module opens into an interactive lab with a real shell and a real editor, write the exploit, compile it, run it, and see exactly what it does. Hands-on, not hypothetical.', ar: 'اقرأ المفهوم ثم طبّقه فوراً. كل وحدة تفتح على مختبر تفاعلي بطرفية حقيقية ومحرّر حقيقي، اكتب الاستغلال وصرّفه ونفّذه وشاهد ما يفعله بالضبط. عمليّاً لا نظريّاً.' },
+  'preview.practice.desc': { en: 'Read a concept, then immediately do it. Each module opens into an interactive lab with a real shell and a real editor, write the exploit, compile it, run it, and see exactly what it does. Hands-on, not hypothetical.', ar: 'اقرأ المفهوم ثم طبّقه فوراً. تفتح كل وحدة مختبراً تفاعلياً فيه طرفية ومحرّر حقيقيان: اكتب برنامج الاستغلال، وترجمه برمجياً، وشغّله لترى ما يفعله. تدريب عملي لا مجرد شرح نظري.' },
 
   // Closing CTA
   'cta.heading': { en: 'Start your cybersecurity journey today', ar: 'ابدأ رحلتك في الأمن السيبراني اليوم' },
@@ -79,7 +79,7 @@ const translations: Record<string, Record<Lang, string>> = {
   'dashboard.overview': { en: 'Your Learning Overview', ar: 'نظرة عامة على تعلمك' },
   'dashboard.modulesCompleted': { en: 'Modules Completed', ar: 'الوحدات المكتملة' },
   'dashboard.learningTime': { en: 'Learning Time', ar: 'وقت التعلم' },
-  'dashboard.pathsEnrolled': { en: 'Paths Enrolled', ar: 'المسارات المسجلة' },
+  'dashboard.pathsEnrolled': { en: 'Paths Enrolled', ar: 'المسارات التي سجلت فيها' },
   'dashboard.continueLearning': { en: 'Continue Learning', ar: 'تابع التعلم' },
   'dashboard.noActivity': { en: 'No learning activity yet', ar: 'لا يوجد نشاط تعلم بعد' },
   'dashboard.noActivityDesc': { en: 'Start a module or enroll in a path to begin your cybersecurity journey.', ar: 'ابدأ وحدة أو سجل في مسار لتبدأ رحلتك في الأمن السيبراني.' },
@@ -137,7 +137,7 @@ const translations: Record<string, Record<Lang, string>> = {
   // Leaderboard
   'leaderboard.title': { en: 'Leaderboard', ar: 'لوحة المتصدرين' },
   'leaderboard.subtitle': { en: 'See how you rank against learners across the Academy.', ar: 'اطّلع على ترتيبك بين المتعلمين في الأكاديمية.' },
-  'leaderboard.overall': { en: 'All-time', ar: 'كل الأوقات' },
+  'leaderboard.overall': { en: 'All-time', ar: 'منذ البداية' },
   'leaderboard.monthly': { en: 'This month', ar: 'هذا الشهر' },
   'leaderboard.monthlyReset': { en: 'Resets at the start of every month', ar: 'يُعاد ضبطها مع بداية كل شهر' },
   'leaderboard.allUniversities': { en: 'All universities', ar: 'كل الجامعات' },

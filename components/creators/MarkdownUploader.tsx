@@ -1,6 +1,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { Upload, FileText, Edit3, ImagePlus, Loader2, AlertTriangle, Shapes } from 'lucide-react';
 import { api } from '../../services/api';
+import { useLang } from '../../contexts/LangContext';
 
 interface MarkdownUploaderProps {
   value: string;
@@ -13,6 +14,7 @@ const MarkdownUploader: React.FC<MarkdownUploaderProps> = ({
   onChange,
   placeholder = 'Write your markdown content here...',
 }) => {
+  const { isArabic } = useLang();
   const [mode, setMode] = useState<'editor' | 'upload'>('editor');
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -50,12 +52,12 @@ const MarkdownUploader: React.FC<MarkdownUploaderProps> = ({
         const { url } = await api.upload<{ url: string }>('/uploads', 'image', file);
         insertSnippet(`![${file.name.replace(/\.[^.]+$/, '')}](${url})`);
       } catch (err) {
-        setImageError(err instanceof Error ? err.message : 'Image upload failed');
+        setImageError(err instanceof Error ? err.message : isArabic ? 'تعذر رفع الصورة.' : 'Image upload failed');
       } finally {
         setImageUploading(false);
       }
     },
-    [insertSnippet]
+    [insertSnippet, isArabic]
   );
 
   /* ── SVG ──
@@ -76,20 +78,20 @@ const MarkdownUploader: React.FC<MarkdownUploaderProps> = ({
       try {
         const markup = (await file.text()).trim();
         if (!markup.startsWith('<svg') || !markup.includes('</svg>')) {
-          setImageError('That file does not look like SVG (it must start with <svg> and close).');
+          setImageError(isArabic ? 'الملف ليس بصيغة SVG صحيحة؛ يجب أن يبدأ بـ <svg> ويُغلق بوسم </svg>.' : 'That file does not look like SVG (it must start with <svg> and close).');
           return;
         }
         if (markup.length > 64 * 1024) {
-          setImageError('That SVG is too large (max 64 KB). Simplify it, or export it as a PNG.');
+          setImageError(isArabic ? 'ملف SVG كبير جدًا (الحد الأقصى 64 كيلوبايت). بسّطه أو صدّره بصيغة PNG.' : 'That SVG is too large (max 64 KB). Simplify it, or export it as a PNG.');
           return;
         }
         const encoded = encodeURIComponent(markup).replace(/\(/g, '%28').replace(/\)/g, '%29');
         insertSnippet(`![${file.name.replace(/\.[^.]+$/, '')}](data:image/svg+xml,${encoded})`);
       } catch {
-        setImageError('Could not read that file.');
+        setImageError(isArabic ? 'تعذرت قراءة الملف.' : 'Could not read that file.');
       }
     },
-    [insertSnippet]
+    [insertSnippet, isArabic]
   );
 
   const handleFile = useCallback(
@@ -149,7 +151,7 @@ const MarkdownUploader: React.FC<MarkdownUploaderProps> = ({
               : 'text-[#8592ad] hover:text-[#d2d7e3]'
           }`}
         >
-          <Edit3 size={12} /> Editor
+          <Edit3 size={12} /> {isArabic ? 'المحرر' : 'Editor'}
         </button>
         <button
           type="button"
@@ -160,7 +162,7 @@ const MarkdownUploader: React.FC<MarkdownUploaderProps> = ({
               : 'text-[#8592ad] hover:text-[#d2d7e3]'
           }`}
         >
-          <Upload size={12} /> Upload
+          <Upload size={12} /> {isArabic ? 'رفع ملف' : 'Upload'}
         </button>
         {fileName && (
           <span className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-[#00a859]">
@@ -179,14 +181,14 @@ const MarkdownUploader: React.FC<MarkdownUploaderProps> = ({
           disabled={imageUploading}
           onClick={() => imageInputRef.current?.click()}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-[#8592ad] hover:text-[#9fef00] transition-colors disabled:opacity-50"
-          title="Upload an image (PNG, JPEG, WebP, GIF, max 2 MB)"
+          title={isArabic ? 'ارفع صورة بصيغة PNG أو JPEG أو WebP أو GIF، بحد أقصى 2 ميغابايت' : 'Upload an image (PNG, JPEG, WebP, GIF, max 2 MB)'}
         >
           {imageUploading ? (
             <Loader2 size={12} className="animate-spin" />
           ) : (
             <ImagePlus size={12} />
           )}
-          {imageUploading ? 'Uploading…' : 'Insert Image'}
+          {imageUploading ? (isArabic ? 'جارٍ الرفع…' : 'Uploading…') : (isArabic ? 'إدراج صورة' : 'Insert Image')}
         </button>
         <input
           ref={imageInputRef}
@@ -204,9 +206,9 @@ const MarkdownUploader: React.FC<MarkdownUploaderProps> = ({
           type="button"
           onClick={() => svgInputRef.current?.click()}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-[#8592ad] hover:text-[#9fef00] transition-colors"
-          title="Embed an SVG diagram (max 64 KB). Stays inside the lesson, nothing is uploaded."
+          title={isArabic ? 'أدرج مخطط SVG بحد أقصى 64 كيلوبايت داخل الدرس؛ لن يُرفع الملف.' : 'Embed an SVG diagram (max 64 KB). Stays inside the lesson, nothing is uploaded.'}
         >
-          <Shapes size={12} /> Insert SVG
+          <Shapes size={12} /> {isArabic ? 'إدراج SVG' : 'Insert SVG'}
         </button>
         <input
           ref={svgInputRef}
@@ -233,7 +235,7 @@ const MarkdownUploader: React.FC<MarkdownUploaderProps> = ({
           ref={textareaRef}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
+          placeholder={isArabic && placeholder === 'Write your markdown content here...' ? 'اكتب محتوى Markdown هنا…' : placeholder}
           className="w-full min-h-[300px] bg-[#0a0f18] border border-[#263248] rounded-lg px-4 py-3 text-sm text-[#c4cad6] font-mono resize-y focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#7c8aa6] custom-scrollbar"
           spellCheck={false}
           dir="ltr"
@@ -262,9 +264,9 @@ const MarkdownUploader: React.FC<MarkdownUploaderProps> = ({
           </div>
           <div className="text-center">
             <p className="text-sm font-medium text-[#d2d7e3]">
-              {isDragging ? 'Drop your file here' : 'Drag & drop a .md file'}
+              {isDragging ? (isArabic ? 'أفلت الملف هنا' : 'Drop your file here') : (isArabic ? 'اسحب ملف .md وأفلته هنا' : 'Drag & drop a .md file')}
             </p>
-            <p className="text-xs text-[#8592ad] mt-1">or click to browse</p>
+            <p className="text-xs text-[#8592ad] mt-1">{isArabic ? 'أو انقر لاختيار ملف' : 'or click to browse'}</p>
           </div>
           <input
             ref={fileInputRef}

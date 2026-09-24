@@ -399,7 +399,7 @@ def get_name(self):
     {
       id: 'py-linting',
       slug: 'linting',
-      title: { en: 'Linting and Style', ar: 'الفحص والأسلوب' },
+      title: { en: 'Linting and Style', ar: 'فحص الشيفرة وأسلوب كتابتها' },
       order: 3,
       type: 'lesson',
       starterCode: `# A linter reads code WITHOUT running it, and reports problems.
@@ -581,7 +581,7 @@ black myfile.py
     {
       id: 'py-errors',
       slug: 'errors-raising',
-      title: { en: 'Errors and Raising', ar: 'الأخطاء وإطلاقها' },
+      title: { en: 'Errors and Raising', ar: 'الأخطاء وإثارة الاستثناءات' },
       order: 4,
       type: 'lesson',
       starterCode: `# The exceptions you have already met

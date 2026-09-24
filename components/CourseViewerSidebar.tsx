@@ -204,7 +204,7 @@ const CourseViewerSidebar: React.FC<CourseViewerSidebarProps> = ({
         <ProgressBar value={progressPct} color="neon" size="sm" showLabel />
         <p className="text-[11px] text-[#8592ad] mt-2">
           {ar
-            ? `${completedCount} من ${totalLectures} دروس مكتملة`
+            ? `الدروس المكتملة: ${completedCount} من ${totalLectures}`
             : `${completedCount} of ${totalLectures} lessons completed`}
         </p>
       </div>

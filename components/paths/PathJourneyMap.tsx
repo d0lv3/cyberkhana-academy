@@ -74,7 +74,7 @@ const PathJourneyMap: React.FC<PathJourneyMapProps> = ({ steps, states, nextInde
      part of it would only redraw the seam the page exists to avoid. */
   return (
     <div className="relative">
-      <svg viewBox={`0 0 ${VBW} ${totalH}`} className="relative mx-auto h-auto w-full max-w-[880px]" role="img" aria-label="Learning path journey">
+      <svg viewBox={`0 0 ${VBW} ${totalH}`} className="relative mx-auto h-auto w-full max-w-[880px]" role="img" aria-label={isArabic ? 'رحلة مسار التعلم' : 'Learning path journey'}>
         {/* Climbing trails — from the inner side edges of the cubes */}
         {steps.slice(0, -1).map((_, i) => {
           const x1 = edgeX(i);

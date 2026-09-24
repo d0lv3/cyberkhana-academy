@@ -5,7 +5,7 @@ const numbers: ProgrammingModule = {
   slug: 'numbers',
   title: {
     en: 'Numbers & Arithmetic',
-    ar: 'الأرقام والعمليات الحسابية',
+    ar: 'الأعداد والعمليات الحسابية',
   },
   description: {
     en: 'Integers and floats, the arithmetic operators, precedence, and why 0.1 + 0.2 is not 0.3.',
@@ -17,7 +17,7 @@ const numbers: ProgrammingModule = {
     {
       id: 'py-numbers-intro',
       slug: 'numbers-intro',
-      title: { en: 'Numbers', ar: 'الأرقام' },
+      title: { en: 'Numbers', ar: 'الأعداد' },
       order: 1,
       type: 'lesson',
       starterCode: `# int, whole numbers, any size
@@ -203,7 +203,7 @@ round(0.1 + 0.2, 2)   # 0.3
     {
       id: 'py-arithmetic',
       slug: 'arithmetic-operators',
-      title: { en: 'Arithmetic Operators', ar: 'العمليات الحسابية' },
+      title: { en: 'Arithmetic Operators', ar: 'المعاملات الحسابية' },
       order: 2,
       type: 'lesson',
       starterCode: `a, b = 17, 5

@@ -6,6 +6,7 @@ import DifficultyBadge from '../../components/ui/DifficultyBadge';
 import Button from '../../components/ui/EnhancedButton';
 import { useLang } from '../../contexts/LangContext';
 import { coverImageSrc } from '../../data/fundamentalsData';
+import { buildCatalogIndex } from '../../data/pathCatalog';
 import PathJourneyMap from '../../components/paths/PathJourneyMap';
 import { getPublishedPathBySlug } from '../../services/creatorDataService';
 import { getPathProgress, isPathEnrolled, enrollInPath } from '../../services/progressService';
@@ -55,6 +56,11 @@ const PathDetailPage: React.FC = () => {
   }
 
   const progress = getPathProgress(path.steps);
+  const localizedCatalog = buildCatalogIndex(lang);
+  const localizedSteps = path.steps.map((step) => {
+    const current = localizedCatalog.get(`${step.kind}:${step.refId}`);
+    return current ? { ...step, title: current.title, subtitle: current.subtitle } : step;
+  });
   const isComplete = progress.total > 0 && progress.completed === progress.total;
   const firstAvailable = progress.states.findIndex((s) => s.available);
 
@@ -199,7 +205,7 @@ const PathDetailPage: React.FC = () => {
         {/* Desktop: the curriculum as a climbing road of floating cubes */}
         <div className="hidden md:block">
           <PathJourneyMap
-            steps={path.steps}
+            steps={localizedSteps}
             states={progress.states}
             nextIndex={progress.nextIndex}
             color={path.color}
@@ -215,7 +221,7 @@ const PathDetailPage: React.FC = () => {
           <div className="absolute left-[18px] top-3 bottom-3 w-px bg-[#263248]" />
 
           <div className="space-y-3">
-            {path.steps.map((step, idx) => {
+            {localizedSteps.map((step, idx) => {
               const st = progress.states[idx];
               const isNext = enrolled && idx === progress.nextIndex;
               return (

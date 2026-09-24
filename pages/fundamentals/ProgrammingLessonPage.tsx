@@ -483,11 +483,14 @@ const ProgrammingLessonPage: React.FC = () => {
             <div ref={workspaceRef} className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-3 md:p-4">
               <CodingEnvironment
                 key={concept.id}
-                starterCode={concept.starterCode}
+                starterCode={lang === 'ar' ? concept.starterCodeAr || concept.starterCode : concept.starterCode}
                 sampleInput={concept.sampleInput}
                 language={runnerFor(langSlug)}
-                testCases={concept.testCases}
-                hints={concept.hints}
+                testCases={concept.testCases?.map((test) => ({
+                  ...test,
+                  description: lang === 'ar' ? test.descriptionAr || test.description : test.description,
+                }))}
+                hints={lang === 'ar' ? concept.hintsAr || concept.hints : concept.hints}
                 solution={concept.solution}
                 onPass={handleChallengePass}
               />

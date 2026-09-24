@@ -10,6 +10,8 @@ import type { FundamentalModule } from './fundamentalsData';
 import type { NetworkingLesson } from '../components/network-sim/types';
 import type { ProgrammingConcept, ProgrammingModule } from './programming/types';
 import quizBank from './linuxQuizData';
+import linuxCourse from './linuxCourseData';
+import { linuxLecturesAr } from './linuxCourseArabic';
 import {
   makeCreatorMeta,
   type CreatorFundamentalModule,
@@ -65,6 +67,7 @@ function lectureQuiz(l: RawLecture): QuizQuestion[] {
  */
 export function builtinToEditableModule(mod: FundamentalModule): CreatorFundamentalModule {
   const course = mod.courseData as { modules?: RawModule[] } | undefined;
+  const isBuiltinLinux = mod.courseData === linuxCourse;
 
   const chapters: CreatorModuleChapter[] = (course?.modules ?? []).map((m) => ({
     id: m.id,
@@ -74,7 +77,10 @@ export function builtinToEditableModule(mod: FundamentalModule): CreatorFundamen
       title: l.title,
       subtitle: l.subtitle || '',
       videoId: l.videoId || '',
-      markdownContent: { en: lectureBodyEn(l), ar: '' },
+      markdownContent: {
+        en: lectureBodyEn(l),
+        ar: isBuiltinLinux ? notesToMarkdown(linuxLecturesAr[l.id]?.notes) : '',
+      },
       quiz: lectureQuiz(l),
     })),
   }));

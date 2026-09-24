@@ -189,7 +189,7 @@ sorted(set(scan))   # [22, 443, 8080]
     {
       id: 'py-sets-methods-change',
       slug: 'set-methods-changing',
-      title: { en: 'Set Methods: Changing', ar: 'دوال المجموعات: التعديل' },
+      title: { en: 'Set Methods: Changing', ar: 'توابع المجموعات: التعديل' },
       order: 2,
       type: 'lesson',
       starterCode: `ports = {80, 443}
@@ -306,7 +306,7 @@ ports.clear()         # empty it
     {
       id: 'py-sets-methods-compare',
       slug: 'set-methods-comparing',
-      title: { en: 'Set Methods: Comparing', ar: 'دوال المجموعات: المقارنة' },
+      title: { en: 'Set Methods: Comparing', ar: 'توابع المجموعات: المقارنة' },
       order: 3,
       type: 'lesson',
       starterCode: `expected = {22, 80, 443}
@@ -674,7 +674,7 @@ host["port"] = 443     # existing key -> replaced
     {
       id: 'py-dicts-methods-access',
       slug: 'dict-methods-access',
-      title: { en: 'Dictionary Methods: Access', ar: 'دوال القواميس: الوصول' },
+      title: { en: 'Dictionary Methods: Access', ar: 'توابع القواميس: الوصول' },
       order: 5,
       type: 'lesson',
       starterCode: `host = {"ip": "10.0.0.5", "port": 8080, "up": True}
@@ -823,7 +823,7 @@ host.setdefault("proto", "tcp")  # 'tcp', missing, so added
     {
       id: 'py-dicts-methods-change',
       slug: 'dict-methods-changing',
-      title: { en: 'Dictionary Methods: Changing', ar: 'دوال القواميس: التعديل' },
+      title: { en: 'Dictionary Methods: Changing', ar: 'توابع القواميس: التعديل' },
       order: 6,
       type: 'lesson',
       starterCode: `host = {"ip": "10.0.0.5", "port": 8080}

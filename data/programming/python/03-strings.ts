@@ -419,7 +419,7 @@ print(text[::-1])   # anahKrebyC, reversed
     {
       id: 'py-strings-methods-case',
       slug: 'methods-case-whitespace',
-      title: { en: 'Methods: Case & Whitespace', ar: 'الدوال: الحالة والمسافات' },
+      title: { en: 'Methods: Case & Whitespace', ar: 'التوابع: حالة الأحرف والمحارف البيضاء' },
       order: 3,
       type: 'lesson',
       starterCode: `name = "cyber khana"
@@ -574,7 +574,7 @@ if answer.strip().lower() == "yes":
     {
       id: 'py-strings-methods-search',
       slug: 'methods-searching',
-      title: { en: 'Methods: Searching', ar: 'الدوال: البحث' },
+      title: { en: 'Methods: Searching', ar: 'التوابع: البحث' },
       order: 4,
       type: 'lesson',
       starterCode: `log = "GET /admin HTTP/1.1 200"
@@ -752,7 +752,7 @@ log.endswith("200")     # True
     {
       id: 'py-strings-methods-split',
       slug: 'methods-splitting-joining',
-      title: { en: 'Methods: Splitting & Joining', ar: 'الدوال: التقسيم والدمج' },
+      title: { en: 'Methods: Splitting & Joining', ar: 'التوابع: التقسيم والدمج' },
       order: 5,
       type: 'lesson',
       starterCode: `csv = "sara,ali,zaid"
@@ -953,7 +953,7 @@ names = ["sara", "ali", "zaid"]
     {
       id: 'py-strings-methods-test',
       slug: 'methods-replacing-testing',
-      title: { en: 'Methods: Replacing & Testing', ar: 'الدوال: الاستبدال والفحص' },
+      title: { en: 'Methods: Replacing & Testing', ar: 'التوابع: الاستبدال والفحص' },
       order: 6,
       type: 'lesson',
       starterCode: `# replace()

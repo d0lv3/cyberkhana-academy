@@ -202,7 +202,7 @@ tools[0] = "nmap-ng"   # works
     {
       id: 'py-lists-methods-add',
       slug: 'list-methods-adding',
-      title: { en: 'List Methods: Adding & Removing', ar: 'دوال القوائم: الإضافة والحذف' },
+      title: { en: 'List Methods: Adding & Removing', ar: 'توابع القوائم: الإضافة والحذف' },
       order: 2,
       type: 'lesson',
       starterCode: `tools = ["nmap", "burp"]
@@ -410,7 +410,7 @@ tools = tools.append("x")   # tools is now None
     {
       id: 'py-lists-methods-order',
       slug: 'list-methods-ordering',
-      title: { en: 'List Methods: Ordering & Copying', ar: 'دوال القوائم: الترتيب والنسخ' },
+      title: { en: 'List Methods: Ordering & Copying', ar: 'توابع القوائم: الترتيب والنسخ' },
       order: 3,
       type: 'lesson',
       starterCode: `nums = [3, 1, 2]

@@ -122,8 +122,8 @@ const LessonQuiz: React.FC<LessonQuizProps> = ({ questions, onPass, passed = fal
             <h3 className="text-sm font-bold text-[#f3f6ff]">
               {ar ? 'اختبر فهمك' : 'Check your understanding'}
             </h3>
-            <p className="text-xs text-[#8592ad]" dir="ltr">
-              {questions.length} {ar ? 'أسئلة' : 'questions'} · {ar ? 'النجاح' : 'pass'} ≥ {passNeeded}
+            <p className="text-xs text-[#8592ad]" dir={ar ? 'rtl' : 'ltr'}>
+              {ar ? `عدد الأسئلة: ${questions.length}` : `${questions.length} questions`} · {ar ? 'درجة النجاح' : 'pass'} ≥ {passNeeded}
             </p>
           </div>
         </div>
@@ -204,7 +204,7 @@ const LessonQuiz: React.FC<LessonQuizProps> = ({ questions, onPass, passed = fal
         </div>
       </div>
 
-      <div className="p-5" dir="ltr">
+      <div className="p-5" dir={ar ? 'rtl' : 'ltr'}>
         <p className="text-sm font-semibold text-[#f3f6ff] mb-4">{q.question}</p>
 
         {isTextQuestion(q) ? (
@@ -226,6 +226,7 @@ const LessonQuiz: React.FC<LessonQuizProps> = ({ questions, onPass, passed = fal
               spellCheck={false}
               autoComplete="off"
               aria-label={ar ? 'إجابتك' : 'Your answer'}
+              dir="ltr"
               className={`w-full rounded-lg border bg-[#0d1117] px-4 py-3 font-mono text-sm tracking-wide outline-none transition-colors placeholder:tracking-[0.2em] placeholder:text-[#3d4a63] disabled:cursor-default ${
                 !revealed
                   ? 'border-[#263248] text-[#f3f6ff] focus:border-[#9fef00]/60'
@@ -273,7 +274,7 @@ const LessonQuiz: React.FC<LessonQuizProps> = ({ questions, onPass, passed = fal
                 type="button"
                 disabled={revealed}
                 onClick={() => setSelected(oi)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg border text-left text-sm transition-all ${cls} ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg border text-start text-sm transition-all ${cls} ${
                   revealed ? 'cursor-default' : ''
                 }`}
               >

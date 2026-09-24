@@ -2,6 +2,7 @@ import React from 'react';
 import { Plus, Trash2, HelpCircle, CheckCircle2, Circle, Keyboard, ListChecks } from 'lucide-react';
 import type { QuizQuestion, QuizKind } from '../../services/creatorTypes';
 import { answerMask } from '../../data/linuxQuizData';
+import { useLang } from '../../contexts/LangContext';
 
 interface QuizEditorProps {
   value: QuizQuestion[];
@@ -13,9 +14,9 @@ const inputCls =
 
 const MAX_OPTIONS = 6;
 
-const KINDS: { value: QuizKind; label: string; icon: React.ElementType }[] = [
-  { value: 'mcq', label: 'MCQ', icon: ListChecks },
-  { value: 'text', label: 'Written answer', icon: Keyboard },
+const KINDS: { value: QuizKind; label: string; labelAr: string; icon: React.ElementType }[] = [
+  { value: 'mcq', label: 'MCQ', labelAr: 'اختيار من متعدد', icon: ListChecks },
+  { value: 'text', label: 'Written answer', labelAr: 'إجابة مكتوبة', icon: Keyboard },
 ];
 
 /** Drop blank questions/options and re-anchor the correct answer by its text.
@@ -56,6 +57,7 @@ export function cleanQuiz(quiz?: QuizQuestion[]): QuizQuestion[] {
  *                    and marked case-insensitively.
  */
 const QuizEditor: React.FC<QuizEditorProps> = ({ value, onChange }) => {
+  const { isArabic } = useLang();
   const quiz = value ?? [];
 
   const addQuestion = () =>
@@ -105,29 +107,30 @@ const QuizEditor: React.FC<QuizEditorProps> = ({ value, onChange }) => {
       {quiz.length === 0 ? (
         <div className="rounded-lg border border-dashed border-[#263248] bg-[#0d1420] py-6 text-center">
           <HelpCircle size={20} className="mx-auto text-[#7c8aa6] mb-2" />
-          <p className="text-xs text-[#8592ad]">No quiz on this section yet.</p>
+          <p className="text-xs text-[#8592ad]">{isArabic ? 'لا يوجد اختبار في هذا القسم بعد.' : 'No quiz on this section yet.'}</p>
         </div>
       ) : (
         quiz.map((q, qi) => {
           const kind: QuizKind = q.kind === 'text' ? 'text' : 'mcq';
           const mask = answerMask(q);
           return (
-          <div key={qi} className="rounded-lg border border-[#263248] bg-[#0d1117] p-3.5" dir="ltr">
+          <div key={qi} className="rounded-lg border border-[#263248] bg-[#0d1117] p-3.5" dir={isArabic ? 'rtl' : 'ltr'}>
             <div className="flex items-start gap-2 mb-3">
               <span className="mt-2 text-[11px] font-bold text-[#8592ad] w-5 flex-shrink-0">
-                Q{qi + 1}
+                {isArabic ? 'س' : 'Q'}{qi + 1}
               </span>
               <input
                 value={q.question}
                 onChange={(e) => updateQuestion(qi, { question: e.target.value })}
-                placeholder="Question prompt…"
+                placeholder={isArabic ? 'نص السؤال…' : 'Question prompt…'}
+                dir="auto"
                 className={`${inputCls} flex-1`}
               />
               <button
                 type="button"
                 onClick={() => removeQuestion(qi)}
                 className="mt-1 w-7 h-7 flex items-center justify-center rounded text-[#7c8aa6] hover:text-red-400 hover:bg-red-500/10 transition-all flex-shrink-0"
-                title="Remove question"
+                title={isArabic ? 'حذف السؤال' : 'Remove question'}
               >
                 <Trash2 size={14} />
               </button>
@@ -135,8 +138,8 @@ const QuizEditor: React.FC<QuizEditorProps> = ({ value, onChange }) => {
 
             {/* How this one is asked. Per question, not per quiz: a section can
                 mix a couple of recall questions in among the options. */}
-            <div className="mb-3 flex items-center gap-1 pl-7">
-              {KINDS.map(({ value, label, icon: KindIcon }) => (
+            <div className="mb-3 flex items-center gap-1 ps-7">
+              {KINDS.map(({ value, label, labelAr, icon: KindIcon }) => (
                 <button
                   key={value}
                   type="button"
@@ -148,33 +151,35 @@ const QuizEditor: React.FC<QuizEditorProps> = ({ value, onChange }) => {
                       : 'border-[#263248] bg-[#0a0f18] text-[#7c8aa6] hover:text-[#9aa5bf]'
                   }`}
                 >
-                  <KindIcon size={12} /> {label}
+                  <KindIcon size={12} /> {isArabic ? labelAr : label}
                 </button>
               ))}
             </div>
 
             {kind === 'text' ? (
-              <div className="space-y-1.5 pl-7">
+              <div className="space-y-1.5 ps-7">
                 <input
                   value={q.answer ?? ''}
                   onChange={(e) => updateQuestion(qi, { answer: e.target.value })}
-                  placeholder="The answer, e.g. Hello World"
+                  placeholder={isArabic ? 'الإجابة، مثل: مرحبًا بالعالم' : 'The answer, e.g. Hello World'}
+                  dir="auto"
                   className={`${inputCls} ${q.answer?.trim() ? 'border-[#00a859]/40' : ''}`}
                 />
                 <p className="text-[11px] leading-relaxed text-[#7c8aa6]">
-                  Marked case-insensitively, and extra spaces are ignored, so “hello world”
-                  passes for “Hello World”.
+                  {isArabic
+                    ? 'لا تؤثر حالة الأحرف الإنجليزية أو المسافات الزائدة في التصحيح؛ مثلًا تُقبل “hello world” بدل “Hello World”.'
+                    : 'Marked case-insensitively, and extra spaces are ignored, so “hello world” passes for “Hello World”.'}
                   {mask && (
                     <>
-                      {' '}The student sees{' '}
-                      <span className="font-mono text-[#9aa5bf]">{mask}</span> in the empty
-                      box as a hint.
+                      {' '}{isArabic ? 'يرى الطالب ' : 'The student sees '}
+                      <span className="font-mono text-[#9aa5bf]">{mask}</span>
+                      {isArabic ? ' تلميحًا في خانة الإجابة الفارغة.' : ' in the empty box as a hint.'}
                     </>
                   )}
                 </p>
               </div>
             ) : (
-            <div className="space-y-1.5 pl-7">
+            <div className="space-y-1.5 ps-7">
               {q.options.map((opt, oi) => {
                 const correct = oi === q.correctIndex;
                 return (
@@ -182,7 +187,7 @@ const QuizEditor: React.FC<QuizEditorProps> = ({ value, onChange }) => {
                     <button
                       type="button"
                       onClick={() => setCorrect(qi, oi)}
-                      title={correct ? 'Correct answer' : 'Mark as correct'}
+                      title={correct ? (isArabic ? 'الإجابة الصحيحة' : 'Correct answer') : (isArabic ? 'تحديد إجابة صحيحة' : 'Mark as correct')}
                       className={`flex-shrink-0 transition-colors ${
                         correct ? 'text-[#00a859]' : 'text-[#7c8aa6] hover:text-[#9aa5bf]'
                       }`}
@@ -192,7 +197,8 @@ const QuizEditor: React.FC<QuizEditorProps> = ({ value, onChange }) => {
                     <input
                       value={opt}
                       onChange={(e) => updateOption(qi, oi, e.target.value)}
-                      placeholder={`Option ${oi + 1}`}
+                      placeholder={isArabic ? `الخيار ${oi + 1}` : `Option ${oi + 1}`}
+                      dir="auto"
                       className={`${inputCls} flex-1 ${correct ? 'border-[#00a859]/40' : ''}`}
                     />
                     <button
@@ -200,7 +206,7 @@ const QuizEditor: React.FC<QuizEditorProps> = ({ value, onChange }) => {
                       onClick={() => removeOption(qi, oi)}
                       disabled={q.options.length <= 2}
                       className="w-7 h-7 flex items-center justify-center rounded text-[#7c8aa6] hover:text-red-400 hover:bg-red-500/10 transition-all flex-shrink-0 disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-[#7c8aa6]"
-                      title="Remove option"
+                      title={isArabic ? 'حذف الخيار' : 'Remove option'}
                     >
                       <Trash2 size={13} />
                     </button>
@@ -214,7 +220,7 @@ const QuizEditor: React.FC<QuizEditorProps> = ({ value, onChange }) => {
                   onClick={() => addOption(qi)}
                   className="flex items-center gap-1.5 px-2 py-1 text-[11px] font-medium text-[#8592ad] hover:text-[#00a859] transition-colors"
                 >
-                  <Plus size={12} /> Add option
+                  <Plus size={12} /> {isArabic ? 'إضافة خيار' : 'Add option'}
                 </button>
               )}
             </div>
@@ -229,7 +235,7 @@ const QuizEditor: React.FC<QuizEditorProps> = ({ value, onChange }) => {
         onClick={addQuestion}
         className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-[#8592ad] bg-[#0d1420] border border-dashed border-[#263248] hover:border-[#00a859]/40 hover:text-[#00a859] transition-all"
       >
-        <Plus size={13} /> Add Question
+        <Plus size={13} /> {isArabic ? 'إضافة سؤال' : 'Add Question'}
       </button>
     </div>
   );

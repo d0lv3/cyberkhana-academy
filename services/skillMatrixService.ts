@@ -39,37 +39,37 @@ export const SKILL_PILLARS: PillarMeta[] = [
   {
     id: 'offensive',
     label: { en: 'Offensive Security', ar: 'الأمن الهجومي' },
-    blurb: { en: 'Exploitation, pentesting, red-team tradecraft', ar: 'الاستغلال واختبار الاختراق' },
+    blurb: { en: 'Exploitation, pentesting, red-team tradecraft', ar: 'استغلال الثغرات واختبار الاختراق وأساليب الفريق الأحمر' },
     color: '#ef4444',
   },
   {
     id: 'defensive',
     label: { en: 'Defensive Security', ar: 'الأمن الدفاعي' },
-    blurb: { en: 'Blue-team, detection, incident response', ar: 'الفريق الأزرق والكشف والاستجابة' },
+    blurb: { en: 'Blue-team, detection, incident response', ar: 'الفريق الأزرق وكشف التهديدات والاستجابة للحوادث' },
     color: '#2dd4bf',
   },
   {
     id: 'networking',
     label: { en: 'Networking', ar: 'الشبكات' },
-    blurb: { en: 'Protocols, routing, traffic analysis', ar: 'البروتوكولات والتوجيه وتحليل الحركة' },
+    blurb: { en: 'Protocols, routing, traffic analysis', ar: 'البروتوكولات وتوجيه البيانات وتحليل حركة الشبكة' },
     color: '#60a5fa',
   },
   {
     id: 'programming',
-    label: { en: 'Programming & Scripting', ar: 'البرمجة والكتابة البرمجية' },
+    label: { en: 'Programming & Scripting', ar: 'البرمجة والبرمجة النصية' },
     blurb: { en: 'Automation, tooling, scripting', ar: 'الأتمتة والأدوات والبرمجة النصية' },
     color: '#9fef00',
   },
   {
     id: 'systems',
     label: { en: 'Operating Systems', ar: 'أنظمة التشغيل' },
-    blurb: { en: 'Linux & Windows internals, the terminal', ar: 'لينكس وويندوز والطرفية' },
+    blurb: { en: 'Linux & Windows internals, the terminal', ar: 'البنية الداخلية للينكس وويندوز والطرفية' },
     color: '#f3a43a',
   },
   {
     id: 'fundamentals',
     label: { en: 'Security Fundamentals', ar: 'أساسيات الأمن' },
-    blurb: { en: 'Core concepts, CIA triad, Security+', ar: 'المفاهيم الأساسية وSecurity+' },
+    blurb: { en: 'Core concepts, CIA triad, Security+', ar: 'المفاهيم الأساسية وثلاثية السرية والسلامة والتوافر وSecurity+' },
     color: '#00a859',
   },
 ];

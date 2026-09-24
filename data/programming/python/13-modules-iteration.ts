@@ -9,7 +9,7 @@ const modulesIteration: ProgrammingModule = {
   },
   description: {
     en: 'Importing and writing modules, dates and times, iterators and generators, and decorators.',
-    ar: 'الاستيراد وكتابة الوحدات، التواريخ والأوقات، المكررات والمولدات، والمزخرفات.',
+    ar: 'الاستيراد وكتابة الوحدات، التواريخ والأوقات، الكائنات القابلة للتكرار والمكررات والمولدات، والمزخرفات.',
   },
   order: 13,
   concepts: [
@@ -952,7 +952,7 @@ datetime.strptime("16-07-2026", "%d/%m/%Y")   # ValueError
     {
       id: 'py-iterables',
       slug: 'iterables-iterators',
-      title: { en: 'Iterables and Iterators', ar: 'المكررات' },
+      title: { en: 'Iterables and Iterators', ar: 'الكائنات القابلة للتكرار والمكررات' },
       order: 6,
       type: 'lesson',
       starterCode: `nums = [1, 2, 3]
@@ -1588,7 +1588,7 @@ ping = repeat(3)(ping)
     {
       id: 'py-practical-timing',
       slug: 'practical-timing',
-      title: { en: 'Practical: Timing Decorator', ar: 'تطبيق: مزخرف القياس' },
+      title: { en: 'Practical: Timing Decorator', ar: 'تطبيق: مزخرف قياس الزمن' },
       order: 9,
       type: 'lesson',
       starterCode: `import functools, time

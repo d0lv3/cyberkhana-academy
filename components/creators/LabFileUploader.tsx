@@ -1,6 +1,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { AlertTriangle, FilePlus2, Loader2, Trash2 } from 'lucide-react';
 import { api } from '../../services/api';
+import { useLang } from '../../contexts/LangContext';
 import {
   LAB_FILE_EXTENSIONS,
   LAB_FILE_MAX_BYTES,
@@ -28,6 +29,7 @@ interface LabFileUploaderProps {
  * told before it starts.
  */
 const LabFileUploader: React.FC<LabFileUploaderProps> = ({ value, onChange, maxFiles = 8 }) => {
+  const { isArabic } = useLang();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,14 +39,14 @@ const LabFileUploader: React.FC<LabFileUploaderProps> = ({ value, onChange, maxF
       setError(null);
 
       if (!labFileKind(file.name)) {
-        setError(`That file type isn't allowed. Accepted: ${LAB_FILE_EXTENSIONS.join(', ')}`);
+        setError(isArabic ? `نوع الملف غير مسموح. الصيغ المقبولة: ${LAB_FILE_EXTENSIONS.join(', ')}` : `That file type isn't allowed. Accepted: ${LAB_FILE_EXTENSIONS.join(', ')}`);
         return;
       }
       if (file.size > LAB_FILE_MAX_BYTES) {
         setError(
-          `${formatBytes(file.size)} is over the ${formatBytes(
-            LAB_FILE_MAX_BYTES
-          )} limit. Link to anything bigger instead of hosting it here.`
+          isArabic
+            ? `حجم الملف ${formatBytes(file.size)} يتجاوز الحد ${formatBytes(LAB_FILE_MAX_BYTES)}. أضف رابطًا للملفات الأكبر بدل رفعها هنا.`
+            : `${formatBytes(file.size)} is over the ${formatBytes(LAB_FILE_MAX_BYTES)} limit. Link to anything bigger instead of hosting it here.`
         );
         return;
       }
@@ -59,12 +61,12 @@ const LabFileUploader: React.FC<LabFileUploaderProps> = ({ value, onChange, maxF
         }>('/uploads/lab-resource', 'file', file);
         onChange([...value, { id: labUid('file'), ...uploaded }]);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Upload failed');
+        setError(err instanceof Error ? err.message : isArabic ? 'تعذر رفع الملف.' : 'Upload failed');
       } finally {
         setUploading(false);
       }
     },
-    [onChange, value]
+    [onChange, value, isArabic]
   );
 
   const remove = (id: string) => onChange(value.filter((f) => f.id !== id));
@@ -79,7 +81,7 @@ const LabFileUploader: React.FC<LabFileUploaderProps> = ({ value, onChange, maxF
               className="group flex items-center gap-3 rounded-lg border border-[#263248] bg-[#0a0f18] px-3 py-2.5"
             >
               <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md border border-[#263248] bg-[#0d1420] text-[10px] font-bold uppercase text-[#60a5fa]">
-                {file.kind || 'file'}
+                {file.kind || (isArabic ? 'ملف' : 'file')}
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-xs font-semibold text-[#d2d7e3]">
@@ -92,7 +94,7 @@ const LabFileUploader: React.FC<LabFileUploaderProps> = ({ value, onChange, maxF
               <button
                 type="button"
                 onClick={() => remove(file.id)}
-                aria-label={`Remove ${file.name}`}
+                aria-label={isArabic ? `إزالة ${file.name}` : `Remove ${file.name}`}
                 className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md text-[#7c8aa6] opacity-0 transition-all hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100 focus:opacity-100"
               >
                 <Trash2 size={13} />
@@ -110,13 +112,14 @@ const LabFileUploader: React.FC<LabFileUploaderProps> = ({ value, onChange, maxF
           className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#263248] bg-[#0d1420] px-3 py-2 text-xs font-medium text-[#8592ad] transition-all hover:border-[#f3a43a]/40 hover:text-[#f3a43a] disabled:opacity-50"
         >
           {uploading ? <Loader2 size={13} className="animate-spin" /> : <FilePlus2 size={13} />}
-          {uploading ? 'Uploading…' : 'Attach a file'}
+          {uploading ? (isArabic ? 'جارٍ الرفع…' : 'Uploading…') : (isArabic ? 'إرفاق ملف' : 'Attach a file')}
         </button>
       )}
 
       <p className="mt-1.5 text-[11px] text-[#8592ad]">
-        Up to {formatBytes(LAB_FILE_MAX_BYTES)} each. Students download these, they never open in
-        the page. Host a VM image somewhere else and add it as a link.
+        {isArabic
+          ? `الحد الأقصى لكل ملف ${formatBytes(LAB_FILE_MAX_BYTES)}. ينزّل الطلاب هذه الملفات ولا تُفتح داخل الصفحة. أضف صورة الآلة الافتراضية كرابط خارجي.`
+          : `Up to ${formatBytes(LAB_FILE_MAX_BYTES)} each. Students download these, they never open in the page. Host a VM image somewhere else and add it as a link.`}
       </p>
 
       {error && (

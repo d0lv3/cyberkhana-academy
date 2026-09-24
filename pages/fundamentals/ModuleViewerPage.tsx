@@ -28,6 +28,9 @@ import quizBank, {
   isTextQuestion,
   type QuizQuestion,
 } from '../../data/linuxQuizData';
+import linuxCourse from '../../data/linuxCourseData';
+import { linuxLecturesAr, linuxModuleTitlesAr } from '../../data/linuxCourseArabic';
+import { arabicLinuxQuizText } from '../../data/linuxQuizArabic';
 import ProgressBar from '../../components/ui/ProgressBar';
 import Button from '../../components/ui/EnhancedButton';
 import DifficultyBadge from '../../components/ui/DifficultyBadge';
@@ -82,6 +85,10 @@ type QuizState = {
 };
 
 const LETTERS = ['A', 'B', 'C', 'D'];
+const questionCountAr = (count: number): string =>
+  count === 1 ? 'سؤال واحد' : count === 2 ? 'سؤالان' : count <= 10 ? `${count} أسئلة` : `${count} سؤالًا`;
+const lessonCountAr = (count: number): string =>
+  count === 1 ? 'درس واحد' : count === 2 ? 'درسان' : count <= 10 ? `${count} دروس` : `${count} درسًا`;
 
 const emptyQuizState = (): QuizState => ({
   started: false,
@@ -123,6 +130,7 @@ const ModuleViewerPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { lang } = useLang();
+  const ar = lang === 'ar';
   const { user } = useAuth();
   const isLinuxCourse = slug === 'linux-for-cybersecurity';
   const firstName = (user?.displayName ?? 'user').trim().split(/\s+/)[0] || 'user';
@@ -143,6 +151,7 @@ const ModuleViewerPage: React.FC = () => {
   const course = fundamentalModule?.courseData as {
     id: string; title: string; description: string; modules: CourseModule[];
   } | undefined;
+  const isBuiltinLinuxContent = fundamentalModule?.courseData === linuxCourse;
 
   const allLectures = useMemo(
     () => course?.modules.flatMap((mod) => mod.lectures.map((lecture) => ({ module: mod, lecture }))) ?? [],
@@ -187,15 +196,15 @@ const ModuleViewerPage: React.FC = () => {
     () =>
       course?.modules.map((mod) => ({
         id: mod.id,
-        title: mod.title,
+        title: ar && isBuiltinLinuxContent ? linuxModuleTitlesAr[mod.id] ?? mod.title : mod.title,
         lectures: mod.lectures.map((l) => ({
           id: l.id,
-          title: l.title,
+          title: ar && isBuiltinLinuxContent ? linuxLecturesAr[l.id]?.title ?? l.title : l.title,
           hasQuiz: !!l.quiz || !!(l.quizQuestions && l.quizQuestions.length),
           kind: l.kind === 'lab' ? ('lab' as const) : ('lesson' as const),
         })),
       })) ?? [],
-    [course]
+    [course, ar, isBuiltinLinuxContent]
   );
 
   useEffect(() => {
@@ -223,8 +232,8 @@ const ModuleViewerPage: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-screen bg-[#0d1117]">
         <div className="text-center">
-          <h2 className="text-xl font-bold text-[#f3f6ff] mb-4">Module not found</h2>
-          <Button variant="outline" onClick={() => navigate('/fundamentals')}>Back to Fundamentals</Button>
+          <h2 className="text-xl font-bold text-[#f3f6ff] mb-4">{ar ? 'الوحدة غير موجودة' : 'Module not found'}</h2>
+          <Button variant="outline" onClick={() => navigate('/fundamentals')}>{ar ? 'العودة إلى الأساسيات' : 'Back to Fundamentals'}</Button>
         </div>
       </div>
     );
@@ -325,11 +334,16 @@ const ModuleViewerPage: React.FC = () => {
 
   const activeLectureInfo = allLectures.find((l) => l.lecture.id === activeLectureId);
   const activeLecture = activeLectureInfo?.lecture;
+  const arabicLecture = ar && isBuiltinLinuxContent && activeLecture ? linuxLecturesAr[activeLecture.id] : undefined;
+  const activeNotes = arabicLecture?.notes ?? activeLecture?.notes ?? [];
 
   // Switching lecture swaps the body under a pane that keeps its offset, so
   // the next one would open partway down. Send it back to the top.
   const bodyRef = useScrollToTop<HTMLElement>(activeLecture?.id);
   const activeModule = activeLectureInfo?.module;
+  const activeModuleTitle = activeModule && ar && isBuiltinLinuxContent
+    ? linuxModuleTitlesAr[activeModule.id] ?? activeModule.title
+    : activeModule?.title;
 
   const totalLectures = allLectures.length;
   const completedCount = completedLectures.length;
@@ -357,8 +371,8 @@ const ModuleViewerPage: React.FC = () => {
           <button
             className="hidden md:inline-flex text-[#9aa5bf] hover:text-[#f3f6ff] transition-colors"
             onClick={toggleToc}
-            title={tocCollapsed ? 'Show course sections' : 'Hide course sections'}
-            aria-label={tocCollapsed ? 'Show course sections' : 'Hide course sections'}
+            title={tocCollapsed ? (ar ? 'إظهار أقسام الدورة' : 'Show course sections') : (ar ? 'إخفاء أقسام الدورة' : 'Hide course sections')}
+            aria-label={tocCollapsed ? (ar ? 'إظهار أقسام الدورة' : 'Show course sections') : (ar ? 'إخفاء أقسام الدورة' : 'Hide course sections')}
             aria-pressed={!tocCollapsed}
           >
             {tocCollapsed ? <PanelLeftOpen className="w-5 h-5 rtl-flip" /> : <PanelLeftClose className="w-5 h-5 rtl-flip" />}
@@ -369,7 +383,7 @@ const ModuleViewerPage: React.FC = () => {
             </h1>
             {isPreview && (
               <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[#9fef00]/15 text-[#9fef00] border border-[#9fef00]/30">
-                Preview
+                {ar ? 'معاينة' : 'Preview'}
               </span>
             )}
           </div>
@@ -377,24 +391,24 @@ const ModuleViewerPage: React.FC = () => {
             <DifficultyBadge difficulty={fundamentalModule.difficulty} />
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-[#1a2332] border border-[#263248] text-[#9aa5bf]">
               {fundamentalModule.contentType === 'text' ? (
-                <><FileText size={10} /> Text</>
+                <><FileText size={10} /> {ar ? 'نصي' : 'Text'}</>
               ) : fundamentalModule.contentType === 'mixed' ? (
-                <><Layers size={10} /> Mixed</>
+                <><Layers size={10} /> {ar ? 'مختلط' : 'Mixed'}</>
               ) : (
-                <><Video size={10} /> Video</>
+                <><Video size={10} /> {ar ? 'فيديو' : 'Video'}</>
               )}
             </span>
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-[#1a2332] border border-[#263248] text-[#9aa5bf]">
-              <Clock size={10} /> {fundamentalModule.estimatedHours}h
+              <Clock size={10} /> {fundamentalModule.estimatedHours} {ar ? 'ساعات' : 'h'}
             </span>
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-[#1a2332] border border-[#263248] text-[#9aa5bf]">
-              <Layers size={10} /> {fundamentalModule.totalLessons} lessons
+              <Layers size={10} /> {ar ? lessonCountAr(fundamentalModule.totalLessons) : `${fundamentalModule.totalLessons} lessons`}
             </span>
           </div>
         </div>
         <div className="flex items-center gap-3" dir="ltr">
           <div className="hidden sm:block text-right">
-            <p className="text-[10px] text-[#8592ad] font-semibold uppercase tracking-wider">Progress</p>
+            <p className="text-[10px] text-[#8592ad] font-semibold uppercase tracking-wider">{ar ? 'التقدّم' : 'Progress'}</p>
             <p className="text-sm font-bold text-[#f3f6ff]">{completedCount}<span className="text-[#8592ad]">/{totalLectures}</span></p>
           </div>
           <div className="w-20 sm:w-28"><ProgressBar value={progressPct} color="neon" size="sm" /></div>
@@ -436,7 +450,7 @@ const ModuleViewerPage: React.FC = () => {
                       out rather than said twice. */}
                   {activeModule.lectures.some((l) => l.kind !== 'lab') && (
                     <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[#f3a43a]">
-                      {activeModule.title}
+                      {activeModuleTitle}
                     </p>
                   )}
                   <LabView
@@ -454,7 +468,7 @@ const ModuleViewerPage: React.FC = () => {
                         onClick={goToNext}
                         leftIcon={<PlayCircle size={16} />}
                       >
-                        Next Lesson
+                        {ar ? 'الدرس التالي' : 'Next Lesson'}
                       </Button>
                     </div>
                   )}
@@ -464,12 +478,12 @@ const ModuleViewerPage: React.FC = () => {
               {/* Lesson header */}
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[#00a859] mb-1.5">
-                  {activeModule.title}
+                  {activeModuleTitle}
                 </p>
                 <h2 className="text-2xl md:text-3xl font-bold text-[#f3f6ff] mb-1">
-                  {activeLecture.title}
+                  {arabicLecture?.title ?? activeLecture.title}
                 </h2>
-                <p className="text-sm text-[#9aa5bf]">{activeLecture.subtitle}</p>
+                <p className="text-sm text-[#9aa5bf]">{arabicLecture?.subtitle ?? activeLecture.subtitle}</p>
               </div>
 
               {/* Video */}
@@ -479,7 +493,7 @@ const ModuleViewerPage: React.FC = () => {
                     <iframe
                       className="w-full h-full"
                       src={`https://www.youtube.com/embed/${activeLecture.videoId}`}
-                      title={activeLecture.title}
+                      title={arabicLecture?.title ?? activeLecture.title}
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
                     />
@@ -495,14 +509,14 @@ const ModuleViewerPage: React.FC = () => {
               )}
 
               {/* Notes */}
-              {activeLecture.notes && activeLecture.notes.length > 0 && (
+              {activeNotes.length > 0 && (
                 <div className="rounded-xl border border-[#263248] bg-[#121a2a] p-6">
                   <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[#263248]">
                     <BookOpen className="w-4 h-4 text-[#60a5fa]" />
-                    <h3 className="text-sm font-semibold text-[#f3f6ff]">Key Takeaways</h3>
+                    <h3 className="text-sm font-semibold text-[#f3f6ff]">{ar ? 'أهم النقاط' : 'Key Takeaways'}</h3>
                   </div>
                   <ul className="space-y-2.5">
-                    {activeLecture.notes.map((note, i) => (
+                    {activeNotes.map((note, i) => (
                       <li key={i} className="text-sm text-[#d2d7e3] flex items-start gap-3">
                         <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-[#60a5fa] flex-shrink-0" />
                         <span className="leading-relaxed">{note}</span>
@@ -521,14 +535,14 @@ const ModuleViewerPage: React.FC = () => {
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-4 border-t border-[#263248]">
                       {isCompleted(activeLecture.id) ? (
                         <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#0f1f15] border border-[#00a859]/20 text-[#00a859]">
-                          <CheckCircle2 size={16} /><span className="text-sm font-medium">Completed</span>
+                          <CheckCircle2 size={16} /><span className="text-sm font-medium">{ar ? 'مكتمل' : 'Completed'}</span>
                         </div>
                       ) : (
-                        <Button onClick={() => markComplete(activeLecture.id)} leftIcon={<CheckCircle2 size={16} />}>Mark as Complete</Button>
+                        <Button onClick={() => markComplete(activeLecture.id)} leftIcon={<CheckCircle2 size={16} />}>{ar ? 'تحديد الدرس كمكتمل' : 'Mark as Complete'}</Button>
                       )}
                       {!isLastLecture && (
                         <Button variant="secondary" onClick={() => { if (!isCompleted(activeLecture.id)) markComplete(activeLecture.id); goToNext(); }} leftIcon={<PlayCircle size={16} />}>
-                          Next Lesson
+                          {ar ? 'الدرس التالي' : 'Next Lesson'}
                         </Button>
                       )}
                     </div>
@@ -538,6 +552,9 @@ const ModuleViewerPage: React.FC = () => {
                 const qs = getQuizState(activeLecture.id);
                 const questions = qs.questions.length ? qs.questions : baseQuestions;
                 const currentQuestion = questions[qs.currentIndex];
+                const localizedQuestion = ar && isLinuxCourse && currentQuestion
+                  ? arabicLinuxQuizText(activeLecture.id, currentQuestion)
+                  : undefined;
 
                 return (
                   <div className="rounded-xl border border-[#263248] bg-[#121a2a] overflow-hidden">
@@ -545,10 +562,10 @@ const ModuleViewerPage: React.FC = () => {
                     <div className="px-6 py-4 border-b border-[#263248] flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <ClipboardCheck className="w-4 h-4 text-[#00a859]" />
-                        <h3 className="text-sm font-semibold text-[#f3f6ff]">Knowledge Check</h3>
+                        <h3 className="text-sm font-semibold text-[#f3f6ff]">{ar ? 'تحقّق من فهمك' : 'Knowledge Check'}</h3>
                       </div>
                       <span className="text-xs text-[#8592ad]">
-                        {questions.length} {questions.length === 1 ? 'question' : 'questions'}
+                        {ar ? questionCountAr(questions.length) : `${questions.length} ${questions.length === 1 ? 'question' : 'questions'}`}
                       </span>
                     </div>
 
@@ -559,11 +576,11 @@ const ModuleViewerPage: React.FC = () => {
                           <div className="w-14 h-14 rounded-full bg-[#1a2332] border border-[#263248] flex items-center justify-center mx-auto mb-4">
                             <ClipboardCheck className="w-6 h-6 text-[#00a859]" />
                           </div>
-                          <h4 className="text-base font-semibold text-[#f3f6ff] mb-1">Lesson Assessment</h4>
+                          <h4 className="text-base font-semibold text-[#f3f6ff] mb-1">{ar ? 'تقييم الدرس' : 'Lesson Assessment'}</h4>
                           <p className="text-sm text-[#9aa5bf] mb-6 max-w-sm mx-auto">
-                            Test your understanding of this lesson with {questions.length} question{questions.length > 1 ? 's' : ''}.
+                            {ar ? `اختبر فهمك لهذا الدرس. عدد الأسئلة: ${questions.length}.` : `Test your understanding of this lesson with ${questions.length} question${questions.length > 1 ? 's' : ''}.`}
                           </p>
-                          <Button onClick={() => startQuiz(activeLecture.id, baseQuestions)}>Begin Assessment</Button>
+                          <Button onClick={() => startQuiz(activeLecture.id, baseQuestions)}>{ar ? 'ابدأ التقييم' : 'Begin Assessment'}</Button>
                         </div>
                       )}
 
@@ -573,7 +590,7 @@ const ModuleViewerPage: React.FC = () => {
                           {/* Progress indicator */}
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-medium text-[#9aa5bf]">
-                              Question {qs.currentIndex + 1} of {questions.length}
+                              {ar ? `السؤال ${qs.currentIndex + 1} من ${questions.length}` : `Question ${qs.currentIndex + 1} of ${questions.length}`}
                             </span>
                             <ProgressBar
                               value={qs.currentIndex + 1}
@@ -586,7 +603,7 @@ const ModuleViewerPage: React.FC = () => {
 
                           {/* Question */}
                           <p className="text-[#f3f6ff] font-medium leading-relaxed">
-                            {currentQuestion.question}
+                            {localizedQuestion?.question ?? currentQuestion.question}
                           </p>
 
                           {/* Written answer, or options to pick from */}
@@ -609,7 +626,7 @@ const ModuleViewerPage: React.FC = () => {
                               placeholder={answerMask(currentQuestion)}
                               spellCheck={false}
                               autoComplete="off"
-                              aria-label="Your answer"
+                              aria-label={ar ? 'إجابتك' : 'Your answer'}
                               dir="ltr"
                               className={`w-full rounded-lg border bg-[#0d1117] px-4 py-3 font-mono text-sm tracking-wide outline-none transition-colors placeholder:tracking-[0.2em] placeholder:text-[#3d4a63] disabled:cursor-default ${
                                 !qs.showExplanation
@@ -650,8 +667,8 @@ const ModuleViewerPage: React.FC = () => {
                                   type="button"
                                   disabled={qs.showExplanation}
                                   onClick={() => updateQuiz(activeLecture.id, { selectedOption: idx })}
-                                  dir="ltr"
-                                  className={`w-full text-left flex items-center gap-3 px-4 py-3 rounded-lg border transition-all ${borderColor} ${bgColor} ${
+                                  dir={ar ? 'rtl' : 'ltr'}
+                                  className={`w-full text-start flex items-center gap-3 px-4 py-3 rounded-lg border transition-all ${borderColor} ${bgColor} ${
                                     !showResult ? 'hover:border-[#00a859]/30 hover:bg-[#0f1f15]' : ''
                                   }`}
                                 >
@@ -660,9 +677,9 @@ const ModuleViewerPage: React.FC = () => {
                                   }`}>
                                     {LETTERS[idx]}
                                   </span>
-                                  <span className={`text-sm font-medium ${textColor}`}>{option}</span>
-                                  {showResult && isCorrect && <CheckCircle2 size={16} className="ml-auto text-[#00a859] flex-shrink-0" />}
-                                  {showResult && isSelected && !isCorrect && <X size={16} className="ml-auto text-red-400 flex-shrink-0" />}
+                                  <span dir="auto" className={`text-sm font-medium ${textColor}`}>{localizedQuestion?.options[idx] ?? option}</span>
+                                  {showResult && isCorrect && <CheckCircle2 size={16} className="ms-auto text-[#00a859] flex-shrink-0" />}
+                                  {showResult && isSelected && !isCorrect && <X size={16} className="ms-auto text-red-400 flex-shrink-0" />}
                                 </button>
                               );
                             })}
@@ -680,14 +697,14 @@ const ModuleViewerPage: React.FC = () => {
                               }
                               fullWidth
                             >
-                              Submit Answer
+                              {ar ? 'أرسل الإجابة' : 'Submit Answer'}
                             </Button>
                           ) : (
                             <div className="space-y-3">
                               {qs.answers[qs.currentIndex]?.correct ? (
                                 <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-[#0f1f15] border border-[#00a859]/20 text-[#00a859]">
                                   <CheckCircle2 size={16} />
-                                  <span className="text-sm font-medium">Correct</span>
+                                  <span className="text-sm font-medium">{ar ? 'إجابة صحيحة' : 'Correct'}</span>
                                 </div>
                               ) : (
                                 <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-red-950/20 border border-red-500/20 text-red-400">
@@ -695,11 +712,11 @@ const ModuleViewerPage: React.FC = () => {
                                   <span className="text-sm font-medium">
                                     {isTextQuestion(currentQuestion) ? (
                                       <>
-                                        Incorrect, the answer was{' '}
+                                        {ar ? 'إجابة غير صحيحة، الإجابة هي ' : 'Incorrect, the answer was '}
                                         <span className="font-mono">{currentQuestion.answer}</span>
                                       </>
                                     ) : (
-                                      <>Incorrect, the correct answer is {LETTERS[currentQuestion.correctIndex]}</>
+                                      <>{ar ? 'إجابة غير صحيحة، الإجابة الصحيحة هي ' : 'Incorrect, the correct answer is '}{LETTERS[currentQuestion.correctIndex]}</>
                                     )}
                                   </span>
                                 </div>
@@ -709,7 +726,7 @@ const ModuleViewerPage: React.FC = () => {
                                 fullWidth
                                 rightIcon={<ChevronRight size={16} />}
                               >
-                                {qs.currentIndex < questions.length - 1 ? 'Next Question' : 'View Results'}
+                                {qs.currentIndex < questions.length - 1 ? (ar ? 'السؤال التالي' : 'Next Question') : (ar ? 'عرض النتائج' : 'View Results')}
                               </Button>
                             </div>
                           )}
@@ -734,21 +751,21 @@ const ModuleViewerPage: React.FC = () => {
                                     <Award size={28} className={passed ? 'text-[#00a859]' : 'text-[#8592ad]'} />
                                   </div>
                                   <h4 className="text-lg font-bold text-[#f3f6ff] mb-1">
-                                    {passed ? 'Assessment Passed' : 'Assessment Complete'}
+                                    {passed ? (ar ? 'اجتزت التقييم' : 'Assessment Passed') : (ar ? 'اكتمل التقييم' : 'Assessment Complete')}
                                   </h4>
                                   <p className="text-2xl font-bold text-[#f3f6ff] mb-1">
                                     {score}/{total}
                                     <span className="text-sm text-[#8592ad] ml-2">({pct}%)</span>
                                   </p>
                                   {passed ? (
-                                    <p className="text-sm text-[#00a859]">All answers correct. This lesson is now complete.</p>
+                                    <p className="text-sm text-[#00a859]">{ar ? 'جميع الإجابات صحيحة. اكتمل هذا الدرس الآن.' : 'All answers correct. This lesson is now complete.'}</p>
                                   ) : (
-                                    <p className="text-sm text-[#9aa5bf]">You need a perfect score to complete this lesson. Review and try again.</p>
+                                    <p className="text-sm text-[#9aa5bf]">{ar ? 'يجب أن تجيب عن جميع الأسئلة إجابة صحيحة لإكمال الدرس. راجع المحتوى وحاول مجددًا.' : 'You need a perfect score to complete this lesson. Review and try again.'}</p>
                                   )}
                                 </div>
 
                                 {/* Results breakdown */}
-                                <div className="space-y-2" dir="ltr">
+                                <div className="space-y-2" dir={ar ? 'rtl' : 'ltr'}>
                                   {questions.map((q, idx) => {
                                     const ans = qs.answers[idx];
                                     return (
@@ -760,7 +777,7 @@ const ModuleViewerPage: React.FC = () => {
                                         ) : (
                                           <X size={15} className="text-red-400 flex-shrink-0" />
                                         )}
-                                        <span className="text-xs text-[#d2d7e3] truncate">{q.question}</span>
+                                        <span className="text-xs text-[#d2d7e3] truncate">{ar && isLinuxCourse ? arabicLinuxQuizText(activeLecture.id, q).question : q.question}</span>
                                       </div>
                                     );
                                   })}
@@ -769,12 +786,12 @@ const ModuleViewerPage: React.FC = () => {
                                 <div className="flex flex-col sm:flex-row gap-3">
                                   {!passed && (
                                     <Button variant="outline" onClick={() => startQuiz(activeLecture.id, baseQuestions)} leftIcon={<RotateCcw size={15} />} fullWidth>
-                                      Retry Assessment
+                                      {ar ? 'أعد التقييم' : 'Retry Assessment'}
                                     </Button>
                                   )}
                                   {!isLastLecture && (
                                     <Button onClick={goToNext} leftIcon={<PlayCircle size={15} />} fullWidth>
-                                      Next Lesson
+                                      {ar ? 'الدرس التالي' : 'Next Lesson'}
                                     </Button>
                                   )}
                                 </div>

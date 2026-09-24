@@ -8,7 +8,7 @@ const cpp: ProgrammingLanguage = {
   available: true,
   description: {
     en: 'Build on C with streams and objects, the language behind most desktop software, game engines, and the binaries you reverse engineer.',
-    ar: 'ابنِ على لغة C بالمجاري والكائنات، اللغة وراء معظم برامج سطح المكتب، محركات الألعاب، والملفات التنفيذية التي تحللها عكسيا.',
+    ar: 'وسّع ما تعلمته في C باستخدام تدفقات الإدخال والإخراج والكائنات. تُستخدم C++ في كثير من برامج سطح المكتب ومحركات الألعاب والملفات التنفيذية التي تحللها بالهندسة العكسية.',
   },
   /* No built-in modules: C++ content is authored through the creator tools
      and merged in by getProgrammingLanguages(). */

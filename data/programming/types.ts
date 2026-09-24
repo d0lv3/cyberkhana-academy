@@ -5,6 +5,7 @@ export type SupportedLanguage = 'python' | 'cpp' | 'bash';
 export type TestCase = {
   id: string;
   description: string;
+  descriptionAr?: string;
   input?: string;
   expectedOutput: string;
 };
@@ -24,6 +25,7 @@ export type ProgrammingConcept = {
    */
   markdownContent: string | { en: string; ar: string };
   starterCode: string;
+  starterCodeAr?: string;
   /**
    * Prefills the Run panel's stdin box for lessons whose starterCode calls
    * input(). Challenges feed stdin per test case instead (see TestCase.input).
@@ -33,6 +35,7 @@ export type ProgrammingConcept = {
   testCases?: TestCase[];
   /** Hints shown progressively when stuck */
   hints?: string[];
+  hintsAr?: string[];
   /** Revealed after completion or on demand */
   solution?: string;
 };
