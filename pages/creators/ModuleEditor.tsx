@@ -404,7 +404,9 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
       iconColor,
       courseData,
       chapters,
-      labs: readyLabs,
+      // Keep unfinished lab drafts in the editor; courseData contains only
+      // complete labs, so students never see a stub.
+      labs,
       showInModules: isOS ? showInModules : true,
       ...(existing
         ? {
@@ -420,15 +422,14 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
   };
 
   /* ── Save ── */
-  const handleSave = async () => {
+  const handleSave = async (silent = false) => {
+    if (isSaving) return;
     if (!titleEn.trim()) {
-      setTab('details');
-      toast('error', 'An English title is required.');
+      if (!silent) { setTab('details'); toast('error', 'An English title is required.'); }
       return;
     }
     if (totalSections === 0) {
-      setTab('content');
-      toast('error', 'Add at least one section.');
+      if (!silent) { setTab('content'); toast('error', 'Add at least one section.'); }
       return;
     }
 
@@ -439,15 +440,13 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
     if (adminCtx) {
       try {
         await saveModuleAsAdmin(adminCtx.ownerId, adminCtx.bucket, built);
-        sessionStorage.removeItem(ADMIN_EDIT_STASH);
-        toast('success', status === 'published' ? `${noun} published.` : `${noun} saved.`);
-        setTimeout(() => {
-          setIsSaving(false);
-          navigate(listRoute);
-        }, 500);
+        sessionStorage.setItem(ADMIN_EDIT_STASH, JSON.stringify({ id: built.id, ...adminCtx, module: built }));
+        setExisting(built);
+        if (!silent) toast('success', status === 'published' ? `${noun} published.` : `${noun} saved.`);
       } catch (err) {
-        setIsSaving(false);
         toast('error', err instanceof Error ? err.message : 'Could not save this module.');
+      } finally {
+        setIsSaving(false);
       }
       return;
     }
@@ -456,12 +455,11 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
     // it writes a fresh, published DB module (owned by this admin) that overrides
     // the static original.
     saveModule(built);
-    if (isBuiltinEdit) sessionStorage.removeItem(BUILTIN_EDIT_STASH);
-    toast('success', status === 'published' ? `${noun} published.` : `${noun} saved.`);
-    setTimeout(() => {
-      setIsSaving(false);
-      navigate(listRoute);
-    }, 500);
+    if (isBuiltinEdit) sessionStorage.setItem(BUILTIN_EDIT_STASH, JSON.stringify({ id: built.id, module: built }));
+    setExisting(built);
+    setIsSaving(false);
+    if (!silent) toast('success', status === 'published' ? `${noun} published.` : `${noun} saved.`);
+    if (!id) navigate(`${listRoute}/edit/${built.id}`, { replace: true });
   };
 
   /* ── Preview as published: snapshot the current (unsaved) draft and open it
@@ -496,6 +494,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
       backTo={listRoute}
       backLabel={isOS ? 'OS & Modules' : 'Modules'}
       onSave={handleSave}
+      autoSaveSnapshot={JSON.stringify([titleEn, titleAr, descEn, descAr, slug, difficulty, tags, author, estimatedHours, iconColor, coverImage, domain, showInModules, status, chapters, labs])}
       isSaving={isSaving}
       onPreview={handlePreview}
       status={status}

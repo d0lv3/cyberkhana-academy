@@ -150,6 +150,8 @@ const translations: Record<string, Record<Lang, string>> = {
 
   // Creator Studio
   'studio.save': { en: 'Save', ar: 'حفظ' },
+  'studio.autosaveOn': { en: 'Autosave on', ar: 'الحفظ التلقائي مفعّل' },
+  'studio.autosaveOff': { en: 'Autosave off', ar: 'الحفظ التلقائي متوقف' },
   'studio.preview': { en: 'Preview', ar: 'معاينة' },
   'studio.backDefault': { en: 'Back', ar: 'رجوع' },
   'studio.contentStudio': { en: 'Content Studio', ar: 'استوديو المحتوى' },

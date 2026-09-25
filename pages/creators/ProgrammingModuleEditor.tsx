@@ -69,11 +69,12 @@ const ProgrammingModuleEditor: React.FC = () => {
     let mod: CreatorModule | undefined;
 
     if (isBuiltinEdit) {
-      // Built-in modules ship in the bundle — resolve straight from static data.
+      const patch = getCreatorProgrammingPatches().find((p) => p.languageSlug === langSlug);
+      mod = patch?.newModules.find((m) => m.id === moduleId);
       const builtin = programmingLanguages
         .find((l) => l.slug === langSlug)
         ?.modules.find((m) => m.id === moduleId);
-      if (builtin) mod = builtinToEditableProgrammingModule(builtin);
+      if (!mod && builtin) mod = builtinToEditableProgrammingModule(builtin);
     } else if (isAdminEdit) {
       try {
         const raw = sessionStorage.getItem(ADMIN_PROGRAMMING_STASH);
@@ -115,13 +116,14 @@ const ProgrammingModuleEditor: React.FC = () => {
     if (!isEditing) setSlug(generateSlug(titleEn));
   }, [titleEn, isEditing]);
 
-  const handleSave = async () => {
+  const handleSave = async (silent = false) => {
+    if (isSaving) return;
     if (!titleEn.trim()) {
-      toast('error', 'An English title is required.');
+      if (!silent) toast('error', 'An English title is required.');
       return;
     }
     if (!langSlug) {
-      toast('error', 'Missing language context.');
+      if (!silent) toast('error', 'Missing language context.');
       return;
     }
 
@@ -158,7 +160,7 @@ const ProgrammingModuleEditor: React.FC = () => {
           kind: 'module',
           item: mod,
         });
-        sessionStorage.removeItem(ADMIN_PROGRAMMING_STASH);
+        sessionStorage.setItem(ADMIN_PROGRAMMING_STASH, JSON.stringify({ kind: 'module', ownerId: adminCtx.ownerId, ownerName: adminCtx.ownerName, languageSlug: langSlug, item: mod }));
       } catch (err) {
         setIsSaving(false);
         toast('error', err instanceof Error ? err.message : 'Could not save this module.');
@@ -170,11 +172,10 @@ const ProgrammingModuleEditor: React.FC = () => {
       saveProgrammingModule(langSlug, mod);
     }
 
-    toast('success', status === 'published' ? 'Module published.' : isEditing ? 'Module updated.' : 'Module created.');
-    setTimeout(() => {
-      setIsSaving(false);
-      navigate('/creators/programming');
-    }, 500);
+    setExisting(mod);
+    setIsSaving(false);
+    if (!silent) toast('success', status === 'published' ? 'Module published.' : isEditing ? 'Module updated.' : 'Module created.');
+    if (!moduleId) navigate(`/creators/programming/edit-module/${langSlug}/${mod.id}`, { replace: true });
   };
 
   const langName = `${langSlug?.charAt(0).toUpperCase()}${langSlug?.slice(1) || ''}`;
@@ -186,6 +187,7 @@ const ProgrammingModuleEditor: React.FC = () => {
       backTo="/creators/programming"
       backLabel="Programming"
       onSave={handleSave}
+      autoSaveSnapshot={JSON.stringify([titleEn, titleAr, descEn, descAr, slug, videoInput, order, status])}
       isSaving={isSaving}
       status={status}
       onStatusChange={setStatus}

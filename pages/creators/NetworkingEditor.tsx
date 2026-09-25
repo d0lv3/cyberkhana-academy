@@ -118,10 +118,10 @@ const NetworkingEditor: React.FC = () => {
     let lesson: CreatorNetworkingLesson | undefined;
 
     if (isBuiltinEdit) {
-      // Built-in lessons ship in the bundle, so resolve straight from static
-      // data — no stash to go stale on a refresh.
+      // Once saved, the creator's override is the latest editable version.
+      lesson = getNetworkingLessonById(id);
       const builtin = networkingLessons.find((l) => l.id === id);
-      if (builtin) lesson = builtinToEditableLesson(builtin);
+      if (!lesson && builtin) lesson = builtinToEditableLesson(builtin);
     } else if (isAdminEdit) {
       // Another author's lesson: it came from an admin-only endpoint, so the
       // list page hands it over through sessionStorage.
@@ -170,25 +170,26 @@ const NetworkingEditor: React.FC = () => {
     if (!isEditing) setSlug(generateSlug(titleEn));
   }, [titleEn, isEditing]);
 
-  const handleSave = async () => {
+  const handleSave = async (silent = false) => {
+    if (isSaving) return;
     if (!markdownContent.en.trim() && markdownContent.ar.trim()) {
       // Arabic alone would leave English readers with a blank lesson, since
       // every fallback in the app runs towards English.
-      toast('error', 'Write the English lesson body too; Arabic alone has nothing to fall back to.');
-      setTab('lesson');
-      setMdLang('en');
+      if (!silent) {
+        toast('error', 'Write the English lesson body too; Arabic alone has nothing to fall back to.');
+        setTab('lesson');
+        setMdLang('en');
+      }
       return;
     }
     if (!titleEn.trim()) {
-      toast('error', 'An English title is required before saving.');
-      setTab('lesson');
+      if (!silent) { toast('error', 'An English title is required before saving.'); setTab('lesson'); }
       return;
     }
     // Only a lesson that claims a simulation owes one: markdown-only lessons
     // publish on their own.
     if (status === 'published' && withSimulation && simulation.steps.length === 0) {
-      toast('error', 'Add at least one simulation step before publishing, or turn the simulation off.');
-      setTab('simulation');
+      if (!silent) { toast('error', 'Add at least one simulation step before publishing, or turn the simulation off.'); setTab('simulation'); }
       return;
     }
 
@@ -227,7 +228,7 @@ const NetworkingEditor: React.FC = () => {
     if (adminCtx) {
       try {
         await saveItemAsAdmin(adminCtx.ownerId, 'networking-lessons', lesson);
-        sessionStorage.removeItem(ADMIN_NETWORKING_STASH);
+        sessionStorage.setItem(ADMIN_NETWORKING_STASH, JSON.stringify({ id: lesson.id, ownerId: adminCtx.ownerId, ownerName: adminCtx.ownerName, lesson }));
       } catch (err) {
         setIsSaving(false);
         toast('error', err instanceof Error ? err.message : 'Could not save this lesson.');
@@ -239,11 +240,10 @@ const NetworkingEditor: React.FC = () => {
       saveNetworkingLesson(lesson);
     }
 
-    toast('success', status === 'published' ? 'Lesson published.' : 'Lesson saved.');
-    setTimeout(() => {
-      setIsSaving(false);
-      navigate('/creators/networking');
-    }, 500);
+    setExistingLesson(lesson);
+    setIsSaving(false);
+    if (!silent) toast('success', status === 'published' ? 'Lesson published.' : 'Lesson saved.');
+    if (!id) navigate(`/creators/networking/edit/${lesson.id}`, { replace: true });
   };
 
   const tabs: { key: Tab; label: string; icon: React.ElementType }[] = [
@@ -258,6 +258,7 @@ const NetworkingEditor: React.FC = () => {
       backTo="/creators/networking"
       backLabel="Networking"
       onSave={handleSave}
+      autoSaveSnapshot={JSON.stringify([titleEn, titleAr, descEn, descAr, slug, order, estimatedMinutes, tags, coverSvg, markdownContent, quiz, simulation, withSimulation, status])}
       isSaving={isSaving}
       status={status}
       onStatusChange={setStatus}

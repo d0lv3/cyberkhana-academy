@@ -173,13 +173,14 @@ const NetworkingUnitEditor: React.FC = () => {
     .map((lessonId) => pickableById.get(lessonId)?.lesson)
     .filter((l): l is NetworkingLesson => !!l);
 
-  const handleSave = async () => {
+  const handleSave = async (silent = false) => {
+    if (isSaving) return;
     if (!titleEn.trim()) {
-      toast('error', ar ? 'العنوان بالإنجليزية مطلوب.' : 'An English title is required.');
+      if (!silent) toast('error', ar ? 'العنوان بالإنجليزية مطلوب.' : 'An English title is required.');
       return;
     }
     if (lessonIds.length === 0) {
-      toast('error', ar ? 'أضف درسا واحدا على الأقل.' : 'Add at least one lesson to the unit.');
+      if (!silent) toast('error', ar ? 'أضف درسا واحدا على الأقل.' : 'Add at least one lesson to the unit.');
       return;
     }
 
@@ -207,7 +208,7 @@ const NetworkingUnitEditor: React.FC = () => {
     if (adminCtx) {
       try {
         await saveItemAsAdmin(adminCtx.ownerId, 'networking-units', unit);
-        sessionStorage.removeItem(ADMIN_UNIT_STASH);
+        sessionStorage.setItem(ADMIN_UNIT_STASH, JSON.stringify({ id: unit.id, ...adminCtx, unit }));
       } catch (err) {
         setIsSaving(false);
         toast('error', err instanceof Error ? err.message : 'Could not save this unit.');
@@ -217,14 +218,13 @@ const NetworkingUnitEditor: React.FC = () => {
       saveNetworkingUnit(unit);
     }
 
-    toast(
+    setExisting(unit);
+    setIsSaving(false);
+    if (!silent) toast(
       'success',
       status === 'published' ? (ar ? 'نُشرت المرحلة.' : 'Unit published.') : ar ? 'حُفظت المرحلة.' : 'Unit saved.'
     );
-    setTimeout(() => {
-      setIsSaving(false);
-      navigate('/creators/networking');
-    }, 500);
+    if (!id) navigate(`/creators/networking/units/edit/${unit.id}`, { replace: true });
   };
 
   return (
@@ -234,6 +234,7 @@ const NetworkingUnitEditor: React.FC = () => {
       backTo="/creators/networking"
       backLabel={ar ? 'دروس الشبكات' : 'Networking Lessons'}
       onSave={handleSave}
+      autoSaveSnapshot={JSON.stringify([titleEn, titleAr, descEn, descAr, order, lessonIds, status])}
       isSaving={isSaving}
       status={status}
       onStatusChange={setStatus}

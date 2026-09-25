@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, ExternalLink } from 'lucide-react';
 import Button from '../ui/EnhancedButton';
@@ -11,7 +11,9 @@ interface CreatorLayoutProps {
   backTo: string;
   backLabel?: string;
   subtitle?: string;
-  onSave?: () => void;
+  onSave?: (silent?: boolean) => void | Promise<void>;
+  /** Serialized editable fields; UI-only state should be left out. */
+  autoSaveSnapshot?: string;
   isSaving?: boolean;
   /** Lifecycle status control (preferred) */
   status?: ContentStatus;
@@ -29,6 +31,7 @@ const CreatorLayout: React.FC<CreatorLayoutProps> = ({
   backLabel,
   subtitle,
   onSave,
+  autoSaveSnapshot,
   isSaving = false,
   status,
   onStatusChange,
@@ -38,13 +41,66 @@ const CreatorLayout: React.FC<CreatorLayoutProps> = ({
 }) => {
   const navigate = useNavigate();
   const { t } = useLang();
+  const [autoSave, setAutoSave] = useState(() => {
+    try { return localStorage.getItem('creator-autosave') === 'true'; } catch { return false; }
+  });
+  const editedRef = useRef(false);
+  const previousSnapshot = useRef(autoSaveSnapshot);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveRef = useRef(onSave);
+  saveRef.current = onSave;
+  const savingRef = useRef(isSaving);
+  savingRef.current = isSaving;
+  const autoSaveRef = useRef(autoSave);
+  autoSaveRef.current = autoSave;
+
+  const scheduleSave = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    const run = () => {
+      if (!autoSaveRef.current) return;
+      if (savingRef.current) {
+        timerRef.current = setTimeout(run, 500);
+      } else {
+        void saveRef.current?.(true);
+      }
+    };
+    timerRef.current = setTimeout(run, 1800);
+  };
+
+  useEffect(() => {
+    if (previousSnapshot.current === autoSaveSnapshot) return;
+    previousSnapshot.current = autoSaveSnapshot;
+    if (autoSave && editedRef.current && autoSaveSnapshot !== undefined) {
+      scheduleSave();
+    } else if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+  }, [autoSave, autoSaveSnapshot]);
+
+  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
+
+  const toggleAutoSave = () => {
+    const next = !autoSave;
+    setAutoSave(next);
+    if (!next && timerRef.current) clearTimeout(timerRef.current);
+    if (next && editedRef.current) scheduleSave();
+    try { localStorage.setItem('creator-autosave', String(next)); } catch { /* preference is optional */ }
+  };
 
   return (
-    <div className="creator-layout min-w-0 space-y-6">
+    <div
+      className="creator-layout min-w-0 space-y-6"
+      onInputCapture={() => { editedRef.current = true; }}
+      onChangeCapture={() => { editedRef.current = true; }}
+      onClickCapture={(event) => {
+        if (!(event.target as Element).closest('[data-creator-header]')) editedRef.current = true;
+      }}
+      onDropCapture={() => { editedRef.current = true; }}
+    >
       {/* Header. Stacked below sm: the action cluster (preview + status +
           save) is close to a phone's full width on its own, so keeping it
           beside the title could only push something off-screen. */}
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+      <div data-creator-header className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
         <div className="flex items-start gap-2 sm:gap-4 min-w-0">
           {/* Below sm the label is hidden and only a 16px chevron remains, so
               the button carries its own tap area rather than inheriting the
@@ -85,13 +141,26 @@ const CreatorLayout: React.FC<CreatorLayoutProps> = ({
           )}
 
           {status && onStatusChange && (
-            <StatusSelect value={status} onChange={onStatusChange} />
+            <StatusSelect value={status} onChange={(next) => { editedRef.current = true; onStatusChange(next); }} />
           )}
 
           {onSave && (
-            <Button size="sm" onClick={onSave} isLoading={isSaving} leftIcon={<Save size={14} />}>
-              {t('studio.save')}
-            </Button>
+            <>
+              {autoSaveSnapshot !== undefined && (
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={autoSave}
+                  onClick={toggleAutoSave}
+                  className={`rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${autoSave ? 'border-[#00c766]/50 bg-[#00c766]/10 text-[#6de9a4]' : 'border-[#263248] bg-[#121a2a] text-[#8592ad]'}`}
+                >
+                  {t(autoSave ? 'studio.autosaveOn' : 'studio.autosaveOff')}
+                </button>
+              )}
+              <Button size="sm" onClick={() => { if (timerRef.current) clearTimeout(timerRef.current); void onSave(false); }} isLoading={isSaving} leftIcon={<Save size={14} />}>
+                {t('studio.save')}
+              </Button>
+            </>
           )}
         </div>
       </div>

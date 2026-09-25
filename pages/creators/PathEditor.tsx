@@ -155,13 +155,14 @@ const PathEditor: React.FC = () => {
       .filter((g) => g.items.length > 0);
   }, [catalog, query]);
 
-  const handleSave = async () => {
+  const handleSave = async (silent = false) => {
+    if (isSaving) return;
     if (!titleEn.trim()) {
-      toast('error', 'An English title is required.');
+      if (!silent) toast('error', 'An English title is required.');
       return;
     }
     if (steps.length === 0) {
-      toast('error', 'Add at least one step to the path.');
+      if (!silent) toast('error', 'Add at least one step to the path.');
       return;
     }
 
@@ -195,7 +196,7 @@ const PathEditor: React.FC = () => {
     if (sharedCtx) {
       try {
         await saveSharedItem(sharedCtx.ownerId, 'paths', path);
-        sessionStorage.removeItem(SHARED_PATH_STASH);
+        sessionStorage.setItem(SHARED_PATH_STASH, JSON.stringify({ id: path.id, ...sharedCtx, path }));
       } catch (err) {
         setIsSaving(false);
         toast('error', err instanceof Error ? err.message : 'Could not save this path.');
@@ -205,11 +206,10 @@ const PathEditor: React.FC = () => {
       savePath(path);
     }
 
-    toast('success', status === 'published' ? 'Path published.' : 'Path saved.');
-    setTimeout(() => {
-      setIsSaving(false);
-      navigate('/creators/paths');
-    }, 500);
+    setExisting(path);
+    setIsSaving(false);
+    if (!silent) toast('success', status === 'published' ? 'Path published.' : 'Path saved.');
+    if (!id) navigate(`/creators/paths/edit/${path.id}`, { replace: true });
   };
 
   return (
@@ -219,6 +219,7 @@ const PathEditor: React.FC = () => {
       backTo="/creators/paths"
       backLabel="Learning Paths"
       onSave={handleSave}
+      autoSaveSnapshot={JSON.stringify([titleEn, titleAr, descEn, descAr, slug, difficulty, color, cover, tags, estimatedHours, steps, status])}
       isSaving={isSaving}
       status={status}
       onStatusChange={setStatus}

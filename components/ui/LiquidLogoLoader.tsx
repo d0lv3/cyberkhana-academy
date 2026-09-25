@@ -44,13 +44,14 @@ const body = (y: number, lift: number): string =>
 /**
  * The CyberKhana mark, animated as if it were a glass being filled with green
  * liquid — a rising, waving level that loops. Used as the app's loading state
- * and as the terminal's boot splash. The logo PNG is used as a luminance mask
- * (white glyph shows, dark badge is hidden), so the liquid only fills the mark.
+ * and as the terminal's boot splash. The logo PNG has an opaque dark badge,
+ * so its green channel is converted to alpha to isolate the actual mark.
  */
 const LiquidLogoLoader: React.FC<LiquidLogoLoaderProps> = ({ size = 96, className = '', fill = false, fillMs = 900 }) => {
   // Unique ids so multiple loaders on one page don't collide.
   const uid = React.useId().replace(/:/g, '');
   const maskId = `ckliq-mask-${uid}`;
+  const alphaId = `ckliq-alpha-${uid}`;
   const gradId = `ckliq-grad-${uid}`;
   const glassId = `ckliq-glass-${uid}`;
 
@@ -65,8 +66,15 @@ const LiquidLogoLoader: React.FC<LiquidLogoLoaderProps> = ({ size = 96, classNam
       style={{ filter: 'drop-shadow(0 0 14px rgba(0,199,102,0.35))', ['--fill-dur' as string]: `${fillMs}ms` }}
     >
       <defs>
-        <mask id={maskId}>
-          {/* White glyph on dark badge → luminance mask = just the mark */}
+        {/* The badge's green channel stays below 20/255; both logo shapes are
+            above 120/255. Map only the shapes to alpha, including their edges. */}
+        <filter id={alphaId} colorInterpolationFilters="sRGB">
+          <feColorMatrix
+            type="matrix"
+            values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 2.55 0 0 -0.25"
+          />
+        </filter>
+        <mask id={maskId} maskContentUnits="userSpaceOnUse" style={{ maskType: 'alpha' }}>
           <image
             href="/assets/brand/cyberkhana-icon-512.png"
             x="0"
@@ -74,6 +82,7 @@ const LiquidLogoLoader: React.FC<LiquidLogoLoaderProps> = ({ size = 96, classNam
             width="120"
             height="120"
             preserveAspectRatio="xMidYMid meet"
+            filter={`url(#${alphaId})`}
           />
         </mask>
         <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">

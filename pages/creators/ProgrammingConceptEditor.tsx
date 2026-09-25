@@ -195,12 +195,13 @@ const ProgrammingConceptEditor: React.FC = () => {
     let concept: CreatorProgrammingConcept | undefined;
 
     if (isBuiltinEdit) {
-      // Built-in lessons ship in the bundle — resolve straight from static data.
+      const patch = getCreatorProgrammingPatches().find((p) => p.languageSlug === langSlug);
+      concept = patch?.newConcepts[moduleSlug]?.find((c) => c.slug === conceptSlug);
       const builtin = programmingLanguages
         .find((l) => l.slug === langSlug)
         ?.modules.find((m) => m.slug === moduleSlug)
         ?.concepts.find((c) => c.slug === conceptSlug);
-      if (builtin) concept = builtinToEditableConcept(builtin);
+      if (!concept && builtin) concept = builtinToEditableConcept(builtin);
     } else if (isAdminEdit) {
       try {
         const raw = sessionStorage.getItem(ADMIN_PROGRAMMING_STASH);
@@ -332,40 +333,37 @@ const ProgrammingConceptEditor: React.FC = () => {
   }, [editorLang, solution, testCases, toast]);
 
   /* ── Save with publish guardrails ── */
-  const handleSave = async () => {
-    let hadWarning = false;
+  const handleSave = async (silent = false) => {
+    if (isSaving) return;
     if (!titleEn.trim()) {
-      toast('error', 'An English title is required.');
+      if (!silent) toast('error', 'An English title is required.');
       return;
     }
     if (!langSlug || !moduleSlug) {
-      toast('error', 'Missing language or module context.');
+      if (!silent) toast('error', 'Missing language or module context.');
       return;
     }
 
     if (status === 'published') {
       if (!markdownContent.en.trim()) {
-        toast('error', 'Add English lesson content (markdown) before publishing.');
+        if (!silent) toast('error', 'Add English lesson content (markdown) before publishing.');
         return;
       }
       if (!starterCode.trim()) {
-        toast('error', 'Add starter code before publishing.');
+        if (!silent) toast('error', 'Add starter code before publishing.');
         return;
       }
       if (type === 'challenge' && testCases.length === 0) {
-        toast('error', 'A published challenge needs at least one test case.');
+        if (!silent) toast('error', 'A published challenge needs at least one test case.');
         return;
       }
       // Soft warnings — publish proceeds, but the creator is told
-      if (type === 'challenge') {
+      if (type === 'challenge' && !silent) {
         if (!solution.trim()) {
-          hadWarning = true;
           toast('warning', 'Publishing without a solution, students will have nothing to reveal when stuck.');
         } else if (!verifyResults) {
-          hadWarning = true;
           toast('warning', 'Solution was not verified against the tests. Consider running "Verify against tests".');
         } else if (!verifyResults.every((r) => r.passed)) {
-          hadWarning = true;
           toast('warning', 'Heads up: your solution currently fails some of its own tests.');
         }
       }
@@ -407,7 +405,7 @@ const ProgrammingConceptEditor: React.FC = () => {
           moduleSlug,
           item: concept,
         });
-        sessionStorage.removeItem(ADMIN_PROGRAMMING_STASH);
+        sessionStorage.setItem(ADMIN_PROGRAMMING_STASH, JSON.stringify({ kind: 'concept', ownerId: adminCtx.ownerId, ownerName: adminCtx.ownerName, languageSlug: langSlug, moduleSlug, item: concept }));
       } catch (err) {
         setIsSaving(false);
         toast('error', err instanceof Error ? err.message : 'Could not save this lesson.');
@@ -419,12 +417,14 @@ const ProgrammingConceptEditor: React.FC = () => {
       saveProgrammingConcept(langSlug, moduleSlug, concept);
     }
 
-    toast('success', status === 'published' ? 'Concept published.' : 'Concept saved.');
-    // Give the creator time to read publish warnings before redirecting
-    setTimeout(() => {
-      setIsSaving(false);
-      navigate('/creators/programming');
-    }, hadWarning ? 2500 : 500);
+    setExistingId(concept.id);
+    setCreatedAt(concept.createdAt);
+    setAuthorName(concept.authorName);
+    setIsSaving(false);
+    if (!silent) toast('success', status === 'published' ? 'Concept published.' : 'Concept saved.');
+    if (conceptSlug !== concept.slug) {
+      navigate(`/creators/programming/${langSlug}/${moduleSlug}/${concept.slug}${searchParams.size ? `?${searchParams}` : ''}`, { replace: true });
+    }
   };
 
   const tabCls = (active: boolean) =>
@@ -439,6 +439,7 @@ const ProgrammingConceptEditor: React.FC = () => {
       backTo="/creators/programming"
       backLabel="Programming"
       onSave={handleSave}
+      autoSaveSnapshot={JSON.stringify([titleEn, titleAr, slug, order, type, markdownContent, starterCode, solution, testCases, hints, status])}
       isSaving={isSaving}
       status={status}
       onStatusChange={setStatus}

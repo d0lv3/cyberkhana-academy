@@ -61,6 +61,7 @@ const ProgrammingLanguageEditor: React.FC = () => {
   const [status, setStatus] = useState<ContentStatus>('draft');
   const [isSaving, setIsSaving] = useState(false);
   const [adminDef, setAdminDef] = useState<CreatorProgrammingLanguage | null>(null);
+  const [savedDef, setSavedDef] = useState<CreatorProgrammingLanguage | null>(null);
   const [adminCtx, setAdminCtx] = useState<{ ownerId: string; ownerName: string } | null>(null);
 
   // Load an existing definition when editing.
@@ -127,14 +128,15 @@ const ProgrammingLanguageEditor: React.FC = () => {
     if (!isEditing) setSlug(generateSlug(name));
   }, [name, isEditing]);
 
-  const handleSave = async () => {
+  const handleSave = async (silent = false) => {
+    if (isSaving) return;
     if (!name.trim()) {
-      toast('error', 'A language name is required.');
+      if (!silent) toast('error', 'A language name is required.');
       return;
     }
     const finalSlug = (isEditing ? editSlug! : slug || generateSlug(name)).trim();
     if (!finalSlug) {
-      toast('error', 'A slug is required.');
+      if (!silent) toast('error', 'A slug is required.');
       return;
     }
     // Slug collisions: static languages + everything already in the catalog +
@@ -144,13 +146,13 @@ const ProgrammingLanguageEditor: React.FC = () => {
         getProgrammingLanguages().some((l) => l.slug === finalSlug) ||
         !!getCreatorLanguageBySlug(finalSlug);
       if (taken) {
-        toast('error', `"${finalSlug}" is already used by another language.`);
+        if (!silent) toast('error', `"${finalSlug}" is already used by another language.`);
         return;
       }
     }
 
     setIsSaving(true);
-    const existing = adminDef ?? (isEditing ? getCreatorLanguageBySlug(editSlug!) : undefined);
+    const existing = adminDef ?? savedDef ?? (isEditing ? getCreatorLanguageBySlug(editSlug!) : undefined);
     const def: CreatorProgrammingLanguage = {
       slug: finalSlug,
       name: name.trim(),
@@ -177,7 +179,7 @@ const ProgrammingLanguageEditor: React.FC = () => {
           kind: 'language',
           item: def,
         });
-        sessionStorage.removeItem(ADMIN_PROGRAMMING_STASH);
+        sessionStorage.setItem(ADMIN_PROGRAMMING_STASH, JSON.stringify({ kind: 'language', ownerId: adminCtx.ownerId, ownerName: adminCtx.ownerName, languageSlug: finalSlug, item: def }));
       } catch (err) {
         setIsSaving(false);
         toast('error', err instanceof Error ? err.message : 'Could not save this language.');
@@ -187,11 +189,10 @@ const ProgrammingLanguageEditor: React.FC = () => {
       saveProgrammingLanguage(def);
     }
 
-    toast('success', status === 'published' ? 'Language published.' : 'Language saved.');
-    setTimeout(() => {
-      setIsSaving(false);
-      navigate('/creators/programming');
-    }, 500);
+    setSavedDef(def);
+    setIsSaving(false);
+    if (!silent) toast('success', status === 'published' ? 'Language published.' : 'Language saved.');
+    if (!editSlug) navigate(`/creators/programming/edit-language/${finalSlug}`, { replace: true });
   };
 
   return (
@@ -201,6 +202,7 @@ const ProgrammingLanguageEditor: React.FC = () => {
       backTo="/creators/programming"
       backLabel="Programming"
       onSave={handleSave}
+      autoSaveSnapshot={JSON.stringify([name, slug, color, descEn, descAr, status])}
       isSaving={isSaving}
       {...(isBuiltinEdit ? {} : { status, onStatusChange: setStatus })}
     >
