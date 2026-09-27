@@ -152,7 +152,7 @@ try {
   const installability = await cdp.send('Page.getInstallabilityErrors');
   assert.deepEqual(installability.installabilityErrors, []);
   const cached = await page.evaluate(async () => {
-    const cache = await caches.open('academy-offline-v2');
+    const cache = await caches.open('academy-offline-v3');
     return (await cache.keys()).map(request => new URL(request.url).pathname).sort();
   });
   assert.deepEqual(cached, ['/assets/brand/favicon-192.png', '/offline.html', '/offline.js']);
