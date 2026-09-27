@@ -14,15 +14,20 @@ import { canEditOthersBucket } from '../utils/grants';
 import { isPlainObject, isPublishedItem, type AnyItem } from '../utils/contentStatus';
 import { logger } from '../utils/logger';
 import { invalidateXpCatalog } from '../utils/xpCatalog';
+import { scheduleXpRestate } from '../utils/xpMigration';
 
 const router = Router();
 
 /* XP is scored against the published content, so any successful write here
-   drops the server's cached catalog (utils/xpCatalog.ts). */
+   drops the server's cached catalog (utils/xpCatalog.ts), and schedules the
+   restating of every account whose figures it changed (utils/xpMigration.ts). */
 router.use((req, res, next) => {
   if (req.method !== 'GET') {
     res.on('finish', () => {
-      if (res.statusCode < 400) invalidateXpCatalog();
+      if (res.statusCode < 400) {
+        invalidateXpCatalog();
+        scheduleXpRestate();
+      }
     });
   }
   next();
@@ -173,7 +178,9 @@ function isBucketKey(value: string): value is ContentBucketKey {
  * in the flat buckets carries `_author`, its owner's public credit. */
 router.get('/published', authenticate, async (_req: AuthRequest, res) => {
   try {
-    const docs = await ContentBucket.find({}).lean();
+    /* In creation order, as the XP catalog reads them (utils/xpCatalog.ts), so
+       where two creators' items collide both sides pick the same one. */
+    const docs = await ContentBucket.find({}).sort({ _id: 1 }).lean();
     const authors = await publicAuthorsFor([...new Set(docs.map((d) => String(d.ownerId)))]);
 
     const result: Record<ContentBucketKey, unknown[]> = {

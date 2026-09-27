@@ -1,11 +1,11 @@
 /* ─── XP in the browser ───
  *
- * Scores the learner's completions against the content this browser holds,
- * with the rules in backend/src/shared/xp.ts, so the header, sidebar and
- * dashboard move the moment a lesson is finished. The server scores the same
- * completions itself (backend/src/utils/xpCatalog.ts) and its number is the
- * one the leaderboard and public profiles show. The two agree as long as the
- * content cache is current, which signing in refreshes.
+ * The server scores XP (backend/src/utils/xpCatalog.ts), and its figure is
+ * the one shown everywhere: here, on the leaderboard and on public profiles.
+ * This browser only adds what it has completed since the server last scored
+ * it, so the header, sidebar and dashboard still move the moment a lesson is
+ * finished, and the next push replaces that estimate with the server's own
+ * figure. The rules are backend/src/shared/xp.ts on both sides.
  *
  * Everything else in the app reads XP and levels through this file rather
  * than reaching into the backend folder.
@@ -14,7 +14,7 @@
 import { useEffect, useState } from 'react';
 import quizBank from '../data/linuxQuizData';
 import { getMergedFundamentalModules } from '../data/fundamentalsData';
-import { getProgrammingLanguages } from '../data/programming';
+import { getScoredProgrammingLanguages } from '../data/programming';
 import { getNetworkingLessons } from '../data/networking';
 import {
   getFinishedModules,
@@ -23,6 +23,7 @@ import {
   getProgrammingDone,
   PROGRESS_EVENT,
 } from './progressService';
+import { getServerXp, type ScoredCompletions } from './serverXp';
 import {
   groupKey,
   levelFor,
@@ -40,6 +41,8 @@ export type { Level, LevelProgress } from '../backend/src/shared/xp';
 
 export interface ClientXpGroup extends XpGroup {
   track: 'module' | 'programming' | 'networking';
+  /** A module's slug, which its completions are stored under. */
+  slug?: string;
   /** A module's pillar placement and security domain, which the Skill Matrix routes by. */
   category?: string;
   domain?: string;
@@ -68,6 +71,7 @@ export function getXpGroups(): ClientXpGroup[] {
     groups.push({
       key: groupKey.module(mod.slug),
       track: 'module',
+      slug: mod.slug,
       category: mod.category,
       domain: mod.domain ?? 'general',
       finishBonus: true,
@@ -79,7 +83,8 @@ export function getXpGroups(): ClientXpGroup[] {
     });
   }
 
-  for (const language of getProgrammingLanguages()) {
+  // Hidden languages included: hiding is temporary, and earned XP stays earned.
+  for (const language of getScoredProgrammingLanguages()) {
     const done = getProgrammingDone(language.slug);
     for (const mod of language.modules) {
       groups.push({
@@ -105,18 +110,22 @@ export function getXpGroups(): ClientXpGroup[] {
 }
 
 export interface XpState {
+  /** Lifetime XP, which the level is read from. */
   xp: number;
   level: LevelProgress;
+  /** The all-time leaderboard's figure, and the reset it counts from (null
+   *  when it counts everything). Null until the server has been heard from. */
+  board: { xp: number; since: string | null } | null;
   stopsDone: number;
   stopsTotal: number;
 }
 
 /* ── XP an admin awarded ──
  *
- * The browser scores the content it has cached, which is what lets a finished
- * lesson count the moment it is finished. An award is in no content, so it
- * cannot be scored here: the session carries the figure and AuthContext hands
- * it over, and it is added to whatever the content came to.
+ * Only for when the server's figure is not in (the pull failed): then the
+ * content this browser holds is all there is to score, and an award is in no
+ * content. The session carries the figure and AuthContext hands it over, and
+ * it is added to whatever the content came to.
  *
  * It lives in a module variable rather than in storage because it belongs to
  * the session, not the device. Signing out clears it, so the next account does
@@ -155,13 +164,43 @@ export function getStreakXp(): number {
   return streakXp;
 }
 
+const NONE: ReadonlySet<string> = new Set();
+
+/** A group's completions as the server last scored them. */
+function scoredIn(group: ClientXpGroup, scored: ScoredCompletions): ReadonlySet<string> {
+  if (group.track === 'module') return scored.osModules.get(group.slug ?? '') ?? NONE;
+  if (group.track === 'programming') return scored.programming.get(group.language ?? '') ?? NONE;
+  return scored.networking;
+}
+
 export function getXpState(): XpState {
-  const score = scoreGroups(getXpGroups(), (group) => group.done, getFinishedModules());
-  /* One total, the same one the server keeps: what the content is worth, plus
-     what was awarded, plus what the streak has paid. The level reads it, so
-     either of those raises a level here exactly as it does on the server. */
-  const xp = Math.max(0, score.xp + awardedXp + streakXp);
-  return { xp, level: levelFor(xp), stopsDone: score.stopsDone, stopsTotal: score.stopsTotal };
+  const groups = getXpGroups();
+  const finished = getFinishedModules();
+  const score = scoreGroups(groups, (group) => group.done, finished);
+  const server = getServerXp();
+
+  if (!server) {
+    /* Not heard from the server (signed out, or the pull failed): the content
+       this browser holds, plus what was awarded and what the streak paid. */
+    const xp = Math.max(0, score.xp + awardedXp + streakXp);
+    return { xp, level: levelFor(xp), board: null, stopsDone: score.stopsDone, stopsTotal: score.stopsTotal };
+  }
+
+  /* The server's figure, plus what has been completed here since the
+     completions it scored. Both sides of that difference are valued here,
+     against the same content, so wherever this browser's copy of the content
+     differs from the server's the two cancel, and only the new work counts
+     early. With nothing new it is exactly the server's figure, the one the
+     leaderboard shows. */
+  const since = score.xp - scoreGroups(groups, (group) => scoredIn(group, server.scored), finished).xp;
+  const xp = Math.max(0, server.xp + since);
+  return {
+    xp,
+    level: levelFor(xp),
+    board: { xp: Math.max(0, server.board.xp + since), since: server.board.since },
+    stopsDone: score.stopsDone,
+    stopsTotal: score.stopsTotal,
+  };
 }
 
 /**

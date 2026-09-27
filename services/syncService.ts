@@ -19,6 +19,7 @@ import { TOUR_SEEN_KEY } from './tourService';
 import { LANG_CHOSEN_KEY } from './languageChoice';
 import { levelFor } from '../backend/src/shared/xp';
 import { dayKeyOf } from '../backend/src/shared/streak';
+import { forgetServerXp, nextScoreTicket, setServerXp } from './serverXp';
 
 /* Mirrors progressService's event name (defined locally to avoid an import
  * cycle — progressService imports this module for write-through). */
@@ -141,7 +142,10 @@ export interface ProgressSnapshot {
 
 /** What the server answers a push with, scored from the completions it was sent. */
 interface PushResult {
+  /** Lifetime XP, award and streak included. */
   xp?: number;
+  /** The all-time board's figure, and the reset it counts from. */
+  board?: { xp: number; since: string | null };
   finishedModules?: string[];
   studyDays?: Record<string, number>;
   streak?: number;
@@ -216,7 +220,12 @@ function announceStreakAward(result: PushResult): void {
 
 /** Push the snapshot, then keep what the server worked out from it. */
 async function pushProgress(): Promise<void> {
-  const result = await api.put<PushResult>('/progress', collectProgressSnapshot());
+  const snapshot = collectProgressSnapshot();
+  const ticket = nextScoreTicket();
+  const result = await api.put<PushResult>('/progress', snapshot);
+  /* The server's figure for exactly these completions. It is what the app
+     shows from now on, plus whatever is completed after they were collected. */
+  setServerXp(ticket, result?.xp, result?.board, snapshot);
   rememberFinishedModules(result?.finishedModules);
   /* The server has just recounted the days from what it received; its answer
      replaces the cache rather than merging, because it is the record. */
@@ -418,6 +427,7 @@ export function claimCachesFor(account: { id: string; displayName: string }): vo
     if (owner === account.id) return;
 
     discardPendingPushes();
+    forgetServerXp();
     if (owner) {
       removeKeys((key) => isServerBackedKey(key) || isDeviceOnlyAccountKey(key));
     } else {
@@ -468,6 +478,7 @@ export async function flushPendingSync(): Promise<void> {
  */
 export function forgetServerBackedCaches(): void {
   discardPendingPushes();
+  forgetServerXp();
   try {
     removeKeys(isServerBackedKey);
     const stashes: string[] = [];
@@ -589,12 +600,19 @@ export async function hydrateFromServer(account: { id: string; displayName: stri
 
   // My progress (all roles).
   try {
-    const { progress, xp, streakAwarded } = await api.get<{
+    const ticket = nextScoreTicket();
+    const { progress, xp, board, streakAwarded } = await api.get<{
       progress: ProgressSnapshot | null;
       xp?: number;
+      board?: { xp: number; since: string | null };
       streakAwarded?: number[];
     }>('/progress');
     rememberLevelReached(xp);
+    /* Taken in after the level is marked as seen, so the figure arriving is
+       never mistaken for a level just reached. It was scored from exactly the
+       progress returned; what this browser has beyond that is added on top
+       until the push below brings the server up to date. */
+    setServerXp(ticket, xp, board, progress);
     /* The server's days, and the rungs it has already paid. Both are taken as
        old news on arrival, for the reason rememberLevelReached exists: a
        streak earned on another device is not something to celebrate here. */

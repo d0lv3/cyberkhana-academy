@@ -50,6 +50,10 @@ export interface IUser extends Document {
    *  XP_FORMULA_VERSION means the account has not been restated yet
    *  (utils/xpMigration.ts). */
   xpVersion?: number;
+  /** The stamp of the XP catalog the figures above were scored against
+   *  (utils/xpCatalog.ts). A different one means content has changed since,
+   *  and the account is restated before its figures are used or added to. */
+  xpStamp?: string;
   /** Where the board counts from. An admin reset moves this up to whatever the
    *  learner had earned, which zeroes the board without touching a single
    *  completion — and, because every later push is measured against it, without
@@ -162,6 +166,7 @@ const UserSchema = new Schema<IUser>(
     pointsRaw: { type: Number },
     // No default either: absent is what "never restated" means.
     xpVersion: { type: Number },
+    xpStamp: { type: String },
     pointsBaseline: { type: Number, default: 0 },
     pointsResetAt: { type: Date },
     pointsAdjustment: { type: Number, default: 0 },

@@ -5,9 +5,9 @@ import { authenticate, AuthRequest } from '../middleware/auth';
 import { checkSafeJson } from '../utils/sanitize';
 import { currentMonthKey } from '../utils/time';
 import { logger } from '../utils/logger';
-import { scoreProgress } from '../utils/xpCatalog';
-import { restateUserXp } from '../utils/xpMigration';
-import { XP_FORMULA_VERSION } from '../shared/xp';
+import { getXpCatalog, scoreProgress } from '../utils/xpCatalog';
+import { isXpStale, restateUserXp } from '../utils/xpMigration';
+import type { IUser } from '../models/User';
 import { streakFrom } from '../shared/streak';
 import {
   awardStreakBreakpoints,
@@ -18,6 +18,16 @@ import {
 } from '../utils/studyDays';
 
 const router = Router();
+
+/** The member's own board standing, so their profile can say what the board
+ *  counts when it differs from their lifetime XP: after an admin reset, it
+ *  counts from the reset. */
+function boardOf(user: IUser) {
+  return {
+    xp: user.points ?? 0,
+    since: (user.pointsBaseline ?? 0) > 0 ? user.pointsResetAt ?? null : null,
+  };
+}
 
 const idArray = z.array(z.string().min(1).max(160)).max(2000);
 
@@ -61,7 +71,10 @@ const snapshotSchema = z
 router.get('/', authenticate, async (req: AuthRequest, res) => {
   try {
     const user = req.user!;
-    if (user.xpVersion !== XP_FORMULA_VERSION) await restateUserXp(user);
+    // Content changed since this account was scored: restate it first, so the
+    // XP below is what the stored completions come to now.
+    const catalog = await getXpCatalog();
+    if (isXpStale(user, catalog)) await restateUserXp(user, { catalog });
     const doc = await Progress.findOne({ userId: user._id }).lean();
     res.json({
       progress: doc
@@ -76,8 +89,10 @@ router.get('/', authenticate, async (req: AuthRequest, res) => {
             lastActivity: doc.lastActivity ?? null,
           }
         : null,
-      /** Lifetime XP as the server scored it. */
+      /** Lifetime XP as the server scored it, from exactly the completions
+       *  above: the browser shows this, plus what it has done since. */
       xp: user.pointsRaw ?? 0,
+      board: boardOf(user),
       /** The streak ladder, so the card can draw before the first push. */
       streakGoal: user.streakGoal ?? null,
       streakAwarded: user.streakAwarded ?? [],
@@ -107,9 +122,12 @@ router.put('/', authenticate, async (req: AuthRequest, res) => {
 
   try {
     const user = req.user!;
-    // Still in an older formula's units: restate from what was stored before
-    // this push, so the push's own gains are still booked below.
-    if (user.xpVersion !== XP_FORMULA_VERSION) await restateUserXp(user);
+    /* Still in another catalog's figures (the formula or the content changed
+       since): restate from what was stored before this push, so only the
+       push's own gains are booked below. One catalog for the whole request,
+       so the stamp recorded is the one the score came from. */
+    const catalog = await getXpCatalog();
+    if (isXpStale(user, catalog)) await restateUserXp(user, { catalog });
 
     /* What the server already had, read before the write so this push's own
        completions can be told apart from the ones it has seen before. */
@@ -151,7 +169,7 @@ router.put('/', authenticate, async (req: AuthRequest, res) => {
        unknown or unpublished ids count for nothing. A module seen complete is
        remembered, which keeps its finishing bonus when a lesson is added. */
     const finishedBefore = progress.finishedModules ?? [];
-    const { xp, finishedNow } = await scoreProgress(progress, finishedBefore);
+    const { xp, finishedNow } = await scoreProgress(progress, finishedBefore, catalog);
     const added = finishedNow.filter((key) => !finishedBefore.includes(key));
     if (added.length) {
       await Progress.updateOne({ _id: progress._id }, { $addToSet: { finishedModules: { $each: added } } });
@@ -187,7 +205,11 @@ router.put('/', authenticate, async (req: AuthRequest, res) => {
 
     res.json({
       ok: true,
-      xp,
+      /* The whole total, award and streak included, scored from exactly the
+         completions this push sent: the browser shows this, plus whatever it
+         has completed since it collected them. */
+      xp: total,
+      board: boardOf(user),
       finishedModules: [...finishedBefore, ...added],
       studyDays,
       streak: streak.current,

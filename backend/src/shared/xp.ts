@@ -28,7 +28,10 @@
  *
  * Anything that changes a score needs XP_FORMULA_VERSION bumped: the server
  * then restates every account once (utils/xpMigration.ts) instead of booking
- * the difference as XP earned this month.
+ * the difference as XP earned this month. A change to what a stop is worth
+ * would be caught without it, since the catalog's stamp hashes every stop's
+ * XP (utils/xpCatalog.ts), but one to the finishing bonus or to scoreGroups
+ * would not.
  */
 
 export const XP_FORMULA_VERSION = 1;

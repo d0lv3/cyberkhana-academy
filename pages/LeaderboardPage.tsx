@@ -154,9 +154,13 @@ const LeaderboardPage: React.FC = () => {
             {t('leaderboard.monthlyReset')}
           </span>
         )}
+        {/* The XP column counts from the reset while each badge reads lifetime
+            XP, so both are named: otherwise a row reads as contradicting itself. */}
         {scope === 'overall' && sinceLabel && (
           <span className="text-[11px] text-[#8592ad] sm:ms-auto">
-            {ar ? `منذ ${sinceLabel}` : `Since ${sinceLabel}`}
+            {ar
+              ? `نقاط الخبرة منذ ${sinceLabel} · المستوى يُحسب من كل نقاط الخبرة`
+              : `XP since ${sinceLabel} · levels count all XP`}
           </span>
         )}
       </div>

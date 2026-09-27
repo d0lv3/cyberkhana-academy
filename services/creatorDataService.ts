@@ -102,7 +102,7 @@ export function getCreatorNetworkingLessons(): CreatorNetworkingLesson[] {
 
 export function getPublishedCreatorNetworkingLessons(): CreatorNetworkingLesson[] {
   return mergeWithPublishedCache(
-    getCreatorNetworkingLessons().filter((l) => l.isPublished),
+    getCreatorNetworkingLessons().filter((l) => statusOf(l) === 'published'),
     PUBLISHED_CACHE_KEYS.NETWORKING_LESSONS
   );
 }
@@ -132,9 +132,15 @@ export function getNetworkingLessonById(id: string): CreatorNetworkingLesson | u
  * Merge static networking lessons with creator-authored ones.
  * Creator lessons are appended after static ones, sorted by order.
  * If a creator lesson has the same id as a static one, the creator version wins.
+ * Where several share an id, the first wins and the rest are dropped, as the
+ * server's XP catalog resolves them (backend/src/utils/xpCatalog.ts).
  */
 export function mergeNetworkingLessons(staticLessons: NetworkingLesson[]): NetworkingLesson[] {
-  const creatorLessons = getPublishedCreatorNetworkingLessons();
+  const firstById = new Map<string, CreatorNetworkingLesson>();
+  for (const lesson of getPublishedCreatorNetworkingLessons()) {
+    if (!firstById.has(lesson.id)) firstById.set(lesson.id, lesson);
+  }
+  const creatorLessons = [...firstById.values()];
   const staticIds = new Set(staticLessons.map((l) => l.id));
 
   // Creator lessons that don't collide with static ones
@@ -536,7 +542,7 @@ export function getCreatorOSModules(): CreatorFundamentalModule[] {
 
 export function getPublishedCreatorOSModules(): CreatorFundamentalModule[] {
   return mergeWithPublishedCache(
-    getCreatorOSModules().filter((m) => m.isPublished),
+    getCreatorOSModules().filter((m) => statusOf(m) === 'published'),
     PUBLISHED_CACHE_KEYS.OS_MODULES
   );
 }
@@ -597,7 +603,7 @@ export function getCreatorStandaloneModules(): CreatorFundamentalModule[] {
 
 export function getPublishedStandaloneModules(): CreatorFundamentalModule[] {
   return mergeWithPublishedCache(
-    getCreatorStandaloneModules().filter((m) => m.isPublished),
+    getCreatorStandaloneModules().filter((m) => statusOf(m) === 'published'),
     PUBLISHED_CACHE_KEYS.STANDALONE_MODULES
   );
 }

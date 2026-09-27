@@ -29,6 +29,14 @@ export const getAllProgrammingLanguagesForAdmin = (): ProgrammingLanguage[] =>
     includeHidden: true,
   });
 
+/** Every language whose lessons count toward XP, hidden built-ins included:
+ *  hiding one is temporary, and what a learner earned in it stays earned. The
+ *  server's XP catalog counts them the same way (backend/src/utils/xpCatalog.ts). */
+export const getScoredProgrammingLanguages = (): ProgrammingLanguage[] =>
+  mergeProgrammingLanguages([...staticLanguages, ...getVisibleCreatorLanguages(staticSlugs)], {
+    includeHidden: true,
+  });
+
 export const getLanguage = (slug: string): ProgrammingLanguage | undefined =>
   getProgrammingLanguages().find((l) => l.slug === slug);
 

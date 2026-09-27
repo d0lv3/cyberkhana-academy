@@ -10,12 +10,20 @@
  * They are merged the way the browser merges them (services/creatorDataService:
  * mergeFundamentalModules, mergeProgrammingLanguages, mergeNetworkingLessons),
  * so both sides score the same stops. Scoring itself is shared/xp.ts.
+ *
+ * Every catalog carries a stamp: the formula version plus a hash of every
+ * stop's worth. An account records the stamp its figures were scored against
+ * (`xpStamp`), so when content changes, whoever is still in the old catalog's
+ * figures is restated (utils/xpMigration.ts) instead of keeping a stale number
+ * on the board, or booking the change as XP earned this month.
  */
 
+import { createHash } from 'crypto';
 import builtinJson from '../data/builtinXpCatalog.json';
 import ContentBucket from '../models/ContentBucket';
 import { isPlainObject, isPublishedItem, type AnyItem } from './contentStatus';
 import {
+  XP_FORMULA_VERSION,
   groupKey,
   measureConcept,
   measureModuleStop,
@@ -37,20 +45,44 @@ export interface ServerXpGroup extends XpGroup {
   source: Source;
 }
 
+export interface XpCatalog {
+  groups: ServerXpGroup[];
+  /** Changes whenever any stop's worth does, or the formula's version. */
+  stamp: string;
+}
+
 /* Content changes rarely, so the catalog is kept for a minute, and dropped at
    once whenever a content bucket is written (routes/content.ts). */
 const TTL_MS = 60_000;
-let cached: { at: number; groups: ServerXpGroup[] } | null = null;
+let cached: { at: number; catalog: XpCatalog } | null = null;
 
 export function invalidateXpCatalog(): void {
   cached = null;
 }
 
-export async function getXpGroups(): Promise<ServerXpGroup[]> {
-  if (cached && Date.now() - cached.at < TTL_MS) return cached.groups;
+export async function getXpCatalog(): Promise<XpCatalog> {
+  if (cached && Date.now() - cached.at < TTL_MS) return cached.catalog;
   const groups = buildGroups(await loadPublished());
-  cached = { at: Date.now(), groups };
-  return groups;
+  const catalog = { groups, stamp: stampOf(groups) };
+  cached = { at: Date.now(), catalog };
+  return catalog;
+}
+
+export async function getXpGroups(): Promise<ServerXpGroup[]> {
+  return (await getXpCatalog()).groups;
+}
+
+/* What the stamp hashes is what a score depends on: which completions each
+   group reads, what each stop is worth and whether it pays the bonus. Order
+   does not change a score, so the lines are sorted first: reordering lessons
+   leaves the stamp alone and restates nobody. */
+function stampOf(groups: ServerXpGroup[]): string {
+  const lines = groups.map((g) => {
+    const stops = g.stops.map((s) => `${s.id}:${s.xp}`).sort();
+    return `${g.key}|${JSON.stringify(g.source)}|${g.finishBonus ? 1 : 0}|${stops.join(',')}`;
+  });
+  const hash = createHash('sha256').update(lines.sort().join('\n')).digest('hex').slice(0, 16);
+  return `${XP_FORMULA_VERSION}.${hash}`;
 }
 
 /* ── Published creator content ── */
@@ -74,9 +106,12 @@ const str = (v: unknown): string => (typeof v === 'string' ? v : v == null ? '' 
 const order = (v: unknown): number => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
 
 async function loadPublished(): Promise<Published> {
+  /* In creation order, as the published feed reads them (routes/content.ts),
+     so where two creators' items collide both sides pick the same one. */
   const docs = await ContentBucket.find({
     bucket: { $in: ['os-modules', 'standalone-modules', 'networking-lessons', 'programming-patches'] },
   })
+    .sort({ _id: 1 })
     .select('bucket items')
     .lean();
 
@@ -165,6 +200,9 @@ function buildGroups(published: Published): ServerXpGroup[] {
   /* Programming. Built-in languages plus published creator languages; a patch
      adds modules and lessons, and a lesson reusing a built-in's id replaces it. */
   const staticLanguageSlugs = new Set(builtin.languages.map((l) => l.slug));
+  /* A built-in an admin has hidden still counts: hiding is temporary, and
+     what a learner earned in it stays earned. The browser scores it too
+     (data/programming getScoredProgrammingLanguages). */
   const languages = [
     ...builtin.languages,
     ...[...published.patches.entries()]
@@ -230,11 +268,14 @@ const idsOf = (value: unknown): Set<string> =>
 const own = (record: unknown, key: string): unknown =>
   isPlainObject(record) && Object.prototype.hasOwnProperty.call(record, key) ? record[key] : undefined;
 
+/** Pass `catalog` to score against one already in hand, so a stamp recorded
+ *  beside the score is the stamp of the catalog that produced it. */
 export async function scoreProgress(
   progress: ProgressLike | null | undefined,
-  finishedBefore: Iterable<string> = []
+  finishedBefore: Iterable<string> = [],
+  catalog?: XpCatalog
 ): Promise<XpScore> {
-  const groups = await getXpGroups();
+  const groups = (catalog ?? (await getXpCatalog())).groups;
   const sets = new Map<string, Set<string>>();
   const setFor = (cacheKey: string, value: unknown) => {
     let set = sets.get(cacheKey);

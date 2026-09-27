@@ -108,9 +108,17 @@ const ProfilePage: React.FC = () => {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   /* The level is public, so the profile shows it the way members see it. */
-  const { xp, level } = useXp();
+  const { xp, level, board } = useXp();
 
   if (!user) return null;
+
+  /* After an admin reset the all-time board counts from the reset, while the
+     level counts everything, so the two figures differ and both are named. */
+  const boardSince = board?.since ? new Date(board.since) : null;
+  const boardSinceLabel =
+    boardSince && !Number.isNaN(boardSince.getTime())
+      ? boardSince.toLocaleDateString(ar ? 'ar' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })
+      : '';
 
   const isAdmin = user.role === 'admin';
 
@@ -706,6 +714,21 @@ const ProfilePage: React.FC = () => {
                 'The top level in the Academy'
               )}
             </p>
+            {board && boardSinceLabel && (
+              <p className="mt-1 text-xs text-[#8592ad]">
+                {ar ? (
+                  <>
+                    على لوحة المتصدرين: <span dir="ltr">{board.xp.toLocaleString('en-US')} XP</span>، محسوبة
+                    منذ إعادة ضبطها في {boardSinceLabel}.
+                  </>
+                ) : (
+                  <>
+                    On the leaderboard: {board.xp.toLocaleString('en-US')} XP, counted since its reset on{' '}
+                    {boardSinceLabel}.
+                  </>
+                )}
+              </p>
+            )}
             <p className="mt-3 inline-flex items-start gap-1.5 text-xs text-[#8592ad]">
               <Eye size={12} className="mt-0.5 flex-shrink-0" />
               {ar
