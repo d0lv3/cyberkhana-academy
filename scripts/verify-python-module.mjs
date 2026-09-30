@@ -5,7 +5,7 @@
  *  - every lesson's starterCode must run without error
  *  - every challenge's solution must run and produce expectedOutput exactly
  *
-  * Usage: npm run verify:python -- ./data/programming/python/01-getting-started.ts
+  * Usage: npm run verify:python -- ./data/programming/python/<module-file>.ts
  */
 import { loadPyodide } from 'pyodide';
 import { resolve } from 'path';

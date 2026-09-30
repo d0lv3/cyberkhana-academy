@@ -1,18 +1,4 @@
 import type { ProgrammingLanguage } from '../types';
-import gettingStarted from './01-getting-started';
-import variables from './02-variables';
-import strings from './03-strings';
-import numbers from './04-numbers';
-import listsTuples from './05-lists-tuples';
-import setsDicts from './06-sets-dicts';
-import booleansOperators from './07-booleans-operators';
-import userInput from './08-input';
-import controlFlow from './09-control-flow';
-import loops from './10-loops';
-import functions from './11-functions';
-import filesBuiltins from './12-files-builtins';
-import modulesIteration from './13-modules-iteration';
-import qualityErrors from './14-quality-errors';
 
 const python: ProgrammingLanguage = {
   id: 'python',
@@ -24,22 +10,9 @@ const python: ProgrammingLanguage = {
     en: 'The most popular language in cybersecurity, used for scripting, automation, exploit development, and tool building.',
     ar: 'اللغة الأكثر شيوعًا في الأمن السيبراني، تُستخدم في البرمجة النصية والأتمتة وتطوير استغلالات الثغرات وبناء الأدوات.',
   },
-  modules: [
-    gettingStarted,
-    variables,
-    strings,
-    numbers,
-    listsTuples,
-    setsDicts,
-    booleansOperators,
-    userInput,
-    controlFlow,
-    loops,
-    functions,
-    filesBuiltins,
-    modulesIteration,
-    qualityErrors,
-  ].sort((a, b) => a.order - b.order),
+  /* No built-in modules: Python content is authored through the creator tools
+     and merged in by getProgrammingLanguages(). */
+  modules: [],
 };
 
 export default python;
