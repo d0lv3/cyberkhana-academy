@@ -12,12 +12,12 @@
 import type { BilingualDoc } from './legalTypes';
 
 /** Must match CURRENT_TERMS_VERSION in backend/src/config/legal.ts. */
-export const TERMS_VERSION = '2026-09-11';
+export const TERMS_VERSION = '2026-09-30';
 
 export const TERMS: BilingualDoc = {
   en: {
     title: 'Terms of Service',
-    updated: '11 September 2026',
+    updated: '30 September 2026',
     version: TERMS_VERSION,
     intro:
       'These Terms govern your use of CyberKhana Academy at academy.cyberkhana.tech (the "Academy"). By signing in or using the Academy, you agree to them.',
@@ -123,6 +123,7 @@ export const TERMS: BilingualDoc = {
         h: 'XP, levels and leaderboards',
         body: [
           'You earn XP as you complete lessons and modules, and your XP sets your level, from 0x1 to 0xD. There is an all-time leaderboard and a monthly one, which list members from level 0x2 up, and you can be filtered onto your university’s board if you have set one.',
+          'XP comes at the pace of the work. A lesson counts once its work checks out: a quiz’s answers, a challenge’s tests or a lab’s flags. Work with nothing to check, such as reading, a video, or a lab you mark finished yourself, earns XP no faster than twice the time it is expected to take, and time away banks up to 45 minutes of it. Finish faster than that and the lesson is recorded by itself once the time has passed.',
           'What others can see: signed-in members can open your public profile from the leaderboard or from anything you publish. It shows your display name and username, your profile picture, your university if you set one, your level, XP and rank, the links you choose to add, and your bio only if you switch it on. Your email address and your country are never shown. There is more detail in the Privacy Policy.',
           'XP is not money. It has no cash value, is not your property, and cannot be sold, traded or transferred.',
           'We can adjust it. We may correct XP or recalculate it, for example when we change how lessons are measured, and we may reset the leaderboards at the start of a new season, to fix errors, deal with broken content, or respond to cheating. A leaderboard reset does not lower your level. Monthly XP resets each month by design.',
@@ -265,7 +266,7 @@ export const TERMS: BilingualDoc = {
 
   ar: {
     title: 'شروط الخدمة',
-    updated: '١١ أيلول/سبتمبر ٢٠٢٦',
+    updated: '٣٠ أيلول/سبتمبر ٢٠٢٦',
     version: TERMS_VERSION,
     intro:
       'تحكم هذه الشروط استخدامك لأكاديمية سايبر خانة على academy.cyberkhana.tech («الأكاديمية»). وبتسجيل دخولك أو استخدامك للأكاديمية، فإنك توافق عليها.',
@@ -371,6 +372,7 @@ export const TERMS: BilingualDoc = {
         h: 'نقاط الخبرة والمستويات ولوحات الصدارة',
         body: [
           'تكسب نقاط خبرة كلما أكملت دروسًا ووحدات، وتحدّد نقاط خبرتك مستواك من 0x1 إلى 0xD. وهناك لوحة صدارة عامة وأخرى شهرية تضمّان الأعضاء من المستوى 0x2 فما فوق، ويمكن تصفيتها لتظهر على لوحة جامعتك إن كنت قد حدّدتها.',
+          'نقاط الخبرة تأتي بقدر العمل. يُحتسب الدرس بعد التحقق من عمله: إجابات الاختبار، أو اختبارات التحدي البرمجي، أو أعلام المختبر. أما العمل الذي لا يمكن التحقق منه، كالقراءة أو الفيديو أو مختبر تعلن أنت إنهاءه، فلا يمنحك نقاط خبرة بأسرع من ضعف المدة المتوقعة له، ويُدَّخر لك من وقت غيابك ما يصل إلى ٤٥ دقيقة منها. وإذا أنهيت أسرع من ذلك، يُسجَّل الدرس تلقائيًا بعد مرور الوقت.',
           'ما يراه الآخرون: يستطيع الأعضاء المسجَّلون فتح ملفك العام من لوحة الصدارة أو من أي محتوى تنشره. ويعرض اسمك المعروض واسم المستخدم، وصورتك الشخصية، وجامعتك إن حدّدتها، ومستواك ونقاط خبرتك ومرتبتك، والروابط التي تختار إضافتها، ونبذتك فقط إذا فعّلت إظهارها. أما بريدك الإلكتروني وبلدك فلا يظهران أبدًا. وتجد تفصيلًا أوفى في سياسة الخصوصية.',
           'نقاط الخبرة ليست مالًا. لا قيمة نقدية لها، وليست ملكًا لك، ولا يمكن بيعها أو تداولها أو نقلها.',
           'ويمكننا تعديلها. فقد نصحّح نقاط الخبرة أو نعيد حسابها، كأن نغيّر طريقة قياس الدروس، وقد نعيد ضبط لوحات الصدارة في بداية موسم جديد، لتصحيح أخطاء أو لمعالجة محتوى معطّل أو للتعامل مع الغش. وإعادة ضبط لوحات الصدارة لا تُنزل مستواك. ونقاط الخبرة الشهرية يُعاد ضبطها كل شهر بحكم التصميم.',

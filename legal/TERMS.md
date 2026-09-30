@@ -1,8 +1,8 @@
 # CyberKhana Academy — Terms of Service
 
 **Applies to:** academy.cyberkhana.tech (the "Academy")
-**Last updated:** 11 September 2026
-**Effective from:** 11 September 2026
+**Last updated:** 30 September 2026
+**Effective from:** 30 September 2026
 
 ---
 
@@ -157,6 +157,13 @@ You earn XP as you complete lessons and modules, and your XP sets your level,
 from 0x1 to 0xD. There is an all-time leaderboard and a monthly one, which list
 members from level 0x2 up, and you can be filtered onto your university's board
 if you have set one.
+
+**XP comes at the pace of the work.** A lesson counts once its work checks out:
+a quiz's answers, a challenge's tests or a lab's flags. Work with nothing to
+check, such as reading, a video, or a lab you mark finished yourself, earns XP
+no faster than twice the time it is expected to take, and time away banks up
+to 45 minutes of it. Finish faster than that and the lesson is recorded by
+itself once the time has passed.
 
 **What others can see:** signed-in members can open your public profile from
 the leaderboard or from anything you publish. It shows your display name and
