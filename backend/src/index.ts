@@ -21,7 +21,11 @@ import { restateStaleAccounts } from './utils/xpMigration';
 
 const app = express();
 
-// Behind a reverse proxy in production set TRUST_PROXY=1 so rate-limit sees real IPs.
+// TRUST_PROXY is the number of proxy hops in front of this process, so req.ip
+// (and every rate limiter) sees the real client. Production is 2: Cloudflare,
+// then Coolify's Traefik, which keeps Cloudflare's X-Forwarded-For because its
+// entrypoints list Cloudflare's ranges in forwardedHeaders.trustedIPs. Set it
+// to 1 and every Cloudflare edge becomes one shared rate-limit bucket.
 app.set('trust proxy', env.trustProxy);
 
 app.use(helmet());
