@@ -15,6 +15,8 @@ import { isPlainObject, isPublishedItem, type AnyItem } from '../utils/contentSt
 import { logger } from '../utils/logger';
 import { invalidateXpCatalog } from '../utils/xpCatalog';
 import { scheduleXpRestate } from '../utils/xpMigration';
+import { forStudents } from '../utils/redact';
+import builtinAnswers from '../data/builtinAnswerKey.json';
 
 const router = Router();
 
@@ -175,7 +177,8 @@ function isBucketKey(value: string): value is ContentBucketKey {
 /* ── GET /api/content/published ──
  * Aggregates PUBLISHED items across every creator. This is what students see;
  * drafts and in-review content never leave their author's account. Every item
- * in the flat buckets carries `_author`, its owner's public credit. */
+ * in the flat buckets carries `_author`, its owner's public credit, and none
+ * carries an answer (utils/redact.ts). */
 router.get('/published', authenticate, async (_req: AuthRequest, res) => {
   try {
     /* In creation order, as the XP catalog reads them (utils/xpCatalog.ts), so
@@ -285,10 +288,11 @@ router.get('/published', authenticate, async (_req: AuthRequest, res) => {
           patchByLang.set(patch.languageSlug, merged);
         }
       } else {
+        // Quiz answers and lab flags stay here: the server marks them itself.
         result[doc.bucket].push(
           ...items
             .filter((i) => isPlainObject(i) && isPublishedItem(i))
-            .map((i) => credited(i, author))
+            .map((i) => forStudents(doc.bucket, credited(i, author)))
         );
       }
     }
@@ -541,6 +545,14 @@ router.delete(
     }
   }
 );
+
+/* ── GET /api/content/admin/builtin-answers ── the built-in courses' quiz
+ * answers. They never ship in the bundle (data/linuxQuizAnswers.ts), so an
+ * admin turning a built-in module into an editable copy fetches them here,
+ * and the copy keeps every question's answer. */
+router.get('/admin/builtin-answers', authenticate, requireRole('admin'), (_req: AuthRequest, res) => {
+  res.json({ quizzes: builtinAnswers.quizzes });
+});
 
 /* ── GET /api/content/admin/programming ── every author's PUBLISHED programming
  * content, patch by patch. Programming lives in a nested shape (language →

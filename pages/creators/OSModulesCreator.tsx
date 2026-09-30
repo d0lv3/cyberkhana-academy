@@ -10,7 +10,8 @@ import { confirmDialog } from '../../components/ui/ConfirmHost';
 import { useLang } from '../../contexts/LangContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { fundamentalModules, type FundamentalModule } from '../../data/fundamentalsData';
-import { builtinToEditableModule } from '../../data/builtinCourse';
+import { builtinToEditableModule, type BuiltinAnswers } from '../../data/builtinCourse';
+import { api } from '../../services/api';
 import {
   getCreatorOSModules,
   deleteOSModule,
@@ -162,8 +163,9 @@ const OSModulesCreator: React.FC = () => {
   const visibleStatic = staticModules.filter((m) => !overriddenIds.has(m.id));
 
   /** Admin edits a built-in course. If an override already exists, edit that;
-   * otherwise convert the static course and open it in copy-on-write mode. */
-  const editBuiltin = (mod: FundamentalModule) => {
+   * otherwise convert the static course and open it in copy-on-write mode,
+   * with the quiz answers the bundle leaves out fetched from the server. */
+  const editBuiltin = async (mod: FundamentalModule) => {
     const own = creatorModules.find((m) => m.id === mod.id);
     if (own) {
       navigate(`/creators/os-modules/edit/${mod.id}`);
@@ -174,9 +176,24 @@ const OSModulesCreator: React.FC = () => {
       editPublished(override);
       return;
     }
+    let answers: BuiltinAnswers;
+    try {
+      const { quizzes } = await api.get<{ quizzes: Record<string, BuiltinAnswers> }>('/content/admin/builtin-answers');
+      answers = quizzes[mod.id] ?? {};
+    } catch {
+      await confirmDialog({
+        title: lang === 'ar' ? 'تعذّر فتح الوحدة' : 'Could not open this module',
+        message:
+          lang === 'ar'
+            ? 'تعذّر تحميل إجابات الاختبارات من الخادم، ولا يمكن تعديل الوحدة بدونها. حاول مجددًا.'
+            : "The quiz answers could not be loaded from the server, and the module can't be edited without them. Try again.",
+        confirmLabel: lang === 'ar' ? 'حسنًا' : 'OK',
+      });
+      return;
+    }
     sessionStorage.setItem(
       'academy-builtin-module-edit',
-      JSON.stringify({ id: mod.id, module: builtinToEditableModule(mod) })
+      JSON.stringify({ id: mod.id, module: builtinToEditableModule(mod, answers) })
     );
     navigate(`/creators/os-modules/edit/${mod.id}?builtin=1`);
   };
@@ -248,7 +265,7 @@ const OSModulesCreator: React.FC = () => {
                   </span>
                   {isAdmin && (
                     <button
-                      onClick={() => editBuiltin(mod)}
+                      onClick={() => void editBuiltin(mod)}
                       title={lang === 'ar' ? 'تعديل (مشرف)' : 'Edit as admin'}
                       className="w-7 h-7 touch:w-11 touch:h-11 flex items-center justify-center rounded-md text-[#8592ad] hover:text-[#9fef00] hover:bg-[#9fef00]/10 transition-all"
                     >

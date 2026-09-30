@@ -17,6 +17,7 @@
 
 import type { NetworkSimulation } from '../components/network-sim/types';
 import { hasSimulation } from '../components/network-sim/types';
+import { flagPlaceholder as placeholderFor } from '../backend/src/shared/checks';
 
 /** A way out to where the lab actually runs. */
 export interface LabLink {
@@ -42,8 +43,11 @@ export interface LabFlag {
   id: string;
   /** What to look for, e.g. "The resolver's IP address". */
   label: string;
-  /** The expected value. Checked in the browser, see checkFlag(). */
-  answer: string;
+  /** The expected value. Kept on the server, which checks each flag
+   *  (backend/src/routes/progress.ts): what students are sent has none, and
+   *  a placeholder worked out from it instead. Only the author's own copy, and
+   *  the studio's preview, carry it. */
+  answer?: string;
   /** Optional nudge, revealed on request. */
   hint?: string;
   /** Off by default: most flags are strings where case is noise. */
@@ -144,54 +148,24 @@ export function isInsecureLabUrl(url: string): boolean {
 
 /* ── Flags ──
  *
- * Checked in the browser against a value that ships inside the module, so a
- * student who opens devtools can read it. That is the same trust model the
- * rest of this platform's progress runs on, and the studio says so out loud
- * rather than implying a grade. Every comparison goes through here, so moving
- * to a server check later is one function, not a search.
- */
-/* ── What the empty box suggests ──
+ * Marked on the server, one at a time, against answers students are never
+ * sent (backend/src/shared/checks.ts, utils/redact.ts), through
+ * services/completionService.ts submitLabFlag. The studio's preview takes no
+ * answers at all.
  *
- * Not every value a lab asks for is a flag. Plenty are answers to questions:
- * the source IP, the name of the process, the port it was listening on. An
- * input that says khana{...} in front of those is not a neutral placeholder,
- * it is a wrong instruction, and a student who types khana{192.168.1.1} was
- * told to.
- *
- * So the hint is derived from the answer the creator already wrote rather than
- * asked for separately. A wrapped token is a flag and says so; anything else
- * shows its own shape in asterisks, which is the same nudge a typed quiz
- * answer gives. A creator who wants to say something more specific can, and
- * that is the only case that costs them a field.
+ * What the empty box suggests is derived from the answer the creator wrote,
+ * since not every value a lab asks for is a flag: the source IP, the name of
+ * the process, the port it was listening on. The server works it out before
+ * the answer is taken away, and sends it as the placeholder.
  */
-
-/** A flag proper: some prefix wrapped around a braced body, khana{...} and its
- *  cousins from other platforms. The prefix is captured, because a lab hosted
- *  on someone else's range hands back their token, and telling a student to
- *  type khana{...} when the answer starts HTB{ is the same wrong instruction
- *  in a smaller size. */
-const WRAPPED_TOKEN = /^([A-Za-z0-9_.-]*)\{.+\}$/;
-
-/** Alphanumerics become asterisks; punctuation and spaces stay, because the
- *  dots in an address are the part that tells you it is an address. */
-function shapeOf(answer: string): string {
-  return answer.trim().replace(/\s+/g, ' ').replace(/[A-Za-z0-9]/g, '*');
-}
 
 export function flagPlaceholder(flag: LabFlag): string {
-  if (flag.placeholder?.trim()) return flag.placeholder.trim();
-  const answer = flag.answer.trim();
-  if (!answer) return '';
-  const wrapped = WRAPPED_TOKEN.exec(answer);
-  return wrapped ? `${wrapped[1]}{...}` : shapeOf(answer);
+  return placeholderFor(flag);
 }
 
-export function checkFlag(flag: LabFlag, submitted: string): boolean {
-  const expected = flag.answer.trim();
-  const given = submitted.trim();
-  if (!expected) return false;
-  return flag.caseSensitive ? expected === given : expected.toLowerCase() === given.toLowerCase();
-}
+/** How many answers one lab can ask for. Generous on purpose: a lab that
+ *  walks through an investigation can ask a question at every step. */
+export const MAX_LAB_FLAGS = 100;
 
 /** The flags on a lab, empty when it completes by button. */
 export function labFlags(lab: ModuleLab): LabFlag[] {
@@ -247,7 +221,7 @@ export function cleanLab(lab: ModuleLab): ModuleLab {
     lab.completion.mode === 'flags'
       ? {
           mode: 'flags',
-          flags: lab.completion.flags.filter((f) => f.label.trim() && f.answer.trim()),
+          flags: lab.completion.flags.filter((f) => f.label.trim() && (f.answer ?? '').trim()),
         }
       : { mode: 'self' };
 

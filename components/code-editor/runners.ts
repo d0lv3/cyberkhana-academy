@@ -10,7 +10,7 @@
  * Run degrades to "the basics work" rather than to a broken button.
  */
 
-import { runPython, isPyodideReady, type ExecutionResult } from './PythonExecutor';
+import { runPython, isPyodideReady, warmUpPython, type ExecutionResult } from './PythonExecutor';
 import { runCpp, isCppReady } from './CppExecutor';
 import { runWasmCpp, isWasmCppReady, isToolchainAvailable, type CppLanguage } from './WasmCppExecutor';
 import { runBash, isBashReady } from './BashExecutor';
@@ -43,6 +43,16 @@ export async function runCode(
   }
   if (language === 'bash') return runBash(code, stdin ?? '');
   return runPython(code, stdin);
+}
+
+/**
+ * Start fetching a runtime before the first Run. Only Python is fetched ahead:
+ * it is the course most lessons run, and its runtime is a one-off 14 MB that
+ * a slow connection is better off downloading while the student reads. The
+ * others load on demand as before.
+ */
+export function warmUpRunner(language: RunnerLanguage): void {
+  if (language === 'python') warmUpPython();
 }
 
 /** Whether the runtime is already warmed up (drives the "loading…" indicator). */

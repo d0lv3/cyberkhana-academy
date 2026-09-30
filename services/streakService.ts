@@ -2,8 +2,8 @@
  * The study streak, as the browser sees it.
  *
  * The server is the one that records a day: it credits the learner's local
- * day when a push brings completions it had not seen, and it pays the
- * breakpoints (backend/src/utils/studyDays.ts). That is deliberate, because
+ * day each time it records a completion, and it pays the breakpoints
+ * (backend/src/utils/studyDays.ts). That is deliberate, because
  * breakpoints pay XP and XP ranks people, so a streak typed into devtools
  * must not buy anything.
  *
@@ -51,25 +51,6 @@ export function getStudyDays(): StudyDays {
     return days;
   } catch {
     return {};
-  }
-}
-
-/**
- * Count an activity against today in the cache, right away.
- *
- * Only so the card moves the moment a lesson is finished instead of waiting
- * out the debounced push. The server recounts from the completions it
- * receives and its answer replaces this, so an inflated local number buys
- * nothing and does not survive the next push.
- */
-export function creditLocalDay(): void {
-  const days = getStudyDays();
-  const today = dayKeyOf(new Date());
-  days[today] = (days[today] ?? 0) + 1;
-  try {
-    localStorage.setItem(STUDY_DAYS_KEY, JSON.stringify(days));
-  } catch {
-    /* quota: the push will put it right */
   }
 }
 

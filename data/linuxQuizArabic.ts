@@ -1,8 +1,8 @@
-import quizBank, { type QuizQuestion } from './linuxQuizData';
+import quizBank, { type StudentQuizQuestion } from './linuxQuizData';
 
 type QuizText = { question: string; options: string[] };
 
-/** Text only: answer indexes and quiz scoring continue to use linuxQuizData. */
+/** Text only: the answers stay on the server, and options are matched by their English text. */
 const translations: Record<string, QuizText[]> = {
   '2.1': [
     { question: 'ما العبارة التي يختصرها GUI؟', options: ['Graphical Universe Interface', 'Graphical Unified Interface', 'Graphical User Interface'] },
@@ -134,7 +134,10 @@ const translations: Record<string, QuizText[]> = {
 };
 
 /** Resolve by the original question/option so shuffled answers keep their meaning. */
-export function arabicLinuxQuizText(lectureId: string, quiz: QuizQuestion): QuizText {
+export function arabicLinuxQuizText(
+  lectureId: string,
+  quiz: Pick<StudentQuizQuestion, 'question' | 'options'>
+): QuizText {
   const source = quizBank[lectureId];
   const index = source?.findIndex((item) => item.question === quiz.question) ?? -1;
   const translated = translations[lectureId]?.[index];

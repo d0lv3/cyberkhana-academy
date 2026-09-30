@@ -5,19 +5,24 @@
  * the lesson viewers can never disagree about "how much have I done?".
  *
  * Storage shape (all arrays of completed item-ids, JSON-encoded):
- *   academy-prog-<langSlug>   → programming concept ids (lessons + challenges)
- *   academy-progress-<slug>   → OS-module lecture ids
- *   academy-net               → networking lesson ids
- *   academy-finished-modules  → XP keys of modules the server recorded as
- *                               finished (written by syncService only)
+ *   academy-prog-<langSlug>   programming concept ids (lessons + challenges)
+ *   academy-progress-<slug>   OS-module lecture ids
+ *   academy-net               networking lesson ids
+ *   academy-finished-modules  XP keys of modules the server recorded as
+ *                             finished
+ *
+ * The completions are the server's record, copied down: only its answers
+ * write them (syncService applyServerRecord). Finishing something goes to the
+ * server with its work through completionService, and the tick arrives with
+ * its reply.
  */
 
 import { getProgrammingLanguages } from '../data/programming';
 import { getNetworkingLessons } from '../data/networking';
 import { getFundamentalsByCategory, getMergedFundamentalModules } from '../data/fundamentalsData';
 import { buildCatalogIndex } from '../data/pathCatalog';
-import { creditLocalDay } from './streakService';
 import { queueProgressPush, FINISHED_MODULES_KEY } from './syncService';
+import { completeStop, type CompletionOutcome, type CompletionProof } from './completionService';
 import type { PathStep } from './creatorTypes';
 
 const progKey = (langSlug: string) => `academy-prog-${langSlug}`;
@@ -60,17 +65,14 @@ export function getProgrammingDone(langSlug: string): Set<string> {
   return readSet(progKey(langSlug));
 }
 
-/** Mark a programming concept (lesson or challenge) complete. Returns the new set. */
-export function markProgrammingDone(langSlug: string, conceptId: string): Set<string> {
-  const set = readSet(progKey(langSlug));
-  if (!set.has(conceptId)) {
-    set.add(conceptId);
-    /* Counted against today straight away so the card moves now; the server
-       recounts it from this push and its answer is the one that stands. */
-    creditLocalDay();
-    writeSet(progKey(langSlug), set);
-  }
-  return new Set(set);
+/** Ask the server to record a programming lesson, or a challenge with the
+ *  output of each of its tests. */
+export function completeProgrammingConcept(
+  langSlug: string,
+  conceptId: string,
+  proof?: CompletionProof
+): Promise<CompletionOutcome> {
+  return completeStop({ kind: 'programming', language: langSlug, stopId: conceptId }, proof);
 }
 
 /* ── networking ── */
@@ -83,15 +85,10 @@ export function isNetworkingDone(lessonId: string): boolean {
   return readSet(NET_KEY).has(lessonId);
 }
 
-/** Mark a networking lesson complete. Returns the new set. */
-export function markNetworkingDone(lessonId: string): Set<string> {
-  const set = readSet(NET_KEY);
-  if (!set.has(lessonId)) {
-    set.add(lessonId);
-    creditLocalDay();
-    writeSet(NET_KEY, set);
-  }
-  return new Set(set);
+/** Ask the server to record a networking lesson, with its quiz answers when
+ *  it has a quiz. */
+export function completeNetworkingLesson(lessonId: string, proof?: CompletionProof): Promise<CompletionOutcome> {
+  return completeStop({ kind: 'networking', stopId: lessonId }, proof);
 }
 
 /* ── OS modules ── */
@@ -106,15 +103,11 @@ export function getOSModuleDone(slug: string): string[] {
   return [...readSet(osKey(slug))];
 }
 
-/** Mark a module lecture or lab complete. Returns the module's completed ids. */
-export function markOSLectureDone(slug: string, lectureId: string): string[] {
-  const set = readSet(osKey(slug));
-  if (!set.has(lectureId)) {
-    set.add(lectureId);
-    creditLocalDay();
-    writeSet(osKey(slug), set);
-  }
-  return [...set];
+/** Ask the server to record a module lecture or a self-check lab, with its
+ *  quiz answers when it has a quiz. A lab with flags is recorded by its last
+ *  flag instead (completionService submitLabFlag). */
+export function completeOSLecture(slug: string, lectureId: string, proof?: CompletionProof): Promise<CompletionOutcome> {
+  return completeStop({ kind: 'module', slug, stopId: lectureId }, proof);
 }
 
 /** Modules the server has recorded as finished, whose XP bonus stays even

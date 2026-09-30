@@ -117,7 +117,9 @@ export type NetworkingLesson = {
    * takes the whole screen when there is nothing to sit beside it.
    */
   simulation?: NetworkSimulation;
-  /** Optional end-of-lesson comprehension check — passing it completes the lesson. */
+  /** Optional end-of-lesson comprehension check: passing it completes the lesson.
+   *  Students receive it without its answers (backend/src/utils/redact.ts), and
+   *  the server marks it. */
   quiz?: QuizQuestion[];
 };
 

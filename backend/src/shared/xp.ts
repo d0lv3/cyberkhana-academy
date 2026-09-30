@@ -217,6 +217,21 @@ export function measureNetworkingLesson(lesson: unknown): StopMeasure {
   };
 }
 
+/** Plain minutes a stop is expected to take, unweighted and at any
+ *  difficulty: what the server paces unchecked work against
+ *  (backend/src/utils/pace.ts). Never part of a score. */
+export function stopMinutes(m: StopMeasure): number {
+  return (
+    Math.min(m.words / WORDS_PER_MINUTE, CAPS.readingMinutes) +
+    Math.min(m.videoMinutes, CAPS.videoMinutes) +
+    m.extraMinutes +
+    Math.min(m.handsOnMinutes, CAPS.handsOnMinutes) +
+    m.mcq * EFFORT.mcqQuestion +
+    m.typed * EFFORT.typedQuestion +
+    Math.min(m.independentMinutes, CAPS.handsOnMinutes)
+  );
+}
+
 export function stopXp(m: StopMeasure, difficulty?: unknown): number {
   const learn =
     Math.min(m.words / WORDS_PER_MINUTE, CAPS.readingMinutes) +

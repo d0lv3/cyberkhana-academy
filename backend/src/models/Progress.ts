@@ -23,6 +23,12 @@ export interface IProgress extends Document {
    *  to be earned in front of the server. Three in a day makes it a study day
    *  (shared/streak.ts), and the count is what shades the heat map. */
   studyDays: Record<string, number>;
+  /** Lab flags the server has accepted, one entry per flag. A flag lab is
+   *  recorded complete once all of its flags are here (routes/progress.ts). */
+  solvedFlags: { module: string; lab: string; flag: string }[];
+  /** How far the learner's unchecked work has been credited up to
+   *  (utils/pace.ts). Absent until the first paced stop. */
+  paceClock?: Date;
   lastActivity: {
     kind: 'programming' | 'networking' | 'os';
     route: string;
@@ -44,6 +50,11 @@ const ProgressSchema = new Schema<IProgress>(
     enrolledModules: { type: [String], default: [] },
     finishedModules: { type: [String], default: [] },
     studyDays: { type: Schema.Types.Mixed, default: {} },
+    solvedFlags: {
+      type: [{ module: String, lab: String, flag: String, _id: false }],
+      default: [],
+    },
+    paceClock: { type: Date },
     lastActivity: { type: Schema.Types.Mixed, default: null },
   },
   { timestamps: true, minimize: false }

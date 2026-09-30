@@ -16,7 +16,10 @@
  *
  * The other half of the job is the timeout. On the main thread a runaway loop
  * starved the event loop, so the 10s timer never fired and the tab froze for
- * good; a worker can simply be terminated (see PythonExecutor).
+ * good; a worker can simply be terminated (see PythonExecutor). The worker
+ * says 'started' the moment it begins on a snippet, once the runtime and any
+ * package it needs are downloaded, because that is when the ten seconds start:
+ * fetching the runtime is not the snippet's time.
  */
 
 const PYODIDE_LOCAL = '/pyodide/pyodide.mjs';
@@ -157,6 +160,12 @@ async function loadRuntime(): Promise<any> {
     return pyodide;
   })();
 
+  /* A load that failed (the connection dropped halfway) must not be kept:
+     every later run would get the same rejection back without trying again. */
+  loading.catch(() => {
+    loading = null;
+  });
+
   return loading;
 }
 
@@ -254,6 +263,9 @@ __stderr_val = sys.stderr.getvalue()
 sys.stdout = sys.__stdout__
 sys.stderr = sys.__stderr__
 `;
+
+  // Everything is downloaded: from here the snippet's own time is counted.
+  post({ type: 'started', id });
 
   try {
     py.runPython(setupCode);

@@ -9,7 +9,8 @@
 import type { FundamentalModule } from './fundamentalsData';
 import type { NetworkingLesson } from '../components/network-sim/types';
 import type { ProgrammingConcept, ProgrammingModule } from './programming/types';
-import quizBank from './linuxQuizData';
+import quizBank, { type StudentQuizQuestion } from './linuxQuizData';
+import type { KeyedAnswer } from '../backend/src/shared/checks';
 import linuxCourse from './linuxCourseData';
 import { linuxLecturesAr } from './linuxCourseArabic';
 import {
@@ -28,7 +29,7 @@ interface RawLecture {
   subtitle?: string;
   videoId?: string;
   quiz?: unknown;
-  quizQuestions?: QuizQuestion[];
+  quizQuestions?: StudentQuizQuestion[];
   notes?: string[];
   markdownContent?: string | { en: string; ar: string };
 }
@@ -53,11 +54,21 @@ function lectureBodyEn(l: RawLecture): string {
   return notesToMarkdown(l.notes);
 }
 
-/** A lecture's quiz: embedded questions win, else the id-keyed static bank. */
-function lectureQuiz(l: RawLecture): QuizQuestion[] {
-  if (l.quizQuestions && l.quizQuestions.length) return l.quizQuestions;
-  if (l.quiz) return quizBank[l.id] ?? [];
-  return [];
+/** Built-in lecture id to its quiz's answers, from the server
+ *  (GET /content/admin/builtin-answers): the bundle does not carry them. */
+export type BuiltinAnswers = Record<string, KeyedAnswer[]>;
+
+/** A lecture's quiz, answers put back: embedded questions win, else the
+ *  id-keyed static bank. An editable copy has to have every answer, or the
+ *  first save would publish a quiz whose answers are all the first option. */
+function lectureQuiz(l: RawLecture, answers: BuiltinAnswers): QuizQuestion[] {
+  const questions = l.quizQuestions?.length ? l.quizQuestions : l.quiz ? quizBank[l.id] ?? [] : [];
+  const key = answers[l.id] ?? [];
+  return questions.map((q, i) => {
+    const answer = key[i];
+    if (answer?.kind === 'text') return { ...q, kind: 'text', correctIndex: 0, answer: answer.answer };
+    return { ...q, correctIndex: answer?.kind === 'mcq' ? answer.correctIndex : q.correctIndex ?? 0 };
+  });
 }
 
 /**
@@ -65,7 +76,7 @@ function lectureQuiz(l: RawLecture): QuizQuestion[] {
  * IDs (module → chapter, lecture → section) are preserved verbatim so existing
  * learner progress keeps counting after the module becomes DB-backed.
  */
-export function builtinToEditableModule(mod: FundamentalModule): CreatorFundamentalModule {
+export function builtinToEditableModule(mod: FundamentalModule, answers: BuiltinAnswers): CreatorFundamentalModule {
   const course = mod.courseData as { modules?: RawModule[] } | undefined;
   const isBuiltinLinux = mod.courseData === linuxCourse;
 
@@ -81,7 +92,7 @@ export function builtinToEditableModule(mod: FundamentalModule): CreatorFundamen
         en: lectureBodyEn(l),
         ar: isBuiltinLinux ? notesToMarkdown(linuxLecturesAr[l.id]?.notes) : '',
       },
-      quiz: lectureQuiz(l),
+      quiz: lectureQuiz(l, answers),
     })),
   }));
 

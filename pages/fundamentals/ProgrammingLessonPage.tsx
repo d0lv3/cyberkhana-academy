@@ -30,7 +30,9 @@ import { useScrollToTop } from '../../hooks/useScrollToTop';
 import { useStoredState, storedBoolean, storedNumber } from '../../hooks/useStoredState';
 import { useTocCollapsed } from '../../hooks/useTocCollapsed';
 import { useProgrammingDone } from '../../hooks/useCourseProgress';
-import { markProgrammingDone, recordActivity } from '../../services/progressService';
+import { completeProgrammingConcept, getProgrammingDone, recordActivity } from '../../services/progressService';
+import { usePendingCompletion, usePendingStops, type FailReason } from '../../services/completionService';
+import CompletionNotice from '../../components/ui/CompletionNotice';
 import { requestFeedback } from '../../components/feedback/FeedbackHost';
 
 type Tab = 'content' | 'code';
@@ -84,6 +86,13 @@ const ProgrammingLessonPage: React.FC = () => {
   );
   const [videoOpen, setVideoOpen] = useState(true);
   const completed = useProgrammingDone(langSlug || '');
+  /* Finished here, and waiting on the server's pace clock to be recorded. */
+  const pendingIds = usePendingStops('programming', langSlug || '');
+  const pendingAt = usePendingCompletion(
+    concept ? { kind: 'programming', language: langSlug || '', stopId: concept.id } : null
+  );
+  const [saving, setSaving] = useState(false);
+  const [failure, setFailure] = useState<{ id: string; reason: FailReason } | null>(null);
 
   const [tocMobileOpen, setTocMobileOpen] = useState(false);
   const [tocCollapsed, toggleToc] = useTocCollapsed();
@@ -126,10 +135,23 @@ const ProgrammingLessonPage: React.FC = () => {
   const goTo = (step: Pick<CourseStep, 'module' | 'concept'>) =>
     navigate(stepPath(langSlug || '', step), { replace: true });
 
-  /* The tick comes back through the progress event, which is also what marks
-     it on the contents. The new set is returned so the caller can ask whether
-     that was the last step of the module. */
-  const markDone = (id: string) => markProgrammingDone(langSlug || '', id);
+  /* The server records the step, comparing a challenge's test outputs first,
+     and the tick comes back through the progress event with its answer, which
+     is also what marks it on the contents. Resolves with the finished set, to
+     ask whether that was the module's last step, or null when the server
+     turned it down, with the reason left on the page. A step waiting on the
+     pace clock counts as finished here: it is sent again by itself. */
+  const markDone = async (id: string, outputs?: string[]): Promise<Set<string> | null> => {
+    setSaving(true);
+    setFailure(null);
+    const outcome = await completeProgrammingConcept(langSlug || '', id, outputs ? { outputs } : undefined);
+    setSaving(false);
+    if (outcome.status === 'failed') {
+      setFailure({ id, reason: outcome.reason });
+      return null;
+    }
+    return new Set([...getProgrammingDone(langSlug || ''), id]);
+  };
 
   /* A module is finished the moment its last concept is ticked off, and it is
      the module, not the single concept, that a learner has an opinion about.
@@ -146,14 +168,17 @@ const ProgrammingLessonPage: React.FC = () => {
     });
   };
 
-  const handleChallengePass = () => {
-    if (!concept) return;
-    askAboutModule(markDone(concept.id));
+  const handleChallengePass = async (outputs: string[]) => {
+    if (!concept || completed.has(concept.id)) return;
+    const done = await markDone(concept.id, outputs);
+    if (done) askAboutModule(done);
   };
 
-  const handleCompleteLesson = () => {
-    if (!concept) return;
-    askAboutModule(markDone(concept.id));
+  const handleCompleteLesson = async () => {
+    if (!concept || saving) return;
+    const done = completed.has(concept.id) || pendingAt ? completed : await markDone(concept.id);
+    if (!done) return;
+    askAboutModule(done);
     if (nextStep) goTo(nextStep);
   };
 
@@ -330,6 +355,7 @@ const ProgrammingLessonPage: React.FC = () => {
           modules={sidebarModules}
           activeLectureId={concept.id}
           completedLectures={[...completed]}
+          pendingLectures={pendingIds}
           onSelectLecture={(id) => {
             const step = steps.find((s) => s.concept.id === id);
             if (step) goTo(step);
@@ -439,7 +465,8 @@ const ProgrammingLessonPage: React.FC = () => {
                     variant="primary"
                     size="sm"
                     fullWidth
-                    onClick={handleCompleteLesson}
+                    onClick={() => void handleCompleteLesson()}
+                    isLoading={saving}
                     leftIcon={<CheckCircle2 size={16} />}
                   >
                     {nextStep
@@ -451,6 +478,13 @@ const ProgrammingLessonPage: React.FC = () => {
                       : 'Mark Complete'}
                   </Button>
                 )}
+              </div>
+            )}
+            {/* Waiting on the pace clock, or turned down: said for lessons and
+                challenges alike, since a challenge has no strip of its own. */}
+            {!isDone && (pendingAt || failure?.id === concept.id) && (
+              <div className="flex-shrink-0 px-4 sm:px-6 pb-3 bg-[#0e1626]">
+                <CompletionNotice readyAt={pendingAt} failure={failure?.id === concept.id ? failure.reason : null} />
               </div>
             )}
           </div>
@@ -492,7 +526,7 @@ const ProgrammingLessonPage: React.FC = () => {
                 }))}
                 hints={lang === 'ar' ? concept.hintsAr || concept.hints : concept.hints}
                 solution={concept.solution}
-                onPass={handleChallengePass}
+                onPass={(outputs) => void handleChallengePass(outputs)}
               />
             </div>
           </div>

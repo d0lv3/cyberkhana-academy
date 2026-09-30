@@ -1,11 +1,13 @@
 /* ─── Sync Service ───
  * Bridges the localStorage cache layer with the backend API:
  *  - hydrateFromServer(): on login, pulls everyone's PUBLISHED content into
- *    the published-* caches, merges server progress with local progress, and
+ *    the published-* caches, takes in the server's record of my progress, and
  *    seeds my own creator-* buckets (first login migrates existing local
  *    content UP to the server instead of wiping it).
  *  - queueContentPush()/queueProgressPush(): debounced write-through called
- *    by creatorDataService/progressService on every local write.
+ *    by creatorDataService/progressService on every local write. Progress
+ *    pushes carry bookmarks only; completions go through completionService.
+ *  - applyServerRecord(): takes in the server's answer to any progress write.
  *  - claimCachesFor() / flushPendingSync() / forgetServerBackedCaches(): keep
  *    the caches to one account at a time (see "Whose caches these are").
  *
@@ -20,6 +22,7 @@ import { LANG_CHOSEN_KEY } from './languageChoice';
 import { levelFor } from '../backend/src/shared/xp';
 import { dayKeyOf } from '../backend/src/shared/streak';
 import { forgetServerXp, nextScoreTicket, setServerXp } from './serverXp';
+import { getLabProgress, saveLabProgress } from './labProgress';
 
 /* Mirrors progressService's event name (defined locally to avoid an import
  * cycle — progressService imports this module for write-through). */
@@ -120,38 +123,164 @@ async function flushBuckets(): Promise<void> {
   }
 }
 
-/* ── progress write-through ── */
+/* ── progress write-through ──
+ *
+ * The server keeps the record of what has been finished, and only the server
+ * adds to it: each stop goes to it on its own, with its work, and is recorded
+ * once that checks out (services/completionService.ts). The completions cached
+ * here are a copy of its answer, never sent back. What this device still
+ * pushes is what only it can know: which paths and modules were bookmarked,
+ * and where the learner left off. */
 
-export interface ProgressSnapshot {
+/** The completions the server has recorded, per container. */
+export interface Completions {
   programming: Record<string, string[]>;
   osModules: Record<string, string[]>;
   networking: string[];
+}
+
+/** A flag the server has accepted, in a lab of a module. */
+export interface SolvedFlag {
+  module: string;
+  lab: string;
+  flag: string;
+}
+
+/** The learner's record as the server returns it. */
+export interface ProgressSnapshot extends Completions {
   enrolledPaths: string[];
   /** Optional so a client still validates against a server that predates it. */
   enrolledModules?: string[];
-  /** Sent by the server only: never pushed, because the server records it. */
+  /** The server records it, so it is never pushed. */
   finishedModules?: string[];
-  /** Sent by the server only: it records the days, so a client cannot claim
-   *  one. Kept locally as a cache so the streak card draws before the pull. */
+  /** The server records the days, so a client cannot claim one. Kept locally
+   *  as a cache so the streak card draws before the pull. */
   studyDays?: Record<string, number>;
+  solvedFlags?: SolvedFlag[];
+  lastActivity: unknown | null;
+}
+
+/** What this device pushes: its bookmarks, and where it left off. */
+export interface BookmarkSnapshot {
+  enrolledPaths: string[];
+  enrolledModules?: string[];
   /** The pusher's own calendar day, so the streak turns over at their
    *  midnight. The server holds it to a day either side of its own. */
   day?: string;
   lastActivity: unknown | null;
 }
 
-/** What the server answers a push with, scored from the completions it was sent. */
-interface PushResult {
+/** What the server answers any progress write with: where the account stands
+ *  now, scored from exactly the completions it names. */
+export interface ServerRecord {
   /** Lifetime XP, award and streak included. */
   xp?: number;
   /** The all-time board's figure, and the reset it counts from. */
   board?: { xp: number; since: string | null };
+  completions?: Completions;
   finishedModules?: string[];
   studyDays?: Record<string, number>;
   streak?: number;
-  /** Breakpoints this push paid for, in days, so the card can celebrate them. */
+  /** Breakpoints this write paid for, in days, so the card can celebrate them. */
   streakAwarded?: number[];
   streakXpGained?: number;
+}
+
+/** Completions waiting on the server's pace clock (services/completionService.ts). */
+export const PENDING_COMPLETIONS_KEY = 'academy-pending-completions';
+
+/** Fired once a sign-in has pulled the account down, so work that was waiting
+ *  on it (completions held by the pace clock) can carry on. */
+export const HYDRATED_EVENT = 'academy-sync-hydrated';
+
+export function isSyncEnabled(): boolean {
+  return syncEnabled;
+}
+
+const PROG_PREFIX = 'academy-prog-';
+const OS_PREFIX = 'academy-progress-';
+const NET_KEY = 'academy-net';
+
+/** Replace the cached completions with the server's. Nothing the server has
+ *  not recorded stays ticked: a tick only ever comes from its answer. */
+function writeCompletions(completions: unknown): void {
+  if (!completions || typeof completions !== 'object') return;
+  const c = completions as Partial<Completions>;
+  const lists = (record: unknown): Map<string, string[]> => {
+    const out = new Map<string, string[]>();
+    if (record && typeof record === 'object' && !Array.isArray(record)) {
+      for (const [key, ids] of Object.entries(record)) {
+        out.set(key, Array.isArray(ids) ? ids.filter((id): id is string => typeof id === 'string') : []);
+      }
+    }
+    return out;
+  };
+  const programming = lists(c.programming);
+  const osModules = lists(c.osModules);
+  try {
+    // Containers the server has nothing for go, then the rest are rewritten.
+    removeKeys(
+      (key) =>
+        (key.startsWith(OS_PREFIX) && !osModules.has(key.slice(OS_PREFIX.length))) ||
+        (!key.startsWith(OS_PREFIX) && key.startsWith(PROG_PREFIX) && !programming.has(key.slice(PROG_PREFIX.length)))
+    );
+    for (const [lang, ids] of programming) localStorage.setItem(`${PROG_PREFIX}${lang}`, JSON.stringify(ids));
+    for (const [slug, ids] of osModules) localStorage.setItem(`${OS_PREFIX}${slug}`, JSON.stringify(ids));
+    const net = Array.isArray(c.networking) ? c.networking.filter((id): id is string => typeof id === 'string') : [];
+    localStorage.setItem(NET_KEY, JSON.stringify(net));
+  } catch {
+    /* storage unavailable: the next answer writes it again */
+  }
+}
+
+/** Keep the flags the server has accepted in each lab's working state, so a
+ *  lab reopened on any device shows what was already found, and nothing it
+ *  has not accepted. */
+function writeSolvedFlags(solved: unknown): void {
+  if (!Array.isArray(solved)) return;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key?.startsWith('academy-lab-')) continue;
+      const state = JSON.parse(localStorage.getItem(key) ?? '{}') as Record<string, unknown>;
+      if (Array.isArray(state.flagsSolved) && state.flagsSolved.length) {
+        localStorage.setItem(key, JSON.stringify({ ...state, flagsSolved: [] }));
+      }
+    }
+  } catch {
+    /* storage unavailable: nothing cached to correct */
+  }
+  const byLab = new Map<string, { slug: string; lab: string; flags: string[] }>();
+  for (const s of solved as Partial<SolvedFlag>[]) {
+    if (typeof s?.module !== 'string' || typeof s.lab !== 'string' || typeof s.flag !== 'string') continue;
+    const key = `${s.module}\u0000${s.lab}`;
+    const entry = byLab.get(key) ?? { slug: s.module, lab: s.lab, flags: [] };
+    entry.flags.push(s.flag);
+    byLab.set(key, entry);
+  }
+  for (const { slug, lab, flags } of byLab.values()) {
+    saveLabProgress(slug, lab, { ...getLabProgress(slug, lab), flagsSolved: flags });
+  }
+}
+
+/**
+ * Take in the server's answer to a progress write: its record of what is
+ * finished, its XP for exactly that, and the days and rungs it counted. Take
+ * the ticket (nextScoreTicket) before sending the request, so a slower, older
+ * answer cannot land on top of a newer one.
+ */
+export function applyServerRecord(ticket: number, result: ServerRecord | null | undefined): void {
+  if (!result) return;
+  if (result.completions) writeCompletions(result.completions);
+  /* The server's figure for exactly these completions. It is what the app
+     shows from now on, plus whatever is completed after they were collected. */
+  setServerXp(ticket, result.xp, result.board, result.completions ?? collectCompletions());
+  rememberFinishedModules(result.finishedModules);
+  /* The server has just recounted the days; its answer replaces the cache
+     rather than merging, because it is the record. */
+  cacheStudyDays(result.studyDays);
+  if (result.streakAwarded?.length) announceStreakAward(result);
+  window.dispatchEvent(new Event(PROGRESS_EVENT));
 }
 
 /** Keep the server's list of finished modules, adding to what is cached. */
@@ -209,7 +338,7 @@ function rememberStreakAwards(days: unknown): void {
 }
 
 /** Tell the app a breakpoint was just paid, so its card can be thrown. */
-function announceStreakAward(result: PushResult): void {
+function announceStreakAward(result: ServerRecord): void {
   const detail: StreakAwardDetail = {
     days: result.streakAwarded ?? [],
     xp: result.streakXpGained ?? 0,
@@ -218,37 +347,33 @@ function announceStreakAward(result: PushResult): void {
   window.dispatchEvent(new CustomEvent<StreakAwardDetail>(STREAK_AWARD_EVENT, { detail }));
 }
 
-/** Push the snapshot, then keep what the server worked out from it. */
+/** Push the bookmarks, then keep what the server answers with. */
 async function pushProgress(): Promise<void> {
-  const snapshot = collectProgressSnapshot();
   const ticket = nextScoreTicket();
-  const result = await api.put<PushResult>('/progress', snapshot);
-  /* The server's figure for exactly these completions. It is what the app
-     shows from now on, plus whatever is completed after they were collected. */
-  setServerXp(ticket, result?.xp, result?.board, snapshot);
-  rememberFinishedModules(result?.finishedModules);
-  /* The server has just recounted the days from what it received; its answer
-     replaces the cache rather than merging, because it is the record. */
-  cacheStudyDays(result?.studyDays);
-  if (result?.streakAwarded?.length) announceStreakAward(result);
+  const result = await api.put<ServerRecord>('/progress', collectBookmarks());
+  applyServerRecord(ticket, result);
 }
 
-/** Builds the full snapshot from the academy-* localStorage keys. */
-export function collectProgressSnapshot(): ProgressSnapshot {
+/** The cached copy of the server's completions. */
+export function collectCompletions(): Completions {
   const programming: Record<string, string[]> = {};
   const osModules: Record<string, string[]> = {};
 
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
     if (!key) continue;
-    // NOTE: check the longer prefix first — 'academy-progress-' also matches 'academy-prog'.
-    if (key.startsWith('academy-progress-')) {
-      osModules[key.slice('academy-progress-'.length)] = readArray<string>(key);
-    } else if (key.startsWith('academy-prog-')) {
-      programming[key.slice('academy-prog-'.length)] = readArray<string>(key);
+    // NOTE: check the longer prefix first, 'academy-progress-' also matches 'academy-prog'.
+    if (key.startsWith(OS_PREFIX)) {
+      osModules[key.slice(OS_PREFIX.length)] = readArray<string>(key);
+    } else if (key.startsWith(PROG_PREFIX)) {
+      programming[key.slice(PROG_PREFIX.length)] = readArray<string>(key);
     }
   }
+  return { programming, osModules, networking: readArray<string>(NET_KEY) };
+}
 
+/** What this device pushes, from the academy-* localStorage keys. */
+export function collectBookmarks(): BookmarkSnapshot {
   let lastActivity: unknown | null = null;
   try {
     const raw = localStorage.getItem('academy-last-activity');
@@ -258,9 +383,6 @@ export function collectProgressSnapshot(): ProgressSnapshot {
   }
 
   return {
-    programming,
-    osModules,
-    networking: readArray<string>('academy-net'),
     enrolledPaths: readArray<string>('academy-paths-enrolled'),
     enrolledModules: readArray<string>('academy-modules-enrolled'),
     day: localDayKey(),
@@ -275,8 +397,8 @@ export function queueProgressPush(): void {
   if (progressTimer) clearTimeout(progressTimer);
   progressTimer = setTimeout(async () => {
     progressTimer = null;
-    /* The server replaces the whole snapshot, points included, so a push
-       made after sign-out has cleared the caches would wipe the account.
+    /* The server replaces the bookmarks with what it is sent, so a push made
+       after sign-out has cleared the caches would wipe them from the account.
        Sign-out pushes what was waiting itself; a late timer stands down. */
     if (!syncEnabled) return;
     try {
@@ -306,7 +428,7 @@ export const CACHE_OWNER_KEY = 'academy-cache-owner';
 /** The creator-* keys: my own Studio content, mirrored from my buckets. */
 const CREATOR_KEYS: string[] = Object.keys(SERVER_BUCKET_BY_STORAGE_KEY);
 
-/** Learning progress: exactly what collectProgressSnapshot() pushes. */
+/** Learning progress: the server's record of it, and the bookmarks pushed back. */
 function isProgressKey(key: string): boolean {
   return (
     key.startsWith('academy-progress-') ||
@@ -331,7 +453,7 @@ function isServerBackedKey(key: string): boolean {
 
 /** Account state that only ever lives on this device: the study streak, the
  *  day's activity tally feeding it and the weekly goal, a lab's working
- *  state, which feedback prompts were answered
+ *  state, completions waiting on the pace clock, which feedback prompts were answered
  *  and any answer still waiting to send, the level and streak milestone last
  *  celebrated, whether
  *  the language question was put and the Academy tour taken, where each
@@ -344,6 +466,9 @@ function isDeviceOnlyAccountKey(key: string): boolean {
     key.startsWith('academy-lab-') ||
     key === 'academy-feedback-answered' ||
     key === 'academy-feedback-pending' ||
+    /* Completions the pace clock is holding: they go to the server as soon
+       as it will take them, under the account that finished them. */
+    key === PENDING_COMPLETIONS_KEY ||
     key === LEVEL_SEEN_KEY ||
     key === STREAK_SEEN_KEY ||
     key === TOUR_SEEN_KEY ||
@@ -498,22 +623,14 @@ function setUnion<T>(a: T[], b: T[]): T[] {
   return [...new Set([...a, ...b])];
 }
 
-/** Progress only ever grows — merge as a union so offline work is never lost. */
+/** Take the server's record in. Its completions replace the cache, because
+ *  only the server adds to them; the bookmarks merge as a union, so one made
+ *  on this device before it synced is not lost. */
 function mergeProgress(server: ProgressSnapshot | null): void {
+  writeCompletions(server ?? { programming: {}, osModules: {}, networking: [] });
   if (!server) return;
+  writeSolvedFlags(server.solvedFlags);
 
-  for (const [lang, ids] of Object.entries(server.programming ?? {})) {
-    const key = `academy-prog-${lang}`;
-    localStorage.setItem(key, JSON.stringify(setUnion(readArray<string>(key), ids)));
-  }
-  for (const [slug, ids] of Object.entries(server.osModules ?? {})) {
-    const key = `academy-progress-${slug}`;
-    localStorage.setItem(key, JSON.stringify(setUnion(readArray<string>(key), ids)));
-  }
-  localStorage.setItem(
-    'academy-net',
-    JSON.stringify(setUnion(readArray<string>('academy-net'), server.networking ?? []))
-  );
   localStorage.setItem(
     'academy-paths-enrolled',
     JSON.stringify(setUnion(readArray<string>('academy-paths-enrolled'), server.enrolledPaths ?? []))
@@ -610,23 +727,17 @@ export async function hydrateFromServer(account: { id: string; displayName: stri
     rememberLevelReached(xp);
     /* Taken in after the level is marked as seen, so the figure arriving is
        never mistaken for a level just reached. It was scored from exactly the
-       progress returned; what this browser has beyond that is added on top
-       until the push below brings the server up to date. */
+       progress returned, which becomes this browser's copy just below. */
     setServerXp(ticket, xp, board, progress);
     /* The server's days, and the rungs it has already paid. Both are taken as
        old news on arrival, for the reason rememberLevelReached exists: a
        streak earned on another device is not something to celebrate here. */
     cacheStudyDays(progress?.studyDays);
     rememberStreakAwards(streakAwarded);
-    const localSnap = collectProgressSnapshot();
-    const hadLocal =
-      localSnap.networking.length > 0 ||
-      localSnap.enrolledPaths.length > 0 ||
-      (localSnap.enrolledModules?.length ?? 0) > 0 ||
-      Object.values(localSnap.programming).some((ids) => ids.length > 0) ||
-      Object.values(localSnap.osModules).some((ids) => ids.length > 0);
+    const local = collectBookmarks();
+    const hadLocal = local.enrolledPaths.length > 0 || (local.enrolledModules?.length ?? 0) > 0;
     mergeProgress(progress);
-    // Push the merged union back so the server catches up with offline work.
+    // Push the merged bookmarks back so the server has any made here.
     if (hadLocal || progress) queueProgressPush();
   } catch (err) {
     console.warn('[sync] could not hydrate progress:', err);
@@ -643,4 +754,5 @@ export async function hydrateFromServer(account: { id: string; displayName: stri
   }
 
   window.dispatchEvent(new Event(PROGRESS_EVENT));
+  window.dispatchEvent(new Event(HYDRATED_EVENT));
 }

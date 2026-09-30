@@ -1,0 +1,517 @@
+{
+  "quizzes": {
+    "linux-for-cybersecurity": {
+      "2.1": [
+        {
+          "kind": "mcq",
+          "correctIndex": 2
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 2
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 1
+        }
+      ],
+      "2.2": [
+        {
+          "kind": "mcq",
+          "correctIndex": 1
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 1
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 1
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        }
+      ],
+      "2.3": [
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 1
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 2
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        }
+      ],
+      "2.4": [
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        }
+      ],
+      "3.1": [
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 1
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        }
+      ],
+      "3.2": [
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        }
+      ],
+      "3.3": [
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        }
+      ],
+      "4.1": [
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        }
+      ],
+      "4.2": [
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        }
+      ],
+      "5.1": [
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        }
+      ],
+      "5.2": [
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        }
+      ],
+      "5.3": [
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        }
+      ],
+      "6.1": [
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        }
+      ],
+      "6.2": [
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        }
+      ],
+      "7.1": [
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        }
+      ],
+      "7.2": [
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        }
+      ],
+      "8.1": [
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        }
+      ],
+      "8.2": [
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        }
+      ],
+      "8.3": [
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        }
+      ],
+      "9.1": [
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 1
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        }
+      ],
+      "9.2": [
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        },
+        {
+          "kind": "mcq",
+          "correctIndex": 0
+        }
+      ]
+    }
+  },
+  "tests": {
+    "python": {
+      "py-ch-first-program": [
+        {
+          "id": "tc-1",
+          "expectedOutput": "Python is powerful\nCyberKhana Academy\n2026"
+        }
+      ],
+      "py-variables-challenge": [
+        {
+          "id": "tc-1",
+          "expectedOutput": "==============\nName:  Sara\nRole:  Analyst\nLevel: 3\n=============="
+        }
+      ],
+      "py-ch-log-parser": [
+        {
+          "id": "tc-1",
+          "expectedOutput": "Method: GET\nPath: /admin\nStatus: 200\nAdmin: True"
+        }
+      ],
+      "py-ch-seconds": [
+        {
+          "id": "tc-1",
+          "expectedOutput": "Days: 1\nHours: 3\nMinutes: 46\nSeconds: 40"
+        }
+      ],
+      "py-ch-top-ports": [
+        {
+          "id": "tc-1",
+          "expectedOutput": "Total: 7\nUnique sorted: [22, 80, 443, 8080]\nMost common: 22 (3 times)\nHighest: 8080"
+        }
+      ],
+      "py-ch-scan-diff": [
+        {
+          "id": "tc-1",
+          "expectedOutput": "New hosts: ['10.0.0.7']\nGone hosts: ['10.0.0.6']\n10.0.0.5 opened: [8080]"
+        }
+      ],
+      "py-ch-access-check": [
+        {
+          "id": "tc-1",
+          "expectedOutput": "Name: anonymous\nAdult: True\nAllowed: True\nNext year: 22"
+        }
+      ],
+      "py-ch-login-report": [
+        {
+          "id": "tc-1",
+          "expectedOutput": "User: sara.ahmed\nDomain: cyberkhana.tech\nFirst: Sara\nAdult: True\nDays: 7,665"
+        }
+      ],
+      "py-ch-grade-report": [
+        {
+          "id": "tc-1",
+          "expectedOutput": "Name: Sara\nScore: 74\nGrade: C\nPassed: True\nStatus: pass"
+        },
+        {
+          "id": "tc-2",
+          "expectedOutput": "Name: Ali\nScore: 95\nGrade: A\nPassed: True\nStatus: pass"
+        },
+        {
+          "id": "tc-3",
+          "expectedOutput": "Name: Omar\nScore: 42\nGrade: F\nPassed: False\nStatus: fail"
+        }
+      ],
+      "py-ch-log-summary": [
+        {
+          "id": "tc-1",
+          "expectedOutput": "Processed: 5\nGET: 3\nPOST: 2\nErrors: 2\nTop path: /home (2)"
+        }
+      ],
+      "py-ch-port-toolkit": [
+        {
+          "id": "tc-1",
+          "expectedOutput": "True False\n80/tcp 53/udp\n{'count': 4, 'valid': 3, 'highest': 8080}\n{'count': 1, 'valid': 0, 'highest': None}"
+        }
+      ],
+      "py-ch-log-file": [
+        {
+          "id": "tc-1",
+          "expectedOutput": "Lines: 4\nErrors: 2\nPaths: ['/admin', '/home', '/login']\nAll GET: False\nReport written: True"
+        }
+      ],
+      "py-ch-scan-report": [
+        {
+          "id": "tc-1",
+          "expectedOutput": "Date: 2026-07-16\nWeekday: Thursday\nssh:22 open\nhttp:80 open\nhttps:443 closed\nmysql:3306 open\nOpen ports: [22, 80, 3306]\nOpen count: 3\nNext scan: 2026-07-23"
+        }
+      ],
+      "py-ch-robust-parse": [
+        {
+          "id": "tc-1",
+          "expectedOutput": "10.0.0.5:22\nbad status: 404\nbad json\nbad port: 99999\nbad status: 500\n10.0.0.7:443\nOK: 2"
+        }
+      ]
+    },
+    "c": {
+      "c-sum-two": [
+        {
+          "id": "tc-1",
+          "expectedOutput": "7"
+        },
+        {
+          "id": "tc-2",
+          "expectedOutput": "30"
+        },
+        {
+          "id": "tc-3",
+          "expectedOutput": "-3"
+        }
+      ]
+    },
+    "bash": {
+      "bash-sum-two": [
+        {
+          "id": "tc-1",
+          "expectedOutput": "7"
+        },
+        {
+          "id": "tc-2",
+          "expectedOutput": "30"
+        },
+        {
+          "id": "tc-3",
+          "expectedOutput": "5"
+        }
+      ]
+    }
+  },
+  "networking": {}
+}

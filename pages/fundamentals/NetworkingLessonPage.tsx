@@ -29,7 +29,15 @@ import { useScrollToTop } from '../../hooks/useScrollToTop';
 import { useStoredState, storedBoolean, storedNumber } from '../../hooks/useStoredState';
 import { useTocCollapsed } from '../../hooks/useTocCollapsed';
 import { useNetworkingDone } from '../../hooks/useCourseProgress';
-import { markNetworkingDone, recordActivity } from '../../services/progressService';
+import { completeNetworkingLesson, recordActivity } from '../../services/progressService';
+import {
+  checkQuizAnswer,
+  usePendingCompletion,
+  usePendingStops,
+  type FailReason,
+  type QuizAnswer,
+} from '../../services/completionService';
+import CompletionNotice from '../../components/ui/CompletionNotice';
 import { requestFeedback } from '../../components/feedback/FeedbackHost';
 
 type Tab = 'content' | 'simulation';
@@ -62,6 +70,11 @@ const NetworkingLessonPage: React.FC = () => {
   const [mobileTab, setMobileTab] = useState<Tab>('content');
   const doneIds = useNetworkingDone();
   const done = lesson ? doneIds.has(lesson.id) : false;
+  /* Finished here, and waiting on the server's pace clock to be recorded. */
+  const pendingIds = usePendingStops('networking');
+  const pendingAt = usePendingCompletion(lesson ? { kind: 'networking', stopId: lesson.id } : null);
+  const [saving, setSaving] = useState(false);
+  const [failure, setFailure] = useState<{ id: string; reason: FailReason } | null>(null);
 
   const [simPct, setSimPct] = useStoredState(SIM_PCT_KEY, SIM_PCT_DEFAULT, storedNumber(clampPct));
   const [simOpen, setSimOpen] = useStoredState(SIM_OPEN_KEY, true, storedBoolean);
@@ -108,11 +121,19 @@ const NetworkingLessonPage: React.FC = () => {
     [setSimPct]
   );
 
-  const handleComplete = () => {
-    if (!lesson) return;
-    /* The tick comes back through the progress event, which is also what puts
-       it on the contents beside the lesson. */
-    markNetworkingDone(lesson.id);
+  /* The server records the lesson, marking the quiz again when it has one,
+     and the tick comes back through the progress event with its answer, which
+     is also what puts it on the contents beside the lesson. */
+  const handleComplete = async (answers?: QuizAnswer[]) => {
+    if (!lesson || saving) return;
+    setSaving(true);
+    setFailure(null);
+    const outcome = await completeNetworkingLesson(lesson.id, answers ? { answers } : undefined);
+    setSaving(false);
+    if (outcome.status === 'failed') {
+      setFailure({ id: lesson.id, reason: outcome.reason });
+      return;
+    }
     /* Finishing the lesson is the moment the learner has an opinion about it.
        The title is stored in English so the studio's list reads as one list
        whichever language it was answered in. */
@@ -330,6 +351,7 @@ const NetworkingLessonPage: React.FC = () => {
           modules={sidebarUnits}
           activeLectureId={lesson.id}
           completedLectures={[...doneIds]}
+          pendingLectures={pendingIds}
           onSelectLecture={(id) => {
             const picked = path.ordered.find((l) => l.id === id);
             if (picked) goToLesson(picked);
@@ -413,15 +435,29 @@ const NetworkingLessonPage: React.FC = () => {
                   <LessonQuiz
                     key={lesson.id}
                     questions={lesson.quiz!}
-                    onPass={handleComplete}
+                    check={(index, answer) =>
+                      checkQuizAnswer({ kind: 'networking', stopId: lesson.id }, index, lesson.quiz!.length, answer)
+                    }
+                    onPass={(answers) => void handleComplete(answers)}
                     passed={done}
                   />
                 ) : (
-                  !done && (
-                    <Button variant="primary" onClick={handleComplete} leftIcon={<CheckCircle2 size={16} />}>
+                  !done && !pendingAt && (
+                    <Button
+                      variant="primary"
+                      onClick={() => void handleComplete()}
+                      isLoading={saving}
+                      leftIcon={<CheckCircle2 size={16} />}
+                    >
                       {lang === 'ar' ? 'وضع علامة كمكتمل' : 'Mark as complete'}
                     </Button>
                   )
+                )}
+                {!done && (
+                  <CompletionNotice
+                    readyAt={pendingAt}
+                    failure={failure?.id === lesson.id ? failure.reason : null}
+                  />
                 )}
 
                 {/* ── Once the lesson is done, the way on is right here, rather

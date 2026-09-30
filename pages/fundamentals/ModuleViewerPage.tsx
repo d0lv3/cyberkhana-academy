@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback, useEffect } from 'react';
+import React, { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -24,10 +24,10 @@ import { moduleLearnPath } from '../../data/fundamentalsData';
 import LessonMarkdown from '../../components/ui/LessonMarkdown';
 import quizBank, {
   answerMask,
-  isAnswerCorrect,
   isTextQuestion,
-  type QuizQuestion,
+  type StudentQuizQuestion,
 } from '../../data/linuxQuizData';
+import { isQuestionCorrect, revealAnswer } from '../../backend/src/shared/checks';
 import linuxCourse from '../../data/linuxCourseData';
 import { linuxLecturesAr, linuxModuleTitlesAr } from '../../data/linuxCourseArabic';
 import { arabicLinuxQuizText } from '../../data/linuxQuizArabic';
@@ -43,7 +43,22 @@ import CourseTerminalLauncher from '../../components/terminal/CourseTerminalLaun
 import LabView from '../../components/labs/LabView';
 import type { ModuleLab } from '../../services/labTypes';
 import { mdFor, type LocalizedMarkdown } from '../../services/creatorTypes';
-import { getOSModuleDone, markOSLectureDone, recordActivity } from '../../services/progressService';
+import {
+  completeOSLecture,
+  getOSModuleDone,
+  PROGRESS_EVENT,
+  recordActivity,
+} from '../../services/progressService';
+import {
+  checkQuizAnswer,
+  usePendingCompletion,
+  usePendingStops,
+  type AnswerCheck,
+  type CompletionProof,
+  type FailReason,
+  type QuizAnswer,
+} from '../../services/completionService';
+import CompletionNotice, { failureText } from '../../components/ui/CompletionNotice';
 import { requestFeedback } from '../../components/feedback/FeedbackHost';
 
 type Lecture = {
@@ -57,8 +72,9 @@ type Lecture = {
   kind?: 'lesson' | 'lab';
   /** The lab itself, present exactly when kind is 'lab'. */
   lab?: ModuleLab;
-  /** Creator-authored quiz embedded on the lecture (static Linux uses quizBank). */
-  quizQuestions?: QuizQuestion[];
+  /** Creator-authored quiz embedded on the lecture (static Linux uses quizBank).
+   *  Sent without answers: the server marks them. */
+  quizQuestions?: StudentQuizQuestion[];
   notes?: string[];
   resource?: string;
   /** Creator section markdown body (rendered below any video), bilingual */
@@ -71,6 +87,23 @@ type CourseModule = {
   lectures: Lecture[];
 };
 
+/** A question as one attempt shows it, its options shuffled. */
+type ShownQuestion = StudentQuizQuestion & {
+  /** For each option shown, where it sits in the author's order, which is the
+   *  order the server marks in. Empty for a typed question. */
+  order: number[];
+};
+
+type Marked = {
+  /** What was answered, as the server reads it: the option's place in the
+   *  author's order, or the typed text. */
+  given: QuizAnswer;
+  correct: boolean;
+  /** The right option as shown, for a pick; the answer, for a typed one. */
+  rightShown?: number;
+  rightText?: string;
+};
+
 type QuizState = {
   started: boolean;
   completed: boolean;
@@ -78,13 +111,17 @@ type QuizState = {
   selectedOption: number | null;
   /** What the learner typed, for a written-answer question. */
   typedAnswer: string;
-  answers: Record<number, { selected: number; correct: boolean }>;
+  answers: Record<number, Marked>;
   showExplanation: boolean;
   /** Per-attempt question set with options shuffled. */
-  questions: QuizQuestion[];
+  questions: ShownQuestion[];
+  /** Waiting on the server to mark the current answer. */
+  checking: boolean;
+  /** Why the current answer could not be marked. */
+  failure: FailReason | null;
 };
 
-const LETTERS = ['A', 'B', 'C', 'D'];
+const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
 const questionCountAr = (count: number): string =>
   count === 1 ? 'سؤال واحد' : count === 2 ? 'سؤالان' : count <= 10 ? `${count} أسئلة` : `${count} سؤالًا`;
 const lessonCountAr = (count: number): string =>
@@ -99,22 +136,20 @@ const emptyQuizState = (): QuizState => ({
   answers: {},
   showExplanation: false,
   questions: [],
+  checking: false,
+  failure: null,
 });
 
-/** Return a copy of a question with its answer options shuffled (Fisher–Yates).
- *  A written-answer question has nothing to shuffle and is passed through. */
-const shuffleOptions = (q: QuizQuestion): QuizQuestion => {
-  if (isTextQuestion(q)) return q;
+/** A question with its options shuffled (Fisher-Yates), remembering where
+ *  each came from. A written-answer question has nothing to shuffle. */
+const shuffleOptions = (q: StudentQuizQuestion): ShownQuestion => {
+  if (isTextQuestion(q)) return { ...q, order: [] };
   const order = q.options.map((_, i) => i);
   for (let i = order.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [order[i], order[j]] = [order[j], order[i]];
   }
-  return {
-    ...q,
-    options: order.map((i) => q.options[i]),
-    correctIndex: order.indexOf(q.correctIndex),
-  };
+  return { ...q, options: order.map((i) => q.options[i]), order };
 };
 
 /** Where a module sits, recorded alongside its feedback so a creator reading
@@ -159,11 +194,28 @@ const ModuleViewerPage: React.FC = () => {
   );
 
   /* A preview's ticks live only in this page, for the same reason as the
-     position below: every draft shares the __preview__ slug, and anything
-     saved under it would be synced to the creator's account as progress. */
+     position below: every draft shares the __preview__ slug, and the server
+     has never seen a draft to record anything against. Otherwise the ticks
+     are the server's record, and follow it as its answers arrive. */
   const [completedLectures, setCompletedLectures] = useState<string[]>(() =>
     isPreview ? [] : getOSModuleDone(slug ?? '')
   );
+  useEffect(() => {
+    if (isPreview) return;
+    const refresh = () => setCompletedLectures(getOSModuleDone(slug ?? ''));
+    refresh();
+    window.addEventListener(PROGRESS_EVENT, refresh);
+    window.addEventListener('storage', refresh);
+    return () => {
+      window.removeEventListener(PROGRESS_EVENT, refresh);
+      window.removeEventListener('storage', refresh);
+    };
+  }, [slug, isPreview]);
+  /* Finished here, but held by the server's pace clock for a moment. */
+  const pendingLectures = usePendingStops('module', isPreview ? '' : slug ?? '');
+  /* Why the last finish on a lecture did not go through, and which lecture. */
+  const [saveFailure, setSaveFailure] = useState<{ id: string; reason: FailReason } | null>(null);
+  const [saving, setSaving] = useState<string | null>(null);
   /* Which stop you were on, remembered across a reload. Refreshing halfway
      through a module used to drop you back at lesson one, which is the worst
      possible place to land: the progress ticks were all still there, so it
@@ -228,6 +280,30 @@ const ModuleViewerPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fundamentalModule?.id]);
 
+  /* When the lecture on screen goes to the server again, if it is waiting. */
+  const activePendingAt = usePendingCompletion(
+    isPreview || !activeLectureId ? null : { kind: 'module', slug: slug ?? '', stopId: activeLectureId }
+  );
+
+  /* The last lecture closes the module out, which is the point worth asking
+     about. Asked when it lands while the page is open, whichever way it lands
+     (straight away, or after the pace clock), and never for a module that was
+     already finished on arrival. Previews are the creator's own draft. */
+  const wasFinished = useRef<boolean | null>(null);
+  useEffect(() => {
+    if (isPreview || !fundamentalModule || allLectures.length === 0) return;
+    const finished = allLectures.every(({ lecture }) => completedLectures.includes(lecture.id));
+    if (wasFinished.current === false && finished) {
+      requestFeedback({
+        track: 'os-modules',
+        contextId: fundamentalModule.id,
+        contextTitle: fundamentalModule.title.en || fundamentalModule.title.ar,
+        contextSub: PILLAR_LABEL[fundamentalModule.category] ?? 'Modules',
+      });
+    }
+    wasFinished.current = finished;
+  }, [completedLectures, allLectures, fundamentalModule, isPreview]);
+
   if (!fundamentalModule || !course) {
     return (
       <div className="flex items-center justify-center h-screen bg-[#0d1117]">
@@ -241,24 +317,27 @@ const ModuleViewerPage: React.FC = () => {
 
   const isCompleted = (id: string) => completedLectures.includes(id);
 
-  const markComplete = (id: string) => {
-    if (isCompleted(id)) return;
-    /* Through the progress service, which also queues the push to the server.
-       Writing the key here used to skip that push, so a lecture finished just
-       before signing out never reached the account. */
-    const next = isPreview ? [...completedLectures, id] : markOSLectureDone(slug ?? '', id);
-    setCompletedLectures(next);
-
-    /* The last lecture closes the module out, which is the point worth asking
-       about. Previews are the creator's own draft, not a finished course. */
-    if (!isPreview && allLectures.length > 0 && next.length >= allLectures.length) {
-      requestFeedback({
-        track: 'os-modules',
-        contextId: fundamentalModule.id,
-        contextTitle: fundamentalModule.title.en || fundamentalModule.title.ar,
-        contextSub: PILLAR_LABEL[fundamentalModule.category] ?? 'Modules',
-      });
+  /**
+   * Ask the server to record a lecture, with its quiz answers when it has a
+   * quiz. Resolves true when it is recorded or waiting on the pace clock, which
+   * sends it again by itself, and false when the server turned it down; the
+   * reason is shown on the lecture. The tick arrives with the server's answer.
+   */
+  const markComplete = async (id: string, proof?: CompletionProof): Promise<boolean> => {
+    if (isCompleted(id)) return true;
+    if (isPreview) {
+      setCompletedLectures((prev) => (prev.includes(id) ? prev : [...prev, id]));
+      return true;
     }
+    setSaveFailure(null);
+    setSaving(id);
+    const outcome = await completeOSLecture(slug ?? '', id, proof);
+    setSaving(null);
+    if (outcome.status === 'failed') {
+      setSaveFailure({ id, reason: outcome.reason });
+      return false;
+    }
+    return true;
   };
 
   const handleSelectLecture = (lectureId: string) => {
@@ -266,7 +345,7 @@ const ModuleViewerPage: React.FC = () => {
     setTocMobileOpen(false);
   };
 
-  const getQuestions = (lecture: Lecture): QuizQuestion[] => {
+  const getQuestions = (lecture: Lecture): StudentQuizQuestion[] => {
     // Creator modules embed their own questions; static Linux looks them up by id.
     if (lecture.quizQuestions && lecture.quizQuestions.length) return lecture.quizQuestions;
     if (!lecture.quiz) return [];
@@ -283,44 +362,75 @@ const ModuleViewerPage: React.FC = () => {
     }));
   }, []);
 
-  const startQuiz = (lectureId: string, base: QuizQuestion[]) => {
+  const startQuiz = (lectureId: string, base: StudentQuizQuestion[]) => {
+    setSaveFailure(null);
     setQuizStates((prev) => ({
       ...prev,
       [lectureId]: { ...emptyQuizState(), started: true, questions: base.map(shuffleOptions) },
     }));
   };
 
-  const submitAnswer = (lecture: Lecture) => {
-    const qs = getQuizState(lecture.id);
-    const questions = qs.questions.length ? qs.questions : getQuestions(lecture);
-    const question = questions[qs.currentIndex];
-    if (!question) return;
+  /* A preview is the creator's own draft, answers and all, which the server
+     has never seen: it is marked here, the one place that still happens. */
+  const markLocally = (lecture: Lecture, index: number, given: QuizAnswer): AnswerCheck => {
+    const authored = getQuestions(lecture)[index];
+    const correct = isQuestionCorrect(authored, given);
+    return correct ? { correct } : { correct, ...revealAnswer(authored) };
+  };
 
-    /* A written answer has no option index, so it records -1: the breakdown
-       below only ever asks whether the answer was right. */
+  const submitAnswer = async (lecture: Lecture) => {
+    const qs = getQuizState(lecture.id);
+    const question = qs.questions[qs.currentIndex];
+    if (!question || qs.checking) return;
+
     const typedOne = isTextQuestion(question);
     if (typedOne ? !qs.typedAnswer.trim() : qs.selectedOption === null) return;
 
-    const correct = typedOne
-      ? isAnswerCorrect(question, qs.typedAnswer)
-      : qs.selectedOption === question.correctIndex;
-    const nextAnswers = {
-      ...qs.answers,
-      [qs.currentIndex]: { selected: typedOne ? -1 : qs.selectedOption!, correct },
-    };
+    /* A pick goes to the server as the option's place in the author's order,
+       since the one on screen was shuffled. */
+    const given: QuizAnswer = typedOne ? qs.typedAnswer : question.order[qs.selectedOption!];
+    updateQuiz(lecture.id, { checking: true, failure: null });
+    const marked = isPreview
+      ? markLocally(lecture, qs.currentIndex, given)
+      : await checkQuizAnswer(
+          { kind: 'module', slug: slug ?? '', stopId: lecture.id },
+          qs.currentIndex,
+          qs.questions.length,
+          given
+        );
+    if ('failed' in marked) {
+      updateQuiz(lecture.id, { checking: false, failure: marked.failed });
+      return;
+    }
 
-    updateQuiz(lecture.id, { answers: nextAnswers, showExplanation: true });
+    const rightShown = typedOne
+      ? undefined
+      : marked.correct
+        ? qs.selectedOption!
+        : marked.correctIndex !== undefined
+          ? question.order.indexOf(marked.correctIndex)
+          : undefined;
+    updateQuiz(lecture.id, {
+      checking: false,
+      showExplanation: true,
+      answers: {
+        ...qs.answers,
+        [qs.currentIndex]: { given, correct: marked.correct, rightShown, rightText: marked.answer },
+      },
+    });
   };
 
   const nextQuestion = (lecture: Lecture) => {
     const qs = getQuizState(lecture.id);
-    const questions = qs.questions.length ? qs.questions : getQuestions(lecture);
+    const questions = qs.questions;
     const isLast = qs.currentIndex >= questions.length - 1;
 
     if (isLast) {
       const score = Object.values(qs.answers).filter((a) => a.correct).length;
       const allCorrect = score === questions.length;
-      if (allCorrect) markComplete(lecture.id);
+      /* Every answer goes to the server together, in the author's order, and
+         it marks them again before recording the lecture. */
+      if (allCorrect) void markComplete(lecture.id, { answers: questions.map((_, i) => qs.answers[i].given) });
       updateQuiz(lecture.id, { completed: true, started: false, showExplanation: false });
     } else {
       updateQuiz(lecture.id, {
@@ -328,6 +438,7 @@ const ModuleViewerPage: React.FC = () => {
         selectedOption: null,
         typedAnswer: '',
         showExplanation: false,
+        failure: null,
       });
     }
   };
@@ -423,6 +534,7 @@ const ModuleViewerPage: React.FC = () => {
           modules={sidebarModules}
           activeLectureId={activeLectureId}
           completedLectures={completedLectures}
+          pendingLectures={pendingLectures}
           onSelectLecture={handleSelectLecture}
           mobileOpen={tocMobileOpen}
           onMobileClose={() => setTocMobileOpen(false)}
@@ -459,7 +571,9 @@ const ModuleViewerPage: React.FC = () => {
                     moduleSlug={isPreview ? undefined : slug}
                     preview={isPreview}
                     isComplete={isCompleted(activeLecture.id)}
-                    onComplete={() => markComplete(activeLecture.id)}
+                    onComplete={() => void markComplete(activeLecture.id)}
+                    pendingAt={activePendingAt}
+                    failure={saveFailure?.id === activeLecture.id ? saveFailure.reason : null}
                   />
                   {!isLastLecture && (
                     <div className="pt-2">
@@ -530,27 +644,48 @@ const ModuleViewerPage: React.FC = () => {
               {(() => {
                 const baseQuestions = getQuestions(activeLecture);
                 if (baseQuestions.length === 0) {
-                  // No quiz — just mark complete / next
+                  // No quiz: just mark complete / next
+                  const done = isCompleted(activeLecture.id);
+                  const isSaving = saving === activeLecture.id;
                   return (
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-4 border-t border-[#263248]">
-                      {isCompleted(activeLecture.id) ? (
+                    <div className="space-y-3 pt-4 border-t border-[#263248]">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                      {done ? (
                         <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#0f1f15] border border-[#00a859]/20 text-[#00a859]">
                           <CheckCircle2 size={16} /><span className="text-sm font-medium">{ar ? 'مكتمل' : 'Completed'}</span>
                         </div>
-                      ) : (
-                        <Button onClick={() => markComplete(activeLecture.id)} leftIcon={<CheckCircle2 size={16} />}>{ar ? 'تحديد الدرس كمكتمل' : 'Mark as Complete'}</Button>
+                      ) : activePendingAt ? null : (
+                        <Button onClick={() => void markComplete(activeLecture.id)} isLoading={isSaving} leftIcon={<CheckCircle2 size={16} />}>{ar ? 'تحديد الدرس كمكتمل' : 'Mark as Complete'}</Button>
                       )}
                       {!isLastLecture && (
-                        <Button variant="secondary" onClick={() => { if (!isCompleted(activeLecture.id)) markComplete(activeLecture.id); goToNext(); }} leftIcon={<PlayCircle size={16} />}>
+                        <Button
+                          variant="secondary"
+                          disabled={isSaving}
+                          onClick={async () => {
+                            /* Recorded, or waiting on the pace clock, which
+                               sends it by itself: either way, on to the next.
+                               Turned down, and the reason stays in view here. */
+                            if (!done && !activePendingAt && !(await markComplete(activeLecture.id))) return;
+                            goToNext();
+                          }}
+                          leftIcon={<PlayCircle size={16} />}
+                        >
                           {ar ? 'الدرس التالي' : 'Next Lesson'}
                         </Button>
                       )}
+                    </div>
+                    {!done && (
+                      <CompletionNotice
+                        readyAt={activePendingAt}
+                        failure={saveFailure?.id === activeLecture.id ? saveFailure.reason : null}
+                      />
+                    )}
                     </div>
                   );
                 }
 
                 const qs = getQuizState(activeLecture.id);
-                const questions = qs.questions.length ? qs.questions : baseQuestions;
+                const questions: StudentQuizQuestion[] = qs.questions.length ? qs.questions : baseQuestions;
                 const currentQuestion = questions[qs.currentIndex];
                 const localizedQuestion = ar && isLinuxCourse && currentQuestion
                   ? arabicLinuxQuizText(activeLecture.id, currentQuestion)
@@ -620,9 +755,9 @@ const ModuleViewerPage: React.FC = () => {
                                 if (e.key !== 'Enter') return;
                                 e.preventDefault();
                                 if (qs.showExplanation) nextQuestion(activeLecture);
-                                else submitAnswer(activeLecture);
+                                else void submitAnswer(activeLecture);
                               }}
-                              disabled={qs.showExplanation}
+                              disabled={qs.showExplanation || qs.checking}
                               placeholder={answerMask(currentQuestion)}
                               spellCheck={false}
                               autoComplete="off"
@@ -640,7 +775,7 @@ const ModuleViewerPage: React.FC = () => {
                           <div className="space-y-2">
                             {currentQuestion.options.map((option, idx) => {
                               const isSelected = qs.selectedOption === idx;
-                              const isCorrect = idx === currentQuestion.correctIndex;
+                              const isCorrect = idx === qs.answers[qs.currentIndex]?.rightShown;
                               const showResult = qs.showExplanation;
 
                               let borderColor = 'border-[#263248]';
@@ -665,7 +800,7 @@ const ModuleViewerPage: React.FC = () => {
                                 <button
                                   key={idx}
                                   type="button"
-                                  disabled={qs.showExplanation}
+                                  disabled={qs.showExplanation || qs.checking}
                                   onClick={() => updateQuiz(activeLecture.id, { selectedOption: idx })}
                                   dir={ar ? 'rtl' : 'ltr'}
                                   className={`w-full text-start flex items-center gap-3 px-4 py-3 rounded-lg border transition-all ${borderColor} ${bgColor} ${
@@ -688,17 +823,21 @@ const ModuleViewerPage: React.FC = () => {
 
                           {/* Submit / Next */}
                           {!qs.showExplanation ? (
+                            <div className="space-y-3">
                             <Button
-                              onClick={() => submitAnswer(activeLecture)}
+                              onClick={() => void submitAnswer(activeLecture)}
                               disabled={
                                 isTextQuestion(currentQuestion)
                                   ? !qs.typedAnswer.trim()
                                   : qs.selectedOption === null
                               }
+                              isLoading={qs.checking}
                               fullWidth
                             >
                               {ar ? 'أرسل الإجابة' : 'Submit Answer'}
                             </Button>
+                            {qs.failure && <CompletionNotice failure={qs.failure} />}
+                            </div>
                           ) : (
                             <div className="space-y-3">
                               {qs.answers[qs.currentIndex]?.correct ? (
@@ -713,10 +852,10 @@ const ModuleViewerPage: React.FC = () => {
                                     {isTextQuestion(currentQuestion) ? (
                                       <>
                                         {ar ? 'إجابة غير صحيحة، الإجابة هي ' : 'Incorrect, the answer was '}
-                                        <span className="font-mono">{currentQuestion.answer}</span>
+                                        <span className="font-mono">{qs.answers[qs.currentIndex]?.rightText}</span>
                                       </>
                                     ) : (
-                                      <>{ar ? 'إجابة غير صحيحة، الإجابة الصحيحة هي ' : 'Incorrect, the correct answer is '}{LETTERS[currentQuestion.correctIndex]}</>
+                                      <>{ar ? 'إجابة غير صحيحة، الإجابة الصحيحة هي ' : 'Incorrect, the correct answer is '}{LETTERS[qs.answers[qs.currentIndex]?.rightShown ?? -1] ?? ''}</>
                                     )}
                                   </span>
                                 </div>
@@ -758,11 +897,22 @@ const ModuleViewerPage: React.FC = () => {
                                     <span className="text-sm text-[#8592ad] ml-2">({pct}%)</span>
                                   </p>
                                   {passed ? (
-                                    <p className="text-sm text-[#00a859]">{ar ? 'جميع الإجابات صحيحة. اكتمل هذا الدرس الآن.' : 'All answers correct. This lesson is now complete.'}</p>
+                                    <p className="text-sm text-[#00a859]">
+                                      {isCompleted(activeLecture.id)
+                                        ? ar ? 'جميع الإجابات صحيحة. اكتمل هذا الدرس الآن.' : 'All answers correct. This lesson is now complete.'
+                                        : ar ? 'جميع الإجابات صحيحة.' : 'All answers correct.'}
+                                    </p>
                                   ) : (
                                     <p className="text-sm text-[#9aa5bf]">{ar ? 'يجب أن تجيب عن جميع الأسئلة إجابة صحيحة لإكمال الدرس. راجع المحتوى وحاول مجددًا.' : 'You need a perfect score to complete this lesson. Review and try again.'}</p>
                                   )}
                                 </div>
+
+                                {passed && !isCompleted(activeLecture.id) && (
+                                  <CompletionNotice
+                                    readyAt={activePendingAt}
+                                    failure={saveFailure?.id === activeLecture.id ? saveFailure.reason : null}
+                                  />
+                                )}
 
                                 {/* Results breakdown */}
                                 <div className="space-y-2" dir={ar ? 'rtl' : 'ltr'}>
@@ -787,6 +937,19 @@ const ModuleViewerPage: React.FC = () => {
                                   {!passed && (
                                     <Button variant="outline" onClick={() => startQuiz(activeLecture.id, baseQuestions)} leftIcon={<RotateCcw size={15} />} fullWidth>
                                       {ar ? 'أعد التقييم' : 'Retry Assessment'}
+                                    </Button>
+                                  )}
+                                  {/* Passed, but the server could not take it: the
+                                      same answers can go again without retaking. */}
+                                  {passed && saveFailure?.id === activeLecture.id && saveFailure.reason !== 'changed' && (
+                                    <Button
+                                      variant="outline"
+                                      onClick={() => void markComplete(activeLecture.id, { answers: questions.map((_, i) => qs.answers[i].given) })}
+                                      isLoading={saving === activeLecture.id}
+                                      leftIcon={<RotateCcw size={15} />}
+                                      fullWidth
+                                    >
+                                      {ar ? 'حاول الحفظ مجددًا' : 'Try saving again'}
                                     </Button>
                                   )}
                                   {!isLastLecture && (

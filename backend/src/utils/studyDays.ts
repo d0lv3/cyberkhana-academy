@@ -2,8 +2,8 @@
  *
  * The server keeps the streak because streak breakpoints pay XP, and XP ranks
  * people. Nothing here trusts a client's word for having studied: a day is
- * credited only when a push carries completions the server had not seen
- * before, so the work has to actually reach the server to count.
+ * credited only when the server records a completion it has checked
+ * (routes/progress.ts), so the work has to actually reach it to count.
  */
 
 import {
@@ -13,39 +13,6 @@ import {
   type StreakBreakpoint,
   type StudyDays,
 } from '../shared/streak';
-
-interface CompletionSnapshot {
-  programming?: Record<string, string[]>;
-  osModules?: Record<string, string[]>;
-  networking?: string[];
-}
-
-/** Every completion in a snapshot, namespaced by where it came from so the
- *  same lesson id under two languages is two different completions. */
-function completionIds(snapshot: CompletionSnapshot | null | undefined): Set<string> {
-  const ids = new Set<string>();
-  if (!snapshot) return ids;
-  for (const [slug, list] of Object.entries(snapshot.programming ?? {})) {
-    for (const id of list ?? []) ids.add(`prog:${slug}:${id}`);
-  }
-  for (const [slug, list] of Object.entries(snapshot.osModules ?? {})) {
-    for (const id of list ?? []) ids.add(`os:${slug}:${id}`);
-  }
-  for (const id of snapshot.networking ?? []) ids.add(`net:${id}`);
-  return ids;
-}
-
-/** How many completions this push brings that the server had never seen.
- *  Removals count for nothing: unticking a lesson must not refund a day. */
-export function newCompletionCount(
-  before: CompletionSnapshot | null | undefined,
-  after: CompletionSnapshot
-): number {
-  const seen = completionIds(before);
-  let fresh = 0;
-  for (const id of completionIds(after)) if (!seen.has(id)) fresh++;
-  return fresh;
-}
 
 function utcDayKey(d: Date): string {
   const y = d.getUTCFullYear();

@@ -2,37 +2,41 @@ import React, { useState } from 'react';
 import { HelpCircle, CheckCircle2, XCircle, RotateCcw, ChevronRight, Trophy } from 'lucide-react';
 import Button from './EnhancedButton';
 import { useLang } from '../../contexts/LangContext';
-import {
-  answerMask,
-  isAnswerCorrect,
-  isTextQuestion,
-  type QuizQuestion,
-} from '../../data/linuxQuizData';
+import { answerMask, isTextQuestion, type StudentQuizQuestion } from '../../data/linuxQuizData';
+import { passMark } from '../../backend/src/shared/checks';
+import type { AnswerCheck, FailReason, QuizAnswer } from '../../services/completionService';
+import CompletionNotice from './CompletionNotice';
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
-const PASS_RATIO = 0.7;
 
-/** Return a copy of a question with its answer options shuffled (Fisher–Yates).
- *  A written-answer question has nothing to shuffle and is passed through. */
-const shuffleOptions = (q: QuizQuestion): QuizQuestion => {
-  if (isTextQuestion(q)) return q;
+/** A question as one attempt shows it, its options shuffled. */
+type ShownQuestion = StudentQuizQuestion & {
+  /** For each option shown, where it sits in the author's order. */
+  order: number[];
+};
+
+/** A question with its options shuffled (Fisher-Yates), remembering where
+ *  each came from. A written-answer question has nothing to shuffle. */
+const shuffleOptions = (q: StudentQuizQuestion): ShownQuestion => {
+  if (isTextQuestion(q)) return { ...q, order: [] };
   const order = q.options.map((_, i) => i);
   for (let i = order.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [order[i], order[j]] = [order[j], order[i]];
   }
-  return {
-    ...q,
-    options: order.map((i) => q.options[i]),
-    correctIndex: order.indexOf(q.correctIndex),
-  };
+  return { ...q, options: order.map((i) => q.options[i]), order };
 };
 
 interface LessonQuizProps {
-  questions: QuizQuestion[];
-  /** Fired once when the learner reaches the pass threshold (≥70%). */
-  onPass: () => void;
-  /** True when the lesson is already completed — shows a passed banner instead of the start card. */
+  /** As students receive them: without answers. */
+  questions: StudentQuizQuestion[];
+  /** Marks one answer, given in the author's order: the server does it
+   *  (services/completionService checkQuizAnswer), and says what was right. */
+  check: (index: number, answer: QuizAnswer) => Promise<AnswerCheck | { failed: FailReason }>;
+  /** Fired once when the learner reaches the pass mark (7 in 10), with every
+   *  answer in the author's order, for the server to mark again. */
+  onPass: (answers: QuizAnswer[]) => void;
+  /** True when the lesson is already completed: shows a passed banner instead of the start card. */
   passed?: boolean;
 }
 
@@ -40,21 +44,27 @@ interface LessonQuizProps {
  * Compact end-of-lesson quiz runner (start → stepper → results).
  * Used by networking lessons; OS modules have their own richer runner.
  */
-const LessonQuiz: React.FC<LessonQuizProps> = ({ questions, onPass, passed = false }) => {
+const LessonQuiz: React.FC<LessonQuizProps> = ({ questions, check, onPass, passed = false }) => {
   const { lang } = useLang();
   const ar = lang === 'ar';
 
   const [started, setStarted] = useState(false);
-  const [qs, setQs] = useState<QuizQuestion[]>([]);
+  const [qs, setQs] = useState<ShownQuestion[]>([]);
   const [idx, setIdx] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   /** What the learner typed, for a written-answer question. */
   const [typed, setTyped] = useState('');
   const [revealed, setRevealed] = useState(false);
+  /* The server's word on the answer standing: right or not, and what was. */
+  const [marked, setMarked] = useState<{ correct: boolean; rightShown?: number; rightText?: string } | null>(null);
+  const [checking, setChecking] = useState(false);
+  const [failure, setFailure] = useState<FailReason | null>(null);
+  /* Every answer given, in the author's order, for the server at the end. */
+  const [given, setGiven] = useState<QuizAnswer[]>([]);
   const [correctCount, setCorrectCount] = useState(0);
   const [finished, setFinished] = useState(false);
 
-  const passNeeded = Math.ceil(questions.length * PASS_RATIO);
+  const passNeeded = passMark(questions.length, 'most');
 
   const start = () => {
     setQs(questions.map(shuffleOptions));
@@ -62,35 +72,64 @@ const LessonQuiz: React.FC<LessonQuizProps> = ({ questions, onPass, passed = fal
     setSelected(null);
     setTyped('');
     setRevealed(false);
+    setMarked(null);
+    setFailure(null);
+    setGiven([]);
     setCorrectCount(0);
     setFinished(false);
     setStarted(true);
   };
 
-  /** Whether the answer standing in the box (or picked in the list) is right.
-   *  Derived rather than stored, so the reveal and the score cannot disagree. */
-  const marks = (q: QuizQuestion): boolean =>
-    isTextQuestion(q) ? isAnswerCorrect(q, typed) : selected === q.correctIndex;
+  /** Whether the answer standing was right, as the server marked it. */
+  const marks = (): boolean => !!marked?.correct;
 
-  const answered = (q: QuizQuestion): boolean =>
+  const answered = (q: ShownQuestion): boolean =>
     isTextQuestion(q) ? typed.trim() !== '' : selected !== null;
 
-  const submit = () => {
+  const submit = async () => {
     const q = qs[idx];
-    if (revealed || !q || !answered(q)) return;
-    if (marks(q)) setCorrectCount((c) => c + 1);
+    if (revealed || checking || !q || !answered(q)) return;
+    // A pick goes as its place in the author's order: the list was shuffled.
+    const answer: QuizAnswer = isTextQuestion(q) ? typed : q.order[selected!];
+    setChecking(true);
+    setFailure(null);
+    const result = await check(idx, answer);
+    setChecking(false);
+    if ('failed' in result) {
+      setFailure(result.failed);
+      return;
+    }
+    setMarked({
+      correct: result.correct,
+      rightShown: isTextQuestion(q)
+        ? undefined
+        : result.correct
+          ? selected!
+          : result.correctIndex !== undefined
+            ? q.order.indexOf(result.correctIndex)
+            : undefined,
+      rightText: result.answer,
+    });
+    setGiven((g) => {
+      const next = [...g];
+      next[idx] = answer;
+      return next;
+    });
+    if (result.correct) setCorrectCount((c) => c + 1);
     setRevealed(true);
   };
 
   const next = () => {
     if (idx + 1 >= qs.length) {
       setFinished(true);
-      if (correctCount >= passNeeded) onPass();
+      if (correctCount >= passNeeded) onPass(given);
     } else {
       setIdx((i) => i + 1);
       setSelected(null);
       setTyped('');
       setRevealed(false);
+      setMarked(null);
+      setFailure(null);
     }
   };
 
@@ -163,8 +202,8 @@ const LessonQuiz: React.FC<LessonQuizProps> = ({ questions, onPass, passed = fal
         <p className={`text-sm font-semibold mt-1 ${didPass ? 'text-[#00a859]' : 'text-red-400'}`}>
           {didPass
             ? ar
-              ? 'أحسنت! تم إكمال الدرس.'
-              : 'Well done, lesson completed.'
+              ? 'أحسنت! لقد نجحت.'
+              : 'Well done, you passed.'
             : ar
             ? 'لم تصل إلى حد النجاح بعد.'
             : "You didn't reach the pass mark yet."}
@@ -218,10 +257,11 @@ const LessonQuiz: React.FC<LessonQuizProps> = ({ questions, onPass, passed = fal
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault();
-                  revealed ? next() : submit();
+                  if (revealed) next();
+                  else void submit();
                 }
               }}
-              disabled={revealed}
+              disabled={revealed || checking}
               placeholder={answerMask(q)}
               spellCheck={false}
               autoComplete="off"
@@ -230,14 +270,14 @@ const LessonQuiz: React.FC<LessonQuizProps> = ({ questions, onPass, passed = fal
               className={`w-full rounded-lg border bg-[#0d1117] px-4 py-3 font-mono text-sm tracking-wide outline-none transition-colors placeholder:tracking-[0.2em] placeholder:text-[#3d4a63] disabled:cursor-default ${
                 !revealed
                   ? 'border-[#263248] text-[#f3f6ff] focus:border-[#9fef00]/60'
-                  : marks(q)
+                  : marks()
                   ? 'border-[#00a859] bg-[#00a859]/10 text-[#f3f6ff]'
                   : 'border-red-500/60 bg-red-500/10 text-[#f3f6ff]'
               }`}
             />
             {revealed && (
               <p className="mt-2.5 flex flex-wrap items-center gap-2 text-xs">
-                {marks(q) ? (
+                {marks() ? (
                   <span className="flex items-center gap-1.5 font-semibold text-[#00a859]">
                     <CheckCircle2 size={14} /> {ar ? 'إجابة صحيحة' : 'Correct'}
                   </span>
@@ -248,7 +288,7 @@ const LessonQuiz: React.FC<LessonQuizProps> = ({ questions, onPass, passed = fal
                     </span>
                     <span className="text-[#8592ad]">
                       {ar ? 'الإجابة الصحيحة:' : 'The answer was'}{' '}
-                      <span className="font-mono text-[#00a859]">{q.answer}</span>
+                      <span className="font-mono text-[#00a859]">{marked?.rightText}</span>
                     </span>
                   </>
                 )}
@@ -259,7 +299,7 @@ const LessonQuiz: React.FC<LessonQuizProps> = ({ questions, onPass, passed = fal
         <div className="space-y-2 mb-5">
           {q.options.map((opt, oi) => {
             const isSelected = selected === oi;
-            const isCorrect = oi === q.correctIndex;
+            const isCorrect = oi === marked?.rightShown;
             let cls = 'border-[#263248] bg-[#0d1117] hover:border-[#354562] text-[#d2d7e3]';
             if (revealed) {
               if (isCorrect) cls = 'border-[#00a859] bg-[#00a859]/10 text-[#f3f6ff]';
@@ -272,7 +312,7 @@ const LessonQuiz: React.FC<LessonQuizProps> = ({ questions, onPass, passed = fal
               <button
                 key={oi}
                 type="button"
-                disabled={revealed}
+                disabled={revealed || checking}
                 onClick={() => setSelected(oi)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg border text-start text-sm transition-all ${cls} ${
                   revealed ? 'cursor-default' : ''
@@ -299,10 +339,11 @@ const LessonQuiz: React.FC<LessonQuizProps> = ({ questions, onPass, passed = fal
             {idx + 1 >= qs.length ? (ar ? 'النتيجة' : 'See results') : ar ? 'التالي' : 'Next'}
           </Button>
         ) : (
-          <Button variant="primary" size="sm" onClick={submit} disabled={!answered(q)}>
+          <Button variant="primary" size="sm" onClick={() => void submit()} disabled={!answered(q)} isLoading={checking}>
             {ar ? 'تحقق' : 'Check answer'}
           </Button>
         )}
+        {failure && <CompletionNotice failure={failure} className="mt-3" />}
       </div>
     </div>
   );

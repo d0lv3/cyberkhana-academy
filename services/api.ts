@@ -8,11 +8,15 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5002/api';
 
 export class ApiError extends Error {
   status: number;
+  /** The JSON the server answered with, for a `code` or anything else it sent
+   *  alongside the message. Empty when the body was not JSON. */
+  body: Record<string, unknown>;
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, body: Record<string, unknown> = {}) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
+    this.body = body;
   }
 }
 
@@ -34,10 +38,11 @@ class ApiService {
     });
 
     if (!response.ok) {
-      const body = await response.json().catch(() => ({}));
+      const body = (await response.json().catch(() => ({}))) as Record<string, unknown>;
       throw new ApiError(
-        (body as { error?: string }).error || `HTTP ${response.status}`,
-        response.status
+        (typeof body.error === 'string' && body.error) || `HTTP ${response.status}`,
+        response.status,
+        body
       );
     }
 
@@ -86,10 +91,11 @@ class ApiService {
       body: form,
     });
     if (!response.ok) {
-      const body = await response.json().catch(() => ({}));
+      const body = (await response.json().catch(() => ({}))) as Record<string, unknown>;
       throw new ApiError(
-        (body as { error?: string }).error || `HTTP ${response.status}`,
-        response.status
+        (typeof body.error === 'string' && body.error) || `HTTP ${response.status}`,
+        response.status,
+        body
       );
     }
     return response.json();

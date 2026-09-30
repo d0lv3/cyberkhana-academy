@@ -19,7 +19,6 @@ import Button from '../ui/EnhancedButton';
 import { NetworkSimulator } from '../network-sim';
 import { hasSimulation } from '../network-sim/types';
 import {
-  checkFlag,
   flagPlaceholder,
   formatBytes,
   isInsecureLabUrl,
@@ -34,6 +33,8 @@ import {
   saveLabProgress,
   type LabProgress,
 } from '../../services/labProgress';
+import { submitLabFlag, type FailReason } from '../../services/completionService';
+import CompletionNotice, { failureText } from '../ui/CompletionNotice';
 
 interface LabViewProps {
   lab: ModuleLab;
@@ -41,9 +42,15 @@ interface LabViewProps {
   /** Keys the working state. Absent in the studio preview, which persists nothing. */
   moduleSlug?: string;
   isComplete?: boolean;
+  /** A self-check lab's finish button. A lab with flags is recorded by the
+   *  server when its last flag is accepted, with no button. */
   onComplete?: () => void;
   /** Studio preview: real layout, real links, no writes and no completion. */
   preview?: boolean;
+  /** When a finish held by the server's pace clock goes again. */
+  pendingAt?: number | null;
+  /** Why the last finish did not go through. */
+  failure?: FailReason | null;
 }
 
 /* Gold is the lab accent throughout: green already means "lesson complete" and
@@ -156,28 +163,40 @@ const LaunchCard: React.FC<{
   );
 };
 
-/* ── The flags a student brings back from the environment ── */
+/* ── The flags a student brings back from the environment ──
+ * Each one goes to the server on its own and is checked there; the answers
+ * never reach this page. The server keeps the ones found, so a lab can be
+ * left and picked up again, and records the lab with the last one. */
 const FlagBoard: React.FC<{
   lab: ModuleLab;
   lang: 'en' | 'ar';
+  moduleSlug?: string;
   solved: string[];
-  onSolve: (flagId: string) => void;
+  /** Every flag the server has accepted so far, after each answer. */
+  onSolved: (solved: string[]) => void;
   disabled: boolean;
-}> = ({ lab, lang, solved, onSolve, disabled }) => {
+}> = ({ lab, lang, moduleSlug, solved, onSolved, disabled }) => {
   const flags = labFlags(lab);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [wrong, setWrong] = useState<Record<string, boolean>>({});
+  const [failed, setFailed] = useState<Record<string, FailReason | undefined>>({});
+  const [checking, setChecking] = useState<string | null>(null);
   const [hints, setHints] = useState<Record<string, boolean>>({});
 
-  const submit = (flagId: string) => {
+  const submit = async (flagId: string) => {
     const flag = flags.find((f) => f.id === flagId);
-    if (!flag || disabled) return;
-    if (checkFlag(flag, drafts[flagId] ?? '')) {
-      setWrong((w) => ({ ...w, [flagId]: false }));
-      onSolve(flagId);
-    } else {
-      setWrong((w) => ({ ...w, [flagId]: true }));
+    const value = drafts[flagId] ?? '';
+    if (!flag || disabled || !moduleSlug || checking || !value.trim()) return;
+    setChecking(flagId);
+    setFailed((f) => ({ ...f, [flagId]: undefined }));
+    const result = await submitLabFlag({ kind: 'module', slug: moduleSlug, stopId: lab.id }, flagId, value);
+    setChecking(null);
+    if ('failed' in result) {
+      setFailed((f) => ({ ...f, [flagId]: result.failed }));
+      return;
     }
+    setWrong((w) => ({ ...w, [flagId]: !result.correct }));
+    if (result.correct) onSolved(result.solved);
   };
 
   const solvedCount = flags.filter((f) => solved.includes(f.id)).length;
@@ -193,17 +212,22 @@ const FlagBoard: React.FC<{
       </div>
 
       <div className="divide-y divide-[#263248]/70">
-        {flags.map((flag) => {
+        {flags.map((flag, index) => {
           const isSolved = solved.includes(flag.id);
+          const isChecking = checking === flag.id;
           return (
             <div key={flag.id} className="px-5 py-4">
               <div className="mb-2.5 flex items-start gap-2.5">
-                <span className="mt-0.5 flex-shrink-0">
-                  {isSolved ? (
-                    <CheckCircle2 size={15} className="text-[#00a859]" />
-                  ) : (
-                    <Circle size={15} className="text-[#7c8aa6]" />
-                  )}
+                {/* Numbered, so a student can say which one they are stuck on. */}
+                <span
+                  dir="ltr"
+                  className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border text-[10px] font-bold tabular-nums ${
+                    isSolved
+                      ? 'border-[#00a859]/50 bg-[#00a859]/15 text-[#00a859]'
+                      : 'border-[#3a4864] bg-[#0d1420] text-[#9aa5bf]'
+                  }`}
+                >
+                  {index + 1}
                 </span>
                 <p
                   className={`text-sm font-medium leading-snug ${
@@ -215,9 +239,11 @@ const FlagBoard: React.FC<{
               </div>
 
               {isSolved ? (
-                <p className="ms-6 text-xs font-semibold text-[#00a859]">{t('solved', lang)}</p>
+                <p className="ms-[30px] flex items-center gap-1.5 text-xs font-semibold text-[#00a859]">
+                  <CheckCircle2 size={13} /> {t('solved', lang)}
+                </p>
               ) : (
-                <div className="ms-6 space-y-2">
+                <div className="ms-[30px] space-y-2">
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
@@ -229,7 +255,7 @@ const FlagBoard: React.FC<{
                     <input
                       type="text"
                       value={drafts[flag.id] ?? ''}
-                      disabled={disabled}
+                      disabled={disabled || isChecking}
                       onChange={(e) => {
                         setDrafts((d) => ({ ...d, [flag.id]: e.target.value }));
                         setWrong((w) => ({ ...w, [flag.id]: false }));
@@ -245,7 +271,8 @@ const FlagBoard: React.FC<{
                     <Button
                       type="submit"
                       size="sm"
-                      disabled={disabled || !(drafts[flag.id] ?? '').trim()}
+                      disabled={disabled || !!checking || !(drafts[flag.id] ?? '').trim()}
+                      isLoading={isChecking}
                     >
                       {t('submit', lang)}
                     </Button>
@@ -254,6 +281,11 @@ const FlagBoard: React.FC<{
                   <div className="flex flex-wrap items-center gap-3">
                     {wrong[flag.id] && (
                       <span className="text-xs font-semibold text-red-400">{t('wrong', lang)}</span>
+                    )}
+                    {failed[flag.id] && (
+                      <span className="text-xs font-semibold text-red-400">
+                        {failureText(failed[flag.id]!, lang)}
+                      </span>
                     )}
                     {flag.hint && !hints[flag.id] && (
                       <button
@@ -291,6 +323,8 @@ const LabView: React.FC<LabViewProps> = ({
   isComplete = false,
   onComplete,
   preview = false,
+  pendingAt = null,
+  failure = null,
 }) => {
   const persist = !preview && !!moduleSlug;
 
@@ -317,14 +351,10 @@ const LabView: React.FC<LabViewProps> = ({
     [moduleSlug, lab.id, persist]
   );
 
+  /* All the flags in means the lab is done, with no second button: the server
+     records it the moment it accepts the last one, and the tick comes back
+     with its answer. */
   const flags = labFlags(lab);
-  const solvedAll = flags.length > 0 && flags.every((f) => progress.flagsSolved.includes(f.id));
-
-  /* All the flags in means the lab is done. Marking it here rather than making
-     the student press a second button: they already proved it. */
-  useEffect(() => {
-    if (solvedAll && !isComplete && onComplete && !preview) onComplete();
-  }, [solvedAll, isComplete, onComplete, preview]);
 
   const markOpened = useCallback(() => {
     update((prev) => (prev.openedAt ? {} : { openedAt: new Date().toISOString() }));
@@ -559,14 +589,9 @@ const LabView: React.FC<LabViewProps> = ({
         <FlagBoard
           lab={lab}
           lang={lang}
+          moduleSlug={moduleSlug}
           solved={progress.flagsSolved}
-          onSolve={(flagId) =>
-            update((prev) =>
-              prev.flagsSolved.includes(flagId)
-                ? {}
-                : { flagsSolved: [...prev.flagsSolved, flagId] }
-            )
-          }
+          onSolved={(solved) => update(() => ({ flagsSolved: solved }))}
           disabled={preview}
         />
       ) : null}
@@ -595,6 +620,9 @@ const LabView: React.FC<LabViewProps> = ({
             </motion.div>
           ) : null}
         </AnimatePresence>
+        {!isComplete && (pendingAt || failure) && (
+          <CompletionNotice readyAt={pendingAt} failure={failure} className="mt-3" />
+        )}
       </div>
 
       {/* Expanded simulation needs a way out that is not the toggle behind it. */}

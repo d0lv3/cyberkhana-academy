@@ -63,6 +63,9 @@ interface CourseViewerSidebarProps {
   modules: SidebarModule[];
   activeLectureId: string;
   completedLectures: string[];
+  /** Finished, and waiting on the server's pace clock to be recorded
+   *  (services/completionService.ts). Drawn apart from done and not done. */
+  pendingLectures?: string[];
   onSelectLecture: (lectureId: string) => void;
   mobileOpen: boolean;
   onMobileClose: () => void;
@@ -104,6 +107,7 @@ const CourseViewerSidebar: React.FC<CourseViewerSidebarProps> = ({
   modules,
   activeLectureId,
   completedLectures,
+  pendingLectures = [],
   onSelectLecture,
   mobileOpen,
   onMobileClose,
@@ -280,6 +284,7 @@ const CourseViewerSidebar: React.FC<CourseViewerSidebarProps> = ({
                 <ul className="pb-2.5 ps-3 pe-2">
                   {mod.lectures.map((lecture, lectureIdx) => {
                     const done = isCompleted(lecture.id);
+                    const pending = !done && pendingLectures.includes(lecture.id);
                     const active = lecture.id === activeLectureId;
                     const first = lectureIdx === 0;
                     const last = lectureIdx === mod.lectures.length - 1;
@@ -326,6 +331,8 @@ const CourseViewerSidebar: React.FC<CourseViewerSidebarProps> = ({
                               )}
                               {done ? (
                                 <span className="h-[9px] w-[9px] rounded-full bg-[#00a859]" />
+                              ) : pending ? (
+                                <span className="h-[9px] w-[9px] rounded-full border-[1.5px] border-[#f3a43a] bg-[#f3a43a]/30" />
                               ) : (
                                 <span
                                   className={`h-[9px] w-[9px] rounded-full border-[1.5px] bg-[#0f1520] ${

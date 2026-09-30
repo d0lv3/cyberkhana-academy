@@ -14,7 +14,7 @@ import CodeEditor from './CodeEditor';
 import OutputPanel from './OutputPanel';
 import ResizeHandle from '../ui/ResizeHandle';
 import type { ExecutionResult } from './PythonExecutor';
-import { runCode, isRunnerReady, type RunnerLanguage } from './runners';
+import { runCode, isRunnerReady, warmUpRunner, type RunnerLanguage } from './runners';
 import type { TestCase } from '../../data/programming/types';
 import { useLang } from '../../contexts/LangContext';
 
@@ -26,7 +26,9 @@ interface CodingEnvironmentProps {
   testCases?: TestCase[];
   hints?: string[];
   solution?: string;
-  onPass?: () => void;
+  /** Every test passed. Given what the code printed for each test, in the
+   *  tests' order, which the server compares before recording a challenge. */
+  onPass?: (outputs: string[]) => void;
 }
 
 /** Does this snippet read from stdin? Decides whether to offer the input box. */
@@ -126,6 +128,14 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
   const [testsHeight, setTestsHeight] = usePanelHeight('tests');
   const [stdinHeight, setStdinHeight] = usePanelHeight('stdin');
 
+  /* Fetch the runtime while the lesson is being read, so the first Run does
+     not wait on it. Skipped when the browser asks to save data: then it is
+     fetched on the first Run, as before. */
+  useEffect(() => {
+    const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData;
+    if (!saveData) warmUpRunner(language);
+  }, [language]);
+
   const isChallenge = testCases && testCases.length > 0;
   const allPassed = testResults?.every((t) => t.passed) ?? false;
 
@@ -173,10 +183,12 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
     if (!isRunnerReady(language)) setIsLoading(true);
 
     const results: TestResult[] = [];
+    const outputs: string[] = [];
     let lastOutput = '';
     try {
       for (const tc of testCases) {
         const result = await runCode(language, code, tc.input);
+        outputs.push(result.output);
         const actual = result.output.trimEnd();
         const expected = tc.expectedOutput.trimEnd();
         lastOutput = result.output;
@@ -197,9 +209,9 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
       setTestResults(results);
       setIsRunning(false);
       setIsLoading(false);
-      if (results.every((r) => r.passed)) onPass?.();
+      if (results.length === testCases.length && results.every((r) => r.passed)) onPass?.(outputs);
     }
-  }, [code, testCases, onPass]);
+  }, [code, language, testCases, onPass]);
 
   const handleReset = () => {
     setCode(starterCode);

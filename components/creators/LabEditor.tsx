@@ -29,6 +29,7 @@ import {
   newLab,
   newLabFlag,
   newLabLink,
+  MAX_LAB_FLAGS as MAX_FLAGS,
   type LabFlag,
   type LabLink,
   type ModuleLab,
@@ -104,11 +105,14 @@ const LinkRow: React.FC<{ link: LabLink; onChange: (l: LabLink) => void }> = ({
 };
 
 /* ── One flag row ── */
-const FlagRow: React.FC<{ flag: LabFlag; onChange: (f: LabFlag) => void }> = ({
+const FlagRow: React.FC<{ flag: LabFlag; index: number; onChange: (f: LabFlag) => void }> = ({
   flag,
+  index,
   onChange,
 }) => (
   <div className="space-y-2">
+    {/* Numbered the way students see them, so the two can be matched up. */}
+    <p className="text-[11px] font-bold uppercase tracking-wider text-[#8592ad]">Answer {index + 1}</p>
     <input
       type="text"
       value={flag.label}
@@ -119,7 +123,7 @@ const FlagRow: React.FC<{ flag: LabFlag; onChange: (f: LabFlag) => void }> = ({
     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
       <input
         type="text"
-        value={flag.answer}
+        value={flag.answer ?? ''}
         onChange={(e) => onChange({ ...flag, answer: e.target.value })}
         placeholder="The expected answer"
         dir="ltr"
@@ -471,17 +475,17 @@ const LabEditor: React.FC<LabEditorProps> = ({
                             }
                             createItem={newLabFlag}
                             addLabel="Add another answer"
-                            maxItems={10}
-                            renderItem={(item, _i, change) => (
-                              <FlagRow flag={item} onChange={change} />
+                            maxItems={MAX_FLAGS}
+                            renderItem={(item, i, change) => (
+                              <FlagRow flag={item} index={i} onChange={change} />
                             )}
                           />
                           <p className="mt-2 flex items-start gap-1.5 text-[11px] leading-relaxed text-[#8592ad]">
                             <AlertTriangle size={11} className="mt-0.5 flex-shrink-0 text-[#f3a43a]" />
                             <span>
-                              Answers are checked in the student&apos;s browser, which means a
-                              determined one can read them from the page. Good for a self-check,
-                              not for a graded exam.
+                              Answers stay on the server, which checks each one as it is sent.
+                              Students only ever see the hint for the empty box, never the
+                              answer. Up to {MAX_FLAGS} per lab.
                             </span>
                           </p>
                         </div>
