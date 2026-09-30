@@ -682,7 +682,9 @@ const LAB_HOSTS: Record<string, string> = {
   'google.com': '142.250.190.14',
   'github.com': '140.82.121.3',
   'scanme.nmap.org': '45.33.32.156',
-  'cyberkhana.tech': '167.235.193.228',
+  // What public DNS returns (a Cloudflare edge). Never the origin server's IP:
+  // this table ships in the client bundle.
+  'cyberkhana.tech': '104.21.42.129',
 };
 /** Resolve a hostname to an IP (deterministic pseudo-IP for unknown names). */
 function resolveHost(h: string): string {
