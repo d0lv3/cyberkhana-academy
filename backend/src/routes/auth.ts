@@ -14,6 +14,7 @@ import { logger } from '../utils/logger';
 import { effectivePermissions } from '../types';
 import { isSocialPlatform, normalizeSocial, publicSocials } from '../utils/socials';
 import { isStreakGoal } from '../shared/streak';
+import { isOfferedUniversity } from '../utils/universities';
 import { scheduleDeletion, settleDeletionAtSignIn } from '../utils/accountDeletion';
 
 import {
@@ -304,6 +305,23 @@ router.patch('/profile', authenticate, async (req: AuthRequest, res) => {
       }
       if (result.value) nextSocials[platform] = result.value;
       else delete nextSocials[platform];
+    }
+  }
+
+  /* A university is picked from the list, never typed (shared/universities.ts),
+     and it is shown to every member on the leaderboard and in its filter, so
+     the list is enforced here and not only by the picker. Checked only when the
+     choice changes: one made before a university was taken off the list stays. */
+  if (rest.university !== undefined && rest.university !== (req.user!.university ?? '')) {
+    try {
+      if (!(await isOfferedUniversity(rest.university))) {
+        res.status(400).json({ error: 'Pick a university from the list', field: 'university' });
+        return;
+      }
+    } catch (err) {
+      logger.error('auth.university_check_failed', { error: String(err) });
+      res.status(500).json({ error: 'Could not update profile' });
+      return;
     }
   }
 

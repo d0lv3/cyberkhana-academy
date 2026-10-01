@@ -15,6 +15,7 @@ import leaderboardRoutes from './routes/leaderboard';
 import userRoutes from './routes/users';
 import feedbackRoutes from './routes/feedback';
 import adminRoutes from './routes/admin';
+import universityRoutes from './routes/universities';
 import uploadRoutes, { UPLOADS_DIR, LAB_RESOURCES_DIR } from './routes/uploads';
 import { startDeletionSweep } from './utils/accountDeletion';
 import { restateStaleAccounts } from './utils/xpMigration';
@@ -55,6 +56,7 @@ app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/universities', universityRoutes);
 app.use('/api/uploads', uploadRoutes);
 
 /* Lab resources — creator-uploaded files students download to do the work.

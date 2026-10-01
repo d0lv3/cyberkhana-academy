@@ -12,6 +12,7 @@ import { api } from '../services/api';
 import { profilePath } from '../services/profiles';
 import { LEVELS } from '../services/xpService';
 import { universityLabel, NOT_ENROLLED } from '../data/iraqUniversities';
+import { useUniversities } from '../services/universities';
 
 type Scope = 'overall' | 'monthly';
 
@@ -50,6 +51,8 @@ const selectCls =
 const LeaderboardPage: React.FC = () => {
   const { user } = useAuth();
   const { t, lang } = useLang();
+  // University names are read from a list that can arrive after first paint.
+  useUniversities();
 
   const [scope, setScope] = useState<Scope>('overall');
   const [university, setUniversity] = useState('');
