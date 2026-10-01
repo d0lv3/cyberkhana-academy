@@ -9,10 +9,13 @@ import {
   ChevronRight,
   Loader2,
   Keyboard,
+  Copy,
+  Check,
 } from 'lucide-react';
 import CodeEditor from './CodeEditor';
 import OutputPanel from './OutputPanel';
 import ResizeHandle from '../ui/ResizeHandle';
+import { copyText } from '../ui/copyText';
 import type { ExecutionResult } from './PythonExecutor';
 import { runCode, isRunnerReady, warmUpRunner, type RunnerLanguage } from './runners';
 import type { TestCase } from '../../data/programming/types';
@@ -122,6 +125,7 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
   const [testResults, setTestResults] = useState<TestResult[] | null>(null);
   const [revealedHints, setRevealedHints] = useState(0);
   const [showSolution, setShowSolution] = useState(false);
+  const [solutionCopied, setSolutionCopied] = useState(false);
 
   const shellRef = useRef<HTMLDivElement>(null);
   const [outputHeight, setOutputHeight] = usePanelHeight('output');
@@ -220,6 +224,12 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
     setTestResults(null);
     setShowSolution(false);
     setRevealedHints(0);
+  };
+
+  const copySolution = async () => {
+    if (!solution || !(await copyText(solution))) return;
+    setSolutionCopied(true);
+    window.setTimeout(() => setSolutionCopied(false), 1600);
   };
 
   const clearOutput = () => {
@@ -438,10 +448,24 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
 
       {showSolution && solution && (
         <div className="mt-2 rounded-lg border border-[#1e2a3d] overflow-hidden flex-shrink-0">
-          <div className="px-3 py-1.5 bg-[#0b1019] border-b border-[#1e2a3d]">
+          <div className="flex items-center justify-between gap-2 px-3 py-1.5 bg-[#0b1019] border-b border-[#1e2a3d]">
             <span className={`text-[10px] font-bold text-[#7c8aa6] ${isArabic ? '' : 'uppercase tracking-wider'}`}>{t('lab.solution')}</span>
+            <button
+              type="button"
+              onClick={copySolution}
+              aria-label={solutionCopied ? t('lab.copied') : t('lab.copySolution')}
+              className={`inline-flex items-center gap-1 rounded border px-2 py-1 touch:min-h-tap touch:px-3 text-[11px] font-medium transition-colors ${
+                solutionCopied
+                  ? 'border-[#00a859]/45 bg-[#00a859]/15 text-[#00a859]'
+                  : 'border-[#1e2a3d] bg-[#0d1420] text-[#8592ad] hover:border-[#2a3a52] hover:text-[#d2d7e3]'
+              }`}
+            >
+              {solutionCopied ? <Check size={11} /> : <Copy size={11} />}
+              {solutionCopied ? t('lab.copied') : t('lab.copy')}
+            </button>
           </div>
-          <div className="pointer-events-none opacity-85">
+          {/* Read-only, but still a thing to select from and copy out of. */}
+          <div className="opacity-85">
             <CodeEditor value={solution} onChange={() => {}} language={language} readOnly />
           </div>
         </div>

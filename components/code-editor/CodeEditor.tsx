@@ -210,6 +210,10 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
       theme={[editorTheme, syntaxHighlighting(syntaxColors)]}
       extensions={langExtensions[language] ?? []}
       readOnly={readOnly}
+      /* Read-only alone leaves the text contenteditable, which raises the
+         keyboard on a phone as soon as it is tapped. Selecting and copying
+         still work without it. */
+      editable={!readOnly}
       basicSetup={{
         lineNumbers: true,
         highlightActiveLine: true,
