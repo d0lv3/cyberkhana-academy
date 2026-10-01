@@ -693,7 +693,6 @@
   .mobile-bottom-nav { padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px); box-shadow: 0 -8px 28px rgb(0 0 0 / .18); }
   .mobile-bottom-nav > div { min-height: 64px; gap: 2px; padding-inline: 6px; }
   .mobile-bottom-nav :is(a, button) { min-width: 0; min-height: 64px; font-size: 11px; gap: 5px; border-radius: 12px; }
-  .mobile-bottom-nav :is(a[aria-current='page'], button[aria-expanded='true']) { background: linear-gradient(180deg, rgb(0 168 89 / .13), transparent); }
   .mobile-bottom-nav :is(a, button):active { background-color: rgb(0 168 89 / .16); }
   .mobile-bottom-nav :is(a, button):focus-visible { outline: 2px solid var(--brand-green); outline-offset: -3px; }
   .challenge-filters > :last-child { grid-column: 1 / -1; }

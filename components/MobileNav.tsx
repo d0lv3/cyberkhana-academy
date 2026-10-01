@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import MobileSheet from './ui/MobileSheet';
+import { LogOut, X } from 'lucide-react';
 import {
-  LayoutDashboard,
-  GraduationCap,
-  Layers,
-  Trophy,
-  User,
-  Pencil,
-  Users,
-  MoreHorizontal,
-  LogOut,
-  X,
-} from 'lucide-react';
-import PathsIcon from './ui/PathsIcon';
+  DashboardIcon,
+  FundamentalsIcon,
+  ModulesIcon,
+  PathsIcon,
+  LeaderboardIcon,
+  StudioIcon,
+  ProfileIcon,
+  MembersIcon,
+  MoreIcon,
+  type NavIconProps,
+} from './ui/NavIcons';
 import LevelEmblem from './levels/LevelEmblem';
 import { levelColor } from './ui/LevelBadge';
 import { useLang } from '../contexts/LangContext';
@@ -46,7 +46,7 @@ import { useXp } from '../services/xpService';
 
 interface NavItem {
   to: string;
-  icon: React.ElementType;
+  icon: React.FC<NavIconProps>;
   label: string;
   /** Shorter wording for the bar, where a cell is a fifth of a phone. */
   short?: string;
@@ -73,30 +73,30 @@ const MobileNav: React.FC = () => {
   const primary: NavItem[] = [
     {
       to: '/dashboard',
-      icon: LayoutDashboard,
+      icon: DashboardIcon,
       label: t('sidebar.dashboard'),
       short: ar ? 'الرئيسية' : 'Home',
       tour: 'nav-dashboard',
     },
     {
       to: '/fundamentals',
-      icon: GraduationCap,
+      icon: FundamentalsIcon,
       label: t('sidebar.fundamentals'),
       short: ar ? undefined : 'Basics',
       tour: 'nav-fundamentals',
     },
-    { to: '/modules', icon: Layers, label: t('sidebar.modules'), tour: 'nav-modules' },
+    { to: '/modules', icon: ModulesIcon, label: t('sidebar.modules'), tour: 'nav-modules' },
     { to: '/paths', icon: PathsIcon, label: t('sidebar.paths'), tour: 'nav-paths' },
   ];
 
   const overflow: NavItem[] = [
-    { to: '/leaderboard', icon: Trophy, label: t('sidebar.leaderboard'), tour: 'nav-leaderboard' },
-    { to: '/profile', icon: User, label: t('sidebar.profile'), tour: 'nav-profile' },
+    { to: '/leaderboard', icon: LeaderboardIcon, label: t('sidebar.leaderboard'), tour: 'nav-leaderboard' },
+    { to: '/profile', icon: ProfileIcon, label: t('sidebar.profile'), tour: 'nav-profile' },
     ...(isCreator
       ? [
           {
             to: '/creators',
-            icon: Pencil,
+            icon: StudioIcon,
             label: ar ? 'استوديو المحتوى' : 'Content Studio',
             tour: 'nav-creators',
           },
@@ -106,7 +106,7 @@ const MobileNav: React.FC = () => {
       ? [
           {
             to: '/admin/members',
-            icon: Users,
+            icon: MembersIcon,
             label: ar ? 'الأعضاء' : 'Members',
             tour: 'nav-members',
           },
@@ -124,11 +124,18 @@ const MobileNav: React.FC = () => {
      the bar is never showing nothing selected. */
   const moreIsCurrent = moreOpen || overflow.some((item) => holds(pathname, item.to));
 
-  const rowIcon = (Icon: React.ElementType, active: boolean, size: number) => (
-    /* The chosen glyph fills in, the same signature the desktop column uses.
-       See Sidebar for why only certain glyphs can live in a navigation that
-       does this: filling one built from open paths closes it into a blob. */
-    <Icon size={size} fill={active ? 'currentColor' : 'none'} className="flex-shrink-0" />
+  /* The desktop column's signature, carried over: the place you are is a
+     solid green tile with its glyph in dark ink, and everything else is quiet.
+     Along the bar the tile is wider than it is tall, so it reads at a glance
+     without making the bar any taller; in the sheet it is the column's own. */
+  const tile = (Icon: React.FC<NavIconProps>, active: boolean, shape: 'bar' | 'row') => (
+    <span
+      className={`flex flex-shrink-0 items-center justify-center transition-colors ${
+        shape === 'bar' ? 'h-7 w-11 rounded-[10px]' : 'h-[34px] w-[34px] rounded-[11px]'
+      } ${active ? 'bg-[#00a859] text-[#04140c]' : shape === 'row' ? 'text-[#7f8ca8]' : ''}`}
+    >
+      <Icon size={20} active={active} />
+    </span>
   );
 
   return (
@@ -202,16 +209,16 @@ const MobileNav: React.FC = () => {
                   data-tour-id={tour}
                   className={({ isActive }) =>
                     [
-                      'flex min-h-tap items-center gap-3 rounded-xl px-3 text-sm font-semibold transition-colors select-none',
+                      'flex min-h-tap items-center gap-3 rounded-xl ps-2 pe-3 text-sm transition-colors select-none',
                       isActive
-                        ? 'bg-[#00a859]/12 text-[#00a859]'
-                        : 'text-[#9aa5bf] hover:bg-[#182235] hover:text-[#d2d7e3]',
+                        ? 'bg-[#101826] font-semibold text-[#f3f6ff]'
+                        : 'font-medium text-[#9aa5bf] hover:bg-[#0f1622] hover:text-[#e3e8f4]',
                     ].join(' ')
                   }
                 >
                   {({ isActive }) => (
                     <>
-                      {rowIcon(Icon, isActive, 18)}
+                      {tile(Icon, isActive, 'row')}
                       <span className="truncate">{label}</span>
                     </>
                   )}
@@ -221,9 +228,12 @@ const MobileNav: React.FC = () => {
               <button
                 type="button"
                 onClick={logout}
-                className="flex w-full min-h-tap items-center gap-3 rounded-xl px-3 text-sm font-semibold text-red-400 transition-colors select-none hover:bg-red-500/10"
+                className="flex w-full min-h-tap items-center gap-3 rounded-xl ps-2 pe-3 text-sm font-semibold text-red-400 transition-colors select-none hover:bg-red-500/10"
               >
-                <LogOut size={18} className="flex-shrink-0 rtl-flip" />
+                {/* In a box the size of the tiles above, so the labels line up. */}
+                <span className="flex h-[34px] w-[34px] flex-shrink-0 items-center justify-center">
+                  <LogOut size={18} className="rtl-flip" />
+                </span>
                 <span className="truncate">{ar ? 'تسجيل الخروج' : 'Log out'}</span>
               </button>
             </nav>
@@ -245,7 +255,7 @@ const MobileNav: React.FC = () => {
                 [
                   'relative flex min-h-tap flex-col items-center justify-center gap-1 px-0.5 py-2',
                   'text-[10px] font-semibold leading-none transition-colors select-none',
-                  isActive ? 'text-[#00a859]' : 'text-[#8592ad]',
+                  isActive ? 'text-[#f3f6ff]' : 'text-[#8592ad]',
                 ].join(' ')
               }
             >
@@ -254,9 +264,9 @@ const MobileNav: React.FC = () => {
                   {/* The desktop column marks the chosen row with a rule down
                       its leading edge. Along a bar, that edge is the top. */}
                   {isActive && (
-                    <span className="absolute inset-x-0 top-0 mx-auto h-0.5 w-8 rounded-b-full bg-[#00a859]" />
+                    <span aria-hidden className="absolute inset-x-0 top-0 mx-auto h-[3px] w-7 rounded-b-full bg-[#9fef00]" />
                   )}
-                  {rowIcon(Icon, isActive, 20)}
+                  {tile(Icon, isActive, 'bar')}
                   <span className="max-w-full truncate">{short ?? label}</span>
                 </>
               )}
@@ -271,13 +281,13 @@ const MobileNav: React.FC = () => {
             className={[
               'relative flex min-h-tap flex-col items-center justify-center gap-1 px-0.5 py-2',
               'text-[10px] font-semibold leading-none transition-colors select-none',
-              moreIsCurrent ? 'text-[#00a859]' : 'text-[#8592ad]',
+              moreIsCurrent ? 'text-[#f3f6ff]' : 'text-[#8592ad]',
             ].join(' ')}
           >
             {moreIsCurrent && (
-              <span className="absolute inset-x-0 top-0 mx-auto h-0.5 w-8 rounded-b-full bg-[#00a859]" />
+              <span aria-hidden className="absolute inset-x-0 top-0 mx-auto h-[3px] w-7 rounded-b-full bg-[#9fef00]" />
             )}
-            <MoreHorizontal size={20} className="flex-shrink-0" />
+            {tile(MoreIcon, moreIsCurrent, 'bar')}
             <span className="max-w-full truncate">{ar ? 'المزيد' : 'More'}</span>
           </button>
         </div>

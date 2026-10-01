@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
-import {
-  LayoutDashboard,
-  GraduationCap,
-  Layers,
-  Trophy,
-  User,
-  Pencil,
-  Users,
-  ChevronLeft,
-  ChevronRight,
-} from 'lucide-react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import BrandLogo from './ui/BrandLogo';
-import PathsIcon from './ui/PathsIcon';
+import {
+  DashboardIcon,
+  FundamentalsIcon,
+  ModulesIcon,
+  PathsIcon,
+  LeaderboardIcon,
+  StudioIcon,
+  ProfileIcon,
+  MembersIcon,
+  type NavIconProps,
+} from './ui/NavIcons';
 import { useLang } from '../contexts/LangContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useXp } from '../services/xpService';
@@ -24,6 +24,12 @@ import LevelEmblem from './levels/LevelEmblem';
  * Desktop only, and deliberately so. A phone gets MobileNav, a bar across the
  * bottom of the screen, rather than a narrow copy of this one hidden behind a
  * menu button.
+ *
+ * It is laid out like an instrument panel: one accent, and it is spent on
+ * exactly one thing, the page you are on. That row's icon sits on a solid
+ * green tile with a lit marker at the panel's edge; every other row is quiet
+ * until the pointer reaches it. The same tile is what is left of a row when
+ * the panel is collapsed, so the two states read as one design.
  */
 
 interface SidebarProps {
@@ -31,37 +37,45 @@ interface SidebarProps {
   onToggle: () => void;
 }
 
+interface NavItem {
+  to: string;
+  icon: React.FC<NavIconProps>;
+  label: string;
+  /** What the Academy tour points at. A name given on purpose, not a class
+   *  borrowed from the styling, so restyling a row never breaks the tour. */
+  tour: string;
+}
+
 const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
   const { t, lang } = useLang();
   const { user } = useAuth();
   const { xp, level } = useXp();
+  const navigate = useNavigate();
   /** Route whose icon is mid-nudge, cleared when the animation ends. */
   const [nudging, setNudging] = useState<string | null>(null);
 
+  const ar = lang === 'ar';
   const isCreator = user?.role === 'creator' || user?.role === 'admin';
 
-  /* `tour` is what the Academy tour points at. It is a name given on purpose,
-     not a class name borrowed from the styling, so moving a row or restyling
-     it never quietly breaks the tour. */
-  const learnItems = [
-    { to: '/dashboard', icon: LayoutDashboard, label: t('sidebar.dashboard'), tour: 'nav-dashboard' },
-    { to: '/fundamentals', icon: GraduationCap, label: t('sidebar.fundamentals'), tour: 'nav-fundamentals' },
-    { to: '/modules', icon: Layers, label: t('sidebar.modules'), tour: 'nav-modules' },
+  const learnItems: NavItem[] = [
+    { to: '/dashboard', icon: DashboardIcon, label: t('sidebar.dashboard'), tour: 'nav-dashboard' },
+    { to: '/fundamentals', icon: FundamentalsIcon, label: t('sidebar.fundamentals'), tour: 'nav-fundamentals' },
+    { to: '/modules', icon: ModulesIcon, label: t('sidebar.modules'), tour: 'nav-modules' },
     { to: '/paths', icon: PathsIcon, label: t('sidebar.paths'), tour: 'nav-paths' },
-    { to: '/leaderboard', icon: Trophy, label: t('sidebar.leaderboard'), tour: 'nav-leaderboard' },
+    { to: '/leaderboard', icon: LeaderboardIcon, label: t('sidebar.leaderboard'), tour: 'nav-leaderboard' },
     ...(isCreator
-      ? [{ to: '/creators', icon: Pencil, label: lang === 'ar' ? 'استوديو المحتوى' : 'Content Studio', tour: 'nav-creators' }]
+      ? [{ to: '/creators', icon: StudioIcon, label: ar ? 'استوديو المحتوى' : 'Content Studio', tour: 'nav-creators' }]
       : []),
   ];
 
-  const accountItems = [
-    { to: '/profile', icon: User, label: t('sidebar.profile'), tour: 'nav-profile' },
+  const accountItems: NavItem[] = [
+    { to: '/profile', icon: ProfileIcon, label: t('sidebar.profile'), tour: 'nav-profile' },
     ...(user?.role === 'admin'
-      ? [{ to: '/admin/members', icon: Users, label: lang === 'ar' ? 'الأعضاء' : 'Members', tour: 'nav-members' }]
+      ? [{ to: '/admin/members', icon: MembersIcon, label: ar ? 'الأعضاء' : 'Members', tour: 'nav-members' }]
       : []),
   ];
 
-  const renderNavItems = (items: typeof learnItems) =>
+  const renderNavItems = (items: NavItem[]) =>
     items.map(({ to, icon: Icon, label, tour }) => (
       <NavLink
         key={to}
@@ -71,148 +85,196 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
         title={collapsed ? label : undefined}
         className={({ isActive }) =>
           [
-            'group relative flex items-center gap-3 rounded-lg text-sm font-medium transition-all duration-150',
-            collapsed ? 'px-2.5 py-2.5 justify-center' : 'px-3 py-2.5',
-            isActive
-              ? 'bg-[#00a859]/12 text-[#00a859] border border-[#00a859]/20'
-              : 'text-[#9aa5bf] hover:bg-[#182235] hover:text-[#d2d7e3] border border-transparent',
+            'group relative flex h-11 items-center rounded-xl outline-none transition-colors duration-150',
+            'focus-visible:ring-2 focus-visible:ring-[#00a859]/60',
+            collapsed ? 'justify-center' : 'gap-3 ps-1.5 pe-3',
+            isActive ? (collapsed ? '' : 'bg-[#101826]') : collapsed ? '' : 'hover:bg-[#0f1622]',
           ].join(' ')
         }
       >
         {({ isActive }) => (
           <>
+            {/* The lit marker sits on the panel's own edge, outside the row, so
+                it lines up down the column whichever row is chosen. */}
             {isActive && (
-              <span className="absolute start-0 w-0.5 h-6 bg-[#00a859] rounded-e" />
+              <span
+                aria-hidden
+                className="absolute -start-3 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-e-full bg-[#9fef00]"
+              />
             )}
-            <Icon
-              /* The chosen tab's glyph fills in, in its own colour: the fill
-                 is currentColor at full strength, so the icon reads as one
-                 solid shape rather than a paler wash sitting inside a brighter
-                 outline.
-
-                 That constrains which glyphs can live here at all. These are
-                 stroked outlines, and filling one built from open paths closes
-                 it into a blob: BookOpen became a lump and PenTool lost its nib.
-                 Paths therefore has a custom two-state glyph; Fundamentals and
-                 the Studio use a cap and pencil, shapes that survive being
-                 filled. Profile is User rather than UserCircle for the same
-                 reason: filling a glyph that encloses itself in a circle only
-                 produces a disc behind the person. */
-              fill={isActive ? 'currentColor' : 'none'}
-              onAnimationEnd={() => setNudging(null)}
-              className={`flex-shrink-0 transition-colors ${
-                nudging === to ? 'nav-nudge' : ''
-              } ${isActive ? 'text-[#00a859]' : 'text-[#8592ad] group-hover:text-[#9aa5bf]'}`}
-              size={collapsed ? 20 : 17}
-            />
-            {!collapsed && <span className="flex-1">{label}</span>}
-            {!collapsed && isActive && <ChevronRight size={13} className="text-[#00a859]/60 rtl-flip" />}
+            <span
+              className={`flex h-[34px] w-[34px] flex-shrink-0 items-center justify-center rounded-[11px] transition-colors duration-150 ${
+                isActive
+                  ? 'bg-[#00a859] text-[#04140c]'
+                  : 'text-[#7f8ca8] group-hover:bg-[#182235] group-hover:text-[#dfe5f2]'
+              }`}
+            >
+              <Icon
+                size={20}
+                active={isActive}
+                onAnimationEnd={() => setNudging(null)}
+                className={nudging === to ? 'nav-nudge' : undefined}
+              />
+            </span>
+            {!collapsed && (
+              <span
+                className={`min-w-0 flex-1 truncate text-[13.5px] transition-colors ${
+                  isActive
+                    ? 'font-semibold text-[#f3f6ff]'
+                    : 'font-medium text-[#9aa5bf] group-hover:text-[#e3e8f4]'
+                }`}
+              >
+                {label}
+              </span>
+            )}
           </>
         )}
       </NavLink>
     ));
 
-  const sidebarContent = (
-    <>
-      {/* Logo + collapse toggle */}
-      <div className={`flex items-center border-b border-[#1e293b] ${collapsed ? 'px-2 py-5 justify-center' : 'px-5 py-5 justify-between'}`}>
-        {collapsed ? (
-          <BrandLogo
-            variant="collapsed"
-            loading="eager"
-            className="h-8 w-8 object-contain"
-          />
-        ) : (
-          <BrandLogo
-            variant="full"
-            loading="eager"
-            className="h-8 w-auto max-w-[140px] object-contain"
-          />
-        )}
-      </div>
+  /* Tracked capitals suit Latin and break Arabic, whose letters join: spacing
+     them apart pulls a word into pieces. The gap above the second label is
+     padding, because the nav's own row spacing overrides a margin there. */
+  const sectionLabel = (text: string, first = false) =>
+    collapsed ? (
+      first ? null : <div aria-hidden className="mx-auto my-3 h-px w-6 bg-[#1e293b]" />
+    ) : (
+      <p
+        className={`mb-2 flex items-center gap-2.5 ps-2.5 pe-1 text-[10px] font-semibold uppercase text-[#66738f] ${
+          first ? '' : 'pt-5'
+        }`}
+        style={ar ? undefined : { letterSpacing: '0.16em' }}
+      >
+        <span>{text}</span>
+        <span aria-hidden className="h-px flex-1 bg-[#1a2334]" />
+      </p>
+    );
 
-      {/* Nav */}
-      <nav className="flex-1 px-2 py-5 space-y-0.5 overflow-y-auto">
-        {!collapsed && (
-          <p className="px-3 mb-3 text-[10px] font-bold tracking-[0.15em] text-[#8592ad] uppercase">
-            {t('sidebar.learn')}
-          </p>
-        )}
-        {renderNavItems(learnItems)}
+  const tint = levelColor(level.level);
+  const percent = Math.round(level.fraction * 100);
+  const xpTitle = level.next
+    ? `${xp.toLocaleString('en-US')} / ${level.next.minXp.toLocaleString('en-US')} XP`
+    : `${xp.toLocaleString('en-US')} XP`;
+  const openLevels = () => navigate('/dashboard', { state: { focus: 'levels' } });
+  const levelsLabel = ar ? 'كل المستويات' : 'See all levels';
 
-        {!collapsed && (
-          <p className="px-3 mb-3 mt-6 text-[10px] font-bold tracking-[0.15em] text-[#8592ad] uppercase">
-            {t('sidebar.account')}
-          </p>
-        )}
-        {collapsed && <div className="my-4 border-t border-[#1e293b]" />}
-        {renderNavItems(accountItems)}
-      </nav>
-
-      {/* User mini-card */}
-      {user && (
-        <div className="px-2 py-4 border-t border-[#1e293b]">
-          {collapsed ? (
-            <div className="flex justify-center">
-              <div className="w-9 h-9 rounded-full bg-[#0e1522] border border-[#263248] flex items-center justify-center">
-                <span className="text-sm font-black text-[#9fef00]">
-                  {(user.displayName || 'U').charAt(0).toUpperCase()}
-                </span>
-              </div>
-            </div>
-          ) : (
-            <div
-              data-tour-id="sidebar-level"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-[#121a2a] border border-[#263248]"
-            >
-              <div className="w-8 h-8 rounded-full bg-[#0e1522] border border-[#263248] flex items-center justify-center flex-shrink-0">
-                <span className="text-sm font-black text-[#9fef00]">
-                  {(user.displayName || 'U').charAt(0).toUpperCase()}
-                </span>
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-[#d2d7e3] truncate">
-                  {user.displayName}
-                </p>
-                <p className="flex items-center gap-1 text-[10px] font-bold" style={{ color: levelColor(level.level) }}>
-                  <LevelEmblem level={level.level} lang={lang} decorative eager className="-my-1 h-4 w-4 flex-shrink-0" />
-                  <span dir="ltr" className="font-mono">
-                    {level.level.hex}
-                  </span>
-                  <span className="truncate">{level.level.name[lang]}</span>
-                </p>
-                {/* How far through the level, toward the next one. */}
-                <div
-                  className="mt-1 h-1 rounded-full bg-[#0a0f18] overflow-hidden"
-                  dir="ltr"
-                  title={
-                    level.next
-                      ? `${xp.toLocaleString('en-US')} / ${level.next.minXp.toLocaleString('en-US')} XP`
-                      : `${xp.toLocaleString('en-US')} XP`
-                  }
-                >
-                  <div
-                    className="h-full rounded-full transition-all duration-700"
-                    style={{ width: `${Math.round(level.fraction * 100)}%`, backgroundColor: levelColor(level.level) }}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-    </>
-  );
+  /* Collapsed, the level card is its emblem inside a ring that fills as the
+     level does: the same reading as the bar, in the space of one tile. */
+  const RING = 2 * Math.PI * 19;
 
   return (
     <aside
       className={`
-        hidden md:flex flex-col flex-shrink-0 h-screen sticky top-0 z-20 bg-[#0d1117] border-e border-[#1e293b]
-        transition-all duration-300 ease-in-out
-        ${collapsed ? 'w-[68px]' : 'w-60'}
+        hidden md:flex flex-col flex-shrink-0 h-screen sticky top-0 z-20 bg-[#0a0e15] border-e border-[#1a2334]
+        transition-[width] duration-300 ease-in-out
+        ${collapsed ? 'w-[72px]' : 'w-60'}
       `}
     >
-      {sidebarContent}
+      {/* Logo */}
+      <div
+        className={`relative flex h-[72px] flex-shrink-0 items-center border-b border-[#1a2334] ${
+          collapsed ? 'justify-center' : 'px-5'
+        }`}
+      >
+        {collapsed ? (
+          <BrandLogo variant="collapsed" loading="eager" className="h-8 w-8 object-contain" />
+        ) : (
+          <BrandLogo variant="full" loading="eager" className="h-8 w-auto max-w-[140px] object-contain" />
+        )}
+      </div>
+
+      {/* Nav */}
+      <nav className="relative flex-1 space-y-1 overflow-y-auto px-3 py-5">
+        {sectionLabel(t('sidebar.learn'), true)}
+        {renderNavItems(learnItems)}
+        {sectionLabel(t('sidebar.account'))}
+        {renderNavItems(accountItems)}
+      </nav>
+
+      {/* Level */}
+      {user && (
+        <div className="relative flex-shrink-0 border-t border-[#1a2334] p-3">
+          {collapsed ? (
+            <button
+              type="button"
+              data-tour-id="sidebar-level"
+              onClick={openLevels}
+              title={`${level.level.hex} ${level.level.name[lang]} · ${xpTitle}`}
+              aria-label={levelsLabel}
+              className="relative mx-auto flex h-11 w-11 items-center justify-center rounded-full outline-none transition-transform duration-150 hover:scale-105 focus-visible:ring-2 focus-visible:ring-[#00a859]/60"
+            >
+              <svg aria-hidden viewBox="0 0 44 44" className="absolute inset-0 h-full w-full -rotate-90">
+                <circle cx="22" cy="22" r="19" fill="none" stroke="#1a2334" strokeWidth="2.5" />
+                <circle
+                  cx="22"
+                  cy="22"
+                  r="19"
+                  fill="none"
+                  stroke={tint}
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeDasharray={RING}
+                  strokeDashoffset={RING * (1 - level.fraction)}
+                  className="transition-[stroke-dashoffset] duration-700"
+                />
+              </svg>
+              <LevelEmblem level={level.level} lang={lang} decorative eager className="h-7 w-7" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              data-tour-id="sidebar-level"
+              onClick={openLevels}
+              title={levelsLabel}
+              className="group block w-full rounded-2xl border border-[#1c2739] bg-[#0f1622] p-3 text-start outline-none transition-colors duration-150 hover:border-[#2b3a54] hover:bg-[#121b2a] focus-visible:ring-2 focus-visible:ring-[#00a859]/60"
+            >
+              <span className="flex items-center gap-3">
+                <LevelEmblem
+                  level={level.level}
+                  lang={lang}
+                  decorative
+                  eager
+                  className="h-10 w-10 flex-shrink-0 drop-shadow-[0_4px_10px_rgba(0,0,0,0.45)]"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[13px] font-semibold text-[#e8ecf6]">
+                    <span dir="auto">{user.displayName}</span>
+                  </span>
+                  <span className="mt-0.5 flex items-center gap-1.5 text-[11px] font-bold" style={{ color: tint }}>
+                    <span dir="ltr" className="font-mono">
+                      {level.level.hex}
+                    </span>
+                    <span className="truncate">{level.level.name[lang]}</span>
+                  </span>
+                </span>
+              </span>
+
+              {/* How far through the level, toward the next one. */}
+              <span className="mt-3 block h-1.5 overflow-hidden rounded-full bg-[#070b12]" dir="ltr" title={xpTitle}>
+                <span
+                  className="block h-full rounded-full transition-all duration-700"
+                  style={{ width: `${percent}%`, backgroundColor: tint }}
+                />
+              </span>
+              <span className="mt-2 flex items-baseline justify-between gap-2 text-[10.5px] text-[#7f8ca8]">
+                <span>
+                  <span dir="ltr" className="font-mono font-semibold text-[#c5cce0]">
+                    {xp.toLocaleString('en-US')} XP
+                  </span>
+                </span>
+                {level.next && (
+                  <span className="truncate">
+                    <span dir="ltr">{level.toNext.toLocaleString('en-US')}</span> {ar ? 'حتى' : 'to'}{' '}
+                    <span dir="ltr" className="font-mono">
+                      {level.next.hex}
+                    </span>
+                  </span>
+                )}
+              </span>
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Floating collapse/expand toggle — rides the sidebar's inner
           (content-facing) edge, overhanging the page by half its width. That
@@ -223,7 +285,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
         onClick={onToggle}
         aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        className="absolute top-[68px] -end-3 z-40 flex h-6 w-6 items-center justify-center rounded-full border border-[#263248] bg-[#121a2a] text-[#8592ad] shadow-md shadow-black/40 transition-all duration-200 hover:scale-110 hover:border-[#00a859]/60 hover:bg-[#0e1626] hover:text-[#00a859] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00a859]/50"
+        className="absolute top-[60px] -end-3 z-40 flex h-6 w-6 items-center justify-center rounded-full border border-[#263248] bg-[#121a2a] text-[#8592ad] shadow-md shadow-black/40 transition-all duration-200 hover:scale-110 hover:border-[#00a859]/60 hover:bg-[#0e1626] hover:text-[#00a859] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00a859]/50"
       >
         {collapsed ? <ChevronRight size={14} className="rtl-flip" /> : <ChevronLeft size={14} className="rtl-flip" />}
       </button>
