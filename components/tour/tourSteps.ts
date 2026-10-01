@@ -15,7 +15,10 @@
  * Fundamentals, then Modules, then Paths. Each stop opens with a `requireClick`
  * step, the nav row lit and nothing else, that only moves on once the learner
  * actually clicks the row, the same click that carries them there. What
- * follows is the explaining, on the page itself. The last stop is a question
+ * follows is the explaining, on the page itself, and each of those steps names
+ * its page too, so stepping Back into one from another page still lands on
+ * it. The wording says "open", never "click": half the audience is on a phone
+ * and taps. The last stop is a question
  * rather than a lecture: whether Fundamentals is worth their time or they
  * already know it.
  */
@@ -26,8 +29,10 @@ export interface TourStep {
   id: string;
   /** `data-tour-id` of the element to light. Absent means a centred card. */
   target?: string;
-  /** Where the card would rather sit. `start`/`end` are logical, so they
-   *  follow the reading direction. */
+  /** Where the card would rather sit beside a navigation row. `start`/`end`
+   *  are logical, so they follow the reading direction. A step about
+   *  something on the page has no say: those are all laid out the same way,
+   *  the element lit and the card under it (see TourHost). */
   placement?: 'bottom' | 'top' | 'start' | 'end';
   /** Drop the step when the target never appears, rather than showing it
    *  centred. For navigation only some accounts have. */
@@ -72,14 +77,13 @@ export const TOUR_STEPS: TourStep[] = [
     requireClick: true,
     title: { en: 'Your dashboard', ar: 'لوحتك' },
     body: {
-      en: 'This is home, and it already knows where you left off. Click it to see what is waiting for you there.',
+      en: 'This is home, and it already knows where you left off. Open it to see what is waiting for you there.',
       ar: 'هذه صفحتك الرئيسية، وهي تعرف أين توقفت. اضغط عليها لترى ما ينتظرك فيها.',
     },
   },
   {
     id: 'primary',
     target: 'dashboard-primary',
-    placement: 'bottom',
     route: '/dashboard',
     title: { en: 'The one button that matters', ar: 'الزر الذي يهم' },
     body: {
@@ -90,7 +94,6 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: 'skills',
     target: 'skill-matrix',
-    placement: 'top',
     route: '/dashboard',
     title: { en: 'Your skill matrix', ar: 'مصفوفة مهاراتك' },
     body: {
@@ -101,7 +104,6 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: 'standing',
     target: 'dashboard-level',
-    placement: 'bottom',
     route: '/dashboard',
     title: { en: 'XP and level', ar: 'الخبرة والمستوى' },
     body: {
@@ -116,14 +118,14 @@ export const TOUR_STEPS: TourStep[] = [
     requireClick: true,
     title: { en: 'Start with Fundamentals', ar: 'ابدأ بالأساسيات' },
     body: {
-      en: 'Three pillars everything else is built on. Click it to open the door.',
+      en: 'Three pillars everything else is built on. Open it to step inside.',
       ar: 'ثلاث ركائز يقوم عليها كل ما بعدها. اضغط عليها لتفتح الباب.',
     },
   },
   {
     id: 'fundamentals',
     target: 'fundamentals-roadmap',
-    placement: 'bottom',
+    route: '/fundamentals',
     title: { en: 'The road for a beginner', ar: 'طريق المبتدئ' },
     body: {
       en: 'This is the road map. Each pillar is a straight line of lessons, in the order that makes the next one make sense, in a real editor and a real shell rather than slides about one.',
@@ -142,14 +144,14 @@ export const TOUR_STEPS: TourStep[] = [
     requireClick: true,
     title: { en: 'Modules', ar: 'الوحدات' },
     body: {
-      en: 'One security subject, start to finish. Click it to see what is there.',
+      en: 'One security subject, start to finish. Open it to see what is there.',
       ar: 'موضوع أمني واحد من أوله إلى آخره. اضغط عليها لترى ما فيها.',
     },
   },
   {
     id: 'modules',
     target: 'modules-grid',
-    placement: 'top',
+    route: '/modules',
     title: { en: 'Study whatever you want, on your own', ar: 'ادرس ما تريد بنفسك' },
     body: {
       en: 'A module holds its lessons, its quizzes and usually a lab you work in. Pick whichever one interests you, in whatever order you like, and be done with it properly.',
@@ -163,14 +165,14 @@ export const TOUR_STEPS: TourStep[] = [
     requireClick: true,
     title: { en: 'Career paths', ar: 'المسارات المهنية' },
     body: {
-      en: 'Modules arranged into a job, for the ones who would rather be told the order. Click it to see them.',
+      en: 'Modules arranged into a job, for the ones who would rather be told the order. Open it to see them.',
       ar: 'وحدات مرتبة على شكل مهنة، لمن يفضل أن يقال له الترتيب. اضغط عليها لتراها.',
     },
   },
   {
     id: 'paths',
     target: 'paths-grid',
-    placement: 'top',
+    route: '/paths',
     title: { en: 'The structured way in', ar: 'الطريق المنظم' },
     body: {
       en: 'A path puts modules in the order the work itself needs, SOC analyst or penetration tester, and tracks your progress across all of them at once.',
