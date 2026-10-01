@@ -34,7 +34,6 @@ import {
   getPublishedNetworkingUnits,
 } from '../services/creatorDataService';
 import { universityLabel } from '../data/iraqUniversities';
-import { useUniversities } from '../services/universities';
 
 /* ─── A member's public profile ───
  *
@@ -74,8 +73,6 @@ const PublicProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { lang, t } = useLang();
-  // University names are read from a list that can arrive after first paint.
-  useUniversities();
   const ar = lang === 'ar';
   const [state, setState] = useState<LoadState>({ status: 'loading' });
 

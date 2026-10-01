@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Search, GraduationCap, Check, Ban } from 'lucide-react';
 import { searchUniversities, NOT_ENROLLED } from '../../data/iraqUniversities';
-import { useUniversities } from '../../services/universities';
 
 interface UniversityPickerProps {
   /** Currently selected value (a university name or NOT_ENROLLED). */
@@ -13,17 +12,13 @@ interface UniversityPickerProps {
 }
 
 /**
- * Searchable list of universities: the built-in Iraqi ones, then any an admin
- * has added. Students choose from the list rather than typing their own; a
- * pinned "not enrolled" option is always available.
+ * Searchable list of Iraqi universities. Students choose from the list rather
+ * than typing their own; a pinned "not enrolled" option is always available.
  */
 const UniversityPicker: React.FC<UniversityPickerProps> = ({ value, onSelect, lang, autoFocus }) => {
   const [q, setQ] = useState('');
   const ar = lang === 'ar';
-  /* Asked for fresh each time the picker opens, so a university an admin added
-     a minute ago is there to choose. */
-  const listVersion = useUniversities(true);
-  const results = useMemo(() => searchUniversities(q), [q, listVersion]);
+  const results = useMemo(() => searchUniversities(q, 60), [q]);
 
   return (
     <div className="flex flex-col min-h-0">

@@ -8,7 +8,6 @@ import {
   User,
   Pencil,
   Users,
-  Landmark,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
@@ -58,10 +57,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
   const accountItems = [
     { to: '/profile', icon: User, label: t('sidebar.profile'), tour: 'nav-profile' },
     ...(user?.role === 'admin'
-      ? [
-          { to: '/admin/members', icon: Users, label: lang === 'ar' ? 'الأعضاء' : 'Members', tour: 'nav-members' },
-          { to: '/admin/universities', icon: Landmark, label: lang === 'ar' ? 'الجامعات' : 'Universities', tour: 'nav-universities' },
-        ]
+      ? [{ to: '/admin/members', icon: Users, label: lang === 'ar' ? 'الأعضاء' : 'Members', tour: 'nav-members' }]
       : []),
   ];
 

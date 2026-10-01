@@ -31,7 +31,6 @@ import Avatar from '../components/ui/Avatar';
 import AvatarPicker from '../components/account/AvatarPicker';
 import SocialLinksRow, { SocialIcon } from '../components/profile/SocialLinks';
 import { universityLabel } from '../data/iraqUniversities';
-import { useUniversities } from '../services/universities';
 import { profilePath } from '../services/profiles';
 import { ROLE_META } from '../services/roles';
 import { useXp } from '../services/xpService';
@@ -84,8 +83,6 @@ const Section: React.FC<{
 const ProfilePage: React.FC = () => {
   const { user, updateUsername, updateProfile, logout, requestAccountDeletion } = useAuth();
   const { t, lang, setLang } = useLang();
-  // University names are read from a list that can arrive after first paint.
-  useUniversities();
   const navigate = useNavigate();
   const ar = lang === 'ar';
 

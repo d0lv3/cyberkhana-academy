@@ -54,7 +54,6 @@ const FeedbackTrackPage = lazy(() => import('./pages/creators/FeedbackTrackPage'
 const PathEditor = lazy(() => import('./pages/creators/PathEditor'));
 const PathDetailPage = lazy(() => import('./pages/paths/PathDetailPage'));
 const MembersPage = lazy(() => import('./pages/admin/MembersPage'));
-const UniversitiesPage = lazy(() => import('./pages/admin/UniversitiesPage'));
 const PublicProfilePage = lazy(() => import('./pages/PublicProfilePage'));
 const CyberSecurity101Page = lazy(() => import('./pages/fundamentals/CyberSecurity101Page'));
 const TerminalPage = lazy(() => import('./pages/TerminalPage'));
@@ -93,7 +92,7 @@ function CreatorGate() {
   );
 }
 
-/** Admin-only area (members, and the universities they pick from). */
+/** Admin-only area (member management). */
 function AdminGate() {
   const { user, isLoading } = useAuth();
   if (isLoading) return <LazyFallback />;
@@ -239,7 +238,6 @@ function AppRoutes() {
           {/* Admin */}
           <Route element={<AdminGate />}>
             <Route path="/admin/members" element={<MembersPage />} />
-            <Route path="/admin/universities" element={<UniversitiesPage />} />
           </Route>
         </Route>
 

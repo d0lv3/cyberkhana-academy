@@ -9,7 +9,6 @@ import {
   User,
   Pencil,
   Users,
-  Landmark,
   MoreHorizontal,
   LogOut,
   X,
@@ -110,12 +109,6 @@ const MobileNav: React.FC = () => {
             icon: Users,
             label: ar ? 'الأعضاء' : 'Members',
             tour: 'nav-members',
-          },
-          {
-            to: '/admin/universities',
-            icon: Landmark,
-            label: ar ? 'الجامعات' : 'Universities',
-            tour: 'nav-universities',
           },
         ]
       : []),
