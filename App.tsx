@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react';
-import { HashRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { MotionConfig } from 'framer-motion';
 import { LangProvider } from './contexts/LangContext';
 import { PwaProvider } from './contexts/PwaContext';
@@ -19,6 +19,9 @@ import LoginPage from './pages/LoginPage';
 import LegalPage from './pages/legal/LegalPage';
 import CreatorAgreementGate from './components/legal/CreatorAgreementGate';
 import NotFoundPage from './pages/NotFoundPage';
+import { loginPath, safeLoginDestination } from './services/loginDestination';
+import { ConnectionRecovery, SyncNoticeHost } from './components/ConnectionRecovery';
+import { useSyncStatus } from './hooks/useSyncStatus';
 import DashboardPage from './pages/DashboardPage';
 import FundamentalsPage from './pages/fundamentals/FundamentalsPage';
 import ProgrammingPage from './pages/fundamentals/ProgrammingPage';
@@ -63,16 +66,26 @@ function LazyFallback() {
 }
 
 function AuthGate({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
+  const { isAuthenticated, isLoading, sessionError, retrySession } = useAuth();
+  const sync = useSyncStatus();
   if (isLoading) return <LazyFallback />;
-  if (!isAuthenticated) return <Navigate to="/" replace />;
+  if (sessionError) return <ConnectionRecovery session retry={retrySession} />;
+  if (!isAuthenticated) return <Navigate to={loginPath(location.pathname + location.search + location.hash)} replace />;
+  if (sync.failedLoads.includes('courses') || sync.failedLoads.includes('progress')) return <ConnectionRecovery />;
   return <>{children}</>;
 }
 
 function PublicGate({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
   const { isAuthenticated, isLoading } = useAuth();
   if (isLoading) return <LazyFallback />;
-  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
+  if (isAuthenticated) {
+    const destination = location.pathname === '/login'
+      ? safeLoginDestination(new URLSearchParams(location.search).get('next'))
+      : '/dashboard';
+    return <Navigate to={destination} replace />;
+  }
   return <>{children}</>;
 }
 
@@ -81,10 +94,12 @@ function PublicGate({ children }: { children: React.ReactNode }) {
  *  other side of this gate. */
 function CreatorGate() {
   const { user, isLoading } = useAuth();
+  const sync = useSyncStatus();
   if (isLoading) return <LazyFallback />;
   if (!user || (user.role !== 'creator' && user.role !== 'admin')) {
     return <Navigate to="/dashboard" replace />;
   }
+  if (sync.failedLoads.includes('studio')) return <ConnectionRecovery />;
   return (
     <CreatorAgreementGate>
       <Outlet />
@@ -266,6 +281,7 @@ const App: React.FC = () => {
               <ConfirmHost />
               <FeedbackHost />
               <AccountNoticeHost />
+              <SyncNoticeHost />
               <LevelUpHost />
               <StreakMilestoneHost />
               <TourHost />

@@ -12,10 +12,15 @@
 
 import { runPython, isPyodideReady, warmUpPython, type ExecutionResult } from './PythonExecutor';
 import { runCpp, isCppReady } from './CppExecutor';
-import { runWasmCpp, isWasmCppReady, isToolchainAvailable, type CppLanguage } from './WasmCppExecutor';
+import { runWasmCpp, isWasmCppReady, isToolchainAvailable, type CppLanguage, type LoadProgress } from './WasmCppExecutor';
 import { runBash, isBashReady } from './BashExecutor';
 
 export type RunnerLanguage = 'python' | 'c' | 'cpp' | 'bash';
+export type { LoadProgress };
+export interface RunOptions {
+  onProgress?: (progress: LoadProgress) => void;
+  signal?: AbortSignal;
+}
 
 const isCLike = (l: RunnerLanguage): l is CppLanguage => l === 'c' || l === 'cpp';
 
@@ -34,11 +39,13 @@ export function runnerFor(slug?: string): RunnerLanguage {
 export async function runCode(
   language: RunnerLanguage,
   code: string,
-  stdin?: string
+  stdin?: string,
+  options: RunOptions = {}
 ): Promise<ExecutionResult> {
   if (isCLike(language)) {
-    return (await isToolchainAvailable())
-      ? runWasmCpp(code, stdin ?? '', language)
+    options.signal?.throwIfAborted();
+    return (await isToolchainAvailable(options.signal))
+      ? runWasmCpp(code, stdin ?? '', language, options.onProgress, options.signal)
       : runCpp(code, stdin ?? '');
   }
   if (language === 'bash') return runBash(code, stdin ?? '');

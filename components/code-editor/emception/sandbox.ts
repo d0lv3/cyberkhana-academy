@@ -38,7 +38,7 @@ export interface RunOutcome {
 const BOOTSTRAP = bootstrapHtml.replace(/\r\n/g, '\n');
 
 /** Compile output in, program output back. Never rejects; failures are data. */
-export function runArtifact(artifact: string, stdin = ''): Promise<RunOutcome> {
+export function runArtifact(artifact: string, stdin = '', signal?: AbortSignal): Promise<RunOutcome> {
   return new Promise((resolve) => {
     const frame = document.createElement('iframe');
     frame.sandbox.add('allow-scripts');
@@ -52,9 +52,11 @@ export function runArtifact(artifact: string, stdin = ''): Promise<RunOutcome> {
       settled = true;
       clearTimeout(timer);
       window.removeEventListener('message', onMessage);
+      signal?.removeEventListener('abort', cancel);
       frame.remove();
       resolve(outcome);
     };
+    const cancel = () => finish({ output: '', error: 'Run cancelled.', timedOut: false });
 
     const timer = setTimeout(
       () =>
@@ -80,6 +82,8 @@ export function runArtifact(artifact: string, stdin = ''): Promise<RunOutcome> {
     }
 
     window.addEventListener('message', onMessage);
+    signal?.addEventListener('abort', cancel, { once: true });
+    if (signal?.aborted) { cancel(); return; }
     document.body.appendChild(frame);
   });
 }

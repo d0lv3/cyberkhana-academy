@@ -516,7 +516,8 @@ const ProgrammingLessonPage: React.FC = () => {
           >
             <div ref={workspaceRef} className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-3 md:p-4">
               <CodingEnvironment
-                key={concept.id}
+                key={`${langSlug}:${mod.id}:${concept.id}`}
+                draftId={`${langSlug}:${mod.id}:${concept.id}`}
                 starterCode={lang === 'ar' ? concept.starterCodeAr || concept.starterCode : concept.starterCode}
                 sampleInput={concept.sampleInput}
                 language={runnerFor(langSlug)}

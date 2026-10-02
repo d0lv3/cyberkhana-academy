@@ -28,25 +28,35 @@ class ApiService {
   }
 
   private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
-    const response = await fetch(`${this.baseUrl}${path}`, {
-      ...options,
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-    });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 20_000);
+    try {
+      const response = await fetch(`${this.baseUrl}${path}`, {
+        ...options,
+        signal: controller.signal,
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+      });
 
-    if (!response.ok) {
-      const body = (await response.json().catch(() => ({}))) as Record<string, unknown>;
-      throw new ApiError(
-        (typeof body.error === 'string' && body.error) || `HTTP ${response.status}`,
-        response.status,
-        body
-      );
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as Record<string, unknown>;
+        throw new ApiError(
+          (typeof body.error === 'string' && body.error) || `HTTP ${response.status}`,
+          response.status,
+          body
+        );
+      }
+
+      return await response.json();
+    } catch (error) {
+      if (controller.signal.aborted) throw new Error('The connection timed out. Please try again.');
+      throw error;
+    } finally {
+      clearTimeout(timer);
     }
-
-    return response.json();
   }
 
   get<T>(path: string) {

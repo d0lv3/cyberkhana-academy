@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { AcademyUser } from '../types';
-import { api } from '../services/api';
+import { api, ApiError } from '../services/api';
+import { clearAccountCodeDrafts } from '../services/codeDrafts';
 import {
   hydrateFromServer,
   setSyncEnabled,
@@ -65,6 +66,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   /** True while the session is being restored or established. */
   isLoading: boolean;
+  sessionError: boolean;
+  retrySession: () => Promise<void>;
   /** Dev-only fallback session (backend rejects it unless ALLOW_DEV_LOGIN). */
   login: () => Promise<void>;
   /** Real sign-in: exchanges a Google ID token for a cookie session. */
@@ -91,6 +94,8 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   isAuthenticated: false,
   isLoading: true,
+  sessionError: false,
+  retrySession: async () => {},
   login: async () => {},
   loginWithGoogle: async () => {},
   logout: async () => {},
@@ -138,6 +143,8 @@ const PROFILE_FIELDS = ['displayName', 'bio', 'university', 'preferredLang', 'av
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AcademyUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [sessionError, setSessionError] = useState(false);
+  const sessionRequest = useRef(0);
   const [accountNotice, setAccountNotice] = useState<AccountNotice | null>(null);
 
   /* My own content is credited to whoever is signed in (see setOwnAuthor).
@@ -160,13 +167,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
      is set: setting it renders the app, and some of what renders reads the
      caches or sends from them straight away (unsent feedback is retried the
      moment someone is signed in). */
-  const adopt = (serverUser: ServerUser) => {
+  const adopt = useCallback((serverUser: ServerUser) => {
     const next = mapServerUser(serverUser);
     const account = { id: next._id, displayName: next.displayName };
     claimCachesFor(account);
     setUser(next);
     return account;
-  };
+  }, []);
 
   /* Hand the awarded XP to the scorer whenever the session changes. One place
      rather than every sign-in path, and it covers signing out too: null means
@@ -176,24 +183,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setStreakXp(user?.streakXp ?? 0);
   }, [user?.xpAward, user?.streakXp]);
 
-  // Restore the session from the httpOnly cookie on boot.
+  const retrySession = useCallback(async () => {
+    const ticket = ++sessionRequest.current;
+    setIsLoading(true);
+    setSessionError(false);
+    try {
+      const { user: serverUser } = await api.get<{ user: ServerUser }>('/auth/me');
+      if (ticket !== sessionRequest.current) return;
+      await hydrateFromServer(adopt(serverUser));
+    } catch (error) {
+      if (ticket !== sessionRequest.current) return;
+      if (error instanceof ApiError && error.status === 401) {
+        setUser(null);
+        setSyncEnabled(false);
+      } else setSessionError(true);
+    } finally {
+      if (ticket === sessionRequest.current) setIsLoading(false);
+    }
+  }, [adopt]);
+
+  // Restore the cookie session without treating a connection failure as sign-out.
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const { user: serverUser } = await api.get<{ user: ServerUser }>('/auth/me');
-        if (cancelled) return;
-        await hydrateFromServer(adopt(serverUser));
-      } catch {
-        if (!cancelled) setUser(null);
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    void retrySession();
+    return () => { sessionRequest.current++; };
+  }, [retrySession]);
+
+  useEffect(() => {
+    if (!sessionError) return;
+    const timer = setTimeout(() => void retrySession(), 10_000);
+    const online = () => void retrySession();
+    window.addEventListener('online', online);
+    return () => { clearTimeout(timer); window.removeEventListener('online', online); };
+  }, [sessionError, retrySession]);
 
   const establishSession = async ({ user: serverUser, deletionCancelled }: SessionResponse) => {
     await hydrateFromServer(adopt(serverUser));
@@ -201,6 +222,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const login = async () => {
+    sessionRequest.current++;
+    setSessionError(false);
     setIsLoading(true);
     try {
       await establishSession(await api.post<SessionResponse>('/auth/dev-login', {}));
@@ -213,6 +236,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const loginWithGoogle = async (credential: string) => {
+    sessionRequest.current++;
+    setSessionError(false);
     setIsLoading(true);
     try {
       await establishSession(await api.post<SessionResponse>('/auth/google', { credential }));
@@ -231,6 +256,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
      empty snapshot, and the server replaces progress, points and all, with
      whatever it is sent. */
   const logout = async () => {
+    sessionRequest.current++;
     await flushPendingSync();
     await flushPendingFeedback().catch(() => {
       /* offline: the answer stays queued for this account's next sign-in */
@@ -253,6 +279,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { deletionScheduledFor } = await api.post<{ deletionScheduledFor: string }>(
       '/auth/request-deletion'
     );
+    sessionRequest.current++;
+    if (user) clearAccountCodeDrafts(user._id);
     setSyncEnabled(false);
     forgetServerBackedCaches();
     setUser(null);
@@ -293,6 +321,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         isAuthenticated: user !== null,
         isLoading,
+        sessionError,
+        retrySession,
         login,
         loginWithGoogle,
         logout,

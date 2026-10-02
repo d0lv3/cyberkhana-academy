@@ -38,11 +38,23 @@ let availability: Promise<boolean> | null = null;
  * that has not run it has no compiler. Asking for one small file answers that
  * without pulling any of the 355 MB behind it.
  */
-export function isToolchainAvailable(): Promise<boolean> {
-  availability ??= fetch('/emception/bootstrap.json', { method: 'HEAD' })
+export function isToolchainAvailable(signal?: AbortSignal): Promise<boolean> {
+  const controller = new AbortController();
+  const cancel = () => controller.abort(signal?.reason);
+  signal?.addEventListener('abort', cancel, { once: true });
+  if (signal?.aborted) cancel();
+  const timer = setTimeout(() => controller.abort(), 15_000);
+  availability ??= fetch('/emception/bootstrap.json', { method: 'HEAD', signal: controller.signal })
     .then((r) => r.ok)
-    .catch(() => false);
-  return availability;
+    .catch((error) => { if (signal?.aborted) throw error; return false; });
+  const result = availability;
+  return result.then((available) => {
+    if (!available && availability === result) availability = null;
+    return available;
+  }, (error) => { if (availability === result) availability = null; throw error; }).finally(() => {
+    clearTimeout(timer);
+    signal?.removeEventListener('abort', cancel);
+  });
 }
 
 /**
@@ -54,14 +66,15 @@ export async function runWasmCpp(
   code: string,
   stdin = '',
   language: CppLanguage = 'cpp',
-  onProgress?: (p: LoadProgress) => void
+  onProgress?: (p: LoadProgress) => void,
+  signal?: AbortSignal
 ): Promise<ExecutionResult> {
   const start = performance.now();
   const elapsed = () => Math.round(performance.now() - start);
 
   let built;
   try {
-    built = await compile(code, language, onProgress);
+    built = await compile(code, language, onProgress, signal);
   } catch (err: unknown) {
     return {
       output: '',
@@ -74,7 +87,7 @@ export async function runWasmCpp(
     return { output: '', error: built.diagnostics, durationMs: elapsed() };
   }
 
-  const run = await runArtifact(built.artifact, stdin);
+  const run = await runArtifact(built.artifact, stdin, signal);
 
   /* Warnings are worth showing, but never at the cost of hiding the program's
      own output — they go above it, the way a terminal would have shown them. */

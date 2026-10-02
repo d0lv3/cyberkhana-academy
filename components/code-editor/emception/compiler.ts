@@ -16,6 +16,7 @@
  */
 
 import * as Comlink from 'comlink';
+import { withAbort } from '../../../services/abortable';
 
 /** Where copy-emception.mjs puts the toolchain. */
 const BASE = '/emception';
@@ -36,7 +37,7 @@ export interface CompileFailure {
 
 export type CompileResult = CompileSuccess | CompileFailure;
 
-export type LoadPhase = 'downloading' | 'starting' | 'ready';
+export type LoadPhase = 'downloading' | 'starting' | 'ready' | 'compiling';
 
 export interface LoadProgress {
   phase: LoadPhase;
@@ -60,6 +61,27 @@ interface RemoteEmception {
 let bootPromise: Promise<RemoteEmception> | null = null;
 let remote: RemoteEmception | null = null;
 let queue: Promise<unknown> = Promise.resolve();
+let worker: Worker | null = null;
+let lifetime: AbortController | null = null;
+let epoch = 0;
+let lastProgress: LoadProgress = { phase: 'downloading' };
+const listeners = new Set<(p: LoadProgress) => void>();
+
+function report(progress: LoadProgress): void {
+  lastProgress = progress;
+  for (const listener of listeners) listener(progress);
+}
+
+function resetCompiler(reason: Error): void {
+  epoch++;
+  lifetime?.abort(reason);
+  worker?.terminate();
+  worker = null;
+  lifetime = null;
+  remote = null;
+  bootPromise = null;
+  queue = Promise.resolve();
+}
 
 /** True once the toolchain is warm — drives the button's loading label. */
 export function isCompilerReady(): boolean {
@@ -72,58 +94,64 @@ export function isCompilerReady(): boolean {
  * Emception's own startup reports nothing, and it begins with a 22 MB fetch
  * that on a phone is most of the wait. Streaming it here first means the
  * student sees a real percentage instead of a spinner that might be broken,
- * and the toolchain then finds it in the HTTP cache. If anything about this
- * fails it is not fatal — the toolchain will just fetch it again itself.
+ * and the toolchain then finds it in the HTTP cache. Download failures end the
+ * attempt so the learner can retry instead of starting an invisible second fetch.
  */
-async function prefetchArchive(onProgress: (p: LoadProgress) => void): Promise<void> {
-  try {
-    const res = await fetch(`${BASE}/bootstrap.json`);
-    if (!res.ok) return;
-    const { archive, bytes } = (await res.json()) as { archive: string; bytes: number };
-    if (!archive) return;
+async function prefetchArchive(signal: AbortSignal): Promise<void> {
+  const res = await fetch(`${BASE}/bootstrap.json`, { signal });
+  if (!res.ok) throw new Error('Compiler files are unavailable. Try again.');
+  const { archive, bytes } = (await res.json()) as { archive: string; bytes: number };
+  if (!archive || !/^[a-zA-Z0-9_.-]+$/.test(archive)) throw new Error('Compiler download information is unavailable.');
 
-    const body = await fetch(`${BASE}/${archive}`);
-    if (!body.ok || !body.body) return;
+  const body = await fetch(`${BASE}/${archive}`, { signal });
+  if (!body.ok || !body.body) throw new Error('Compiler files could not download. Try again.');
 
-    const reader = body.body.getReader();
-    let received = 0;
-    // The bytes are only being pulled to warm the cache, so they are read and
-    // dropped rather than assembled — no reason to hold 22 MB twice.
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      received += value.byteLength;
-      onProgress({ phase: 'downloading', fraction: bytes ? Math.min(1, received / bytes) : undefined });
-    }
-  } catch {
-    /* Cache warming is an optimisation; the compiler still boots without it. */
+  const reader = body.body.getReader();
+  let received = 0;
+  // The bytes are only being pulled to warm the cache, so they are read and
+  // dropped rather than assembled — no reason to hold 22 MB twice.
+  for (;;) {
+    const { done, value } = await reader.read();
+    signal.throwIfAborted();
+    if (done) break;
+    received += value.byteLength;
+    report({ phase: 'downloading', fraction: bytes ? Math.min(1, received / bytes) : undefined });
   }
 }
 
 /** Boot the toolchain, or return the boot already in flight. */
-export function ensureCompiler(onProgress: (p: LoadProgress) => void = () => {}): Promise<RemoteEmception> {
-  if (bootPromise) return bootPromise;
-
-  bootPromise = (async () => {
-    await prefetchArchive(onProgress);
-    onProgress({ phase: 'starting' });
-
-    const worker = new Worker(`${BASE}/emception.worker.bundle.worker.js`);
-    const em = Comlink.wrap<RemoteEmception>(worker);
-    await em.init();
-
-    remote = em as unknown as RemoteEmception;
-    onProgress({ phase: 'ready' });
-    return remote;
-  })();
-
-  // A failed boot must not poison every later attempt.
-  bootPromise.catch(() => {
-    bootPromise = null;
-    remote = null;
+export function ensureCompiler(onProgress: (p: LoadProgress) => void = () => {}, signal?: AbortSignal): Promise<RemoteEmception> {
+  if (signal?.aborted) return Promise.reject(signal.reason);
+  listeners.add(onProgress);
+  const cancel = () => resetCompiler(new Error('Compiler setup cancelled.'));
+  signal?.addEventListener('abort', cancel, { once: true });
+  if (!bootPromise) {
+    const controller = new AbortController();
+    lifetime = controller;
+    report({ phase: 'downloading', fraction: 0 });
+    const timer = setTimeout(() => {
+      if (lifetime === controller) resetCompiler(new Error('Compiler loading timed out. Check your connection and try again.'));
+    }, 5 * 60_000);
+    bootPromise = (async () => {
+      await prefetchArchive(controller.signal);
+      controller.signal.throwIfAborted();
+      report({ phase: 'starting' });
+      worker = new Worker(`${BASE}/emception.worker.bundle.worker.js`);
+      const em = Comlink.wrap<RemoteEmception>(worker);
+      await withAbort(em.init(), controller.signal);
+      controller.signal.throwIfAborted();
+      remote = em as unknown as RemoteEmception;
+      report({ phase: 'ready' });
+      return remote;
+    })().catch((error) => {
+      if (lifetime === controller) resetCompiler(error instanceof Error ? error : new Error(String(error)));
+      throw error;
+    }).finally(() => clearTimeout(timer));
+  } else onProgress(lastProgress);
+  return bootPromise.finally(() => {
+    listeners.delete(onProgress);
+    signal?.removeEventListener('abort', cancel);
   });
-
-  return bootPromise;
 }
 
 /* `em++` and `emcc` differ in more than the name: emcc will not link the C++
@@ -183,36 +211,54 @@ function cleanDiagnostics(raw: string): string {
 export function compile(
   source: string,
   language: 'c' | 'cpp',
-  onProgress?: (p: LoadProgress) => void
+  onProgress?: (p: LoadProgress) => void,
+  signal?: AbortSignal
 ): Promise<CompileResult> {
+  const version = epoch;
   const task = queue.then(async (): Promise<CompileResult> => {
-    const em = await ensureCompiler(onProgress);
+    if (version !== epoch) throw new Error('Compilation cancelled. Run again.');
+    const em = await ensureCompiler(onProgress, signal);
+    signal?.throwIfAborted();
+    const controller = lifetime!;
+    const cancel = () => resetCompiler(new Error('Compilation cancelled.'));
+    signal?.addEventListener('abort', cancel, { once: true });
+    const timer = setTimeout(() => {
+      if (lifetime === controller) resetCompiler(new Error('Compilation timed out. Run again.'));
+    }, 120_000);
+    onProgress?.({ phase: 'compiling' });
+    try {
+      return await withAbort((async (): Promise<CompileResult> => {
 
-    let output = '';
-    const collect = Comlink.proxy((s: unknown) => {
-      output += String(s) + '\n';
-    });
-    // Assigning through the proxy is how Comlink sets a remote property.
-    (em as any).onstdout = collect;
-    (em as any).onstderr = collect;
+        let output = '';
+        const collect = Comlink.proxy((s: unknown) => {
+          output += String(s) + '\n';
+        });
+        // Assigning through the proxy is how Comlink sets a remote property.
+        (em as any).onstdout = collect;
+        (em as any).onstderr = collect;
 
-    const file = SOURCE[language];
-    await em.fileSystem.writeFile(`/working/${file}`, source);
+        const file = SOURCE[language];
+        await em.fileSystem.writeFile(`/working/${file}`, source);
 
-    // A previous build's artifact would otherwise be read back as this one's.
-    if (await em.fileSystem.exists('/working/main.js')) {
-      await em.fileSystem.unlink('/working/main.js');
+        // A previous build's artifact would otherwise be read back as this one's.
+        if (await em.fileSystem.exists('/working/main.js')) {
+          await em.fileSystem.unlink('/working/main.js');
+        }
+
+        const result = await em.run(`${DRIVER[language]} ${FLAGS} ${file} -o main.js`);
+        const diagnostics = cleanDiagnostics(output || result.stderr || '');
+
+        if (result.returncode !== 0) {
+          return { ok: false, diagnostics: diagnostics || 'Compilation failed.' };
+        }
+
+        const artifact = await em.fileSystem.readFile('/working/main.js', { encoding: 'utf8' });
+        return { ok: true, artifact, diagnostics };
+      })(), controller.signal);
+    } finally {
+      clearTimeout(timer);
+      signal?.removeEventListener('abort', cancel);
     }
-
-    const result = await em.run(`${DRIVER[language]} ${FLAGS} ${file} -o main.js`);
-    const diagnostics = cleanDiagnostics(output || result.stderr || '');
-
-    if (result.returncode !== 0) {
-      return { ok: false, diagnostics: diagnostics || 'Compilation failed.' };
-    }
-
-    const artifact = await em.fileSystem.readFile('/working/main.js', { encoding: 'utf8' });
-    return { ok: true, artifact, diagnostics };
   });
 
   // Keep the chain alive even when one compile rejects.

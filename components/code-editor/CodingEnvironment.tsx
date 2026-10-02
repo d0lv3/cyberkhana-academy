@@ -17,12 +17,17 @@ import OutputPanel from './OutputPanel';
 import ResizeHandle from '../ui/ResizeHandle';
 import { copyText } from '../ui/copyText';
 import type { ExecutionResult } from './PythonExecutor';
-import { runCode, isRunnerReady, warmUpRunner, type RunnerLanguage } from './runners';
+import { runCode, isRunnerReady, warmUpRunner, type RunnerLanguage, type LoadProgress } from './runners';
 import type { TestCase } from '../../data/programming/types';
 import { useLang } from '../../contexts/LangContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { codeDraftKey, readCodeDraft, writeCodeDraft, clearCodeDraft } from '../../services/codeDrafts';
+import { confirmDialog } from '../ui/ConfirmHost';
 
 interface CodingEnvironmentProps {
   starterCode: string;
+  /** Stable lesson identity; creator previews deliberately do not save drafts. */
+  draftId?: string;
   language?: RunnerLanguage;
   /** Prefills the stdin box for lessons that read input(). */
   sampleInput?: string;
@@ -107,6 +112,7 @@ type TestResult = {
 
 const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
   starterCode,
+  draftId,
   language = 'python',
   sampleInput,
   testCases,
@@ -115,13 +121,29 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
   onPass,
 }) => {
   const { t, isArabic } = useLang();
-  const [code, setCode] = useState(starterCode);
-  const [stdin, setStdin] = useState(sampleInput ?? '');
+  const { user } = useAuth();
+  const draftKey = user && draftId ? codeDraftKey(user._id, draftId) : null;
+  const [restoredDraft] = useState(() => readCodeDraft(draftKey));
+  const [code, setCode] = useState(restoredDraft?.code ?? starterCode);
+  const [stdin, setStdin] = useState(restoredDraft?.stdin ?? sampleInput ?? '');
+  const [draftSaved, setDraftSaved] = useState<boolean | null>(restoredDraft ? true : null);
+
+  const changeCode = (next: string) => {
+    if (draftKey) setDraftSaved(writeCodeDraft(draftKey, { code: next, stdin }));
+    setCode(next);
+  };
+  const changeStdin = (next: string) => {
+    if (draftKey) setDraftSaved(writeCodeDraft(draftKey, { code, stdin: next }));
+    setStdin(next);
+  };
   const [output, setOutput] = useState('');
   const [error, setError] = useState<string | undefined>();
   const [durationMs, setDurationMs] = useState<number | undefined>();
   const [isRunning, setIsRunning] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [compilerProgress, setCompilerProgress] = useState<LoadProgress | null>(null);
+  const activeRun = useRef<AbortController | null>(null);
+  useEffect(() => () => activeRun.current?.abort(), []);
   const [testResults, setTestResults] = useState<TestResult[] | null>(null);
   const [revealedHints, setRevealedHints] = useState(0);
   const [showSolution, setShowSolution] = useState(false);
@@ -154,6 +176,9 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
   );
 
   const handleRun = useCallback(async () => {
+    const controller = new AbortController();
+    activeRun.current = controller;
+    setCompilerProgress(null);
     setIsRunning(true);
     setTestResults(null);
     setOutput('');
@@ -165,21 +190,34 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
       const result: ExecutionResult = await runCode(
         language,
         code,
-        readsInput(code, language) ? stdin : undefined
+        readsInput(code, language) ? stdin : undefined,
+        { signal: controller.signal, onProgress: (progress) => {
+          if (activeRun.current !== controller) return;
+          setCompilerProgress(progress);
+          setIsLoading(progress.phase === 'downloading' || progress.phase === 'starting');
+        } }
       );
+      if (activeRun.current !== controller) return;
       setOutput(result.output);
       setError(result.error);
       setDurationMs(result.durationMs);
     } catch (err: any) {
       setError(err.message || 'Execution failed');
     } finally {
-      setIsRunning(false);
-      setIsLoading(false);
+      if (activeRun.current === controller) {
+        if (controller.signal.aborted) setError(isArabic ? 'أُلغي التشغيل. الكود ما زال موجودًا، ويمكنك التشغيل مجددًا.' : 'Run cancelled. Your code is still here; run again to retry.');
+        activeRun.current = null;
+        setIsRunning(false);
+        setIsLoading(false);
+      }
     }
-  }, [code, language, stdin]);
+  }, [code, language, stdin, isArabic]);
 
   const handleSubmit = useCallback(async () => {
     if (!testCases?.length) return;
+    const controller = new AbortController();
+    activeRun.current = controller;
+    setCompilerProgress(null);
     setIsRunning(true);
     setOutput('');
     setError(undefined);
@@ -191,7 +229,14 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
     let lastOutput = '';
     try {
       for (const tc of testCases) {
-        const result = await runCode(language, code, tc.input);
+        controller.signal.throwIfAborted();
+        const result = await runCode(language, code, tc.input, {
+          signal: controller.signal, onProgress: (progress) => {
+            if (activeRun.current !== controller) return;
+            setCompilerProgress(progress);
+            setIsLoading(progress.phase === 'downloading' || progress.phase === 'starting');
+          },
+        });
         outputs.push(result.output);
         const actual = result.output.trimEnd();
         const expected = tc.expectedOutput.trimEnd();
@@ -209,16 +254,28 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
     } catch (err: any) {
       setError(err.message || 'Execution failed');
     } finally {
+      if (activeRun.current !== controller) return;
       setOutput(lastOutput);
-      setTestResults(results);
+      setTestResults(controller.signal.aborted ? null : results);
       setIsRunning(false);
       setIsLoading(false);
-      if (results.length === testCases.length && results.every((r) => r.passed)) onPass?.(outputs);
+      if (controller.signal.aborted) setError(isArabic ? 'أُلغي التشغيل. الكود ما زال موجودًا، ويمكنك التشغيل مجددًا.' : 'Run cancelled. Your code is still here; run again to retry.');
+      else if (results.length === testCases.length && results.every((r) => r.passed)) onPass?.(outputs);
+      activeRun.current = null;
     }
-  }, [code, language, testCases, onPass]);
+  }, [code, language, testCases, onPass, isArabic]);
 
-  const handleReset = () => {
+  const handleReset = async () => {
+    if ((code !== starterCode || stdin !== (sampleInput ?? '')) && !(await confirmDialog({
+      title: isArabic ? 'إعادة ضبط الكود؟' : 'Reset your code?',
+      message: isArabic ? 'سيُستبدل عملك بالكود الأولي لهذا الدرس.' : 'This replaces your work with this lesson’s starter code.',
+      confirmLabel: isArabic ? 'إعادة الضبط' : 'Reset code',
+      cancelLabel: isArabic ? 'احتفظ بعملي' : 'Keep my work',
+    }))) return;
+    clearCodeDraft(draftKey);
+    setDraftSaved(null);
     setCode(starterCode);
+    setStdin(sampleInput ?? '');
     setOutput('');
     setError(undefined);
     setTestResults(null);
@@ -260,8 +317,15 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
         </div>
 
         <div className="flex items-center gap-1.5">
+          {isRunning && (language === 'c' || language === 'cpp') && (
+            <button type="button" onClick={() => activeRun.current?.abort()}
+              className="rounded px-2.5 py-1.5 text-[11px] font-semibold text-red-400 hover:bg-red-500/10">
+              {isArabic ? 'إلغاء' : 'Cancel'}
+            </button>
+          )}
           <button
-            onClick={handleReset}
+            onClick={() => void handleReset()}
+            disabled={isRunning}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[11px] font-medium text-[#7c8aa6] hover:text-[#8390ac] hover:bg-[#0d1420] transition-colors"
             title={t('lab.resetTitle')}
           >
@@ -299,12 +363,38 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
         </div>
       </div>
 
+      {isRunning && compilerProgress && compilerProgress.phase !== 'ready' && (
+        <div role="status" className="flex-shrink-0 border-x border-[#151d2e] bg-[#0b1019] px-3 py-3">
+          <p className="text-xs text-[#9aa5bf]" dir={isArabic ? 'rtl' : 'ltr'}>
+            {compilerProgress.phase === 'downloading'
+              ? isArabic ? 'تنزيل ملفات المترجم، يلزم ذلك عند التشغيل الأول…' : 'Downloading compiler files for the first run…'
+              : compilerProgress.phase === 'starting'
+                ? isArabic ? 'جارٍ بدء المترجم…' : 'Starting the compiler…'
+                : isArabic ? 'جارٍ ترجمة الكود…' : 'Compiling your code…'}
+          </p>
+          {compilerProgress.phase === 'downloading' && typeof compilerProgress.fraction === 'number' && (
+            <div className="mt-2 flex items-center gap-2">
+              <progress aria-label={isArabic ? 'تنزيل ملفات المترجم' : 'Compiler download'} max={1} value={compilerProgress.fraction} className="h-2 flex-1 accent-[#00a859]" />
+              <span className="text-xs tabular-nums text-[#9aa5bf]">{Math.round(compilerProgress.fraction * 100)}%</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {draftSaved !== null && (
+        <p role="status" dir={isArabic ? 'rtl' : 'ltr'} className={`flex-shrink-0 border-x border-[#151d2e] px-3 py-1.5 text-[11px] ${draftSaved ? 'text-[#8592ad]' : 'text-[#f3a43a]'}`}>
+          {draftSaved
+            ? isArabic ? 'الكود محفوظ على هذا الجهاز' : 'Code saved on this device'
+            : isArabic ? 'تعذّر حفظ الكود في هذا المتصفح. انسخ عملك قبل المغادرة.' : 'This browser couldn’t save your code. Copy your work before leaving.'}
+        </p>
+      )}
+
       {/* ── Editor ──
            height="100%" rather than a min-height: it is what gives CodeMirror a
            scroller of its own, so long files scroll here instead of running off
            the bottom of a clipped box. */}
       <div className="flex-1 min-h-[6rem] overflow-hidden border-x border-[#151d2e]">
-        <CodeEditor value={code} onChange={setCode} language={language} height="100%" />
+        <CodeEditor value={code} onChange={changeCode} language={language} height="100%" />
       </div>
 
       {/* ── Input (stdin) — only for code that reads it. Challenges feed their
@@ -328,7 +418,7 @@ const CodingEnvironment: React.FC<CodingEnvironmentProps> = ({
             <textarea
               id="stdin-box"
               value={stdin}
-              onChange={(e) => setStdin(e.target.value)}
+              onChange={(e) => changeStdin(e.target.value)}
               spellCheck={false}
               dir="ltr"
               style={{ height: stdinHeight }}

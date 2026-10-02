@@ -76,9 +76,102 @@ function rememberLevelReached(xp: unknown): void {
 }
 
 let syncEnabled = false;
+type LoadSection = 'courses' | 'progress' | 'studio';
+export interface SyncStatus {
+  failedLoads: LoadSection[];
+  saveFailed: boolean;
+  retrying: boolean;
+}
+const SYNC_STATUS_EVENT = 'academy-sync-status';
+const PENDING_BOOKMARKS_KEY = 'academy-bookmarks-unsaved';
+const PENDING_BUCKETS_KEY = 'academy-content-unsaved';
+let status: SyncStatus = { failedLoads: [], saveFailed: false, retrying: false };
+let account: { id: string; displayName: string } | null = null;
+let generation = 0;
+let retryTimer: ReturnType<typeof setTimeout> | null = null;
+let retryDelay = 5_000;
+let retryInFlight: Promise<void> | null = null;
+let hydrationInFlight: Promise<void> | null = null;
+let bookmarksDirty = false;
+let bookmarkVersion = 0;
+
+export const getSyncStatus = (): SyncStatus => status;
+export function subscribeSyncStatus(listener: () => void): () => void {
+  window.addEventListener(SYNC_STATUS_EVENT, listener);
+  return () => window.removeEventListener(SYNC_STATUS_EVENT, listener);
+}
+
+function updateStatus(patch: Partial<SyncStatus>): void {
+  status = { ...status, ...patch };
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(SYNC_STATUS_EVENT));
+}
+
+function loadFailed(section: LoadSection, failed: boolean): void {
+  updateStatus({ failedLoads: failed
+    ? [...new Set([...status.failedLoads, section])]
+    : status.failedLoads.filter((item) => item !== section) });
+}
+
+function rememberPendingWrites(): void {
+  try {
+    if (bookmarksDirty) localStorage.setItem(PENDING_BOOKMARKS_KEY, '1');
+    else localStorage.removeItem(PENDING_BOOKMARKS_KEY);
+    if (pendingBuckets.size) localStorage.setItem(PENDING_BUCKETS_KEY, JSON.stringify([...pendingBuckets.keys()]));
+    else localStorage.removeItem(PENDING_BUCKETS_KEY);
+  } catch { /* The visible error still offers Retry when storage is unavailable. */ }
+}
+
+function scheduleRetry(): void {
+  if (!syncEnabled || retryTimer || (!status.failedLoads.length && !status.saveFailed)) return;
+  retryTimer = setTimeout(() => {
+    retryTimer = null;
+    void retrySync();
+  }, retryDelay);
+  retryDelay = Math.min(60_000, retryDelay * 2);
+}
+
+/** Retry only failed reads, then send changes still waiting on this account. */
+export function retrySync(): Promise<void> {
+  if (!account || !syncEnabled) return Promise.resolve();
+  if (retryInFlight) return retryInFlight;
+  if (retryTimer) clearTimeout(retryTimer);
+  retryTimer = null;
+  const owner = account;
+  const ticket = generation;
+  updateStatus({ retrying: true });
+  const current = () => syncEnabled && generation === ticket;
+  retryInFlight = (async () => {
+    if (status.failedLoads.length) await hydrateFromServer(owner, true);
+    if (!current()) return;
+    await flushPendingSync();
+  })().finally(() => {
+    if (!current()) return;
+    retryInFlight = null;
+    updateStatus({ retrying: false });
+    if (!status.failedLoads.length && !status.saveFailed) retryDelay = 5_000;
+    scheduleRetry();
+  });
+  return retryInFlight;
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', () => {
+    if (status.failedLoads.length || status.saveFailed) void retrySync();
+  });
+}
 
 export function setSyncEnabled(enabled: boolean): void {
   syncEnabled = enabled;
+  if (!enabled) {
+    generation++;
+    account = null;
+    if (retryTimer) clearTimeout(retryTimer);
+    retryTimer = null;
+    retryInFlight = null;
+    hydrationInFlight = null;
+    retryDelay = 5_000;
+    updateStatus({ failedLoads: [], saveFailed: false, retrying: false });
+  }
 }
 
 /* ── helpers ── */
@@ -102,6 +195,7 @@ export function queueContentPush(storageKey: string, items: unknown[]): void {
   const bucket = SERVER_BUCKET_BY_STORAGE_KEY[storageKey];
   if (!bucket || !syncEnabled) return;
   pendingBuckets.set(bucket, items);
+  rememberPendingWrites();
   if (bucketTimer) clearTimeout(bucketTimer);
   bucketTimer = setTimeout(() => {
     bucketTimer = null;
@@ -112,15 +206,22 @@ export function queueContentPush(storageKey: string, items: unknown[]): void {
 }
 
 async function flushBuckets(): Promise<void> {
+  const ticket = generation;
   const entries = [...pendingBuckets.entries()];
-  pendingBuckets.clear();
   for (const [bucket, items] of entries) {
+    if (!syncEnabled || ticket !== generation) return;
     try {
       await api.put(`/content/${bucket}`, { items });
+      if (ticket !== generation) return;
+      if (pendingBuckets.get(bucket) === items) pendingBuckets.delete(bucket);
     } catch (err) {
+      if (ticket !== generation) return;
       console.warn(`[sync] failed to push ${bucket}:`, err);
+      updateStatus({ saveFailed: true });
+      scheduleRetry();
     }
   }
+  rememberPendingWrites();
 }
 
 /* ── progress write-through ──
@@ -349,9 +450,15 @@ function announceStreakAward(result: ServerRecord): void {
 
 /** Push the bookmarks, then keep what the server answers with. */
 async function pushProgress(): Promise<void> {
+  if (status.failedLoads.includes('progress')) return;
+  const session = generation;
+  const version = bookmarkVersion;
   const ticket = nextScoreTicket();
   const result = await api.put<ServerRecord>('/progress', collectBookmarks());
+  if (!syncEnabled || generation !== session) return;
   applyServerRecord(ticket, result);
+  if (version === bookmarkVersion) bookmarksDirty = false;
+  rememberPendingWrites();
 }
 
 /** The cached copy of the server's completions. */
@@ -394,6 +501,9 @@ let progressTimer: ReturnType<typeof setTimeout> | null = null;
 
 export function queueProgressPush(): void {
   if (!syncEnabled) return;
+  bookmarksDirty = true;
+  bookmarkVersion++;
+  rememberPendingWrites();
   if (progressTimer) clearTimeout(progressTimer);
   progressTimer = setTimeout(async () => {
     progressTimer = null;
@@ -401,10 +511,16 @@ export function queueProgressPush(): void {
        after sign-out has cleared the caches would wipe them from the account.
        Sign-out pushes what was waiting itself; a late timer stands down. */
     if (!syncEnabled) return;
+    const session = generation;
     try {
       await pushProgress();
+      if (session !== generation) return;
+      if (!bookmarksDirty && !pendingBuckets.size) updateStatus({ saveFailed: false });
     } catch (err) {
+      if (session !== generation) return;
       console.warn('[sync] failed to push progress:', err);
+      updateStatus({ saveFailed: true });
+      scheduleRetry();
     }
   }, 800);
 }
@@ -463,6 +579,7 @@ function isServerBackedKey(key: string): boolean {
  *  in. */
 function isDeviceOnlyAccountKey(key: string): boolean {
   return (
+    key === PENDING_BOOKMARKS_KEY || key === PENDING_BUCKETS_KEY ||
     key.startsWith('academy-lab-') ||
     key === 'academy-feedback-answered' ||
     key === 'academy-feedback-pending' ||
@@ -495,6 +612,8 @@ function discardPendingPushes(): void {
   pendingBuckets.clear();
   if (progressTimer) clearTimeout(progressTimer);
   progressTimer = null;
+  bookmarksDirty = false;
+  bookmarkVersion++;
 }
 
 /** The names a Studio cache's items are credited to. Programming patches
@@ -579,20 +698,27 @@ export function claimCachesFor(account: { id: string; displayName: string }): vo
  * the caches are cleared (see queueProgressPush for why the order matters).
  */
 export async function flushPendingSync(): Promise<void> {
+  const ticket = generation;
   if (bucketTimer) clearTimeout(bucketTimer);
   bucketTimer = null;
-  const progressWaiting = progressTimer !== null;
+  const progressWaiting = bookmarksDirty;
   if (progressTimer) clearTimeout(progressTimer);
   progressTimer = null;
 
   await flushBuckets();
+  if (!syncEnabled || ticket !== generation) return;
   if (progressWaiting && syncEnabled) {
     try {
       await pushProgress();
     } catch (err) {
+      if (ticket !== generation) return;
       console.warn('[sync] failed to push progress:', err);
+      updateStatus({ saveFailed: true });
+      scheduleRetry();
     }
   }
+  if (ticket !== generation) return;
+  if (!bookmarksDirty && !pendingBuckets.size) updateStatus({ saveFailed: false });
 }
 
 /**
@@ -602,10 +728,14 @@ export async function flushPendingSync(): Promise<void> {
  * anyone else's sign-in clears them (claimCachesFor).
  */
 export function forgetServerBackedCaches(): void {
+  const unsavedBuckets = new Set(pendingBuckets.keys());
+  const keepBookmarks = bookmarksDirty;
   discardPendingPushes();
   forgetServerXp();
   try {
-    removeKeys(isServerBackedKey);
+    removeKeys((key) => isServerBackedKey(key)
+      && !unsavedBuckets.has(SERVER_BUCKET_BY_STORAGE_KEY[key])
+      && !(keepBookmarks && ['academy-paths-enrolled', 'academy-modules-enrolled', 'academy-last-activity'].includes(key)));
     const stashes: string[] = [];
     for (let i = 0; i < sessionStorage.length; i++) {
       const key = sessionStorage.key(i);
@@ -659,10 +789,13 @@ function mergeProgress(server: ProgressSnapshot | null): void {
 
 /** Seed my own creator buckets; first login pushes existing local work UP. */
 function seedOwnBuckets(serverBuckets: Record<string, unknown[] | undefined>): void {
+  const unsaved = new Set(readArray<string>(PENDING_BUCKETS_KEY));
   const pairs: Array<[string, string]> = Object.entries(SERVER_BUCKET_BY_STORAGE_KEY);
   for (const [storageKey, bucket] of pairs) {
     const serverItems = serverBuckets[bucket];
-    if (serverItems !== undefined) {
+    if (unsaved.has(bucket)) {
+      queueContentPush(storageKey, readArray(storageKey));
+    } else if (serverItems !== undefined) {
       // Server is the source of truth once a bucket exists there.
       localStorage.setItem(storageKey, JSON.stringify(serverItems));
     } else {
@@ -676,83 +809,133 @@ function seedOwnBuckets(serverBuckets: Record<string, unknown[] | undefined>): v
 }
 
 /**
- * Full hydration after authentication. Failures are non-fatal: the app keeps
- * working from the local cache.
+ * Full hydration after authentication. Failed sections stay visible and retry
+ * without replacing their local caches with an empty result.
  */
-export async function hydrateFromServer(account: { id: string; displayName: string }): Promise<void> {
+export async function hydrateFromServer(owner: { id: string; displayName: string }, onlyFailed = false): Promise<void> {
   /* The caller claims the caches before showing the session; confirming it
      here means no path can merge or seed another account's leftovers. */
-  claimCachesFor(account);
-  setSyncEnabled(true);
-
-  // Everyone's published content → published-* caches (all roles).
-  try {
-    const { buckets } = await api.get<{ buckets: Record<string, unknown[]> }>(
-      '/content/published'
-    );
-    localStorage.setItem(
-      PUBLISHED_CACHE_KEYS.NETWORKING_LESSONS,
-      JSON.stringify(buckets['networking-lessons'] ?? [])
-    );
-    localStorage.setItem(
-      PUBLISHED_CACHE_KEYS.NETWORKING_UNITS,
-      JSON.stringify(buckets['networking-units'] ?? [])
-    );
-    localStorage.setItem(
-      PUBLISHED_CACHE_KEYS.PROGRAMMING_PATCHES,
-      JSON.stringify(buckets['programming-patches'] ?? [])
-    );
-    localStorage.setItem(
-      PUBLISHED_CACHE_KEYS.OS_MODULES,
-      JSON.stringify(buckets['os-modules'] ?? [])
-    );
-    localStorage.setItem(
-      PUBLISHED_CACHE_KEYS.STANDALONE_MODULES,
-      JSON.stringify(buckets['standalone-modules'] ?? [])
-    );
-    localStorage.setItem(PUBLISHED_CACHE_KEYS.PATHS, JSON.stringify(buckets['paths'] ?? []));
-  } catch (err) {
-    console.warn('[sync] could not hydrate published content:', err);
-  }
-
-  // My progress (all roles).
-  try {
-    const ticket = nextScoreTicket();
-    const { progress, xp, board, streakAwarded } = await api.get<{
-      progress: ProgressSnapshot | null;
-      xp?: number;
-      board?: { xp: number; since: string | null };
-      streakAwarded?: number[];
-    }>('/progress');
-    rememberLevelReached(xp);
-    /* Taken in after the level is marked as seen, so the figure arriving is
-       never mistaken for a level just reached. It was scored from exactly the
-       progress returned, which becomes this browser's copy just below. */
-    setServerXp(ticket, xp, board, progress);
-    /* The server's days, and the rungs it has already paid. Both are taken as
-       old news on arrival, for the reason rememberLevelReached exists: a
-       streak earned on another device is not something to celebrate here. */
-    cacheStudyDays(progress?.studyDays);
-    rememberStreakAwards(streakAwarded);
-    const local = collectBookmarks();
-    const hadLocal = local.enrolledPaths.length > 0 || (local.enrolledModules?.length ?? 0) > 0;
-    mergeProgress(progress);
-    // Push the merged bookmarks back so the server has any made here.
-    if (hadLocal || progress) queueProgressPush();
-  } catch (err) {
-    console.warn('[sync] could not hydrate progress:', err);
-  }
-
-  // My creator buckets (creators/admins only — 403 for students is expected).
-  try {
-    const { buckets } = await api.get<{ buckets: Record<string, unknown[]> }>('/content/mine');
-    seedOwnBuckets(buckets ?? {});
-  } catch (err) {
-    if (!(err instanceof ApiError && err.status === 403)) {
-      console.warn('[sync] could not hydrate own content:', err);
+  if (account?.id !== owner.id) {
+    setSyncEnabled(false);
+    claimCachesFor(owner);
+    account = owner;
+    bookmarksDirty = readPendingBookmark();
+    // Rebuild the entire pending queue before any parallel read can save
+    // bookmarks and update its markers. Otherwise a fast progress response
+    // could clear the creator marker before the creator response arrives.
+    const waiting = new Set(readArray<string>(PENDING_BUCKETS_KEY));
+    for (const [storageKey, bucket] of Object.entries(SERVER_BUCKET_BY_STORAGE_KEY)) {
+      if (waiting.has(bucket)) pendingBuckets.set(bucket, readArray(storageKey));
     }
   }
+  setSyncEnabled(true);
+  if (hydrationInFlight) return hydrationInFlight;
+  const ticket = generation;
+  const current = () => syncEnabled && generation === ticket;
+  const sections = onlyFailed ? [...status.failedLoads] : ['courses', 'progress', 'studio'];
+  hydrationInFlight = (async () => {
+    await Promise.all([
+      (async () => {
+        // Everyone's published content → published-* caches (all roles).
+        if (!sections.includes('courses')) return;
+        try {
+          const { buckets } = await api.get<{ buckets: Record<string, unknown[]> }>(
+            '/content/published'
+          );
+          if (!current()) return;
+          localStorage.setItem(
+            PUBLISHED_CACHE_KEYS.NETWORKING_LESSONS,
+            JSON.stringify(buckets['networking-lessons'] ?? [])
+          );
+          localStorage.setItem(
+            PUBLISHED_CACHE_KEYS.NETWORKING_UNITS,
+            JSON.stringify(buckets['networking-units'] ?? [])
+          );
+          localStorage.setItem(
+            PUBLISHED_CACHE_KEYS.PROGRAMMING_PATCHES,
+            JSON.stringify(buckets['programming-patches'] ?? [])
+          );
+          localStorage.setItem(
+            PUBLISHED_CACHE_KEYS.OS_MODULES,
+            JSON.stringify(buckets['os-modules'] ?? [])
+          );
+          localStorage.setItem(
+            PUBLISHED_CACHE_KEYS.STANDALONE_MODULES,
+            JSON.stringify(buckets['standalone-modules'] ?? [])
+          );
+          localStorage.setItem(PUBLISHED_CACHE_KEYS.PATHS, JSON.stringify(buckets['paths'] ?? []));
+          loadFailed('courses', false);
+        } catch (err) {
+          if (!current()) return;
+          console.warn('[sync] could not hydrate published content:', err);
+          loadFailed('courses', true);
+        }
+      })(),
 
-  window.dispatchEvent(new Event(PROGRESS_EVENT));
-  window.dispatchEvent(new Event(HYDRATED_EVENT));
+      (async () => {
+        // My progress (all roles).
+        if (!sections.includes('progress')) return;
+        try {
+          const ticket = nextScoreTicket();
+          const { progress, xp, board, streakAwarded } = await api.get<{
+            progress: ProgressSnapshot | null;
+            xp?: number;
+            board?: { xp: number; since: string | null };
+            streakAwarded?: number[];
+          }>('/progress');
+          if (!current()) return;
+          loadFailed('progress', false);
+          rememberLevelReached(xp);
+          /* Taken in after the level is marked as seen, so the figure arriving is
+             never mistaken for a level just reached. It was scored from exactly the
+             progress returned, which becomes this browser's copy just below. */
+          setServerXp(ticket, xp, board, progress);
+          /* The server's days, and the rungs it has already paid. Both are taken as
+             old news on arrival, for the reason rememberLevelReached exists: a
+             streak earned on another device is not something to celebrate here. */
+          cacheStudyDays(progress?.studyDays);
+          rememberStreakAwards(streakAwarded);
+          const local = collectBookmarks();
+          const hadLocal = local.enrolledPaths.length > 0 || (local.enrolledModules?.length ?? 0) > 0;
+          mergeProgress(progress);
+          // Push the merged bookmarks back so the server has any made here.
+          if (hadLocal || progress || bookmarksDirty) queueProgressPush();
+        } catch (err) {
+          if (!current()) return;
+          console.warn('[sync] could not hydrate progress:', err);
+          loadFailed('progress', true);
+        }
+      })(),
+
+      (async () => {
+        // My creator buckets (creators/admins only — 403 for students is expected).
+        if (!sections.includes('studio')) return;
+        try {
+          const { buckets } = await api.get<{ buckets: Record<string, unknown[]> }>('/content/mine');
+          if (!current()) return;
+          seedOwnBuckets(buckets ?? {});
+          loadFailed('studio', false);
+        } catch (err) {
+          if (!current()) return;
+          if (!(err instanceof ApiError && err.status === 403)) {
+            console.warn('[sync] could not hydrate own content:', err);
+            loadFailed('studio', true);
+          } else loadFailed('studio', false);
+        }
+      })(),
+    ]);
+
+    if (!current()) return;
+    window.dispatchEvent(new Event(PROGRESS_EVENT));
+    window.dispatchEvent(new Event(HYDRATED_EVENT));
+  })().finally(() => {
+    if (!current()) return;
+    hydrationInFlight = null;
+    scheduleRetry();
+  });
+  return hydrationInFlight;
+}
+
+function readPendingBookmark(): boolean {
+  try { return localStorage.getItem(PENDING_BOOKMARKS_KEY) === '1'; } catch { return false; }
 }
