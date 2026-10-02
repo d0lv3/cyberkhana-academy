@@ -4,13 +4,20 @@
  * Arabic below is a convenience translation).
  *
  * Every factual claim here is checkable against the code, and several were
- * written by reading it: there are no analytics or third-party trackers, only
+ * written by reading it: there are no analytics and no advertising, only
  * Google OAuth is implemented, exercise code never leaves the browser, the
  * leaderboard and public-profile projections (routes/leaderboard.ts,
  * routes/users.ts) exclude email and country, and the bio reaches other
  * members only when its owner has switched it on. "Deleting your account" is
- * what backend/src/utils/accountDeletion.ts does, grace period included. If
- * any of that changes, this file is wrong, in both languages, and has to
+ * what backend/src/utils/accountDeletion.ts does, grace period included.
+ *
+ * "Who we share it with" names every outside host the app sends a browser to:
+ * Google sign-in, the YouTube players (on open in lessons, on play on the
+ * landing page), the fonts linked from index.html, members' Google photos, and
+ * the jsDelivr fallback. A new host in the CSP in vite.config.ts, or a lesson
+ * video that stops loading on open, belongs in that list and in "Cookies".
+ *
+ * If any of that changes, this file is wrong, in both languages, and has to
  * change with it.
  */
 import type { BilingualDoc } from './legalTypes';
@@ -18,15 +25,16 @@ import type { BilingualDoc } from './legalTypes';
 export const PRIVACY: BilingualDoc = {
   en: {
     title: 'Privacy Policy',
-    updated: '11 September 2026',
-    version: '2026-09-11',
+    updated: '2 October 2026',
+    version: '2026-10-02',
     intro:
       'This policy explains what CyberKhana Academy collects, what we do with it, and what you can ask us to do about it.',
     callout: {
       heading: 'The short version',
       body: [
         'We collect what we need to run a learning platform and a leaderboard, and nothing else.',
-        'We have no analytics, no advertising, and no third-party trackers. Not Google Analytics, not Facebook, not anything. There is one cookie and it exists to keep you signed in. We do not sell your data and we never will.',
+        'We run no analytics and no advertising. Not Google Analytics, not Facebook, not anything. We set one cookie and it exists to keep you signed in. We do not sell your data and we never will.',
+        'Some things do load from Google, and you should know which. Videos play through YouTube, and the Academy’s fonts come from Google Fonts. When you open a lesson that has a video, YouTube may set cookies of its own. The section "Who we share it with" below says exactly what each of them sees.',
         'The two things most people do not expect, so they are said plainly here: feedback you leave is not anonymous — creators see your name with it — and if you delete your account, lessons you wrote as a creator stay published. Both are explained below.',
       ],
     },
@@ -112,8 +120,9 @@ export const PRIVACY: BilingualDoc = {
       {
         h: 'Cookies',
         body: [
-          'One cookie. It is an httpOnly authentication cookie that keeps you signed in. It cannot be read by JavaScript in your browser.',
-          'There are no advertising cookies, no analytics cookies, and no third-party tracking cookies of any kind. That is why the Academy has no cookie banner — there is nothing to consent to beyond the cookie that makes signing in work.',
+          'We set one cookie. It is an httpOnly authentication cookie that keeps you signed in. It cannot be read by JavaScript in your browser.',
+          'We set no advertising cookies and no analytics cookies, which is why the Academy has no cookie banner: the only cookie of ours is the one that makes signing in work.',
+          'YouTube may set its own. A lesson that includes a video shows it in a YouTube player, and the player loads as soon as the lesson opens. YouTube may then set cookies in your browser. They belong to YouTube, we cannot read them, and Google uses them as its own privacy policy describes. A lesson without a video loads nothing from YouTube. The introduction video on our front page uses YouTube’s privacy-enhanced player, and loads nothing from YouTube until you press play.',
           'The Academy also uses your browser’s local storage for practical things like your language choice and your place in a lesson. That stays on your device.',
         ],
       },
@@ -152,6 +161,8 @@ export const PRIVACY: BilingualDoc = {
         list: [
           'Google, because you sign in with it. Your use of Google sign-in is also governed by Google’s own privacy policy.',
           'Our hosting provider, which runs the servers the Academy sits on.',
+          'YouTube, for videos. A lesson that includes a video plays it in an embedded YouTube player, which loads when you open the lesson. YouTube is part of Google. It sees your IP address, which video it was, and that you were on the Academy. It may set its own cookies, and if you are signed in to Google in that browser it may connect the video to your Google account. The introduction video on our front page uses YouTube’s privacy-enhanced player and contacts YouTube only once you press play. We send YouTube nothing about your Academy account or your learning, and what it does with what it sees is governed by Google’s privacy policy.',
+          'Google Fonts, for the typefaces. Every page of the Academy loads its fonts from Google’s servers, which means Google sees your IP address and that your browser asked for those fonts, whether or not you are signed in. Google says this service sets no cookies. Profile pictures that members kept from their Google account are served by Google in the same way.',
           'A public CDN (jsDelivr), but only as a fallback. The Academy normally serves its Python runtime from its own servers. If that copy is unavailable, your browser fetches it from jsDelivr instead, which means jsDelivr sees your IP address and that you requested that file. It sees nothing about your account or your learning.',
           'When the law requires it, or where we need to protect someone’s safety.',
         ],
@@ -243,15 +254,16 @@ export const PRIVACY: BilingualDoc = {
 
   ar: {
     title: 'سياسة الخصوصية',
-    updated: '١١ أيلول/سبتمبر ٢٠٢٦',
-    version: '2026-09-11',
+    updated: '٢ تشرين الأول/أكتوبر ٢٠٢٦',
+    version: '2026-10-02',
     intro:
       'تشرح هذه السياسة ما تجمعه أكاديمية سايبر خانة، وما نفعله به، وما يمكنك أن تطلب منا فعله بشأنه.',
     callout: {
       heading: 'النسخة المختصرة',
       body: [
         'نجمع ما نحتاجه لتشغيل منصة تعليمية ولوحة صدارة، ولا شيء غير ذلك.',
-        'ليس لدينا أي تحليلات ولا إعلانات ولا أدوات تتبّع من أطراف أخرى. لا Google Analytics ولا Facebook ولا غيرهما. هناك ملف تعريف ارتباط واحد فقط، وُجد ليُبقيك مسجَّل الدخول. ونحن لا نبيع بياناتك ولن نفعل.',
+        'لا نشغّل أي تحليلات ولا إعلانات. لا Google Analytics ولا Facebook ولا غيرهما. نضع ملف تعريف ارتباط واحدًا فقط، وُجد ليُبقيك مسجَّل الدخول. ونحن لا نبيع بياناتك ولن نفعل.',
+        'لكنّ بعض الأشياء تُحمَّل من Google، ومن حقك أن تعرف ما هي. فالفيديوهات تُعرض عبر YouTube، وخطوط الأكاديمية تأتي من Google Fonts. وعندما تفتح درسًا فيه فيديو، قد يضع YouTube ملفات تعريف ارتباط خاصة به. وقسم «مع مَن نشاركها» أدناه يبيّن بالضبط ما يراه كلٌّ منهما.',
         'أمران لا يتوقّعهما معظم الناس، ولذلك نقولهما هنا بوضوح: التقييمات التي تتركها ليست مجهولة المصدر — يرى مُنشِئو المحتوى اسمك معها — وإذا حذفت حسابك، تبقى الدروس التي كتبتها كمُنشِئ منشورة. وكلاهما مشروح أدناه.',
       ],
     },
@@ -335,8 +347,9 @@ export const PRIVACY: BilingualDoc = {
       {
         h: 'ملفات تعريف الارتباط',
         body: [
-          'ملف واحد. وهو ملف مصادقة من نوع httpOnly يُبقيك مسجَّل الدخول، ولا يمكن لجافاسكربت في متصفحك قراءته.',
-          'ولا توجد ملفات إعلانية ولا تحليلية ولا أي ملفات تتبّع من أطراف أخرى. ولهذا لا تعرض الأكاديمية لافتة موافقة على الارتباطات — إذ لا شيء يستدعي موافقتك سوى الملف الذي يجعل تسجيل الدخول يعمل.',
+          'نضع ملفًا واحدًا. وهو ملف مصادقة من نوع httpOnly يُبقيك مسجَّل الدخول، ولا يمكن لجافاسكربت في متصفحك قراءته.',
+          'ولا نضع ملفات إعلانية ولا تحليلية، ولهذا لا تعرض الأكاديمية لافتة موافقة على الارتباطات: فالملف الوحيد الذي نضعه نحن هو الذي يجعل تسجيل الدخول يعمل.',
+          'لكنّ YouTube قد يضع ملفاته الخاصة. فالدرس الذي يتضمّن فيديو يعرضه في مشغّل YouTube، ويُحمَّل المشغّل فور فتح الدرس. وعندها قد يضع YouTube ملفات تعريف ارتباط في متصفحك. وهذه الملفات تخصّ YouTube، ولا نستطيع قراءتها، وتستخدمها Google وفق سياسة الخصوصية الخاصة بها. أما الدرس الذي لا فيديو فيه فلا يُحمِّل شيئًا من YouTube. والفيديو التعريفي في صفحتنا الرئيسية يستخدم مشغّل YouTube المعزِّز للخصوصية، ولا يُحمَّل شيء من YouTube قبل أن تضغط على التشغيل.',
           'كما تستخدم الأكاديمية التخزين المحلي في متصفحك لأمور عملية مثل اختيارك للغة وموضعك في الدرس. وهذا يبقى على جهازك.',
         ],
       },
@@ -375,6 +388,8 @@ export const PRIVACY: BilingualDoc = {
         list: [
           'Google، لأنك تسجّل الدخول عبرها. واستخدامك لتسجيل الدخول عبر Google يخضع أيضًا لسياسة الخصوصية الخاصة بها.',
           'مزوّد الاستضافة لدينا، وهو الذي يشغّل الخوادم التي تعمل عليها الأكاديمية.',
+          'YouTube، لعرض الفيديوهات. فالدرس الذي يتضمّن فيديو يعرضه في مشغّل YouTube مضمَّن في الصفحة، يُحمَّل عند فتح الدرس. وYouTube تابع لشركة Google. وهو يرى عنوان IP الخاص بك، وأيّ فيديو حُمِّل، وأنك كنت على الأكاديمية. وقد يضع ملفات تعريف ارتباط خاصة به، وإذا كنت مسجَّل الدخول إلى Google في ذلك المتصفح فقد يربط الفيديو بحسابك عليها. أما الفيديو التعريفي في صفحتنا الرئيسية فيستخدم مشغّل YouTube المعزِّز للخصوصية، ولا يتصل بـ YouTube إلا بعد أن تضغط على التشغيل. ونحن لا نرسل إلى YouTube شيئًا عن حسابك في الأكاديمية أو عن تعلّمك، وما يفعله بما يراه يخضع لسياسة الخصوصية الخاصة بـ Google.',
+          'Google Fonts، للخطوط. فكل صفحة في الأكاديمية تُحمِّل خطوطها من خوادم Google، ما يعني أن Google ترى عنوان IP الخاص بك وأن متصفحك طلب تلك الخطوط، سواء كنت مسجَّل الدخول أم لا. وتقول Google إن هذه الخدمة لا تضع ملفات تعريف ارتباط. والصور الشخصية التي أبقاها الأعضاء من حساباتهم على Google تُقدَّم من خوادم Google بالطريقة نفسها.',
           'شبكة توزيع محتوى عامة (jsDelivr)، وذلك كخيار احتياطي فقط. فالأكاديمية تقدّم بيئة تشغيل Python من خوادمها عادةً، وإذا لم تكن تلك النسخة متاحة، يجلبها متصفحك من jsDelivr بدلًا منها، ما يعني أن jsDelivr ترى عنوان IP الخاص بك وأنك طلبت ذلك الملف. وهي لا ترى شيئًا عن حسابك أو تعلّمك.',
           'وعندما يقتضي القانون ذلك، أو حين نحتاج إلى حماية سلامة شخص ما.',
         ],

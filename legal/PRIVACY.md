@@ -1,8 +1,8 @@
 # CyberKhana Academy — Privacy Policy
 
 **Applies to:** academy.cyberkhana.tech (the "Academy")
-**Last updated:** 11 September 2026
-**Effective from:** 11 September 2026
+**Last updated:** 2 October 2026
+**Effective from:** 2 October 2026
 
 ---
 
@@ -11,9 +11,14 @@
 We collect what we need to run a learning platform and a leaderboard, and
 nothing else.
 
-**We have no analytics, no advertising, and no third-party trackers.** Not
-Google Analytics, not Facebook, not anything. There is one cookie and it exists
-to keep you signed in. We do not sell your data and we never will.
+**We run no analytics and no advertising.** Not Google Analytics, not Facebook,
+not anything. We set one cookie and it exists to keep you signed in. We do not
+sell your data and we never will.
+
+**Some things do load from Google**, and you should know which. Videos play
+through YouTube, and the Academy's fonts come from Google Fonts. When you open a
+lesson that has a video, YouTube may set cookies of its own. Section 6 says
+exactly what each of them sees.
 
 The two things most people do not expect, so they are said plainly here:
 **feedback you leave is not anonymous** — creators see your name with it — and
@@ -119,12 +124,20 @@ change to the service. We do not send marketing email.
 
 ## 4. Cookies
 
-**One cookie.** It is an httpOnly authentication cookie that keeps you signed
-in. It cannot be read by JavaScript in your browser.
+**We set one cookie.** It is an httpOnly authentication cookie that keeps you
+signed in. It cannot be read by JavaScript in your browser.
 
-There are no advertising cookies, no analytics cookies, and no third-party
-tracking cookies of any kind. That is why the Academy has no cookie banner —
-there is nothing to consent to beyond the cookie that makes signing in work.
+We set no advertising cookies and no analytics cookies, which is why the Academy
+has no cookie banner: the only cookie of ours is the one that makes signing in
+work.
+
+**YouTube may set its own.** A lesson that includes a video shows it in a
+YouTube player, and the player loads as soon as the lesson opens. YouTube may
+then set cookies in your browser. They belong to YouTube, we cannot read them,
+and Google uses them as its own privacy policy describes. A lesson without a
+video loads nothing from YouTube. The introduction video on our front page uses
+YouTube's privacy-enhanced player, and loads nothing from YouTube until you
+press play.
 
 The Academy also uses your browser's local storage for practical things like
 your language choice and your place in a lesson. That stays on your device.
@@ -183,6 +196,20 @@ It reaches other parties only in these ways:
 - **Google**, because you sign in with it. Your use of Google sign-in is also
   governed by Google's own privacy policy.
 - **Our hosting provider**, which runs the servers the Academy sits on.
+- **YouTube**, for videos. A lesson that includes a video plays it in an
+  embedded YouTube player, which loads when you open the lesson. YouTube is
+  part of Google. It sees your IP address, which video it was, and that you
+  were on the Academy. It may set its own cookies, and if you are signed in to
+  Google in that browser it may connect the video to your Google account. The
+  introduction video on our front page uses YouTube's privacy-enhanced player
+  and contacts YouTube only once you press play. We send YouTube nothing about
+  your Academy account or your learning, and what it does with what it sees is
+  governed by Google's privacy policy.
+- **Google Fonts**, for the typefaces. Every page of the Academy loads its
+  fonts from Google's servers, which means Google sees your IP address and that
+  your browser asked for those fonts, whether or not you are signed in. Google
+  says this service sets no cookies. Profile pictures that members kept from
+  their Google account are served by Google in the same way.
 - **A public CDN (jsDelivr)**, but only as a fallback. The Academy normally
   serves its Python runtime from its own servers. If that copy is unavailable,
   your browser fetches it from jsDelivr instead, which means jsDelivr sees your
