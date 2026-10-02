@@ -23,6 +23,13 @@ const translations: Record<string, Record<Lang, string>> = {
   'hero.cta': { en: 'Start Learning', ar: 'ابدأ التعلم' },
   'hero.cta.login': { en: 'I Have An Account', ar: 'لدي حساب' },
 
+  // Intro video
+  'intro.heading': { en: 'The Academy in two minutes', ar: 'الأكاديمية في دقيقتين' },
+  'intro.subtitle': { en: 'A quick tour of the roadmap, the hands-on labs, and the levels you climb along the way.', ar: 'جولة سريعة على خارطة الطريق والمختبرات العملية والمستويات التي ترتقي فيها.' },
+  'intro.play': { en: 'Watch the intro', ar: 'شاهد الفيديو التعريفي' },
+  'intro.note': { en: 'Narrated in Arabic. The video plays from YouTube, and nothing loads from YouTube until you press play.', ar: 'يُعرض الفيديو عبر يوتيوب، ولا يُحمَّل شيء من يوتيوب قبل أن تضغط على التشغيل.' },
+  'intro.videoTitle': { en: 'CyberKhana Academy intro video', ar: 'الفيديو التعريفي لأكاديمية سايبر خانة' },
+
   // Features
   'features.heading': { en: 'Structured Around How You Actually Learn', ar: 'مصممة وفق الطريقة التي تتعلم بها فعلاً' },
   'features.subtitle': { en: 'A guided roadmap from core fundamentals to job-ready skills.', ar: 'خارطة طريق موجّهة من الأساسيات إلى مهارات سوق العمل.' },

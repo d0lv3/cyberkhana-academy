@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Globe } from 'lucide-react';
 import HeroSection from '../components/landing/HeroSection';
+import IntroVideoSection from '../components/landing/IntroVideoSection';
 import FeaturesSection from '../components/landing/FeaturesSection';
 import ProductPreviewSection from '../components/landing/ProductPreviewSection';
 import CTASection from '../components/landing/CTASection';
@@ -78,6 +79,9 @@ const LandingPage: React.FC = () => {
       {/* Hero with live product showcase */}
       <PwaInstallBanner className="mx-4 mt-20" />
       <HeroSection onGetStarted={handleLogin} onLogin={handleLogin} />
+
+      {/* The two-minute film, loaded from YouTube only on play */}
+      <IntroVideoSection />
 
       {/* Three pillars */}
       <FeaturesSection />

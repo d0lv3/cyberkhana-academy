@@ -186,7 +186,8 @@ function contentSecurityPolicy(): Plugin {
         // The Python sandbox, and the C/C++ toolchain's own workers.
         "worker-src 'self' blob:",
         // Course videos use YouTube iframes, including the built-in Linux lessons.
-        `frame-src 'self' ${GOOGLE_SIGN_IN} https://www.youtube.com`,
+        // The landing page's intro video uses the no-cookie player domain.
+        `frame-src 'self' ${GOOGLE_SIGN_IN} https://www.youtube.com https://www.youtube-nocookie.com`,
         `connect-src ${[...new Set(connect)].join(' ')}`,
         "manifest-src 'self'",
       ].join('; ');
