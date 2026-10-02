@@ -27,7 +27,7 @@ const translations: Record<string, Record<Lang, string>> = {
   'intro.heading': { en: 'The Academy in two minutes', ar: 'الأكاديمية في دقيقتين' },
   'intro.subtitle': { en: 'A quick tour of the roadmap, the hands-on labs, and the levels you climb along the way.', ar: 'جولة سريعة على خارطة الطريق والمختبرات العملية والمستويات التي ترتقي فيها.' },
   'intro.play': { en: 'Watch the intro', ar: 'شاهد الفيديو التعريفي' },
-  'intro.note': { en: 'Narrated in Arabic. The video plays from YouTube, and nothing loads from YouTube until you press play.', ar: 'يُعرض الفيديو عبر يوتيوب، ولا يُحمَّل شيء من يوتيوب قبل أن تضغط على التشغيل.' },
+  'intro.note': { en: 'Narrated in Arabic. The video plays from YouTube, and nothing loads from YouTube until you press play.', ar: '' },
   'intro.videoTitle': { en: 'CyberKhana Academy intro video', ar: 'الفيديو التعريفي لأكاديمية سايبر خانة' },
 
   // Features

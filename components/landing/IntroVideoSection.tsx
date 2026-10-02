@@ -93,7 +93,10 @@ const IntroVideoSection: React.FC = () => {
             )}
           </div>
 
-          <p className="relative mt-4 text-center text-xs sm:text-[13px] text-[#7c8aa6] [text-wrap:balance]">{t('intro.note')}</p>
+          {/* English only: the Arabic page carries no note under the player. */}
+          {t('intro.note') && (
+            <p className="relative mt-4 text-center text-xs sm:text-[13px] text-[#7c8aa6] [text-wrap:balance]">{t('intro.note')}</p>
+          )}
         </motion.div>
       </div>
     </section>
