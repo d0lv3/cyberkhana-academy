@@ -49,6 +49,24 @@ export function forgetTour(): void {
   }
 }
 
+/* ── Asking for the tour ──
+ * The tour's own code is fetched only for someone who is going to see it
+ * (components/tour/TourGate.tsx), so the buttons that ask for it cannot call
+ * into it. They say so here, and whatever is listening brings it up. */
+
+const TOUR_REQUEST_EVENT = 'academy-tour-requested';
+
+/** Show the learner around, from wherever. */
+export function startTour(): void {
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(TOUR_REQUEST_EVENT));
+}
+
+/** Hear every request for the tour. Returns the way to stop listening. */
+export function onTourRequested(listener: () => void): () => void {
+  window.addEventListener(TOUR_REQUEST_EVENT, listener);
+  return () => window.removeEventListener(TOUR_REQUEST_EVENT, listener);
+}
+
 /* There used to be a window event here for opening the phone's navigation
    drawer, because a step about Fundamentals had nothing to point at until it
    was open. The phone's navigation is now a bar along the bottom carrying the

@@ -47,13 +47,6 @@ import { TOUR_STEPS, type TourStep } from './tourSteps';
  * middle of the screen with nothing lit. The tour always continues.
  */
 
-let trigger: (() => void) | null = null;
-
-/** Show the learner around, from wherever. No-op until <TourHost/> mounts. */
-export function startTour(): void {
-  trigger?.();
-}
-
 interface Box {
   top: number;
   left: number;
@@ -97,7 +90,9 @@ const sameBox = (a: Box | null, b: Box): boolean =>
   Math.abs(a.width - b.width) < 0.5 &&
   Math.abs(a.height - b.height) < 0.5;
 
-const TourHost: React.FC = () => {
+/** `requests` counts how often the tour has been asked for by hand
+ *  (components/tour/TourGate.tsx); each new one opens it. */
+const TourHost: React.FC<{ requests?: number }> = ({ requests = 0 }) => {
   const { lang, isArabic } = useLang();
   const { user, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
@@ -154,11 +149,8 @@ const TourHost: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    trigger = () => begin();
-    return () => {
-      trigger = null;
-    };
-  }, [begin]);
+    if (requests > 0) begin();
+  }, [requests, begin]);
 
   /* Opens itself once, for a learner who has signed in, answered the prompts
      that come before it, and has nothing finished yet. The wait is not

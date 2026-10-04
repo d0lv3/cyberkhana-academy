@@ -236,7 +236,10 @@ export default defineConfig({
         // Split heavyweight, rarely-changing vendors into their own
         // long-cacheable chunks instead of one monolithic index bundle.
         manualChunks: {
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          // 'react-dom/client' is named on its own because React 19 keeps the
+          // renderer there, apart from the 'react-dom' entry. Without it the
+          // renderer rode in the app's chunk and was fetched again on every deploy.
+          'vendor-react': ['react', 'react-dom', 'react-dom/client', 'react-router-dom'],
           'vendor-motion': ['framer-motion'],
           // Markdown + KaTeX only load once a lesson is opened.
           'vendor-markdown': [

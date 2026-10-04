@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { MotionConfig } from 'framer-motion';
 import { LangProvider } from './contexts/LangContext';
@@ -9,19 +9,17 @@ import FeedbackHost from './components/feedback/FeedbackHost';
 import AccountNoticeHost from './components/account/AccountNoticeHost';
 import LevelUpHost from './components/levels/LevelUpHost';
 import StreakMilestoneHost from './components/levels/StreakMilestoneHost';
-import TourHost from './components/tour/TourHost';
+import TourGate from './components/tour/TourGate';
 import ErrorBoundary from './components/ErrorBoundary';
 
 import { FullscreenLiquidLoader } from './components/ui/LiquidLogoLoader';
 import AppLayout from './components/AppLayout';
-import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
-import LegalPage from './pages/legal/LegalPage';
-import CreatorAgreementGate from './components/legal/CreatorAgreementGate';
 import NotFoundPage from './pages/NotFoundPage';
 import { loginPath, safeLoginDestination } from './services/loginDestination';
 import { ConnectionRecovery, SyncNoticeHost } from './components/ConnectionRecovery';
 import { useSyncStatus } from './hooks/useSyncStatus';
+import { CACHE_OWNER_KEY } from './services/syncService';
 import DashboardPage from './pages/DashboardPage';
 import FundamentalsPage from './pages/fundamentals/FundamentalsPage';
 import ProgrammingPage from './pages/fundamentals/ProgrammingPage';
@@ -30,7 +28,28 @@ import OperatingSystemsPage from './pages/fundamentals/OperatingSystemsPage';
 import ModulesPage from './pages/modules/ModulesPage';
 import PathsPage from './pages/paths/PathsPage';
 import LeaderboardPage from './pages/LeaderboardPage';
-import ProfilePage from './pages/ProfilePage';
+
+/* ── Out of the first download ──
+ * Each of these was in the bundle every visit begins with, and none of them is
+ * what a visit begins with: the landing page is for someone signed out and the
+ * rest of that bundle for someone signed in, the legal texts are read from a
+ * link, and the Creator Agreement is put to a creator at the Studio's door.
+ *
+ * A browser no account has ever used is almost certainly here for the landing
+ * page, so that one is asked for straight away, while the session is still
+ * being checked, rather than once the answer is back. */
+const loadLanding = () => import('./pages/LandingPage');
+const LandingPage = lazy(loadLanding);
+const LegalPage = lazy(() => import('./pages/legal/LegalPage'));
+const CreatorAgreementGate = lazy(() => import('./components/legal/CreatorAgreementGate'));
+const loadProfile = () => import('./pages/ProfilePage');
+const ProfilePage = lazy(loadProfile);
+
+try {
+  if (localStorage.getItem(CACHE_OWNER_KEY) === null) void loadLanding();
+} catch {
+  /* storage unavailable: the landing page is fetched when it is shown */
+}
 
 /* ── Lazy-loaded heavy pages (CodeMirror, react-markdown, Pyodide) ── */
 const ModuleViewerPage = lazy(() => import('./pages/fundamentals/ModuleViewerPage'));
@@ -117,7 +136,24 @@ function AdminGate() {
   return <Outlet />;
 }
 
+/** The Profile tab is one press away from every page, so its code is fetched
+ *  once the app is up and the browser has a moment, and the press finds it. */
+function usePrefetchedProfile(enabled: boolean) {
+  useEffect(() => {
+    if (!enabled) return;
+    const fetchIt = () => void loadProfile().catch(() => undefined);
+    if (typeof window.requestIdleCallback === 'function') {
+      const id = window.requestIdleCallback(fetchIt, { timeout: 5000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const timer = setTimeout(fetchIt, 2000);
+    return () => clearTimeout(timer);
+  }, [enabled]);
+}
+
 function AppRoutes() {
+  const { isAuthenticated } = useAuth();
+  usePrefetchedProfile(isAuthenticated);
   return (
     <Suspense fallback={<LazyFallback />}>
       <Routes>
@@ -284,7 +320,7 @@ const App: React.FC = () => {
               <SyncNoticeHost />
               <LevelUpHost />
               <StreakMilestoneHost />
-              <TourHost />
+              <TourGate />
             </PwaProvider>
           </LangProvider>
         </AuthProvider>

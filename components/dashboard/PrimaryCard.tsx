@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Code2, Compass, GraduationCap, Network, Play, Terminal } from 'lucide-react';
-import { startTour } from '../tour/TourHost';
+import { startTour } from '../../services/tourService';
 import { useLang } from '../../contexts/LangContext';
 import type { Journey, JourneyTarget } from '../../services/journeyService';
 import type { TrackProgress } from '../../services/progressService';

@@ -7,7 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLang } from '../contexts/LangContext';
 import { useXp } from '../services/xpService';
 import { levelColor } from './ui/LevelBadge';
-import { startTour } from './tour/TourHost';
+import { startTour } from '../services/tourService';
 
 const Header: React.FC = () => {
   const { user, logout } = useAuth();
