@@ -87,6 +87,12 @@ export function setServerXp(
   announce();
 }
 
+/** Has a reply newer than this request's already been taken in? Then what
+ *  this one carries is the older picture of the record. */
+export function isOvertaken(ticket: number): boolean {
+  return accepted > ticket;
+}
+
 export function getServerXp(): ServerXp | null {
   return current;
 }

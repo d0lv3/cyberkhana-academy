@@ -10,6 +10,7 @@ import {
   markTourSeen,
   prefersReducedMotion,
 } from '../../services/tourService';
+import { useSyncStatus } from '../../hooks/useSyncStatus';
 import { TOUR_STEPS, type TourStep } from './tourSteps';
 
 /* ─── The Academy tour ───
@@ -95,6 +96,7 @@ const sameBox = (a: Box | null, b: Box): boolean =>
 const TourHost: React.FC<{ requests?: number }> = ({ requests = 0 }) => {
   const { lang, isArabic } = useLang();
   const { user, isAuthenticated, isLoading } = useAuth();
+  const { loading: pulling } = useSyncStatus();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -156,9 +158,10 @@ const TourHost: React.FC<{ requests?: number }> = ({ requests = 0 }) => {
      that come before it, and has nothing finished yet. The wait is not
      decoration: progress arrives from the server a moment after the session
      does, and starting before it lands would show the tour to someone who is
-     halfway through the course. */
+     halfway through the course. A device that already holds the account's
+     copy shows the app before that pull is back, so it is waited for here. */
   useEffect(() => {
-    if (open || isLoading || !isAuthenticated || !settledIn(user)) return;
+    if (open || isLoading || pulling || !isAuthenticated || !settledIn(user)) return;
     if (hasSeenTour()) return;
     if (location.pathname !== '/dashboard') return;
 
@@ -172,7 +175,7 @@ const TourHost: React.FC<{ requests?: number }> = ({ requests = 0 }) => {
       begin();
     }, 1500);
     return () => clearTimeout(timer);
-  }, [open, isLoading, isAuthenticated, user, location.pathname, begin]);
+  }, [open, isLoading, pulling, isAuthenticated, user, location.pathname, begin]);
 
   /* ── Moving between steps ── */
 

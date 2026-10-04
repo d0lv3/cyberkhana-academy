@@ -8,6 +8,7 @@ import UniversityPrompt from './university/UniversityPrompt';
 import UsernamePrompt from './account/UsernamePrompt';
 import LanguagePrompt, { useLanguageFirstRun } from './account/LanguagePrompt';
 import { skyFor, skyStyle } from './ui/sky';
+import { useSyncStatus } from '../hooks/useSyncStatus';
 
 const SIDEBAR_KEY = 'academy-sidebar-collapsed';
 
@@ -19,6 +20,10 @@ const AppLayout: React.FC = () => {
   const sky = skyFor(pathname);
   /* Which language to say everything else in. Asked first, and on its own. */
   const language = useLanguageFirstRun();
+  /* The page can be on screen before this visit's pull is back. When the pull
+     brings something the device's copy did not have, the page starts again
+     from it; the shell around it stays where it is. */
+  const { revision } = useSyncStatus();
 
   useEffect(() => {
     localStorage.setItem(SIDEBAR_KEY, String(collapsed));
@@ -54,7 +59,7 @@ const AppLayout: React.FC = () => {
               is all of it on a desktop, where there is no bar. */}
           <div className="max-w-7xl mx-auto min-w-0 mobile-nav-clearance md:pb-[env(safe-area-inset-bottom,0px)]">
             {!language.needed && <PwaInstallBanner className="mb-5" />}
-            <Outlet />
+            <Outlet key={revision} />
           </div>
         </main>
       </div>

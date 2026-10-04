@@ -9,6 +9,7 @@ import {
   type StreakAwardDetail,
 } from '../../services/syncService';
 import { STREAK_BREAKPOINTS, breakpointFor } from '../../services/streakService';
+import { useSyncStatus } from '../../hooks/useSyncStatus';
 
 /* ─── The streak reward card ───
  *
@@ -71,6 +72,9 @@ interface Shown {
 
 const StreakMilestoneHost: React.FC = () => {
   const { user, isLoading } = useAuth();
+  /* The pull marks what was paid on another device as already seen, and the
+     app can open before it is back. */
+  const { loading: pulling } = useSyncStatus();
   const { lang } = useLang();
   const reduceMotion = useReducedMotion();
   const [shown, setShown] = useState<Shown | null>(null);
@@ -104,7 +108,7 @@ const StreakMilestoneHost: React.FC = () => {
 
   /* Paid earlier, and never shown here. */
   useEffect(() => {
-    if (!user || isLoading) return;
+    if (!user || isLoading || pulling) return;
     const paid = user.streakAwarded ?? [];
     if (!paid.length) return;
     const seen = readSeen();
@@ -116,7 +120,7 @@ const StreakMilestoneHost: React.FC = () => {
     if (!fresh.length) return;
     const xp = fresh.reduce((sum, d) => sum + (breakpointFor(d)?.points ?? 0), 0);
     open(fresh, xp, Math.max(...fresh));
-  }, [user, isLoading, open]);
+  }, [user, isLoading, pulling, open]);
 
   // Signed out while it was open: it belonged to that session.
   useEffect(() => {

@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useEffect } from 'react';
-import { HashRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, Outlet, useLocation, useParams } from 'react-router-dom';
 import { MotionConfig } from 'framer-motion';
 import { LangProvider } from './contexts/LangContext';
 import { PwaProvider } from './contexts/PwaContext';
@@ -20,6 +20,10 @@ import { loginPath, safeLoginDestination } from './services/loginDestination';
 import { ConnectionRecovery, SyncNoticeHost } from './components/ConnectionRecovery';
 import { useSyncStatus } from './hooks/useSyncStatus';
 import { CACHE_OWNER_KEY } from './services/syncService';
+import { getPublishedPathBySlug } from './services/creatorDataService';
+import { getViewableModuleBySlug } from './data/modulesData';
+import { getNetworkingLesson } from './data/networking';
+import { getConcept, getLanguage } from './data/programming';
 import DashboardPage from './pages/DashboardPage';
 import FundamentalsPage from './pages/fundamentals/FundamentalsPage';
 import ProgrammingPage from './pages/fundamentals/ProgrammingPage';
@@ -108,13 +112,45 @@ function PublicGate({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+/* ── Pages that name one thing ──
+ * A device that holds the account's copy opens from it while this visit's pull
+ * is still on its way (services/syncService.ts, "Opening from this device's
+ * copy"). For a page that lists things that is all there is to it. A page that
+ * is about ONE thing has a second case: a link to something published since
+ * the last visit, which the copy does not have. That page waits for the pull,
+ * as every page used to, instead of saying the thing does not exist.
+ *
+ * Each is also keyed by the revision, as the pages inside the shell are
+ * (components/AppLayout.tsx): when the pull brings something the copy did not
+ * have, the page starts again from it. */
+type RouteParams = Readonly<Record<string, string | undefined>>;
+
+const inCopy = {
+  /* A draft preview is read from the Studio's own snapshot, not the catalog. */
+  module: ({ slug }: RouteParams) => slug === '__preview__' || !!getViewableModuleBySlug(slug ?? ''),
+  lesson: ({ slug }: RouteParams) => !!getNetworkingLesson(slug ?? ''),
+  concept: ({ langSlug, moduleSlug, conceptSlug }: RouteParams) =>
+    !!getConcept(langSlug ?? '', moduleSlug ?? '', conceptSlug ?? ''),
+  language: ({ langSlug }: RouteParams) => !!getLanguage(langSlug ?? ''),
+  path: ({ slug }: RouteParams) => !!getPublishedPathBySlug(slug ?? ''),
+};
+
+function CatalogRoute({ has, children }: { has: (params: RouteParams) => boolean; children: React.ReactNode }) {
+  const params = useParams();
+  const { loading, revision } = useSyncStatus();
+  if (loading && !has(params)) return <LazyFallback />;
+  return <React.Fragment key={revision}>{children}</React.Fragment>;
+}
+
 /** Content Studio is for creators/admins only — and creators must additionally
  *  have accepted the Creator Agreement, which is what governs the powers on the
  *  other side of this gate. */
 function CreatorGate() {
   const { user, isLoading } = useAuth();
   const sync = useSyncStatus();
-  if (isLoading) return <LazyFallback />;
+  /* The Studio writes whole buckets back, so it never works from the copy a
+     visit opened with: it waits until this visit's pull has brought its own. */
+  if (isLoading || sync.loading) return <LazyFallback />;
   if (!user || (user.role !== 'creator' && user.role !== 'admin')) {
     return <Navigate to="/dashboard" replace />;
   }
@@ -189,7 +225,9 @@ function AppRoutes() {
           path="/modules/:slug/learn"
           element={
             <AuthGate>
-              <ModuleViewerPage />
+              <CatalogRoute has={inCopy.module}>
+                <ModuleViewerPage />
+              </CatalogRoute>
             </AuthGate>
           }
         />
@@ -197,7 +235,9 @@ function AppRoutes() {
           path="/fundamentals/module/:slug/learn"
           element={
             <AuthGate>
-              <ModuleViewerPage />
+              <CatalogRoute has={inCopy.module}>
+                <ModuleViewerPage />
+              </CatalogRoute>
             </AuthGate>
           }
         />
@@ -207,7 +247,9 @@ function AppRoutes() {
           path="/fundamentals/networking/lesson/:slug"
           element={
             <AuthGate>
-              <NetworkingLessonPage />
+              <CatalogRoute has={inCopy.lesson}>
+                <NetworkingLessonPage />
+              </CatalogRoute>
             </AuthGate>
           }
         />
@@ -217,7 +259,9 @@ function AppRoutes() {
           path="/fundamentals/programming/:langSlug/:moduleSlug/:conceptSlug"
           element={
             <AuthGate>
-              <ProgrammingLessonPage />
+              <CatalogRoute has={inCopy.concept}>
+                <ProgrammingLessonPage />
+              </CatalogRoute>
             </AuthGate>
           }
         />
@@ -243,16 +287,44 @@ function AppRoutes() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/fundamentals" element={<FundamentalsPage />} />
           <Route path="/fundamentals/programming" element={<ProgrammingPage />} />
-          <Route path="/fundamentals/programming/:langSlug" element={<ProgrammingLanguagePage />} />
+          <Route
+            path="/fundamentals/programming/:langSlug"
+            element={
+              <CatalogRoute has={inCopy.language}>
+                <ProgrammingLanguagePage />
+              </CatalogRoute>
+            }
+          />
           <Route path="/fundamentals/networking" element={<NetworkingPage />} />
           <Route path="/fundamentals/operating-systems" element={<OperatingSystemsPage />} />
           <Route path="/fundamentals/cybersecurity-101" element={<CyberSecurity101Page />} />
           <Route path="/modules" element={<ModulesPage />} />
           {/* A module's own page: what it covers and the way in. */}
-          <Route path="/modules/:slug" element={<ModuleOverviewPage />} />
-          <Route path="/fundamentals/module/:slug" element={<ModuleOverviewPage />} />
+          <Route
+            path="/modules/:slug"
+            element={
+              <CatalogRoute has={inCopy.module}>
+                <ModuleOverviewPage />
+              </CatalogRoute>
+            }
+          />
+          <Route
+            path="/fundamentals/module/:slug"
+            element={
+              <CatalogRoute has={inCopy.module}>
+                <ModuleOverviewPage />
+              </CatalogRoute>
+            }
+          />
           <Route path="/paths" element={<PathsPage />} />
-          <Route path="/paths/:slug" element={<PathDetailPage />} />
+          <Route
+            path="/paths/:slug"
+            element={
+              <CatalogRoute has={inCopy.path}>
+                <PathDetailPage />
+              </CatalogRoute>
+            }
+          />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           {/* Another member's public profile, by username or account id. */}

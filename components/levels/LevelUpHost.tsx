@@ -6,6 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLang } from '../../contexts/LangContext';
 import { useXp } from '../../services/xpService';
 import { LEVEL_SEEN_KEY } from '../../services/syncService';
+import { useSyncStatus } from '../../hooks/useSyncStatus';
 import LevelEmblem from './LevelEmblem';
 import { levelColor } from '../ui/LevelBadge';
 
@@ -57,6 +58,9 @@ const SPARKS = [
 
 const LevelUpHost: React.FC = () => {
   const { user, isLoading } = useAuth();
+  /* The app can open before the server's figure is in. A level is only news
+     once it is: until then the number here is this device's estimate. */
+  const { loading: pulling } = useSyncStatus();
   const { lang } = useLang();
   const navigate = useNavigate();
   const reduceMotion = useReducedMotion();
@@ -67,7 +71,7 @@ const LevelUpHost: React.FC = () => {
   const number = level.level.number;
 
   useEffect(() => {
-    if (!user || isLoading) return;
+    if (!user || isLoading || pulling) return;
     const seen = readSeen();
     if (seen === null) {
       writeSeen(number);
@@ -77,7 +81,7 @@ const LevelUpHost: React.FC = () => {
     writeSeen(number);
     returnFocus.current = document.activeElement as HTMLElement | null;
     setOpen(true);
-  }, [user, isLoading, number]);
+  }, [user, isLoading, pulling, number]);
 
   // Signed out while it was open: it belonged to that session.
   useEffect(() => {

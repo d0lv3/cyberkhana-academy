@@ -10,6 +10,9 @@
  *  - applyServerRecord(): takes in the server's answer to any progress write.
  *  - claimCachesFor() / flushPendingSync() / forgetServerBackedCaches(): keep
  *    the caches to one account at a time (see "Whose caches these are").
+ *  - hasCachedCopyFor(): whether this device already holds the account's copy,
+ *    so the app can open from it while the pull catches up behind the page
+ *    (see "Opening from this device's copy").
  *
  * All pushes are no-ops until a session exists, so the app still works fully
  * offline against the local cache.
@@ -21,7 +24,7 @@ import { TOUR_SEEN_KEY } from './tourService';
 import { LANG_CHOSEN_KEY } from './languageChoice';
 import { levelFor } from '../backend/src/shared/xp';
 import { dayKeyOf } from '../backend/src/shared/streak';
-import { forgetServerXp, nextScoreTicket, setServerXp } from './serverXp';
+import { forgetServerXp, isOvertaken, nextScoreTicket, setServerXp } from './serverXp';
 import { getLabProgress, saveLabProgress } from './labProgress';
 
 /* Mirrors progressService's event name (defined locally to avoid an import
@@ -81,11 +84,20 @@ export interface SyncStatus {
   failedLoads: LoadSection[];
   saveFailed: boolean;
   retrying: boolean;
+  /** A whole pull of the account is on its way. The app may already be open
+   *  from this device's copy, so whatever must not act on that copy waits on
+   *  this: the Studio, a page whose content the copy does not have, and the
+   *  cards that celebrate a level or a streak. */
+  loading: boolean;
+  /** Goes up when a pull finished behind an open page and what it brought
+   *  differs from the copy that page was drawn from. Pages are keyed by it,
+   *  so they start again from what is true now. */
+  revision: number;
 }
 const SYNC_STATUS_EVENT = 'academy-sync-status';
 const PENDING_BOOKMARKS_KEY = 'academy-bookmarks-unsaved';
 const PENDING_BUCKETS_KEY = 'academy-content-unsaved';
-let status: SyncStatus = { failedLoads: [], saveFailed: false, retrying: false };
+let status: SyncStatus = { failedLoads: [], saveFailed: false, retrying: false, loading: false, revision: 0 };
 let account: { id: string; displayName: string } | null = null;
 let generation = 0;
 let retryTimer: ReturnType<typeof setTimeout> | null = null;
@@ -94,6 +106,10 @@ let retryInFlight: Promise<void> | null = null;
 let hydrationInFlight: Promise<void> | null = null;
 let bookmarksDirty = false;
 let bookmarkVersion = 0;
+/** The server's record has been merged into this device's since the session
+ *  began. Until it has, the bookmarks here are the last visit's, and pushing
+ *  them would replace whatever another device has added since. */
+let recordPulled = false;
 
 export const getSyncStatus = (): SyncStatus => status;
 export function subscribeSyncStatus(listener: () => void): () => void {
@@ -169,8 +185,9 @@ export function setSyncEnabled(enabled: boolean): void {
     retryTimer = null;
     retryInFlight = null;
     hydrationInFlight = null;
+    recordPulled = false;
     retryDelay = 5_000;
-    updateStatus({ failedLoads: [], saveFailed: false, retrying: false });
+    updateStatus({ failedLoads: [], saveFailed: false, retrying: false, loading: false });
   }
 }
 
@@ -450,7 +467,9 @@ function announceStreakAward(result: ServerRecord): void {
 
 /** Push the bookmarks, then keep what the server answers with. */
 async function pushProgress(): Promise<void> {
-  if (status.failedLoads.includes('progress')) return;
+  /* Held until the server's record is in (see recordPulled). The change stays
+     marked as waiting, and the pull pushes it once it has merged. */
+  if (!recordPulled || status.failedLoads.includes('progress')) return;
   const session = generation;
   const version = bookmarkVersion;
   const ticket = nextScoreTicket();
@@ -540,6 +559,32 @@ export function queueProgressPush(): void {
  */
 
 export const CACHE_OWNER_KEY = 'academy-cache-owner';
+
+/* ── Opening from this device's copy ──
+ *
+ * A pull used to stand between every visit and the app, even on a device that
+ * had been given the same account's catalog and record the visit before. Now
+ * such a device opens from its copy as soon as the session is confirmed, and
+ * the pull lands behind the page (SyncStatus.loading, SyncStatus.revision).
+ *
+ * `academy-cache-filled` names the account that copy is whole for. It is set
+ * when a pull brings down both the catalog and the record, and dropped with
+ * the copy itself: at sign-out, and when another account takes the device. A
+ * first sign-in here has no copy, so it waits for the pull as it always did.
+ */
+const CACHE_FILLED_KEY = 'academy-cache-filled';
+
+/** Does this device hold a whole copy for this account, to open from? */
+export function hasCachedCopyFor(accountId: string): boolean {
+  try {
+    return (
+      localStorage.getItem(CACHE_OWNER_KEY) === accountId &&
+      localStorage.getItem(CACHE_FILLED_KEY) === accountId
+    );
+  } catch {
+    return false;
+  }
+}
 
 /** The creator-* keys: my own Studio content, mirrored from my buckets. */
 const CREATOR_KEYS: string[] = Object.keys(SERVER_BUCKET_BY_STORAGE_KEY);
@@ -670,6 +715,7 @@ export function claimCachesFor(account: { id: string; displayName: string }): vo
     const owner = localStorage.getItem(CACHE_OWNER_KEY);
     if (owner === account.id) return;
 
+    localStorage.removeItem(CACHE_FILLED_KEY);
     discardPendingPushes();
     forgetServerXp();
     if (owner) {
@@ -733,6 +779,8 @@ export function forgetServerBackedCaches(): void {
   discardPendingPushes();
   forgetServerXp();
   try {
+    // What is left after this is not a copy to open from.
+    localStorage.removeItem(CACHE_FILLED_KEY);
     removeKeys((key) => isServerBackedKey(key)
       && !unsavedBuckets.has(SERVER_BUCKET_BY_STORAGE_KEY[key])
       && !(keepBookmarks && ['academy-paths-enrolled', 'academy-modules-enrolled', 'academy-last-activity'].includes(key)));
@@ -755,11 +803,16 @@ function setUnion<T>(a: T[], b: T[]): T[] {
 
 /** Take the server's record in. Its completions replace the cache, because
  *  only the server adds to them; the bookmarks merge as a union, so one made
- *  on this device before it synced is not lost. */
-function mergeProgress(server: ProgressSnapshot | null): void {
-  writeCompletions(server ?? { programming: {}, osModules: {}, networking: [] });
+ *  on this device before it synced is not lost.
+ *
+ *  `overtaken` is a pull that a newer answer beat here: something was
+ *  finished while it was on its way, and the server has already said what the
+ *  record is now. Its completions and flags are the older picture and are
+ *  left out; its bookmarks only ever add, so they still merge. */
+function mergeProgress(server: ProgressSnapshot | null, overtaken = false): void {
+  if (!overtaken) writeCompletions(server ?? { programming: {}, osModules: {}, networking: [] });
   if (!server) return;
-  writeSolvedFlags(server.solvedFlags);
+  if (!overtaken) writeSolvedFlags(server.solvedFlags);
 
   localStorage.setItem(
     'academy-paths-enrolled',
@@ -787,8 +840,10 @@ function mergeProgress(server: ProgressSnapshot | null): void {
   }
 }
 
-/** Seed my own creator buckets; first login pushes existing local work UP. */
-function seedOwnBuckets(serverBuckets: Record<string, unknown[] | undefined>): void {
+/** Seed my own creator buckets; first login pushes existing local work UP.
+ *  Returns whether the server's copy differed from what was cached. */
+function seedOwnBuckets(serverBuckets: Record<string, unknown[] | undefined>): boolean {
+  let changed = false;
   const unsaved = new Set(readArray<string>(PENDING_BUCKETS_KEY));
   const pairs: Array<[string, string]> = Object.entries(SERVER_BUCKET_BY_STORAGE_KEY);
   for (const [storageKey, bucket] of pairs) {
@@ -797,7 +852,11 @@ function seedOwnBuckets(serverBuckets: Record<string, unknown[] | undefined>): v
       queueContentPush(storageKey, readArray(storageKey));
     } else if (serverItems !== undefined) {
       // Server is the source of truth once a bucket exists there.
-      localStorage.setItem(storageKey, JSON.stringify(serverItems));
+      const next = JSON.stringify(serverItems);
+      if (localStorage.getItem(storageKey) !== next) {
+        localStorage.setItem(storageKey, next);
+        changed = true;
+      }
     } else {
       /* Never synced: migrate any existing local content up. Whatever is
          still cached here got through claimCachesFor, so it is this
@@ -806,6 +865,27 @@ function seedOwnBuckets(serverBuckets: Record<string, unknown[] | undefined>): v
       if (local.length > 0) queueContentPush(storageKey, local);
     }
   }
+  return changed;
+}
+
+/** What the pages draw from the learner's record, in a form two reads can be
+ *  compared by: the same record reads the same whatever order its keys and
+ *  ids came in, and a container with nothing in it reads as no container. */
+function recordMark(): string {
+  const { programming, osModules, networking } = collectCompletions();
+  const lists = (record: Record<string, string[]>) =>
+    Object.keys(record)
+      .filter((key) => record[key].length > 0)
+      .sort()
+      .map((key) => [key, [...record[key]].sort()]);
+  return JSON.stringify([
+    lists(programming),
+    lists(osModules),
+    [...networking].sort(),
+    readArray<string>('academy-paths-enrolled').sort(),
+    readArray<string>('academy-modules-enrolled').sort(),
+    readArray<string>(FINISHED_MODULES_KEY).sort(),
+  ]);
 }
 
 /**
@@ -833,6 +913,16 @@ export async function hydrateFromServer(owner: { id: string; displayName: string
   const ticket = generation;
   const current = () => syncEnabled && generation === ticket;
   const sections = onlyFailed ? [...status.failedLoads] : ['courses', 'progress', 'studio'];
+  if (!onlyFailed) updateStatus({ loading: true });
+  /* Whether this pull brought anything the caches did not already hold. A
+     page drawn from them before it landed is started again only when it did. */
+  let changed = false;
+  const put = (key: string, value: unknown) => {
+    const next = JSON.stringify(value);
+    if (localStorage.getItem(key) === next) return;
+    localStorage.setItem(key, next);
+    changed = true;
+  };
   hydrationInFlight = (async () => {
     await Promise.all([
       (async () => {
@@ -843,27 +933,12 @@ export async function hydrateFromServer(owner: { id: string; displayName: string
             '/content/published'
           );
           if (!current()) return;
-          localStorage.setItem(
-            PUBLISHED_CACHE_KEYS.NETWORKING_LESSONS,
-            JSON.stringify(buckets['networking-lessons'] ?? [])
-          );
-          localStorage.setItem(
-            PUBLISHED_CACHE_KEYS.NETWORKING_UNITS,
-            JSON.stringify(buckets['networking-units'] ?? [])
-          );
-          localStorage.setItem(
-            PUBLISHED_CACHE_KEYS.PROGRAMMING_PATCHES,
-            JSON.stringify(buckets['programming-patches'] ?? [])
-          );
-          localStorage.setItem(
-            PUBLISHED_CACHE_KEYS.OS_MODULES,
-            JSON.stringify(buckets['os-modules'] ?? [])
-          );
-          localStorage.setItem(
-            PUBLISHED_CACHE_KEYS.STANDALONE_MODULES,
-            JSON.stringify(buckets['standalone-modules'] ?? [])
-          );
-          localStorage.setItem(PUBLISHED_CACHE_KEYS.PATHS, JSON.stringify(buckets['paths'] ?? []));
+          put(PUBLISHED_CACHE_KEYS.NETWORKING_LESSONS, buckets['networking-lessons'] ?? []);
+          put(PUBLISHED_CACHE_KEYS.NETWORKING_UNITS, buckets['networking-units'] ?? []);
+          put(PUBLISHED_CACHE_KEYS.PROGRAMMING_PATCHES, buckets['programming-patches'] ?? []);
+          put(PUBLISHED_CACHE_KEYS.OS_MODULES, buckets['os-modules'] ?? []);
+          put(PUBLISHED_CACHE_KEYS.STANDALONE_MODULES, buckets['standalone-modules'] ?? []);
+          put(PUBLISHED_CACHE_KEYS.PATHS, buckets['paths'] ?? []);
           loadFailed('courses', false);
         } catch (err) {
           if (!current()) return;
@@ -885,6 +960,11 @@ export async function hydrateFromServer(owner: { id: string; displayName: string
           }>('/progress');
           if (!current()) return;
           loadFailed('progress', false);
+          const before = recordMark();
+          /* The app can be in use while this is on its way. A stop finished in
+             that time has been answered by the server already, and that answer
+             is newer than this one. */
+          const overtaken = isOvertaken(ticket);
           rememberLevelReached(xp);
           /* Taken in after the level is marked as seen, so the figure arriving is
              never mistaken for a level just reached. It was scored from exactly the
@@ -893,11 +973,13 @@ export async function hydrateFromServer(owner: { id: string; displayName: string
           /* The server's days, and the rungs it has already paid. Both are taken as
              old news on arrival, for the reason rememberLevelReached exists: a
              streak earned on another device is not something to celebrate here. */
-          cacheStudyDays(progress?.studyDays);
+          if (!overtaken) cacheStudyDays(progress?.studyDays);
           rememberStreakAwards(streakAwarded);
           const local = collectBookmarks();
           const hadLocal = local.enrolledPaths.length > 0 || (local.enrolledModules?.length ?? 0) > 0;
-          mergeProgress(progress);
+          mergeProgress(progress, overtaken);
+          recordPulled = true;
+          if (recordMark() !== before) changed = true;
           // Push the merged bookmarks back so the server has any made here.
           if (hadLocal || progress || bookmarksDirty) queueProgressPush();
         } catch (err) {
@@ -913,7 +995,7 @@ export async function hydrateFromServer(owner: { id: string; displayName: string
         try {
           const { buckets } = await api.get<{ buckets: Record<string, unknown[]> }>('/content/mine');
           if (!current()) return;
-          seedOwnBuckets(buckets ?? {});
+          if (seedOwnBuckets(buckets ?? {})) changed = true;
           loadFailed('studio', false);
         } catch (err) {
           if (!current()) return;
@@ -931,6 +1013,16 @@ export async function hydrateFromServer(owner: { id: string; displayName: string
   })().finally(() => {
     if (!current()) return;
     hydrationInFlight = null;
+    if (!status.failedLoads.includes('courses') && !status.failedLoads.includes('progress')) {
+      try {
+        localStorage.setItem(CACHE_FILLED_KEY, owner.id);
+      } catch {
+        /* storage unavailable: the next visit waits for its pull instead */
+      }
+    }
+    if (!onlyFailed) {
+      updateStatus({ loading: false, revision: changed ? status.revision + 1 : status.revision });
+    }
     scheduleRetry();
   });
   return hydrationInFlight;

@@ -8,6 +8,7 @@ import {
   claimCachesFor,
   flushPendingSync,
   forgetServerBackedCaches,
+  hasCachedCopyFor,
 } from '../services/syncService';
 import { setOwnAuthor } from '../services/creatorDataService';
 import { setAwardedXp, setStreakXp } from '../services/xpService';
@@ -183,6 +184,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setStreakXp(user?.streakXp ?? 0);
   }, [user?.xpAward, user?.streakXp]);
 
+  /* Adopt a session and bring the account down. A device that already holds
+     this account's copy opens from it at once, and the pull lands behind the
+     page; anywhere else there is nothing to open from yet, so the pull is
+     waited for. Either way it is the same pull. */
+  const settle = useCallback(
+    async (serverUser: ServerUser) => {
+      const account = adopt(serverUser);
+      const cached = hasCachedCopyFor(account.id);
+      const pulled = hydrateFromServer(account);
+      if (!cached) await pulled;
+    },
+    [adopt]
+  );
+
   const retrySession = useCallback(async () => {
     const ticket = ++sessionRequest.current;
     setIsLoading(true);
@@ -190,7 +205,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { user: serverUser } = await api.get<{ user: ServerUser }>('/auth/me');
       if (ticket !== sessionRequest.current) return;
-      await hydrateFromServer(adopt(serverUser));
+      await settle(serverUser);
     } catch (error) {
       if (ticket !== sessionRequest.current) return;
       if (error instanceof ApiError && error.status === 401) {
@@ -200,7 +215,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       if (ticket === sessionRequest.current) setIsLoading(false);
     }
-  }, [adopt]);
+  }, [settle]);
 
   // Restore the cookie session without treating a connection failure as sign-out.
   useEffect(() => {
@@ -217,7 +232,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [sessionError, retrySession]);
 
   const establishSession = async ({ user: serverUser, deletionCancelled }: SessionResponse) => {
-    await hydrateFromServer(adopt(serverUser));
+    await settle(serverUser);
     if (deletionCancelled) setAccountNotice({ kind: 'deletion-cancelled' });
   };
 
