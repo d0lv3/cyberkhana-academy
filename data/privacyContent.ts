@@ -25,7 +25,7 @@ import type { BilingualDoc } from './legalTypes';
 export const PRIVACY: BilingualDoc = {
   en: {
     title: 'Privacy Policy',
-    updated: '2 October 2026',
+    updated: '6 October 2026',
     version: '2026-10-02',
     intro:
       'This policy explains what CyberKhana Academy collects, what we do with it, and what you can ask us to do about it.',
@@ -69,6 +69,7 @@ export const PRIVACY: BilingualDoc = {
           'your university, chosen from a list, and your country;',
           'a short bio, which stays private unless you choose to show it on your profile;',
           'links to your accounts elsewhere, such as GitHub, LinkedIn, X, TryHackMe or a website, if you choose to add them;',
+          'the name printed on your certificates, which you confirm when you claim one, and whether your university is printed with it;',
           'your language preference (English or Arabic).',
         ],
         after: [
@@ -81,6 +82,8 @@ export const PRIVACY: BilingualDoc = {
           'which lessons and modules you have completed, and your progress within them;',
           'how much time you have spent learning, in minutes;',
           'your XP and level, your monthly XP, and your position on the leaderboards;',
+          'your final exam attempts: when you sat each one, the questions you were given, your answers and your score;',
+          'the certificates you have been issued;',
           'when you last signed in;',
           'whether your account is suspended;',
           'whether you have asked for your account to be deleted, and when.',
@@ -136,10 +139,12 @@ export const PRIVACY: BilingualDoc = {
           'your level, XP, monthly XP and rank;',
           'links to your accounts elsewhere, if you add them;',
           'your bio, only if you switch on "Show my bio on my public profile". It is off until you do;',
+          'the certificates you hold, unless you switch off "List my certificates on my public profile";',
           'the content you have published as a creator.',
         ],
         after: [
-          'Never shown to other members: your email address, your country, your language setting, the Google account you sign in with, when you last signed in, whether your account is suspended, whether you have asked for it to be deleted, and your learning record beyond your XP and level.',
+          'Visible to anyone with the link: a certificate is a public page. When you claim a certificate it gets a page of its own, and anyone you give the link to can open it, signed in to the Academy or not. That is what lets an employer check it. The page shows the name you had printed, your username, your university if you asked for it to be printed, the path and its steps, when you finished it, when the certificate was issued, and whether it has been withdrawn. It does not show your score, and nothing on it leads to the rest of your account. Nobody is given the link but you.',
+          'Never shown to other members: your email address, your country, your language setting, the Google account you sign in with, when you last signed in, whether your account is suspended, whether you have asked for it to be deleted, and your learning record beyond your XP, your level and the certificates you hold. Your exam attempts and scores can be seen by administrators. The creator of a path sees only totals for its exam, such as how many people passed, never who.',
           'Content you publish as a creator is visible to everyone, credited to your account: your display name, username and picture appear beside it and link to your profile.',
         ],
       },
@@ -188,7 +193,7 @@ export const PRIVACY: BilingualDoc = {
           'Signing in again during those 7 days cancels the request, and your account comes back exactly as you left it. If you do not sign in, it is deleted automatically and permanently when the 7 days are up. After that it cannot be recovered.',
           'Administrators can see that you have asked, and when the deletion is due, next to your account in the members list. If you cannot sign in, email support@cyberkhana.tech and we will delete your account for you within 30 days of a request we can verify came from you.',
           'An administrator can also delete an account straight away, as the Terms of Service allow. That takes effect at once, with no waiting period, and deletes and keeps exactly what is listed below.',
-          'What is deleted: your name, email address, profile picture, username, university, country, bio, social links, language preference, your public profile, and the link between your account and your Google identity; your learning progress, your XP and your place on the leaderboards; and anything you wrote as a creator but had not published, such as drafts and content waiting for review, along with uploaded files that nothing else uses. Sharing between you and other creators ends. The leaderboards are worked out from the accounts that exist, so nobody else loses XP; the members below you each move up a place.',
+          'What is deleted: your name, email address, profile picture, username, university, country, bio, social links, language preference, your public profile, and the link between your account and your Google identity; your learning progress, your XP and your place on the leaderboards; your final exam attempts and your certificates, whose public pages stop working; and anything you wrote as a creator but had not published, such as drafts and content waiting for review, along with uploaded files that nothing else uses. Sharing between you and other creators ends. The leaderboards are worked out from the accounts that exist, so nobody else loses XP; the members below you each move up a place.',
           'What is not deleted, and why:',
         ],
         list: [
@@ -254,7 +259,7 @@ export const PRIVACY: BilingualDoc = {
 
   ar: {
     title: 'سياسة الخصوصية',
-    updated: '٢ تشرين الأول/أكتوبر ٢٠٢٦',
+    updated: '٦ تشرين الأول/أكتوبر ٢٠٢٦',
     version: '2026-10-02',
     intro:
       'تشرح هذه السياسة ما تجمعه أكاديمية سايبر خانة، وما نفعله به، وما يمكنك أن تطلب منا فعله بشأنه.',
@@ -296,6 +301,7 @@ export const PRIVACY: BilingualDoc = {
           'جامعتك، تختارها من قائمة، وبلدك؛',
           'نبذة قصيرة، تبقى خاصة ما لم تختر إظهارها في ملفك؛',
           'روابط لحساباتك في مواقع أخرى، مثل GitHub وLinkedIn وX وTryHackMe أو موقعك الشخصي، إن اخترت إضافتها؛',
+          'الاسم المطبوع على شهاداتك، وتؤكده عند طلب الشهادة، وما إذا كانت جامعتك تُطبع معه؛',
           'لغتك المفضّلة (الإنجليزية أو العربية).',
         ],
         after: [
@@ -308,6 +314,8 @@ export const PRIVACY: BilingualDoc = {
           'الدروس والوحدات التي أكملتها، وتقدّمك داخلها؛',
           'الوقت الذي قضيته في التعلّم، بالدقائق؛',
           'نقاط خبرتك ومستواك، ونقاط خبرتك الشهرية، وموقعك على لوحات الصدارة؛',
+          'محاولاتك في الاختبارات النهائية: متى أدّيت كل محاولة، والأسئلة التي عُرضت عليك، وإجاباتك ودرجتك؛',
+          'الشهادات التي صدرت لك؛',
           'آخر مرة سجّلت فيها الدخول؛',
           'ما إذا كان حسابك معلَّقًا؛',
           'ما إذا كنت قد طلبت حذف حسابك، ومتى.',
@@ -363,10 +371,12 @@ export const PRIVACY: BilingualDoc = {
           'مستواك ونقاط خبرتك ونقاط خبرتك الشهرية ومرتبتك؛',
           'روابط حساباتك في مواقع أخرى، إن أضفتها؛',
           'نبذتك، فقط إذا فعّلت خيار «أظهر نبذتي في ملفي العام». وهو مطفأ حتى تفعّله؛',
+          'الشهادات التي تحملها، ما لم تُطفئ خيار «عرض شهاداتي في ملفي العام»؛',
           'المحتوى الذي نشرته كمُنشِئ.',
         ],
         after: [
-          'ولا يظهر للأعضاء الآخرين أبدًا: بريدك الإلكتروني، وبلدك، وإعداد لغتك، وحساب Google الذي تسجّل الدخول به، ووقت آخر تسجيل دخول لك، وما إذا كان حسابك معلَّقًا، وما إذا كنت قد طلبت حذفه، وسجلّ تعلّمك فيما عدا نقاط خبرتك ومستواك.',
+          'ويظهر لكل مَن يملك الرابط: الشهادة صفحة علنية. عندما تطلب شهادة تصير لها صفحة خاصة، ويستطيع كل من تعطيه رابطها أن يفتحها، سواء سجّل الدخول إلى الأكاديمية أم لا. وهذا ما يتيح لجهة العمل التحقق منها. تعرض الصفحة الاسم الذي طلبت طباعته، واسم المستخدم، وجامعتك إن طلبت طباعتها، والمسار وخطواته، ومتى أنهيته، ومتى صدرت الشهادة، وما إذا كانت قد سُحبت. ولا تعرض درجتك، ولا يقود شيء فيها إلى بقية حسابك. ولا يُعطى الرابط لأحد سواك.',
+          'ولا يظهر للأعضاء الآخرين أبدًا: بريدك الإلكتروني، وبلدك، وإعداد لغتك، وحساب Google الذي تسجّل الدخول به، ووقت آخر تسجيل دخول لك، وما إذا كان حسابك معلَّقًا، وما إذا كنت قد طلبت حذفه، وسجلّ تعلّمك فيما عدا نقاط خبرتك ومستواك والشهادات التي تحملها. أما محاولاتك في الاختبارات ودرجاتك فيستطيع المشرفون رؤيتها. ولا يرى كاتب المسار عن اختباره إلا الأعداد الإجمالية، كعدد الناجحين، لا أسماءهم.',
           'والمحتوى الذي تنشره كمُنشِئ مرئي للجميع، ويُنسب إلى حسابك: يظهر بجانبه اسمك المعروض واسم المستخدم وصورتك، مع رابط إلى ملفك.',
         ],
       },
@@ -415,7 +425,7 @@ export const PRIVACY: BilingualDoc = {
           'وتسجيل دخولك مجددًا خلال هذه الأيام السبعة يلغي الطلب، فيعود حسابك كما تركته تمامًا. وإن لم تسجّل الدخول، يُحذف حسابك تلقائيًا ونهائيًا عند انقضائها، ولا يمكن استرجاعه بعد ذلك.',
           'ويستطيع المشرفون أن يروا أنك طلبت الحذف، وموعد تنفيذه، بجانب حسابك في قائمة الأعضاء. وإذا لم تتمكن من تسجيل الدخول، فراسلنا على support@cyberkhana.tech وسنحذف حسابك خلال ٣٠ يومًا من طلبٍ نتحقق من صدوره عنك.',
           'ويجوز للمشرف أيضًا حذف حساب فورًا، على النحو الذي تسمح به شروط الخدمة. ويسري ذلك في الحال دون مدة انتظار، ويحذف ويُبقي بالضبط ما هو مبيّن أدناه.',
-          'ما يُحذف: اسمك وبريدك الإلكتروني وصورتك الشخصية واسم المستخدم وجامعتك وبلدك ونبذتك وروابطك ولغتك المفضّلة وملفك العام، والرابط بين حسابك وهويتك على Google؛ وتقدّمك في التعلّم ونقاط خبرتك وموقعك على لوحات الصدارة؛ وكل ما كتبته كمُنشِئ ولم تنشره، كالمسودّات والمحتوى الذي ينتظر المراجعة، مع الملفات المرفوعة التي لا يستخدمها شيء آخر. وتنتهي المشاركة بينك وبين المُنشِئين الآخرين. ولوحات الصدارة تُحسب من الحسابات الموجودة، فلا يخسر أحد غيرك شيئًا من نقاط خبرته، ويتقدّم كل من كان بعدك مرتبة واحدة.',
+          'ما يُحذف: اسمك وبريدك الإلكتروني وصورتك الشخصية واسم المستخدم وجامعتك وبلدك ونبذتك وروابطك ولغتك المفضّلة وملفك العام، والرابط بين حسابك وهويتك على Google؛ وتقدّمك في التعلّم ونقاط خبرتك وموقعك على لوحات الصدارة؛ ومحاولاتك في الاختبارات النهائية وشهاداتك التي تتوقف صفحاتها العامة عن العمل؛ وكل ما كتبته كمُنشِئ ولم تنشره، كالمسودّات والمحتوى الذي ينتظر المراجعة، مع الملفات المرفوعة التي لا يستخدمها شيء آخر. وتنتهي المشاركة بينك وبين المُنشِئين الآخرين. ولوحات الصدارة تُحسب من الحسابات الموجودة، فلا يخسر أحد غيرك شيئًا من نقاط خبرته، ويتقدّم كل من كان بعدك مرتبة واحدة.',
           'وما لا يُحذف، ولماذا:',
         ],
         list: [

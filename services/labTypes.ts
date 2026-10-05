@@ -178,6 +178,7 @@ export function labFlags(lab: ModuleLab): LabFlag[] {
 export const LAB_FILE_EXTENSIONS = [
   'pdf', 'zip', 'gz', 'tar', 'txt', 'md', 'csv', 'json', 'log',
   'pcap', 'pcapng', 'cap', 'yaml', 'yml', 'conf', 'sh', 'py', 'sql',
+  'ovpn',
 ] as const;
 
 export const LAB_FILE_MAX_BYTES = 25 * 1024 * 1024;

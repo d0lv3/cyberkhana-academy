@@ -33,6 +33,12 @@ export interface IUser extends Document {
    *  utils/socials.ts: a handle, or a checked URL for the platforms without a
    *  fixed profile address. */
   socials?: SocialLinks;
+  /** The name this member asked to have printed on their certificates. Asked
+   *  for when the first one is claimed, and shown nowhere but on them. */
+  certificateName?: string;
+  /** Whether their certificates are listed on their public profile. Listed
+   *  unless they switch it off: absent means shown. */
+  showCertificates?: boolean;
   /** Explicit creator capability grants (admin-managed). Unset → default set. */
   creatorPermissions?: string[];
   preferredLang: 'en' | 'ar';
@@ -154,6 +160,8 @@ const UserSchema = new Schema<IUser>(
       ),
       default: undefined,
     },
+    certificateName: { type: String, maxlength: 80 },
+    showCertificates: { type: Boolean },
     creatorPermissions: { type: [String], default: undefined },
     preferredLang: { type: String, enum: ['en', 'ar'], default: 'en' },
     completedModulesCount: { type: Number, default: 0 },

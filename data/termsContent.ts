@@ -12,12 +12,12 @@
 import type { BilingualDoc } from './legalTypes';
 
 /** Must match CURRENT_TERMS_VERSION in backend/src/config/legal.ts. */
-export const TERMS_VERSION = '2026-09-30';
+export const TERMS_VERSION = '2026-10-06';
 
 export const TERMS: BilingualDoc = {
   en: {
     title: 'Terms of Service',
-    updated: '30 September 2026',
+    updated: '6 October 2026',
     version: TERMS_VERSION,
     intro:
       'These Terms govern your use of CyberKhana Academy at academy.cyberkhana.tech (the "Academy"). By signing in or using the Academy, you agree to them.',
@@ -117,6 +117,7 @@ export const TERMS: BilingualDoc = {
         body: [
           'XP, levels and ranks only mean something if they are earned.',
           'Do not use extra accounts to farm XP, automate lesson completion, or exploit a bug in progress tracking or scoring instead of doing the work. If you find such a bug, tell us — reporting it in good faith earns credit; using it does not.',
+          'Final exams are sat alone. A learning path can end in a final exam. Sit it yourself, from your own account: notes and documentation are allowed, other people are not, and neither is sharing its questions, answers or files, during the exam or after. Where an exam gives you a target to work against, attack only that address, only while your attempt is running, never with a denial of service, and leave it working for the next person.',
         ],
       },
       {
@@ -131,12 +132,16 @@ export const TERMS: BilingualDoc = {
       },
       {
         h: 'Certificates',
-        body: ['The Academy does not currently issue certificates. If we introduce them:'],
+        body: [
+          'A learning path can award a certificate of achievement. You earn one by finishing every step of the path and then passing its final exam, and you claim it by confirming the name to print on it.',
+        ],
         list: [
-          'a certificate will record that you completed specific Academy content, and nothing more;',
+          'a certificate records that you completed specific Academy content and passed its exam, and nothing more;',
           'it is not an accredited qualification, is not awarded by a university or any recognised awarding body, and does not license you to do professional security work;',
-          'we may withdraw one obtained through cheating, multiple accounts, or any breach of these Terms;',
-          'we may change what a certificate covers or stop issuing them at any time.',
+          'it is public: each certificate has a page of its own that anyone holding the link can open, signed in or not. It shows the name you had printed, your username, your university if you asked for it to be printed, the path, its steps and the dates. It does not show your score. The Privacy Policy has the detail;',
+          'we may withdraw one obtained through cheating, multiple accounts, or any breach of these Terms, and a withdrawn certificate’s page says so;',
+          'we may change what a certificate covers or stop issuing them at any time, and one already issued keeps what it said when it was issued;',
+          'it goes when your account does: delete your account and your certificates stop verifying.',
         ],
       },
       {
@@ -266,7 +271,7 @@ export const TERMS: BilingualDoc = {
 
   ar: {
     title: 'شروط الخدمة',
-    updated: '٣٠ أيلول/سبتمبر ٢٠٢٦',
+    updated: '٦ تشرين الأول/أكتوبر ٢٠٢٦',
     version: TERMS_VERSION,
     intro:
       'تحكم هذه الشروط استخدامك لأكاديمية سايبر خانة على academy.cyberkhana.tech («الأكاديمية»). وبتسجيل دخولك أو استخدامك للأكاديمية، فإنك توافق عليها.',
@@ -366,6 +371,7 @@ export const TERMS: BilingualDoc = {
         body: [
           'نقاط الخبرة والمستويات والمراتب لا تعني شيئًا ما لم تُكتسب فعلًا.',
           'لا تستخدم حسابات إضافية لجمع نقاط الخبرة، ولا تُؤتمت إكمال الدروس، ولا تستغلّ خللًا في تتبّع التقدّم أو في احتساب نقاط الخبرة بدلًا من إنجاز العمل. وإذا وجدت خللًا من هذا النوع فأخبرنا به — فالإبلاغ بحسن نية يستحق التقدير، أما استغلاله فلا.',
+          'الاختبارات النهائية تُؤدّى منفردًا. قد ينتهي المسار التعليمي باختبار نهائي. أدِّه بنفسك ومن حسابك: يُسمح بالملاحظات والتوثيق، ولا يُسمح بمساعدة الآخرين، ولا بمشاركة أسئلته أو إجاباته أو ملفاته، لا أثناء الاختبار ولا بعده. وإذا أعطاك الاختبار هدفًا تعمل عليه فلا تهاجم إلا ذلك العنوان، وفقط أثناء محاولتك، ومن دون هجمات حجب الخدمة، واتركه يعمل لمن يأتي بعدك.',
         ],
       },
       {
@@ -380,12 +386,16 @@ export const TERMS: BilingualDoc = {
       },
       {
         h: 'الشهادات',
-        body: ['لا تُصدر الأكاديمية شهادات حاليًا. وإذا استحدثناها:'],
+        body: [
+          'قد يمنح المسار التعليمي شهادة إنجاز. تنالها بإكمال كل خطوات المسار ثم النجاح في اختباره النهائي، وتطلبها بتأكيد الاسم الذي يُطبع عليها.',
+        ],
         list: [
-          'فستوثّق الشهادة أنك أكملت محتوى محدّدًا في الأكاديمية، ولا شيء أكثر من ذلك؛',
+          'توثّق الشهادة أنك أكملت محتوى محدّدًا في الأكاديمية ونجحت في اختباره، ولا شيء أكثر من ذلك؛',
           'وهي ليست مؤهلًا معتمدًا، ولا تصدر عن جامعة أو أي جهة مانحة معترف بها، ولا ترخّص لك ممارسة العمل الأمني المهني؛',
-          'ويجوز لنا سحب أي شهادة حُصل عليها بالغش أو بحسابات متعددة أو بأي مخالفة لهذه الشروط؛',
-          'ويجوز لنا تغيير ما تغطّيه الشهادة أو التوقف عن إصدارها في أي وقت.',
+          'وهي علنية: لكل شهادة صفحة خاصة يستطيع فتحها كل من يملك رابطها، سواء سجّل الدخول أم لا. تعرض الاسم الذي طلبت طباعته، واسم المستخدم، وجامعتك إن طلبت طباعتها، والمسار وخطواته والتواريخ. ولا تعرض درجتك. وتجد التفصيل في سياسة الخصوصية؛',
+          'ويجوز لنا سحب أي شهادة حُصل عليها بالغش أو بحسابات متعددة أو بأي مخالفة لهذه الشروط، وتذكر صفحة الشهادة المسحوبة ذلك؛',
+          'ويجوز لنا تغيير ما تغطّيه الشهادة أو التوقف عن إصدارها في أي وقت، وتبقى الشهادة الصادرة على ما كانت عليه عند إصدارها؛',
+          'وتزول بزوال حسابك: إذا حذفت حسابك توقفت شهاداتك عن التحقق.',
         ],
       },
       {

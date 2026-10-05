@@ -16,6 +16,8 @@ import userRoutes from './routes/users';
 import feedbackRoutes from './routes/feedback';
 import adminRoutes from './routes/admin';
 import uploadRoutes, { UPLOADS_DIR, LAB_RESOURCES_DIR } from './routes/uploads';
+import examRoutes from './routes/exams';
+import certificateRoutes from './routes/certificates';
 import { startDeletionSweep } from './utils/accountDeletion';
 import { restateStaleAccounts } from './utils/xpMigration';
 
@@ -56,6 +58,10 @@ app.use('/api/users', userRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/uploads', uploadRoutes);
+/* Outside /api/content on purpose: sitting an exam changes no content, so it
+   must not drop the XP catalog or restate anyone (routes/content.ts). */
+app.use('/api/exams', examRoutes);
+app.use('/api/certificates', certificateRoutes);
 
 /* Lab resources — creator-uploaded files students download to do the work.
  *

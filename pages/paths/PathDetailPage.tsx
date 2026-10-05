@@ -8,6 +8,8 @@ import { useLang } from '../../contexts/LangContext';
 import { coverImageSrc } from '../../data/fundamentalsData';
 import { buildCatalogIndex } from '../../data/pathCatalog';
 import PathJourneyMap from '../../components/paths/PathJourneyMap';
+import PathExamStop from '../../components/paths/PathExamStop';
+import { examInfoOf } from '../../services/examService';
 import { getPublishedPathBySlug } from '../../services/creatorDataService';
 import { getPathProgress, isPathEnrolled, enrollInPath } from '../../services/progressService';
 
@@ -62,6 +64,8 @@ const PathDetailPage: React.FC = () => {
     return current ? { ...step, title: current.title, subtitle: current.subtitle } : step;
   });
   const isComplete = progress.total > 0 && progress.completed === progress.total;
+  /* The author's own copy carries the whole exam; everyone else is sent its figures. */
+  const examInfo = examInfoOf(path.exam) ?? path.examInfo ?? null;
   const firstAvailable = progress.states.findIndex((s) => s.available);
 
   const handleEnroll = () => {
@@ -202,6 +206,23 @@ const PathDetailPage: React.FC = () => {
       <div>
         <h2 className="text-sm font-bold text-[#f3f6ff] mb-4">{t('paths.curriculum')}</h2>
 
+        {/* The final exam is the path's last stop. The road on a wide screen
+            climbs, so its end is at the top; the list on a phone reads down,
+            so its end is at the bottom. One stop, placed by the layout. */}
+        <div className="flex flex-col gap-6">
+        {examInfo && (
+          <div className="order-last md:order-first">
+            <PathExamStop
+              pathId={path.id}
+              slug={path.slug}
+              info={examInfo}
+              certificate={path.certificate?.enabled === true}
+              done={progress.completed}
+              total={progress.total}
+            />
+          </div>
+        )}
+
         {/* Desktop: the curriculum as a climbing road of floating cubes */}
         <div className="hidden md:block">
           <PathJourneyMap
@@ -286,6 +307,7 @@ const PathDetailPage: React.FC = () => {
               );
             })}
           </div>
+        </div>
         </div>
       </div>
     </div>

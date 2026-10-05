@@ -14,6 +14,7 @@ export const CREATOR_PERMISSIONS = [
   'modules',
   'os-modules',
   'paths',
+  'exams',
 ] as const;
 
 export type CreatorPermission = (typeof CREATOR_PERMISSIONS)[number];
@@ -45,6 +46,13 @@ export const PERMISSION_META: Record<
   paths: {
     label: { en: 'Learning paths', ar: 'المسارات التعليمية' },
     hint: { en: 'Sequence content into guided paths', ar: 'ترتيب المحتوى في مسارات موجّهة' },
+  },
+  exams: {
+    label: { en: 'Exams and certificates', ar: 'الاختبارات والشهادات' },
+    hint: {
+      en: 'Give a path a final exam and a certificate of achievement',
+      ar: 'إضافة اختبار نهائي وشهادة إنجاز إلى المسار',
+    },
   },
 };
 

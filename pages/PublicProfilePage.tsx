@@ -19,6 +19,7 @@ import Button from '../components/ui/EnhancedButton';
 import LevelBadge from '../components/ui/LevelBadge';
 import MemberTags from '../components/ui/MemberTags';
 import SocialLinksRow from '../components/profile/SocialLinks';
+import { CertificateCards } from '../components/profile/CertificateList';
 import NetworkingLessonCard from '../components/fundamentals/NetworkingLessonCard';
 import ModuleCard from '../components/fundamentals/ModuleCard';
 import PathCard from '../components/paths/PathCard';
@@ -281,6 +282,14 @@ const PublicProfilePage: React.FC = () => {
           )}
         </div>
       </motion.section>
+
+      {/* ── Certificates they hold ── */}
+      {(profile.certificates?.length ?? 0) > 0 && (
+        <section className="space-y-4">
+          <h2 className="text-lg font-bold text-[#f3f6ff]">{ar ? 'الشهادات' : 'Certificates'}</h2>
+          <CertificateCards items={profile.certificates!} />
+        </section>
+      )}
 
       {/* ── What they have published ── */}
       {publishedCount > 0 && (

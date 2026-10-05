@@ -17,6 +17,10 @@ export interface AcademyUser {
   bio?: string;
   /** Whether other members see the bio on the public profile. Opt-in. */
   showBio?: boolean;
+  /** Whether their certificates are listed on their public profile. On unless switched off. */
+  showCertificates?: boolean;
+  /** The name they last had printed on a certificate. */
+  certificateName?: string;
   /** Links shown on the public profile, stored normalised (services/socials.ts). */
   socials?: Partial<Record<import('./services/socials').SocialPlatform, string>>;
   completedModulesCount: number;

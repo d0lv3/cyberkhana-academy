@@ -69,6 +69,11 @@ export interface ServerStop {
 export interface ServerXpGroup extends XpGroup {
   source: Source;
   stops: ServerStop[];
+  /** The id of the module this group is, as a learning path names it: a path
+   *  step points at content by id, while completions are kept by slug
+   *  (utils/pathCompletion.ts). Absent on the networking group, whose stops
+   *  are the lessons themselves. */
+  contentId?: string;
 }
 
 /** A stop as a learner names it: which container, and which stop in it. */
@@ -83,6 +88,10 @@ export interface XpCatalog {
   stamp: string;
   /** Every stop by refKey(), the first one wherever a container repeats one. */
   stops: Map<string, { group: ServerXpGroup; stop: ServerStop }>;
+  /** Built-in languages an admin has hidden. They still score, and no page
+   *  lists them, so a path step inside one is not something a learner can
+   *  be asked to finish. */
+  hiddenLanguages: Set<string>;
 }
 
 const refKey = (ref: StopRef): string =>
@@ -126,8 +135,12 @@ export function invalidateXpCatalog(): void {
 
 export async function getXpCatalog(): Promise<XpCatalog> {
   if (cached && Date.now() - cached.at < TTL_MS) return cached.catalog;
-  const groups = buildGroups(await loadPublished());
-  const catalog = { groups, stamp: stampOf(groups), stops: indexStops(groups) };
+  const published = await loadPublished();
+  const groups = buildGroups(published);
+  const hiddenLanguages = new Set(
+    builtin.languages.map((l) => l.slug).filter((slug) => published.patches.get(slug)?.languageHidden === true)
+  );
+  const catalog = { groups, stamp: stampOf(groups), stops: indexStops(groups), hiddenLanguages };
   cached = { at: Date.now(), catalog };
   return catalog;
 }
@@ -155,6 +168,8 @@ interface Patch {
   newModules: AnyItem[];
   newConcepts: Record<string, AnyItem[]>;
   newLanguage?: AnyItem;
+  /** The first patch to say so decides, as in the published feed. */
+  languageHidden?: boolean;
 }
 
 interface Published {
@@ -202,6 +217,9 @@ async function loadPublished(): Promise<Published> {
         }
         if (!merged.newLanguage && isPlainObject(patch.newLanguage) && isPublishedItem(patch.newLanguage)) {
           merged.newLanguage = patch.newLanguage;
+        }
+        if (merged.languageHidden === undefined && typeof patch.languageHidden === 'boolean') {
+          merged.languageHidden = patch.languageHidden;
         }
         patches.set(patch.languageSlug, merged);
       }
@@ -266,11 +284,11 @@ function buildGroups(published: Published): ServerXpGroup[] {
      editing the built-in course); the rest are added after, first one wins. */
   const overrideById = new Map(published.modules.map((m) => [str(m.id), m]));
   const staticIds = new Set(builtin.modules.map((m) => m.id));
-  const addModule = (slug: string, stops: ServerStop[]) => {
+  const addModule = (slug: string, stops: ServerStop[], contentId: string) => {
     // One set of completions per slug, so two modules sharing one never count it twice.
     if (!slug || seenSlugs.has(slug)) return;
     seenSlugs.add(slug);
-    groups.push({ key: groupKey.module(slug), source: { kind: 'module', slug }, stops, finishBonus: true });
+    groups.push({ key: groupKey.module(slug), source: { kind: 'module', slug }, stops, finishBonus: true, contentId });
   };
   const creatorStops = (mod: AnyItem): ServerStop[] => {
     const course = isPlainObject(mod.courseData) ? mod.courseData : {};
@@ -284,13 +302,14 @@ function buildGroups(published: Published): ServerXpGroup[] {
   for (const mod of builtin.modules) {
     const override = overrideById.get(mod.id);
     if (override) {
-      addModule(str(override.slug), creatorStops(override));
+      addModule(str(override.slug), creatorStops(override), mod.id);
       continue;
     }
     const key = builtinAnswers.quizzes[mod.id] ?? {};
     addModule(
       mod.slug,
-      mod.stops.map((s) => stopOf(s.id, s.m, quizOf(key[s.id], 'all'), mod.difficulty))
+      mod.stops.map((s) => stopOf(s.id, s.m, quizOf(key[s.id], 'all'), mod.difficulty)),
+      mod.id
     );
   }
   const seenIds = new Set<string>();
@@ -298,7 +317,7 @@ function buildGroups(published: Published): ServerXpGroup[] {
     const id = str(mod.id);
     if (staticIds.has(id) || seenIds.has(id)) continue;
     seenIds.add(id);
-    addModule(str(mod.slug), creatorStops(mod));
+    addModule(str(mod.slug), creatorStops(mod), id);
   }
 
   /* Programming. Built-in languages plus published creator languages; a patch
@@ -331,6 +350,7 @@ function buildGroups(published: Published): ServerXpGroup[] {
         return { ...c, check: tests?.length ? { kind: 'tests', tests } : NONE };
       });
     const modules = language.modules.map((mod) => ({
+      id: mod.id,
       slug: mod.slug,
       concepts: withPatchConcepts(mod.slug, builtinConcepts(mod.concepts)),
     }));
@@ -338,7 +358,7 @@ function buildGroups(published: Published): ServerXpGroup[] {
     for (const mod of patch?.newModules ?? []) {
       if (existingIds.has(str(mod.id))) continue;
       const slug = str(mod.slug);
-      modules.push({ slug, concepts: withPatchConcepts(slug, measured(mod.concepts)) });
+      modules.push({ id: str(mod.id), slug, concepts: withPatchConcepts(slug, measured(mod.concepts)) });
     }
     for (const mod of modules) {
       groups.push({
@@ -346,6 +366,7 @@ function buildGroups(published: Published): ServerXpGroup[] {
         source: { kind: 'programming', language: language.slug },
         stops: mod.concepts.map((c) => stopOf(c.id, c.m, c.check)),
         finishBonus: true,
+        contentId: mod.id,
       });
     }
   }

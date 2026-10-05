@@ -1,8 +1,8 @@
 # CyberKhana Academy — Terms of Service
 
 **Applies to:** academy.cyberkhana.tech (the "Academy")
-**Last updated:** 30 September 2026
-**Effective from:** 30 September 2026
+**Last updated:** 6 October 2026
+**Effective from:** 6 October 2026
 
 ---
 
@@ -151,6 +151,13 @@ a bug in progress tracking or scoring instead of doing the work. If you find
 such a bug, tell us under section 12 — reporting it in good faith earns credit;
 using it does not.
 
+**Final exams are sat alone.** A learning path can end in a final exam. Sit it
+yourself, from your own account: notes and documentation are allowed, other
+people are not, and neither is sharing its questions, answers or files, during
+the exam or after. Where an exam gives you a target to work against, attack only
+that address, only while your attempt is running, never with a denial of
+service, and leave it working for the next person.
+
 ## 10. XP, levels and leaderboards
 
 You earn XP as you complete lessons and modules, and your XP sets your level,
@@ -183,16 +190,26 @@ month by design.
 
 ## 11. Certificates
 
-The Academy does not currently issue certificates. If we introduce them:
+A learning path can award a **certificate of achievement**. You earn one by
+finishing every step of the path and then passing its final exam, and you claim
+it by confirming the name to print on it.
 
-- a certificate will record that you completed specific Academy content, and
-  nothing more;
+- a certificate records that you completed specific Academy content and passed
+  its exam, and nothing more;
 - it is **not an accredited qualification**, is not awarded by a university or
   any recognised awarding body, and does not license you to do professional
   security work;
+- **it is public**: each certificate has a page of its own that anyone holding
+  the link can open, signed in or not. It shows the name you had printed, your
+  username, your university if you asked for it to be printed, the path, its
+  steps and the dates. It does not show your score. The Privacy Policy has the
+  detail;
 - we may withdraw one obtained through cheating, multiple accounts, or any
-  breach of these Terms;
-- we may change what a certificate covers or stop issuing them at any time.
+  breach of these Terms, and a withdrawn certificate's page says so;
+- we may change what a certificate covers or stop issuing them at any time, and
+  one already issued keeps what it said when it was issued;
+- it goes when your account does: delete your account and your certificates
+  stop verifying.
 
 ## 12. Found a bug in the Academy?
 

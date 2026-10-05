@@ -1,0 +1,79 @@
+/* =========================================================================
+   CyberKhana Academy certificate of achievement · A4 landscape 297 × 210 mm
+
+   The sheet the CyberKhana platform prints for its events (Direction C,
+   "Dossier"), set for a learning path: the panel carries the seal where an
+   event carries a placing. Dark only. Every rule is scoped to .cert, so
+   nothing here reaches the rest of the app. Page-level print rules live in
+   CertificateTemplate, mounted only while a certificate is on screen.
+
+   The sheet is English and left to right whatever language the Academy is
+   being read in, so it is the same sheet for everyone it is shown to.
+   ========================================================================= */
+
+.cert {
+  --bg: #0d1117; --panel: #121a2a; --line: #263248;
+  --text: #f3f6ff; --text2: #d2d7e3; --muted: #9aa5bf;
+  --green: #00a859; --lime: #9fef00; --place: var(--green);
+  --foil: url(#ck-foil-g); --seal-core: #0d1117; --seal-line: #263248; --seal-patch: transparent;
+  /* supplied logos, never recoloured */
+  --ck-sym: url('/assets/brand/certificate/symbol.png');
+  --ck-wm: url('/assets/brand/certificate/wordmark.png');
+  width: 297mm; height: 210mm; position: relative; overflow: hidden; flex: none;
+  background: var(--bg); color: var(--text); font-family: 'Poppins', sans-serif;
+  direction: ltr; text-align: left;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+.cert * { box-sizing: border-box; }
+/* A pass with distinction takes the lime foil an event gives its winner. */
+.cert[data-tier="distinction"] { --place: #9fef00; --foil: url(#ck-foil-1); }
+
+.cert .bg { position: absolute; inset: 0; }
+.cert .bg svg { display: block; width: 100%; height: 100%; }
+.cert .abs { position: absolute; }
+.cert .fitbox { display: flex; overflow: hidden; }
+
+.cert .logo { position: absolute; background-repeat: no-repeat; background-size: 100% 100%; }
+.cert .sym { left: 15mm; top: 15.41mm; width: 16mm; height: 15.173mm; background-image: var(--ck-sym); }
+.cert .wm { left: 240.93mm; top: 14mm; width: 40.07mm; height: 7mm; background-image: var(--ck-wm); }
+.cert .wm-sub { left: 240.93mm; top: 22.4mm; width: 40.07mm; text-align: right; font-size: 6.5pt; font-weight: 600; letter-spacing: .42em; text-transform: uppercase; color: var(--green); line-height: 1.2; padding-right: 0; margin-right: -.42em; }
+
+.cert .k { font-family: 'Poppins', sans-serif; font-size: 6.5pt; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); line-height: 1.3; }
+
+/* ---- panel (x 0–90 mm) ---- */
+.cert .p-label { left: 14mm; top: 52mm; }
+.cert .sealwrap { left: 14mm; top: 57mm; }
+.cert .seal { position: relative; width: 54mm; height: 54mm; }
+.cert .seal svg { display: block; width: 100%; height: 100%; }
+.cert .seal-mark { position: absolute; left: 36%; top: 36.13%; width: 28%; height: 26.55%; background: var(--ck-sym) no-repeat; background-size: 100% 100%; }
+.cert .resultbox { left: 14mm; top: 116mm; width: 62mm; height: 14mm; align-items: flex-start; }
+.cert .result { font-weight: 600; color: var(--place); line-height: 1.25; }
+.cert .qr { left: 14mm; top: 162mm; width: 22mm; height: 22mm; padding: 2mm; background: #fff; border-radius: 1mm; }
+.cert .qr svg { display: block; width: 18mm; height: 18mm; }
+.cert .code { left: 40mm; top: 162mm; width: 36mm; height: 22mm; display: flex; flex-direction: column; justify-content: flex-end; }
+.cert .code .k { margin-bottom: 1.2mm; }
+.cert .code-groups { font-family: 'Poppins', sans-serif; font-weight: 500; font-size: 7.5pt; line-height: 1.5; letter-spacing: .08em; font-variant-numeric: tabular-nums; color: var(--text2); white-space: pre; }
+
+/* ---- main column (x 106–281 mm, 175 mm wide) ---- */
+.cert .main { left: 106mm; width: 175mm; }
+.cert .title { top: 34mm; font-weight: 600; font-size: 15pt; letter-spacing: .22em; text-transform: uppercase; color: var(--green); line-height: 1.2; }
+.cert .awarded { top: 48mm; font-size: 9.5pt; font-weight: 500; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); line-height: 1.3; }
+.cert .namebox { top: 54mm; height: 34mm; align-items: center; }
+.cert .name { font-family: 'Poppins', 'IBM Plex Sans Arabic', sans-serif; font-weight: 600; line-height: 1.08; letter-spacing: -.01em; color: var(--text); text-align: left; overflow-wrap: anywhere; unicode-bidi: plaintext; }
+.cert .name[dir="rtl"] { font-family: 'IBM Plex Sans Arabic', 'Poppins', sans-serif; font-weight: 700; line-height: 1.3; letter-spacing: 0; }
+.cert .whobox { top: 89mm; height: 7mm; align-items: center; }
+.cert .who { font-weight: 500; color: var(--text2); white-space: nowrap; unicode-bidi: plaintext; }
+.cert .who .u { font-size: .92em; color: var(--lime); margin-right: 3mm; }
+.cert .rule { top: 99mm; height: .25mm; background: linear-gradient(90deg, var(--green) 0 12mm, var(--line) 12mm); }
+.cert .copy { top: 104.5mm; font-size: 10pt; color: var(--muted); line-height: 1.3; }
+.cert .eventbox { top: 111mm; height: 21mm; align-items: flex-start; }
+.cert .event { font-family: 'Poppins', 'IBM Plex Sans Arabic', sans-serif; font-weight: 600; line-height: 1.2; color: var(--text); overflow-wrap: anywhere; unicode-bidi: plaintext; }
+.cert .fields { bottom: 22mm; display: grid; grid-template-columns: 70mm 49mm 40mm; column-gap: 8mm; row-gap: 4.5mm; }
+.cert .fields .cell { border-top: .25mm solid var(--line); padding-top: 2.4mm; min-width: 0; }
+.cert .fields .vbox { display: flex; overflow: hidden; height: 6.6mm; margin-top: 1mm; align-items: center; }
+.cert .fields .v { font-weight: 600; color: var(--text); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.cert .fields .v.m { font-weight: 500; color: var(--text2); }
+
+/* On screen the sheet is scaled to its container; printing uses it at real size. */
+.cert-scaler { position: relative; margin: 0 auto; }
+.cert-scaler > .cert { position: absolute; left: 0; top: 0; transform-origin: 0 0; box-shadow: 0 20px 60px rgba(0, 0, 0, .45); }

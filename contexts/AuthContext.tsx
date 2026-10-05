@@ -28,6 +28,8 @@ interface ServerUser {
   country?: string;
   bio?: string;
   showBio?: boolean;
+  showCertificates?: boolean;
+  certificateName?: string;
   socials?: AcademyUser['socials'];
   tags?: AcademyUser['tags'];
   xpAward?: number;
@@ -54,7 +56,7 @@ export type AccountNotice =
 
 /** What the profile form may change in one save. */
 export type ProfilePatch = Partial<
-  Pick<AcademyUser, 'displayName' | 'bio' | 'university' | 'avatarUrl' | 'showBio'>
+  Pick<AcademyUser, 'displayName' | 'bio' | 'university' | 'avatarUrl' | 'showBio' | 'showCertificates'>
 > & {
   /** Each platform mapped to what was typed; '' clears that link. */
   socials?: Record<string, string>;
@@ -123,6 +125,8 @@ function mapServerUser(u: ServerUser): AcademyUser {
     country: u.country,
     bio: u.bio,
     showBio: u.showBio ?? false,
+    showCertificates: u.showCertificates ?? true,
+    certificateName: u.certificateName,
     socials: u.socials ?? {},
     tags: u.tags ?? [],
     xpAward: u.xpAward ?? 0,

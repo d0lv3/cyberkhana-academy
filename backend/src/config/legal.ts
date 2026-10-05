@@ -9,7 +9,7 @@
  * user record says which text they actually agreed to.
  */
 
-export const CURRENT_TERMS_VERSION = '2026-09-30';
+export const CURRENT_TERMS_VERSION = '2026-10-06';
 
 export const CURRENT_CREATOR_AGREEMENT_VERSION = '2026-09-07';
 

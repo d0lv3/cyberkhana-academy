@@ -30,6 +30,7 @@ import UniversityPicker from '../components/university/UniversityPicker';
 import Avatar from '../components/ui/Avatar';
 import AvatarPicker from '../components/account/AvatarPicker';
 import SocialLinksRow, { SocialIcon } from '../components/profile/SocialLinks';
+import { MyCertificates } from '../components/profile/CertificateList';
 import { universityLabel } from '../data/iraqUniversities';
 import { profilePath } from '../services/profiles';
 import { ROLE_META } from '../services/roles';
@@ -746,6 +747,9 @@ const ProfilePage: React.FC = () => {
           </Button>
         </div>
       </motion.div>
+
+      {/* ── Certificates ── */}
+      <MyCertificates />
 
       {/* ── Preferences ── */}
       <motion.div

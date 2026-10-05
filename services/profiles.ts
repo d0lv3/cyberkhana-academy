@@ -24,6 +24,9 @@ export interface PublicProfile {
   xp?: number;
   /** All-time leaderboard position; null when not ranked. */
   rank: number | null;
+  /** Certificates still standing, unless their holder took them off the
+   *  profile. Absent from servers before certificates. */
+  certificates?: { code: string; pathTitle: string; issuedAt: string; distinction: boolean }[];
 }
 
 /** Where a member's profile lives: by handle when they have one, otherwise by

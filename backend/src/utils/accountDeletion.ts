@@ -6,6 +6,8 @@ import Progress from '../models/Progress';
 import Feedback from '../models/Feedback';
 import ContentBucket from '../models/ContentBucket';
 import ContentGrant from '../models/ContentGrant';
+import ExamAttempt from '../models/ExamAttempt';
+import Certificate from '../models/Certificate';
 import { UPLOADS_DIR } from '../routes/uploads';
 import type { ContentBucketKey } from '../types';
 import { isPlainObject, isPublishedItem, type AnyItem } from './contentStatus';
@@ -99,6 +101,12 @@ export async function purgeAccount(user: IUser, cause: DeletionCause, by?: strin
   // Learning record.
   const progress = await Progress.deleteMany({ userId });
 
+  /* Exam sittings and certificates. A certificate is a public page with the
+     member's name on it, so it goes with the account: its link stops
+     verifying, which is what section 9 of the Privacy Policy says. */
+  const attempts = await ExamAttempt.deleteMany({ userId });
+  const certificates = await Certificate.deleteMany({ userId });
+
   /* Feedback stays with the creators it was written for, but as nobody's. The
      name comes off, and each answer gets a fresh id of its own, so they cannot
      be traced to the account or put back together as one person's answers. */
@@ -127,6 +135,8 @@ export async function purgeAccount(user: IUser, cause: DeletionCause, by?: strin
     cause,
     ...(by ? { by } : {}),
     progressRemoved: progress.deletedCount,
+    examAttemptsRemoved: attempts.deletedCount,
+    certificatesRemoved: certificates.deletedCount,
     feedbackAnonymised: answers.length,
     grantsRemoved: grants.deletedCount,
     ...content,

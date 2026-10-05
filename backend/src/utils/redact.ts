@@ -14,6 +14,7 @@
  */
 
 import { answerMask, flagPlaceholder, isTypedQuestion } from '../shared/checks';
+import { examInfoOf } from '../shared/exam';
 import { isPlainObject, type AnyItem } from './contentStatus';
 
 function question(q: unknown): unknown {
@@ -66,8 +67,22 @@ function moduleItem(item: AnyItem): AnyItem {
   return out;
 }
 
+/* A path's final exam is not sent at all. Its questions and answers, and also
+   its brief, its files and the address of its target, are for someone whose
+   attempt has started, and they are handed over then (routes/exams.ts). What
+   the feed carries in its place is the handful of figures a path page shows
+   beside a locked exam. */
+function pathItem(item: AnyItem): AnyItem {
+  if (!('exam' in item) && !('examInfo' in item)) return item;
+  // `examInfo` is only ever worked out here: one written into the item is dropped.
+  const { exam, examInfo: _written, ...rest } = item;
+  const info = examInfoOf(exam);
+  return info ? { ...rest, examInfo: info } : rest;
+}
+
 /** An item of a flat bucket, ready for the published feed. */
 export function forStudents(bucket: string, item: AnyItem): AnyItem {
+  if (bucket === 'paths') return pathItem(item);
   if (bucket === 'os-modules' || bucket === 'standalone-modules') return moduleItem(item);
   if (bucket === 'networking-lessons' && 'quiz' in item) return { ...item, quiz: quiz(item.quiz) };
   return item;

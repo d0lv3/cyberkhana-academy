@@ -1,8 +1,8 @@
 # CyberKhana Academy — Privacy Policy
 
 **Applies to:** academy.cyberkhana.tech (the "Academy")
-**Last updated:** 2 October 2026
-**Effective from:** 2 October 2026
+**Last updated:** 6 October 2026
+**Effective from:** 6 October 2026
 
 ---
 
@@ -59,6 +59,8 @@ Google account.
   profile;
 - **links to your accounts elsewhere**, such as GitHub, LinkedIn, X, TryHackMe
   or a website, if you choose to add them;
+- the **name printed on your certificates**, which you confirm when you claim
+  one, and whether your university is printed with it;
 - your **language preference** (English or Arabic).
 
 All of these are optional except the display name, and you can change or clear
@@ -70,6 +72,9 @@ them at any time on your profile.
   them;
 - **how much time you have spent learning**, in minutes;
 - your **XP** and **level**, your monthly XP, and your position on the leaderboards;
+- your **final exam attempts**: when you sat each one, the questions you were
+  given, your answers and your score;
+- the **certificates** you have been issued;
 - when you **last signed in**;
 - whether your account is **suspended**;
 - whether you have **asked for your account to be deleted**, and when.
@@ -156,14 +161,30 @@ from the leaderboard or from anything you publish:
 - **links to your accounts elsewhere**, if you add them;
 - your **bio**, only if you switch on "Show my bio on my public profile". It is
   off until you do;
+- the **certificates you hold**, unless you switch off "List my certificates on
+  my public profile";
 - the **content you have published** as a creator.
+
+### Visible to anyone with the link
+
+**A certificate is a public page.** When you claim a certificate it gets a page
+of its own, and anyone you give the link to can open it, signed in to the
+Academy or not. That is what lets an employer check it. The page shows the
+**name you had printed**, your **username**, your **university** if you asked
+for it to be printed, the **path** and its steps, **when you finished it**,
+**when the certificate was issued**, and **whether it has been withdrawn**. It
+does not show your score, and nothing on it leads to the rest of your account.
+Nobody is given the link but you.
 
 ### Never shown to other members
 
 Your **email address**, your **country**, your **language setting**, the
 **Google account** you sign in with, **when you last signed in**, **whether your
 account is suspended**, **whether you have asked for it to be deleted**, and
-your **learning record** beyond your XP and level.
+your **learning record** beyond your XP, your level and the certificates you
+hold. Your **exam attempts and scores** can be seen by administrators. The
+creator of a path sees only totals for its exam, such as how many people
+passed, never who.
 
 ### Feedback — please read this one
 
@@ -260,7 +281,8 @@ and keeps exactly what is listed below.
 **What is deleted:** your name, email address, profile picture, username,
 university, country, bio, social links, language preference, your public
 profile, and the link between your account and your Google identity; your
-learning progress, your XP and your place on the leaderboards; and anything
+learning progress, your XP and your place on the leaderboards; your final exam
+attempts and your certificates, whose public pages stop working; and anything
 you wrote as a creator but had not published, such as drafts and content
 waiting for review, along with uploaded files that nothing else uses. Sharing
 between you and other creators ends. The leaderboards are worked out from the

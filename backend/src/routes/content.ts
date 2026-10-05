@@ -16,6 +16,8 @@ import { logger } from '../utils/logger';
 import { invalidateXpCatalog } from '../utils/xpCatalog';
 import { scheduleXpRestate } from '../utils/xpMigration';
 import { forStudents } from '../utils/redact';
+import { certificateProblem, examProblem } from '../shared/exam';
+import { addedTargets, examGateProblem } from '../utils/examGate';
 import builtinAnswers from '../data/builtinAnswerKey.json';
 
 const router = Router();
@@ -45,6 +47,9 @@ const ADMIN_ITEM_BUCKETS: ContentBucketKey[] = [
   'standalone-modules',
   'networking-lessons',
   'networking-units',
+  // Paths too: a path's final exam awards a certificate in CyberKhana's name,
+  // and its target addresses are an admin's to set (utils/examGate.ts).
+  'paths',
 ];
 
 /** The languages that ship in the bundle (data/programming/index.ts on the
@@ -150,6 +155,16 @@ function validateBucketItems(bucket: ContentBucketKey, items: unknown): string |
       if (typeof item.id !== 'string' || !item.id || item.id.length > 160) {
         return 'Every item needs a string id';
       }
+    }
+    /* A path's final exam and certificate. Their shape is always checked; a
+       published path's exam also has to be one that can be sat. */
+    if (bucket === 'paths') {
+      const live = isPublishedItem(item);
+      const awards = isPlainObject(item.certificate) && item.certificate.enabled === true;
+      const examIssue =
+        examProblem(item.exam, { complete: live, certificate: awards }) ??
+        certificateProblem(item.certificate, item.exam, live);
+      if (examIssue) return examIssue;
     }
     // A unit is a list of lesson ids. Anything else in that slot would reach
     // every student's Networking page, so its shape is checked, not assumed.
@@ -359,6 +374,26 @@ router.put('/:bucket', authenticate, requireRole('creator', 'admin'), async (req
   }
 
   try {
+    /* A path's exam is a separate permission, and its targets an admin's: each
+       path is held against the copy already stored (utils/examGate.ts). */
+    if (bucket === 'paths') {
+      const stored = await ContentBucket.findOne({ ownerId: req.user!._id, bucket }).select('items').lean();
+      const before = new Map(
+        ((stored?.items as AnyItem[]) ?? []).filter(isPlainObject).map((i) => [String(i.id), i] as const)
+      );
+      for (const item of items as AnyItem[]) {
+        const gate = examGateProblem(req.user!, before.get(String(item.id)), item);
+        if (gate) {
+          res.status(403).json({ error: gate, code: 'EXAM_PERMISSION' });
+          return;
+        }
+        const targets = addedTargets(before.get(String(item.id)), item);
+        if (targets.length) {
+          logger.info('exam.targets_set', { by: String(req.user!._id), pathId: String(item.id), targets });
+        }
+      }
+    }
+
     // Credit is assigned on the way out; a stored copy would only go stale.
     const clean = (items as unknown[]).map((i) => (isPlainObject(i) ? withoutCredit(i) : i));
     await ContentBucket.findOneAndUpdate(
@@ -459,6 +494,19 @@ router.patch(
       if (idx < 0) {
         res.status(404).json({ error: 'Content not found' });
         return;
+      }
+
+      if (bucket === 'paths') {
+        const before = isPlainObject(list[idx]) ? list[idx] : undefined;
+        const gate = examGateProblem(req.user!, before, item);
+        if (gate) {
+          res.status(403).json({ error: gate, code: 'EXAM_PERMISSION' });
+          return;
+        }
+        const targets = addedTargets(before, item);
+        if (targets.length) {
+          logger.info('exam.targets_set', { by: String(req.user!._id), owner: ownerId, pathId: item.id, targets });
+        }
       }
 
       list[idx] = withoutCredit(item);

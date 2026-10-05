@@ -23,7 +23,9 @@ export type ContentBucketKey = (typeof CONTENT_BUCKETS)[number];
  * Fine-grained capabilities an admin grants each creator. Admins implicitly
  * hold every permission; creators without an explicit grant get the default
  * set (everything except whole-language creation, which is catalog-level and
- * must be granted deliberately). */
+ * must be granted deliberately, and `exams`: a path's final exam decides who
+ * is handed a certificate carrying CyberKhana's name, so that one is granted
+ * by hand as well). */
 export const CREATOR_PERMISSIONS = [
   'networking',
   'programming',
@@ -31,12 +33,13 @@ export const CREATOR_PERMISSIONS = [
   'modules',
   'os-modules',
   'paths',
+  'exams',
 ] as const;
 
 export type CreatorPermission = (typeof CREATOR_PERMISSIONS)[number];
 
 export const DEFAULT_CREATOR_PERMISSIONS: CreatorPermission[] = CREATOR_PERMISSIONS.filter(
-  (p) => p !== 'programming-languages'
+  (p) => p !== 'programming-languages' && p !== 'exams'
 );
 
 /** Resolve what a user may author. Admin → all; creator → grants ?? default; student → none. */

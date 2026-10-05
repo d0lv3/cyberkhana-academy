@@ -101,6 +101,8 @@ router.post('/', authenticate, requireRole('creator', 'admin'), (req: AuthReques
 const LAB_EXTENSIONS = new Set([
   'pdf', 'zip', 'gz', 'tar', 'txt', 'md', 'csv', 'json', 'log',
   'pcap', 'pcapng', 'cap', 'yaml', 'yml', 'conf', 'sh', 'py', 'sql',
+  // A VPN profile, for an exam whose target sits on a private range.
+  'ovpn',
 ]);
 
 const MAX_LAB_FILE_BYTES = 25 * 1024 * 1024; // 25 MB

@@ -293,7 +293,7 @@ tab. Anything that is not http or https is dropped when the module is saved.
 ### Files
 
 Accepted: `pdf, zip, gz, tar, txt, md, csv, json, log, pcap, pcapng, cap, yaml,
-yml, conf, sh, py, sql`. Everything is served as a forced download and never opens
+yml, conf, sh, py, sql, ovpn`. Everything is served as a forced download and never opens
 in the page. Host a VM image somewhere else and add it as a link instead: a
 multi-gigabyte `.ova` does not belong on the app server.
 
@@ -306,10 +306,10 @@ multi-gigabyte `.ova` does not belong on the app server.
   and an optional case-sensitivity toggle. Getting **all** of them right finishes
   the lab, with no second button to press.
 
-> Flags are checked in the student's browser, which means a determined one can read
-> the answers from the page. That is fine for a self-check and wrong for a graded
-> exam. Do not use a flag as the only thing standing between a student and a
-> certificate.
+> Flags are checked on the server, one at a time, against answers a student's
+> browser is never sent. A lab's flags are still the same for everyone who takes
+> it, so they can be passed around: fine for a lab, and the reason a path's final
+> exam (section 7) deals its questions afresh for every attempt.
 
 ### Network simulation
 
@@ -355,12 +355,89 @@ underlying content is completed (finishing a lesson anywhere counts), and a Cont
 button jumps to the first incomplete step. If a step's content is later unpublished, the
 step shows as *Unavailable* instead of breaking.
 
+### Final exam
+
+A path can end in a **final exam**, set in the path's own settings, under the step
+builder. It shows as the last stop of the path. It opens only to a student who has
+finished every step, it is sat against the clock, and it is marked on the server.
+
+Setting one takes the **Exams and certificates** permission, which an admin grants.
+Without it the card is locked, and a path that already has an exam keeps it untouched
+when you save.
+
+| Setting | Default | Notes |
+|---|---|---|
+| Pass mark | 70% | A share of the exam's points, from 50 to 100 |
+| Time limit | 30 minutes | Up to 7 days, for a practical exam worked at over several sittings. The clock does not stop when the page is closed |
+| Wait before a retake | 24 hours | 0 for none |
+| Attempt cap | none | Leave empty for as many attempts as it takes |
+| Opens / Closes | none | An optional window attempts may start in |
+| Paused | off | No new attempts, for instance while a target is down. Attempts already running carry on |
+| Exam rules (EN/AR) | optional | Markdown, shown before the clock starts under the standard rules every exam carries |
+
+An exam is built from **sections**:
+
+- **Theory** is a bank of questions. Every attempt gets them in a new order, and if you
+  set *Questions dealt per attempt* lower than the bank, a new selection too. Write more
+  than you deal, and a retake is not the same paper twice.
+- **Practical** is a scenario: a **brief** in markdown, **targets**, **links**, **files**,
+  and the **tasks** answered from them. Use it for a pentest (a target to attack) or an
+  investigation (a capture or logs to analyse, with no target at all).
+
+A practical section can be written in several **versions**, each with its own target,
+files and answers. Each attempt is dealt one at random, so an answer passed between two
+students is likely to be for the wrong version.
+
+**Tasks** come in three kinds, each worth the points you give it:
+
+| Kind | Marked how |
+|---|---|
+| Multiple choice | One correct option of 2 to 6. Options are shuffled per attempt |
+| Written answer | Typed, marked ignoring case and extra spaces. No hint of its length is shown |
+| Flag | Typed, marked exactly unless you leave *Case matters* off. Shows `khana{...}` or your own hint in the empty box |
+
+*Examines* ties a task to one of the path's steps. A student who gets it wrong is told
+which steps to go back over. They are never shown which answers were right.
+
+**Targets** are addresses: an IP, a range such as `10.10.20.0/24`, or a hostname, with an
+optional port. The Academy shows the address once the attempt starts and never connects
+to it: nothing here runs a lab, so the target has to be something you host.
+
+> **Only an admin can set or change a target address**, and has to tick that CyberKhana
+> controls it or has permission to have it tested. Students are told to attack exactly
+> what is written there, so a mistyped address sends them at a stranger's machine.
+
+Editing a live exam is safe: an attempt keeps the questions and answers it started with,
+so a change reaches only attempts started after it. The editor says how many attempts
+are in progress. If you are changing what a target answers, wait until none are.
+
+Below the editor, once students have sat the exam, **How the exam is going** shows the
+pass rate, the average score, and the tasks most often got wrong, which is how a broken
+question shows itself. It shows no names. An admin can also see each attempt, cancel one
+that should not count (the target was down), and read problems students reported.
+
+### Certificate of achievement
+
+Switch it on in the same settings and a student who passes the final exam can claim a
+**certificate**. It is one standard sheet for every path, and only the printed title is
+yours to set (it defaults to the path's English title). The sheet is in English for
+everyone.
+
+The student confirms the name to print when they claim it. From then on the certificate
+has a **public page** that anyone holding the link can open, which is how it is verified.
+An admin can withdraw a certificate or correct the name on it.
+
+A certificate needs an exam, and an exam that awards one must ask at least 5 tasks per
+attempt.
+
 ### Publish checklist
 
 - [ ] English title + description
 - [ ] Steps ordered from fundamentals → advanced
 - [ ] Every step's content is itself **published** (unpublished steps appear locked to students)
 - [ ] Estimated hours roughly match the sum of the steps
+- [ ] If there is a final exam: every task has a prompt, an answer and its points, and every target is confirmed. The editor names what is missing, and the path will not publish until it is fixed
+- [ ] A practical exam's target is up, reachable the way the brief says, and holds the flags the tasks ask for
 
 ---
 

@@ -42,6 +42,9 @@ function publicUser(user: IUser) {
     country: user.country,
     bio: user.bio,
     showBio: Boolean(user.showBio),
+    /* On unless switched off, and the name printed on their certificates. */
+    showCertificates: user.showCertificates !== false,
+    certificateName: user.certificateName,
     /* Read-only here: PATCH /auth/profile does not take them, because a tag is
        something the Academy says about a member, not something they say about
        themselves. */
@@ -260,6 +263,8 @@ const profileSchema = z
     preferredLang: z.enum(['en', 'ar']).optional(),
     /* Opt-in: other members see the bio only once this is true. */
     showBio: z.boolean().optional(),
+    /* Whether their certificates are listed on their public profile. */
+    showCertificates: z.boolean().optional(),
     /* Each platform mapped to what the member typed ('' clears it). Every value goes
      * through normalizeSocial below; the shape is all that is checked here. */
     socials: z.record(z.string().max(20), z.string().max(300)).optional(),

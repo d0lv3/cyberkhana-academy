@@ -29,6 +29,11 @@ export interface IProgress extends Document {
   /** How far the learner's unchecked work has been credited up to
    *  (utils/pace.ts). Absent until the first paced stop. */
   paceClock?: Date;
+  /** Paths the server has seen this learner finish, and when it first did
+   *  (utils/pathCompletion.ts). Kept once earned: a lesson added to the path
+   *  later does not lock its final exam again. `owner` is the account whose
+   *  bucket the path lives in. */
+  completedPaths: { owner: string; path: string; at: Date }[];
   lastActivity: {
     kind: 'programming' | 'networking' | 'os';
     route: string;
@@ -55,6 +60,10 @@ const ProgressSchema = new Schema<IProgress>(
       default: [],
     },
     paceClock: { type: Date },
+    completedPaths: {
+      type: [{ owner: String, path: String, at: Date, _id: false }],
+      default: [],
+    },
     lastActivity: { type: Schema.Types.Mixed, default: null },
   },
   { timestamps: true, minimize: false }

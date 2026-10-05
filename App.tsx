@@ -79,6 +79,8 @@ const FeedbackCreator = lazy(() => import('./pages/creators/FeedbackCreator'));
 const FeedbackTrackPage = lazy(() => import('./pages/creators/FeedbackTrackPage'));
 const PathEditor = lazy(() => import('./pages/creators/PathEditor'));
 const PathDetailPage = lazy(() => import('./pages/paths/PathDetailPage'));
+const PathExamPage = lazy(() => import('./pages/paths/PathExamPage'));
+const CertificatePage = lazy(() => import('./pages/public/CertificatePage'));
 const MembersPage = lazy(() => import('./pages/admin/MembersPage'));
 const PublicProfilePage = lazy(() => import('./pages/PublicProfilePage'));
 const CyberSecurity101Page = lazy(() => import('./pages/fundamentals/CyberSecurity101Page'));
@@ -215,6 +217,22 @@ function AppRoutes() {
         <Route path="/privacy" element={<LegalPage kind="privacy" />} />
         <Route path="/terms" element={<LegalPage kind="terms" />} />
         <Route path="/creator-agreement" element={<LegalPage kind="creator-agreement" />} />
+
+        {/* A certificate and its verification: public, so the link works for
+            an employer who has never heard of the Academy. */}
+        <Route path="/certificates/:code" element={<CertificatePage />} />
+
+        {/* A path's final exam: full-screen, outside AppLayout */}
+        <Route
+          path="/paths/:slug/exam"
+          element={
+            <AuthGate>
+              <CatalogRoute has={inCopy.path}>
+                <PathExamPage />
+              </CatalogRoute>
+            </AuthGate>
+          }
+        />
 
         {/* Module viewer — full-screen, outside AppLayout, one level under the
          * module's own page so the overview keeps the app shell around it.

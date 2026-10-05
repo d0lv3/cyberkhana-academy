@@ -27,6 +27,7 @@
     "katex": "^0.16.47",
     "lucide-react": "^0.553.0",
     "pyodide": "^0.26.2",
+    "qrcode-generator": "1.4.4",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-markdown": "^10.1.0",

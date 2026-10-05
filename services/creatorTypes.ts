@@ -6,6 +6,7 @@ import type { FundamentalModule } from '../data/fundamentalsData';
 import type { QuizQuestion, QuizKind } from '../data/linuxQuizData';
 import type { ModuleLab } from './labTypes';
 import type { Difficulty } from '../types';
+import type { ExamInfo, PathCertificate, PathExam } from '../backend/src/shared/exam';
 
 /* ── Localized markdown ──
  * Lesson bodies are bilingual: { en, ar } with an English fallback. Legacy
@@ -211,6 +212,14 @@ export interface CreatorPath extends CreatorMeta {
   tags: string[];
   estimatedHours: number;
   steps: PathStep[];
+  /** The path's final exam: its last stop, open to whoever has finished the
+   *  rest. Only the author's own copy carries it; what students are sent has
+   *  `examInfo` in its place (backend/src/utils/redact.ts). */
+  exam?: PathExam;
+  /** Whether passing that exam awards a certificate of achievement. */
+  certificate?: PathCertificate;
+  /** The figures a path page shows beside its exam, worked out by the server. */
+  examInfo?: ExamInfo;
 }
 
 /* ── localStorage Keys ── */

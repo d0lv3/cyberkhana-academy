@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import User from '../models/User';
+import Certificate from '../models/Certificate';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { publicSocials } from '../utils/socials';
 import { cleanTags } from '../shared/tags';
@@ -24,7 +25,7 @@ const router = Router();
  * an admin put them on the account to say something about it in public.
  */
 const PUBLIC_FIELDS =
-  'username displayName avatarUrl bio showBio university points pointsRaw socials tags';
+  'username displayName avatarUrl bio showBio university points pointsRaw socials tags showCertificates';
 
 /** 24 hex characters: an account id. A username is at most 20, so the two never collide. */
 const OBJECT_ID = /^[a-f0-9]{24}$/i;
@@ -74,6 +75,16 @@ router.get('/:handle', authenticate, async (req: AuthRequest, res) => {
           })) + 1
         : null;
 
+    /* Certificates still standing, unless their holder took them off the
+       profile. Each is already a public page of its own; this only lists them. */
+    const certificates =
+      user.showCertificates === false
+        ? []
+        : await Certificate.find({ userId: user._id, revokedAt: null })
+            .sort({ issuedAt: -1 })
+            .select('code pathTitle issuedAt distinction')
+            .lean();
+
     res.json({
       profile: {
         id: String(user._id),
@@ -88,6 +99,12 @@ router.get('/:handle', authenticate, async (req: AuthRequest, res) => {
         /** Lifetime XP, which the level is read from. */
         xp,
         rank,
+        certificates: certificates.map((c) => ({
+          code: c.code,
+          pathTitle: c.pathTitle,
+          issuedAt: c.issuedAt,
+          distinction: c.distinction === true,
+        })),
       },
     });
   } catch (err) {
