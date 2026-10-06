@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Users, Search, RefreshCw, Ban, RotateCcw, KeyRound, Check, Trophy, Trash2, Clock, Award } from 'lucide-react';
 import PageHeader from '../../components/ui/PageHeader';
@@ -45,6 +45,9 @@ interface AdminUser {
 
 const ROLES: Role[] = ['user', 'creator', 'admin'];
 
+/** How many members one request brings back. The server gives no more. */
+const PAGE_SIZE = 100;
+
 /** An action held back until the admin re-confirms with Google. */
 type PendingAction =
   | { kind: 'role'; target: AdminUser; role: Role }
@@ -62,8 +65,16 @@ const MembersPage: React.FC = () => {
   const ar = lang === 'ar';
 
   const [users, setUsers] = useState<AdminUser[]>([]);
+  /** Every member the search matches, or every member there is when it is
+   *  empty. `users` holds a page of them at a time. */
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [query, setQuery] = useState('');
+  /** What the list was last asked for: `query`, once the typing has paused. */
+  const [search, setSearch] = useState('');
+  /** Counts the searches sent, so an answer to an older one is dropped. */
+  const ticket = useRef(0);
   const [savingId, setSavingId] = useState<string | null>(null);
   /** Which creator's permission panel is open, and the toggles being edited. */
   /** Which member's points-and-tags panel is open. */
@@ -77,33 +88,64 @@ const MembersPage: React.FC = () => {
   const [reauthError, setReauthError] = useState<string | null>(null);
   const [resetting, setResetting] = useState(false);
 
+  /* The search runs on the server, over every member, not over the page in
+     hand: someone who joined long ago has to be as findable as someone who
+     joined today. */
+  const fetchPage = (skip: number) =>
+    api.get<{ users: AdminUser[]; total: number }>(
+      `/admin/users?${new URLSearchParams({
+        q: search,
+        skip: String(skip),
+        limit: String(PAGE_SIZE),
+      })}`
+    );
+
   const load = async () => {
+    const mine = ++ticket.current;
     setLoading(true);
     try {
-      const { users: list } = await api.get<{ users: AdminUser[] }>('/admin/users');
-      setUsers(list);
+      const page = await fetchPage(0);
+      if (mine !== ticket.current) return;
+      setUsers(page.users);
+      setTotal(page.total);
     } catch {
+      if (mine === ticket.current) toast('error', ar ? 'تعذر تحميل الأعضاء.' : 'Could not load members.');
+    } finally {
+      if (mine === ticket.current) setLoading(false);
+    }
+  };
+
+  const loadMore = async () => {
+    if (loadingMore) return;
+    const mine = ticket.current;
+    setLoadingMore(true);
+    try {
+      const page = await fetchPage(users.length);
+      if (mine !== ticket.current) return;
+      /* Someone joining between two requests pushes a row already on screen
+         onto the next page, so anything held already is left out. */
+      setUsers((prev) => {
+        const held = new Set(prev.map((u) => u.id));
+        return [...prev, ...page.users.filter((u) => !held.has(u.id))];
+      });
+      setTotal(page.total);
+    } catch {
+      // The button stays, so this is retryable in place.
       toast('error', ar ? 'تعذر تحميل الأعضاء.' : 'Could not load members.');
     } finally {
-      setLoading(false);
+      setLoadingMore(false);
     }
   };
 
   useEffect(() => {
+    const timer = setTimeout(() => setSearch(query.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  useEffect(() => {
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return users;
-    return users.filter(
-      (u) =>
-        u.email.toLowerCase().includes(q) ||
-        u.displayName.toLowerCase().includes(q) ||
-        (u.username ?? '').toLowerCase().includes(q)
-    );
-  }, [users, query]);
+  }, [search]);
 
   const changeRole = (target: AdminUser, role: Role) => {
     if (role === target.role) return;
@@ -246,6 +288,7 @@ const MembersPage: React.FC = () => {
       try {
         await api.delete(`/admin/users/${target.id}`, { credential });
         setUsers((prev) => prev.filter((u) => u.id !== target.id));
+        setTotal((n) => Math.max(0, n - 1));
         if (permsOpenId === target.id) setPermsOpenId(null);
         setPending(null);
         toast(
@@ -332,6 +375,7 @@ const MembersPage: React.FC = () => {
           <input
             type="text"
             value={query}
+            maxLength={80}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={
               ar ? 'ابحث بالاسم أو المعرّف أو البريد...' : 'Search by name, username or email...'
@@ -346,9 +390,13 @@ const MembersPage: React.FC = () => {
         >
           <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
         </button>
-        <span className="text-xs text-[#8592ad] flex-shrink-0" dir="ltr">
-          {filtered.length} / {users.length}
-        </span>
+        {/* The count of everyone there is, or everyone the search found, not of
+            the rows on screen: those are counted under the list. */}
+        {!loading && (
+          <span className="text-xs text-[#8592ad] flex-shrink-0">
+            <span dir="ltr">{total}</span> {ar ? 'عضو' : total === 1 ? 'member' : 'members'}
+          </span>
+        )}
       </div>
 
       {/* list */}
@@ -356,16 +404,17 @@ const MembersPage: React.FC = () => {
         <EnhancedCard padding="xl" className="text-center">
           <p className="text-sm text-[#8592ad]">{ar ? 'جارٍ التحميل...' : 'Loading members...'}</p>
         </EnhancedCard>
-      ) : filtered.length === 0 ? (
+      ) : users.length === 0 ? (
         <EnhancedCard padding="xl" className="text-center">
           <p className="text-sm text-[#8592ad]">
             {ar ? 'لا يوجد أعضاء مطابقون.' : 'No members match.'}
           </p>
         </EnhancedCard>
       ) : (
+        <>
         <EnhancedCard padding="none" className="overflow-hidden">
           <div className="divide-y divide-[#263248]/60">
-            {filtered.map((u, i) => {
+            {users.map((u, i) => {
               const meta = ROLE_META[u.role];
               const isSelf = u.id === me?._id;
               const leaving = !!u.deletionScheduledFor;
@@ -645,6 +694,27 @@ const MembersPage: React.FC = () => {
             })}
           </div>
         </EnhancedCard>
+
+        {/* The list is a page at a time, so this says what is on screen
+            against what exists, and the button is there only while the two
+            disagree. */}
+        <div className="flex flex-col items-center gap-3">
+          <p className="text-[11px] text-[#7c8aa6]">
+            {ar ? 'المعروض' : 'Showing'} <span dir="ltr">{users.length}</span> {ar ? 'من' : 'of'}{' '}
+            <span dir="ltr">{total}</span>
+          </p>
+          {users.length < total && (
+            <button
+              type="button"
+              onClick={() => void loadMore()}
+              disabled={loadingMore}
+              className="rounded-lg border border-[#263248] bg-[#0e1522] px-4 py-2 text-xs font-semibold text-[#d2d7e3] transition-colors hover:border-[#354562] hover:bg-[#172033] disabled:cursor-not-allowed disabled:text-[#6e7a94]"
+            >
+              {loadingMore ? (ar ? 'جارٍ التحميل...' : 'Loading...') : ar ? 'تحميل المزيد' : 'Load more'}
+            </button>
+          )}
+        </div>
+        </>
       )}
 
       {/* ── Danger zone ──

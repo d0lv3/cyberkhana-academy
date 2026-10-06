@@ -41,9 +41,14 @@ function escapeRegex(input: string): string {
   return input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-/* ── GET /api/admin/users?q=<search> ── newest first, capped at 100.
- * Members who have asked to be deleted come first, soonest due first, and are
- * never cut off by the cap: they are the rows an admin most needs to see. */
+const USERS_MAX_LIMIT = 100;
+
+/* ── GET /api/admin/users?q=<search>&skip=…&limit=… ── a page of members, and
+ * how many there are in all.
+ * Members who have asked to be deleted come first, soonest due first: they are
+ * the rows an admin most needs to see. Everyone else follows, newest first.
+ * `total` counts every member the search matches rather than the page in hand,
+ * so the studio can say how many there are and keep asking until it has them. */
 router.get('/users', async (req: AuthRequest, res) => {
   try {
     const q = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 80) : '';
@@ -56,16 +61,42 @@ router.get('/users', async (req: AuthRequest, res) => {
           ],
         }
       : {};
+    const limit = Math.min(
+      USERS_MAX_LIMIT,
+      Math.max(1, parseInt(String(req.query.limit ?? USERS_MAX_LIMIT), 10) || USERS_MAX_LIMIT)
+    );
+    const skip = Math.max(0, parseInt(String(req.query.skip ?? 0), 10) || 0);
 
-    const [leaving, others] = await Promise.all([
-      User.find({ ...filter, deletionScheduledFor: { $exists: true } })
-        .sort({ deletionScheduledFor: 1 })
-        .limit(100),
-      User.find({ ...filter, deletionScheduledFor: { $exists: false } })
-        .sort({ createdAt: -1 })
-        .limit(100),
+    const leavingFilter = { ...filter, deletionScheduledFor: { $exists: true } };
+    const othersFilter = { ...filter, deletionScheduledFor: { $exists: false } };
+    const [leavingCount, othersCount] = await Promise.all([
+      User.countDocuments(leavingFilter),
+      User.countDocuments(othersFilter),
     ]);
-    res.json({ users: [...leaving, ...others].map(adminUserShape) });
+
+    /* One list in two stretches, so `skip` runs through the members leaving
+       before it reaches anyone else. The `_id` in each sort settles ties, which
+       keeps a row from turning up on two pages or on none. */
+    const leaving =
+      skip < leavingCount
+        ? await User.find(leavingFilter)
+            .sort({ deletionScheduledFor: 1, _id: 1 })
+            .skip(skip)
+            .limit(limit)
+        : [];
+    const room = limit - leaving.length;
+    const others =
+      room > 0
+        ? await User.find(othersFilter)
+            .sort({ createdAt: -1, _id: -1 })
+            .skip(Math.max(0, skip - leavingCount))
+            .limit(room)
+        : [];
+
+    res.json({
+      users: [...leaving, ...others].map(adminUserShape),
+      total: leavingCount + othersCount,
+    });
   } catch (err) {
     logger.error('admin.users_list_failed', { error: String(err) });
     res.status(500).json({ error: 'Could not load users' });
