@@ -1,78 +1,84 @@
 /* =========================================================================
    CyberKhana Academy certificate of achievement · A4 landscape 297 × 210 mm
 
-   The sheet the CyberKhana platform prints for its events (Direction C,
-   "Dossier"), set for a learning path: the panel carries the seal where an
-   event carries a placing. Dark only. Every rule is scoped to .cert, so
-   nothing here reaches the rest of the app. Page-level print rules live in
-   CertificateTemplate, mounted only while a certificate is on screen.
+   "Charter": a diploma. Everything sits on the sheet's centre line: the
+   Academy's logo, the title, the holder's name in a serif, the path, and a
+   round foil seal at the foot, inside a double green frame. Dark only.
+
+   Every rule is scoped to .cert, so nothing here reaches the rest of the
+   app. Page-level print rules live in CertificateTemplate, mounted only while
+   a certificate is on screen.
 
    The sheet is English and left to right whatever language the Academy is
    being read in, so it is the same sheet for everyone it is shown to.
    ========================================================================= */
 
 .cert {
-  --bg: #0d1117; --panel: #121a2a; --line: #263248;
-  --text: #f3f6ff; --text2: #d2d7e3; --muted: #9aa5bf;
-  --green: #00a859; --lime: #9fef00; --place: var(--green);
-  --foil: url(#ck-foil-g); --seal-core: #0d1117; --seal-line: #263248; --seal-patch: transparent;
+  --bg: #0d1117; --line: #263248;
+  --text: #f3f6ff; --text2: #d2d7e3; --muted: #9aa5bf; --faint: #7c8aa6;
+  --green: #00a859; --lime: #9fef00;
+  /* What a pass is marked in. A pass with distinction takes the lime foil. */
+  --place: var(--green); --foil: url(#ckc-foil-pass);
   /* supplied logos, never recoloured */
+  --ck-academy: url('/assets/brand/cyberkhana-academy.png');
   --ck-sym: url('/assets/brand/certificate/symbol.png');
-  --ck-wm: url('/assets/brand/certificate/wordmark.png');
+  --serif: 'Fraunces', 'Noto Naskh Arabic', Georgia, 'Times New Roman', serif;
   width: 297mm; height: 210mm; position: relative; overflow: hidden; flex: none;
   background: var(--bg); color: var(--text); font-family: 'Poppins', sans-serif;
-  direction: ltr; text-align: left;
+  direction: ltr; text-align: center;
   -webkit-print-color-adjust: exact; print-color-adjust: exact;
 }
 .cert * { box-sizing: border-box; }
-/* A pass with distinction takes the lime foil an event gives its winner. */
-.cert[data-tier="distinction"] { --place: #9fef00; --foil: url(#ck-foil-1); }
+.cert[data-tier="distinction"] { --place: var(--lime); --foil: url(#ckc-foil-dist); }
 
 .cert .bg { position: absolute; inset: 0; }
 .cert .bg svg { display: block; width: 100%; height: 100%; }
 .cert .abs { position: absolute; }
-.cert .fitbox { display: flex; overflow: hidden; }
+.cert .fitbox { display: flex; overflow: hidden; align-items: center; justify-content: center; }
+/* Everything in the centre column spans the same width, so it centres on one line. */
+.cert .mid { left: 27.5mm; width: 242mm; }
 
-.cert .logo { position: absolute; background-repeat: no-repeat; background-size: 100% 100%; }
-.cert .sym { left: 15mm; top: 15.41mm; width: 16mm; height: 15.173mm; background-image: var(--ck-sym); }
-.cert .wm { left: 240.93mm; top: 14mm; width: 40.07mm; height: 7mm; background-image: var(--ck-wm); }
-.cert .wm-sub { left: 240.93mm; top: 22.4mm; width: 40.07mm; text-align: right; font-size: 6.5pt; font-weight: 600; letter-spacing: .42em; text-transform: uppercase; color: var(--green); line-height: 1.2; padding-right: 0; margin-right: -.42em; }
+.cert .k { font-family: 'Poppins', sans-serif; font-size: 6.5pt; font-weight: 500; letter-spacing: .2em; text-transform: uppercase; color: var(--faint); line-height: 1.3; }
 
-.cert .k { font-family: 'Poppins', sans-serif; font-size: 6.5pt; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); line-height: 1.3; }
+/* ---- head ---- */
+/* The logo says whose certificate this is; nothing is lettered under it. */
+.cert .logo { left: 119.65mm; top: 18mm; width: 57.7mm; height: 11mm; background: var(--ck-academy) no-repeat center / contain; }
+.cert .title { top: 36mm; font-family: var(--serif); font-variation-settings: 'opsz' 144; font-weight: 500; font-size: 32pt; line-height: 1.15; letter-spacing: -.01em; color: var(--text); }
 
-/* ---- panel (x 0–90 mm) ---- */
-.cert .p-label { left: 14mm; top: 52mm; }
-.cert .sealwrap { left: 14mm; top: 57mm; }
-.cert .seal { position: relative; width: 54mm; height: 54mm; }
-.cert .seal svg { display: block; width: 100%; height: 100%; }
-.cert .seal-mark { position: absolute; left: 36%; top: 36.13%; width: 28%; height: 26.55%; background: var(--ck-sym) no-repeat; background-size: 100% 100%; }
-.cert .resultbox { left: 14mm; top: 116mm; width: 62mm; height: 14mm; align-items: flex-start; }
-.cert .result { font-weight: 600; color: var(--place); line-height: 1.25; }
-.cert .qr { left: 14mm; top: 162mm; width: 22mm; height: 22mm; padding: 2mm; background: #fff; border-radius: 1mm; }
-.cert .qr svg { display: block; width: 18mm; height: 18mm; }
-.cert .code { left: 40mm; top: 162mm; width: 36mm; height: 22mm; display: flex; flex-direction: column; justify-content: flex-end; }
-.cert .code .k { margin-bottom: 1.2mm; }
-.cert .code-groups { font-family: 'Poppins', sans-serif; font-weight: 500; font-size: 7.5pt; line-height: 1.5; letter-spacing: .08em; font-variant-numeric: tabular-nums; color: var(--text2); white-space: pre; }
-
-/* ---- main column (x 106–281 mm, 175 mm wide) ---- */
-.cert .main { left: 106mm; width: 175mm; }
-.cert .title { top: 34mm; font-weight: 600; font-size: 15pt; letter-spacing: .22em; text-transform: uppercase; color: var(--green); line-height: 1.2; }
-.cert .awarded { top: 48mm; font-size: 9.5pt; font-weight: 500; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); line-height: 1.3; }
-.cert .namebox { top: 54mm; height: 34mm; align-items: center; }
-.cert .name { font-family: 'Poppins', 'IBM Plex Sans Arabic', sans-serif; font-weight: 600; line-height: 1.08; letter-spacing: -.01em; color: var(--text); text-align: left; overflow-wrap: anywhere; unicode-bidi: plaintext; }
-.cert .name[dir="rtl"] { font-family: 'IBM Plex Sans Arabic', 'Poppins', sans-serif; font-weight: 700; line-height: 1.3; letter-spacing: 0; }
-.cert .whobox { top: 89mm; height: 7mm; align-items: center; }
+/* ---- holder ---- */
+.cert .pre { top: 57.2mm; font-family: var(--serif); font-style: italic; font-weight: 400; font-size: 13.5pt; line-height: 1.3; color: var(--muted); }
+.cert .namebox { top: 64mm; height: 25mm; }
+.cert .name { font-family: var(--serif); font-variation-settings: 'opsz' 144; font-weight: 600; line-height: 1.08; letter-spacing: -.015em; color: #fff; overflow-wrap: anywhere; unicode-bidi: plaintext; }
+.cert .name[dir="rtl"] { font-family: 'Noto Naskh Arabic', 'IBM Plex Sans Arabic', serif; font-weight: 700; line-height: 1.4; letter-spacing: 0; }
+.cert .rule { left: 98.5mm; top: 92.4mm; width: 100mm; height: .35mm; background: linear-gradient(90deg, transparent, var(--green) 18%, var(--green) 82%, transparent); }
+.cert .whobox { top: 96.2mm; height: 6.5mm; }
 .cert .who { font-weight: 500; color: var(--text2); white-space: nowrap; unicode-bidi: plaintext; }
-.cert .who .u { font-size: .92em; color: var(--lime); margin-right: 3mm; }
-.cert .rule { top: 99mm; height: .25mm; background: linear-gradient(90deg, var(--green) 0 12mm, var(--line) 12mm); }
-.cert .copy { top: 104.5mm; font-size: 10pt; color: var(--muted); line-height: 1.3; }
-.cert .eventbox { top: 111mm; height: 21mm; align-items: flex-start; }
-.cert .event { font-family: 'Poppins', 'IBM Plex Sans Arabic', sans-serif; font-weight: 600; line-height: 1.2; color: var(--text); overflow-wrap: anywhere; unicode-bidi: plaintext; }
-.cert .fields { bottom: 22mm; display: grid; grid-template-columns: 70mm 49mm 40mm; column-gap: 8mm; row-gap: 4.5mm; }
-.cert .fields .cell { border-top: .25mm solid var(--line); padding-top: 2.4mm; min-width: 0; }
-.cert .fields .vbox { display: flex; overflow: hidden; height: 6.6mm; margin-top: 1mm; align-items: center; }
-.cert .fields .v { font-weight: 600; color: var(--text); white-space: nowrap; font-variant-numeric: tabular-nums; }
-.cert .fields .v.m { font-weight: 500; color: var(--text2); }
+.cert .who .u { font-weight: 600; color: var(--place); }
+.cert .who .dot { margin: 0 2.2mm; color: var(--faint); }
+
+/* ---- what it is for ---- */
+.cert .copy { top: 107.4mm; font-family: var(--serif); font-style: italic; font-weight: 400; font-size: 13.5pt; line-height: 1.3; color: var(--muted); }
+.cert .pathbox { top: 114.2mm; height: 13.5mm; }
+.cert .path { font-family: 'Poppins', 'IBM Plex Sans Arabic', sans-serif; font-weight: 600; line-height: 1.15; letter-spacing: -.01em; color: var(--green); overflow-wrap: anywhere; unicode-bidi: plaintext; }
+.cert .facts { left: 53.5mm; top: 134.5mm; width: 190mm; height: 14.5mm; display: grid; grid-template-columns: 1.5fr 1fr 1fr; border-block: .25mm solid var(--line); }
+.cert .facts .cell { min-width: 0; padding: 2.3mm 3mm 0; }
+.cert .facts .cell + .cell { border-left: .25mm solid var(--line); }
+.cert .facts .vbox { display: flex; overflow: hidden; height: 6mm; margin-top: .7mm; align-items: center; justify-content: center; }
+.cert .facts .v { font-weight: 600; color: var(--text); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* ---- foot: verification, the seal, the dates ---- */
+.cert .qr { left: 21.5mm; top: 162.5mm; width: 23mm; height: 23mm; padding: 1.9mm; background: #fff; border-radius: .8mm; }
+.cert .qr svg { display: block; width: 19.2mm; height: 19.2mm; }
+.cert .code { left: 48.5mm; top: 163mm; width: 44mm; text-align: left; }
+.cert .code-groups { margin-top: 1.4mm; font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace; font-weight: 500; font-size: 8pt; line-height: 1.6; letter-spacing: .06em; font-variant-numeric: tabular-nums; color: var(--text2); white-space: pre; }
+.cert .sealwrap { left: 129.75mm; top: 154.5mm; }
+.cert .seal { position: relative; width: 37.5mm; height: 37.5mm; }
+.cert .seal svg { display: block; width: 100%; height: 100%; }
+.cert .seal-mark { position: absolute; left: 13.75mm; top: 13.9mm; width: 10mm; height: 9.48mm; background: var(--ck-sym) no-repeat; background-size: 100% 100%; }
+.cert .result { top: 193.4mm; font-size: 6.8pt; font-weight: 600; letter-spacing: .26em; text-indent: .26em; text-transform: uppercase; color: var(--place); line-height: 1.3; }
+.cert .dates { right: 21.5mm; top: 163mm; width: 62mm; text-align: right; }
+.cert .dates .v { margin-top: 1mm; font-size: 10.5pt; font-weight: 600; color: var(--text); line-height: 1.25; }
+.cert .dates .v + .k { margin-top: 3.2mm; }
 
 /* On screen the sheet is scaled to its container; printing uses it at real size. */
 .cert-scaler { position: relative; margin: 0 auto; }

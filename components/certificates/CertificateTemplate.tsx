@@ -1,15 +1,16 @@
-import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import qrcode from 'qrcode-generator';
 import './certificate.css';
-import { CERT_BACKGROUND_SVG, CERT_DEFS_SVG, CERT_SEAL_SVG } from './certificateArt';
+import { CERT_FRAME_SVG, CERT_SEAL_SVG } from './certificateArt';
 import type { CertificateData } from '../../services/certificateService';
 
 /* ─── The certificate sheet ───
  *
- * One standard sheet for every path, the same one the CyberKhana platform
- * prints for its events, set for a learning path. A creator switches it on
- * for a path and can change nothing else about it: a certificate carries
- * CyberKhana's name, and it should look like one whoever wrote the path.
+ * One standard sheet for every path: a diploma on a dark ground, centred, with
+ * the Academy's logo at its head and a round foil seal at its foot. A creator
+ * switches it on for a path and can change nothing else about it: a
+ * certificate carries CyberKhana's name, and it should look like one whoever
+ * wrote the path.
  *
  * Everything it shows comes from the certificate record, fixed when it was
  * issued (backend/src/models/Certificate.ts).
@@ -20,6 +21,24 @@ const ARABIC = /[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]/;
 // The sheet is in English whatever language the Academy is read in, so it reads the same everywhere.
 const longDate = (value: string | Date) =>
   new Date(value).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+/* The serif the sheet is set in, and its Arabic companion for a holder's name.
+   Nothing else in the Academy uses them, so they are asked for here, when a
+   certificate is first shown, and not in the page every visit begins with. */
+const FONTS_ID = 'ck-certificate-fonts';
+const FONTS_HREF =
+  'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,400&family=Noto+Naskh+Arabic:wght@700&display=swap';
+
+function useCertificateFonts(): void {
+  useEffect(() => {
+    if (document.getElementById(FONTS_ID)) return;
+    const link = document.createElement('link');
+    link.id = FONTS_ID;
+    link.rel = 'stylesheet';
+    link.href = FONTS_HREF;
+    document.head.appendChild(link);
+  }, []);
+}
 
 /** QR modules as one SVG path. */
 const qrPath = (text: string) => {
@@ -64,11 +83,11 @@ const PRINT_STYLES = `
   .cert-scaler > .cert { position: fixed !important; left: 0 !important; top: 0 !important; transform: none !important; box-shadow: none !important; }
 }`;
 
-const Cell: React.FC<{ label: string; value: string; muted?: boolean }> = ({ label, value, muted }) => (
+const Cell: React.FC<{ label: string; value: string }> = ({ label, value }) => (
   <div className="cell">
     <div className="k">{label}</div>
     <div className="vbox">
-      <div className={`v${muted ? ' m' : ''}`} data-fit={muted ? '10,8,8' : '12,8,8'}>
+      <div className="v" data-fit="11,7.5,7.5">
         {value}
       </div>
     </div>
@@ -87,6 +106,7 @@ interface CertificateTemplateProps {
 }
 
 const CertificateTemplate: React.FC<CertificateTemplateProps> = ({ certificate: c, verifyUrl, printable = true }) => {
+  useCertificateFonts();
   const wrapRef = useRef<HTMLDivElement>(null);
   const certRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
@@ -94,8 +114,8 @@ const CertificateTemplate: React.FC<CertificateTemplateProps> = ({ certificate: 
 
   const code = c.code.toUpperCase();
   const groups = code.match(/.{1,4}/g) || [];
-  const codeLines = [0, 2, 4, 6]
-    .map((i) => groups.slice(i, i + 2).join(' '))
+  const codeLines = [0, 4]
+    .map((i) => groups.slice(i, i + 4).join(' '))
     .filter(Boolean)
     .join('\n');
   const qr = useMemo(() => qrPath(verifyUrl), [verifyUrl]);
@@ -109,17 +129,22 @@ const CertificateTemplate: React.FC<CertificateTemplateProps> = ({ certificate: 
     .filter(Boolean)
     .join(' · ');
 
-  // Fit now, and again once the fonts arrive: sizes measured in a fallback face are wrong.
+  /* Fit now, and again once the fonts arrive: sizes measured in a fallback
+     face are wrong. The sheet's own serif is asked for after the first paint,
+     so the set of fonts is watched and the text is fitted again when it lands. */
   useLayoutEffect(() => {
     const cert = certRef.current;
     if (!cert) return;
     fitAll(cert);
     let live = true;
-    document.fonts?.ready.then(() => {
+    const refit = () => {
       if (live && certRef.current) fitAll(certRef.current);
-    });
+    };
+    document.fonts?.ready.then(refit);
+    document.fonts?.addEventListener?.('loadingdone', refit);
     return () => {
       live = false;
+      document.fonts?.removeEventListener?.('loadingdone', refit);
     };
   }, [c, verifyUrl]);
 
@@ -155,25 +180,44 @@ const CertificateTemplate: React.FC<CertificateTemplateProps> = ({ certificate: 
           dir="ltr"
           style={{ transform: `scale(${scale})` }}
         >
-          <div aria-hidden="true" style={{ position: 'absolute', width: 0, height: 0 }} dangerouslySetInnerHTML={{ __html: CERT_DEFS_SVG }} />
-          <div className="bg" aria-hidden="true" dangerouslySetInnerHTML={{ __html: CERT_BACKGROUND_SVG }} />
-          <div className="logo sym" role="img" aria-label="CyberKhana" />
-          <div className="logo wm" role="img" aria-label="CyberKhana" />
-          <div className="abs wm-sub">Academy</div>
+          <div className="bg" aria-hidden="true" dangerouslySetInnerHTML={{ __html: CERT_FRAME_SVG }} />
 
-          {/* panel */}
-          <div className="abs k p-label">Verified credential</div>
-          <div className="abs sealwrap">
-            <div className="seal" role="img" aria-label="CyberKhana Academy verified seal">
-              <div aria-hidden="true" style={{ width: '100%', height: '100%' }} dangerouslySetInnerHTML={{ __html: CERT_SEAL_SVG }} />
-              <div className="seal-mark" />
+          {/* head */}
+          <div className="abs logo" role="img" aria-label="CyberKhana Academy" />
+          <div className="abs mid title">Certificate of Achievement</div>
+
+          {/* holder */}
+          <div className="abs mid pre">This certifies that</div>
+          <div className="abs mid fitbox namebox">
+            <div className="name" data-fit="52,34,22" {...(rtlName ? { dir: 'rtl', lang: 'ar' } : {})}>
+              {c.name}
             </div>
           </div>
-          <div className="abs fitbox resultbox">
-            <div className="result" data-fit="12,9,9">
-              {c.distinction ? 'Passed with distinction' : 'Final exam passed'}
+          <div className="abs rule" />
+          {(c.username || c.university) && (
+            <div className="abs mid fitbox whobox">
+              <div className="who" data-fit="11,8,8">
+                {c.username && <span className="u">@{c.username}</span>}
+                {c.username && c.university && <span className="dot">·</span>}
+                {c.university && <span>{c.university}</span>}
+              </div>
+            </div>
+          )}
+
+          {/* what it is for */}
+          <div className="abs mid copy">has completed the learning path and passed its final exam</div>
+          <div className="abs mid fitbox pathbox">
+            <div className="path" data-fit="23,16,12">
+              {c.pathTitle}
             </div>
           </div>
+          <div className="abs facts">
+            <Cell label="Curriculum" value={curriculum} />
+            <Cell label="Level" value={c.difficulty || 'All levels'} />
+            <Cell label="Final exam" value={c.practical ? 'Practical' : 'Theory'} />
+          </div>
+
+          {/* foot */}
           <div className="abs qr" role="img" aria-label="QR code linking to the verification page">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox={`0 0 ${qr.size} ${qr.size}`} shapeRendering="crispEdges">
               <path fill="#0d1117" d={qr.d} />
@@ -183,38 +227,18 @@ const CertificateTemplate: React.FC<CertificateTemplateProps> = ({ certificate: 
             <div className="k">Verify</div>
             <div className="code-groups">{codeLines}</div>
           </div>
-
-          {/* main column */}
-          <div className="abs main title">Certificate of Achievement</div>
-          <div className="abs main awarded">Awarded to</div>
-          <div className="abs main fitbox namebox">
-            <div className="name" data-fit="46,32,22" {...(rtlName ? { dir: 'rtl', lang: 'ar' } : {})}>
-              {c.name}
+          <div className="abs sealwrap">
+            <div className="seal" role="img" aria-label="CyberKhana Academy verified seal">
+              <div aria-hidden="true" style={{ width: '100%', height: '100%' }} dangerouslySetInnerHTML={{ __html: CERT_SEAL_SVG }} />
+              <div className="seal-mark" />
             </div>
           </div>
-          {(c.username || c.university) && (
-            <div className="abs main fitbox whobox">
-              <div className="who" data-fit="12,9,9">
-                {c.username && <span className="u">@{c.username}</span>}
-                {c.university && <span>{c.university}</span>}
-              </div>
-            </div>
-          )}
-          <div className="abs main rule" />
-          <div className="abs main copy">for completing the learning path and passing its final exam</div>
-          <div className="abs main fitbox eventbox">
-            <div className="event" data-fit="19,15,12">
-              {c.pathTitle}
-            </div>
-          </div>
-          {/* One labelled cell per fact, in two aligned rows anchored to the bottom of the sheet. */}
-          <div className="abs main fields">
-            <Cell label="Curriculum" value={curriculum} />
-            <Cell label="Level" value={c.difficulty || 'All levels'} />
-            <Cell label="Final exam" value={c.practical ? 'Practical' : 'Theory'} />
-            <Cell label="Issued by" value="CyberKhana Academy" muted />
-            <Cell label="Path completed" value={longDate(c.pathCompletedAt)} muted />
-            <Cell label="Issued" value={longDate(c.issuedAt)} muted />
+          <div className="abs mid result">{c.distinction ? 'Passed with distinction' : 'Final exam passed'}</div>
+          <div className="abs dates">
+            <div className="k">Path completed</div>
+            <div className="v">{longDate(c.pathCompletedAt)}</div>
+            <div className="k">Issued</div>
+            <div className="v">{longDate(c.issuedAt)}</div>
           </div>
         </div>
       </div>
