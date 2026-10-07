@@ -9,8 +9,9 @@
  * their own routes.
  *
  * A module carries each answer twice, in `chapters` (what the studio edits)
- * and in `courseData` (what the viewer reads), and a lab once more in `labs`,
- * so all three are covered.
+ * and in `courseData` (what the viewer reads), and a lab once more in `labs`.
+ * Only `courseData` is sent, with its answers taken out. The other two are the
+ * studio's working copy and are left out whole (see moduleItem).
  */
 
 import { answerMask, flagPlaceholder, isTypedQuestion } from '../shared/checks';
@@ -42,14 +43,12 @@ const mapList = (list: unknown, fn: (item: AnyItem) => AnyItem): unknown =>
   Array.isArray(list) ? list.map((item) => (isPlainObject(item) ? fn(item) : item)) : list;
 
 function moduleItem(item: AnyItem): AnyItem {
-  const out: AnyItem = { ...item };
-  if ('chapters' in item) {
-    out.chapters = mapList(item.chapters, (chapter) => ({
-      ...chapter,
-      sections: mapList(chapter.sections, (section) => ('quiz' in section ? { ...section, quiz: quiz(section.quiz) } : section)),
-    }));
-  }
-  if ('labs' in item) out.labs = Array.isArray(item.labs) ? item.labs.map(lab) : item.labs;
+  /* `chapters` is every lesson a second time, in the shape the studio edits,
+     and `labs` is the studio's list of labs, unfinished ones included. The
+     viewer reads `courseData` alone, so neither is sent: a browser keeps this
+     whole feed in storage that holds about 5 MB, and sending each lesson twice
+     was filling it and locking people out at sign-in. */
+  const { chapters: _chapters, labs: _labs, ...out } = item;
   if (isPlainObject(item.courseData)) {
     out.courseData = {
       ...item.courseData,
