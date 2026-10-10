@@ -34,10 +34,24 @@ export type QuizRule = 'all' | 'most';
 
 export const MOST_RATIO = 0.7;
 
+/** Arabic's vowel marks and its stretching stroke, which change how a word
+ *  looks and not which word it is. */
+const ARABIC_MARKS = /[\u064B-\u065F\u0670\u0640]/g;
+
 /** The learner is being asked whether they know the answer, not whether they
  *  can reproduce its typography, so case, surrounding space and doubled inner
- *  spaces are all noise: "hello world" answers "Hello World". */
-export const normalizeAnswer = (value: string): string => value.trim().replace(/\s+/g, ' ').toLowerCase();
+ *  spaces are all noise: "hello world" answers "Hello World". Arabic gets the
+ *  same allowance: vowel marks are dropped, and the letters a keyboard lets
+ *  people swap freely are read as one (an alef with or without its hamza, a
+ *  final ya with or without its dots). */
+export const normalizeAnswer = (value: string): string =>
+  value
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLowerCase()
+    .replace(ARABIC_MARKS, '')
+    .replace(/[\u0623\u0625\u0622\u0671]/g, '\u0627')
+    .replace(/\u0649/g, '\u064A');
 
 /** The shape of a typed answer, one asterisk per character with the spaces
  *  left standing, shown in the empty box so a stuck learner can see how long
@@ -50,18 +64,28 @@ export const isTypedQuestion = (q: unknown): boolean => isRec(q) && q.kind === '
 export function isQuestionCorrect(question: unknown, given: unknown): boolean {
   if (!isRec(question)) return false;
   if (question.kind === 'text') {
-    const expected = normalizeAnswer(text(question.answer));
-    return expected !== '' && typeof given === 'string' && normalizeAnswer(given) === expected;
+    if (typeof given !== 'string') return false;
+    /* A question asked in two languages has an answer in each, and someone
+       reading the English may well type the Arabic: either one is right. */
+    const answer = normalizeAnswer(given);
+    return [question.answer, question.answerAr].some((accepted) => {
+      const expected = normalizeAnswer(text(accepted));
+      return expected !== '' && expected === answer;
+    });
   }
   const correct = question.correctIndex;
   return typeof given === 'number' && Number.isInteger(given) && typeof correct === 'number' && given === correct;
 }
 
 /** The right answer, to show a learner who got it wrong: the option's index
- *  for a pick, the answer itself for a typed one. */
-export function revealAnswer(question: unknown): { correctIndex?: number; answer?: string } {
+ *  for a pick, the answer itself for a typed one (in Arabic as well when the
+ *  question has one, so the page can show the one being read). */
+export function revealAnswer(question: unknown): { correctIndex?: number; answer?: string; answerAr?: string } {
   if (!isRec(question)) return {};
-  if (question.kind === 'text') return { answer: text(question.answer).trim() };
+  if (question.kind === 'text') {
+    const answerAr = text(question.answerAr).trim();
+    return { answer: text(question.answer).trim(), ...(answerAr ? { answerAr } : {}) };
+  }
   return typeof question.correctIndex === 'number' ? { correctIndex: question.correctIndex } : {};
 }
 

@@ -7,6 +7,8 @@ import AuthorChip from '../ui/AuthorChip';
 import { useLang } from '../../contexts/LangContext';
 import { MODULE_DOMAIN_META, moduleDomain, coverImageSrc, modulePath, type FundamentalModule } from '../../data/fundamentalsData';
 import { creditOf } from '../../services/creatorTypes';
+import { moduleText } from '../../services/contentLang';
+import ModuleLanguageBadge from './ModuleLanguageBadge';
 
 const contentTypeIcons = {
   video: Video,
@@ -41,7 +43,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ module: mod }) => {
   return (
     <ImageCard
       src={coverImageSrc(mod.coverImage)}
-      alt={mod.title[lang]}
+      alt={moduleText(mod, mod.title, lang)}
       imageClassName="transition-transform duration-500 group-hover:scale-[1.04]"
       fallback={
         <div className="absolute inset-0" style={{ background: `linear-gradient(150deg, ${mod.iconColor}33 0%, #0d1117 62%)` }}>
@@ -79,7 +81,8 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ module: mod }) => {
       {/* Bottom: title + difficulty + compact stats */}
       <div className="absolute inset-x-0 bottom-0 p-4">
         <h3 className="mb-2 line-clamp-2 text-base font-bold leading-snug text-[#f3f6ff] transition-colors group-hover:text-[#00a859]">
-          {mod.title[lang]}
+          {/* Its own direction: an Arabic title on an English page still reads right to left. */}
+          <span dir="auto">{moduleText(mod, mod.title, lang)}</span>
         </h3>
         <div className="flex flex-wrap items-center gap-2 text-[11px] font-medium text-[#aab3c7]" dir="ltr">
           <DifficultyBadge difficulty={mod.difficulty} className="backdrop-blur-sm" />
@@ -89,6 +92,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ module: mod }) => {
           <span className="inline-flex items-center gap-1">
             <Layers size={11} /> {mod.totalModules} {t(mod.totalModules === 1 ? 'card.section' : 'card.sections')}
           </span>
+          <ModuleLanguageBadge module={mod} compact />
         </div>
         <AuthorChip
           credit={creditOf(mod)}

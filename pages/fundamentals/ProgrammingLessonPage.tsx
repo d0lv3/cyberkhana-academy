@@ -1,4 +1,5 @@
 import LessonLanguageSwitcher from '../../components/ui/LessonLanguageSwitcher';
+import { withLessonLanguage } from '../../components/ui/LessonLanguage';
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
@@ -539,4 +540,6 @@ const ProgrammingLessonPage: React.FC = () => {
   );
 };
 
-export default ProgrammingLessonPage;
+/* Read in a language of its own, which the switch in the header changes for
+   this lesson alone (components/ui/LessonLanguage.tsx). */
+export default withLessonLanguage(ProgrammingLessonPage);

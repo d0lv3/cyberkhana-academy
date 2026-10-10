@@ -20,8 +20,12 @@ import { isPlainObject, type AnyItem } from './contentStatus';
 
 function question(q: unknown): unknown {
   if (!isPlainObject(q)) return q;
-  const { correctIndex: _index, answer, ...rest } = q;
-  return isTypedQuestion(q) ? { ...rest, mask: answerMask(typeof answer === 'string' ? answer : '') } : rest;
+  // The Arabic answer is an answer like the other, and is taken out with it.
+  const { correctIndex: _index, answer, answerAr, ...rest } = q;
+  if (!isTypedQuestion(q)) return rest;
+  const masked: AnyItem = { ...rest, mask: answerMask(typeof answer === 'string' ? answer : '') };
+  if (typeof answerAr === 'string' && answerAr.trim()) masked.maskAr = answerMask(answerAr);
+  return masked;
 }
 
 const quiz = (list: unknown): unknown => (Array.isArray(list) ? list.map(question) : list);

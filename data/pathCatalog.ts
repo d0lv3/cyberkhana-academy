@@ -30,7 +30,7 @@ export function buildPathCatalog(locale: 'en' | 'ar' = 'en'): CatalogGroup[] {
   const osItems: PathStep[] = mergeFundamentalModules(fundamentalModules).map((m) => ({
     kind: 'os-module',
     refId: m.id,
-    title: m.title[locale] || m.title.en,
+    title: m.title[locale] || m.title.en || m.title.ar,
     subtitle: locale === 'ar'
       ? `${difficultyAr[m.difficulty] ?? m.difficulty} · الدروس: ${m.totalLessons}`
       : `${m.difficulty} · ${m.totalLessons} lessons`,

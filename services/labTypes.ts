@@ -11,8 +11,10 @@
  * then open the room" is one lab, not two, so a lab carries links, files and
  * an optional simulation together and shows whichever it has.
  *
- * Bilinguality follows the house rule: bodies are { en, ar }, short labels are
- * plain strings (the same split section titles and quiz questions use).
+ * Everything a student reads here comes in two languages, the way a lesson
+ * does (services/contentLang.ts): the brief is { en, ar }, and each short text
+ * has an Arabic sibling beside it (`title` and `titleAr`). What is not prose
+ * is said once: addresses, filenames, and the answers themselves.
  */
 
 import type { NetworkSimulation } from '../components/network-sim/types';
@@ -24,6 +26,7 @@ export interface LabLink {
   id: string;
   /** e.g. "Open the room on TryHackMe" */
   label: string;
+  labelAr?: string;
   url: string;
 }
 
@@ -43,6 +46,7 @@ export interface LabFlag {
   id: string;
   /** What to look for, e.g. "The resolver's IP address". */
   label: string;
+  labelAr?: string;
   /** The expected value. Kept on the server, which checks each flag
    *  (backend/src/routes/progress.ts): what students are sent has none, and
    *  a placeholder worked out from it instead. Only the author's own copy, and
@@ -50,6 +54,7 @@ export interface LabFlag {
   answer?: string;
   /** Optional nudge, revealed on request. */
   hint?: string;
+  hintAr?: string;
   /** Off by default: most flags are strings where case is noise. */
   caseSensitive?: boolean;
   /** What the empty box should suggest, when the shape of the answer is not
@@ -74,14 +79,18 @@ export type LabCompletion =
 
 export interface ModuleLab {
   id: string;
-  /** Shown in the course sidebar, so a plain string like a section title. */
+  /** Shown in the course sidebar, like a lesson's title. */
   title: string;
+  titleAr?: string;
   /** The task, in markdown. A lesson body, so bilingual. */
   brief: { en: string; ar: string };
   /** Ticked off in the page while the work happens elsewhere. */
   objectives: string[];
+  /** The same objectives in Arabic, one for one with `objectives`. */
+  objectivesAr?: string[];
   /** What to have ready first, e.g. "Wireshark and a TryHackMe account". */
   setupNotes?: string;
+  setupNotesAr?: string;
   estimatedMinutes: number;
   placement: LabPlacement;
   links: LabLink[];
@@ -208,33 +217,76 @@ export function labHasContent(lab: ModuleLab): boolean {
     lab.brief.en.trim() ||
     lab.brief.ar.trim() ||
     lab.objectives.some((o) => o.trim()) ||
+    (lab.objectivesAr ?? []).some((o) => o.trim()) ||
     lab.links.some((l) => l.url.trim()) ||
     lab.files.length ||
     hasSimulation(lab.simulation)
   );
 }
 
-/** Drop the empty rows an editor leaves behind, and any link that isn't safe. */
+/** Drop the empty rows an editor leaves behind, and any link that isn't safe.
+ *  A row counts as written when either language has it, and the two lists of
+ *  objectives stay in step with each other. */
 export function cleanLab(lab: ModuleLab): ModuleLab {
   const links = lab.links.filter((l) => isSafeLabUrl(l.url));
-  const objectives = lab.objectives.map((o) => o.trim()).filter(Boolean);
+  const rows = lab.objectives
+    .map((en, i) => ({ en: en.trim(), ar: (lab.objectivesAr?.[i] ?? '').trim() }))
+    .filter((row) => row.en || row.ar);
   const completion: LabCompletion =
     lab.completion.mode === 'flags'
       ? {
           mode: 'flags',
-          flags: lab.completion.flags.filter((f) => f.label.trim() && (f.answer ?? '').trim()),
+          flags: lab.completion.flags.filter(
+            (f) => (f.label.trim() || (f.labelAr ?? '').trim()) && (f.answer ?? '').trim()
+          ),
         }
       : { mode: 'self' };
+  const title = lab.title.trim();
+  const titleAr = (lab.titleAr ?? '').trim();
 
   return {
     ...lab,
-    title: lab.title.trim() || 'Lab',
-    objectives,
+    title: title || (titleAr ? '' : 'Lab'),
+    titleAr: titleAr || undefined,
+    objectives: rows.map((row) => row.en),
+    objectivesAr: rows.some((row) => row.ar) ? rows.map((row) => row.ar) : undefined,
     setupNotes: lab.setupNotes?.trim() || undefined,
+    setupNotesAr: lab.setupNotesAr?.trim() || undefined,
     links,
     completion:
       completion.mode === 'flags' && completion.flags.length === 0 ? { mode: 'self' } : completion,
     simulation: hasSimulation(lab.simulation) ? lab.simulation : undefined,
+  };
+}
+
+/**
+ * The lab as someone reading in `lang` gets it: every short text in their
+ * language, or in the other one where theirs was never written. The page that
+ * shows a lab reads the plain fields of what this returns, so it has one rule
+ * for both languages instead of a choice at every label.
+ */
+export function labInLanguage(lab: ModuleLab, lang: 'en' | 'ar'): ModuleLab {
+  const say = (en?: string, ar?: string): string => {
+    const [own, other] = lang === 'ar' ? [ar, en] : [en, ar];
+    return own?.trim() ? own : other ?? '';
+  };
+  return {
+    ...lab,
+    title: say(lab.title, lab.titleAr),
+    setupNotes: say(lab.setupNotes, lab.setupNotesAr) || undefined,
+    objectives: lab.objectives.map((o, i) => say(o, lab.objectivesAr?.[i])),
+    links: lab.links.map((l) => ({ ...l, label: say(l.label, l.labelAr) })),
+    completion:
+      lab.completion.mode === 'flags'
+        ? {
+            mode: 'flags',
+            flags: lab.completion.flags.map((f) => ({
+              ...f,
+              label: say(f.label, f.labelAr),
+              hint: say(f.hint, f.hintAr) || undefined,
+            })),
+          }
+        : lab.completion,
   };
 }
 

@@ -1,27 +1,22 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  Plus,
-  Trash2,
-  ArrowUp,
-  ArrowDown,
-  ChevronRight,
   FileText,
-  Film,
   Layers,
   BookOpen,
-  HelpCircle,
   FlaskConical,
 } from 'lucide-react';
 import CreatorLayout from '../../components/creators/CreatorLayout';
-import BilingualInput from '../../components/creators/BilingualInput';
 import TagInput from '../../components/creators/TagInput';
-import BilingualMarkdown from '../../components/creators/BilingualMarkdown';
-import MarkdownPreview from '../../components/creators/MarkdownPreview';
 import CoverImageUploader from '../../components/creators/CoverImageUploader';
-import QuizEditor, { cleanQuiz } from '../../components/creators/QuizEditor';
+import { cleanQuiz } from '../../components/creators/QuizEditor';
 import LabEditor from '../../components/creators/LabEditor';
+import ContentLanguageBar from '../../components/creators/module-editor/ContentLanguageBar';
+import LessonsTab, { newChapter, type LessonSelection } from '../../components/creators/module-editor/LessonsTab';
+import ModuleLanguagesField from '../../components/creators/module-editor/ModuleLanguagesField';
+import { LocalizedInput, useInterfaceLang, useTr, type EditingLanguage } from '../../components/creators/module-editor/fields';
 import EnhancedCard from '../../components/ui/EnhancedCard';
+import { confirmDialog } from '../../components/ui/ConfirmHost';
 import { useToast } from '../../hooks/useToast';
 import { useAuth } from '../../contexts/AuthContext';
 import {
@@ -41,9 +36,19 @@ import {
   type CreatorFundamentalModule,
   type CreatorModuleChapter,
   type LocalizedMarkdown,
-  type QuizQuestion,
 } from '../../services/creatorTypes';
 import { cleanLabs, type ModuleLab } from '../../services/labTypes';
+import { exactText, moduleLanguages, pairOf, pickText, type Lang } from '../../services/contentLang';
+import {
+  servedBody,
+  servedLab,
+  servedName,
+  servedQuiz,
+  servedText,
+  translationReport,
+  UNNAMED,
+  type Gap,
+} from '../../services/moduleLocalize';
 import { MODULE_DOMAINS, MODULE_DOMAIN_META, type ModuleDomain } from '../../data/fundamentalsData';
 import type { Difficulty } from '../../types';
 
@@ -56,6 +61,8 @@ const DIFFICULTIES: Difficulty[] = ['Beginner', 'Easy', 'Medium', 'Hard', 'Exper
 
 const inputCls =
   'w-full bg-[#0a0f18] border border-[#263248] rounded-lg px-3 py-2 text-sm text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#7c8aa6]';
+
+const fieldLabelCls = 'block text-xs font-semibold text-[#9aa5bf] mb-1.5';
 
 /** Where the module list stashes the foreign module an admin chose to edit. */
 const ADMIN_EDIT_STASH = 'academy-admin-module-edit';
@@ -76,12 +83,19 @@ interface BuiltinEditStash {
   module: CreatorFundamentalModule;
 }
 
+/** Whether the other language is shown beside each field: a preference of the
+ *  person translating, kept on this device like the autosave switch. */
+const COMPARE_KEY = 'creator-compare-languages';
+
 const uid = (p: string) => `${p}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 const generateSlug = (title: string) =>
   title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').slice(0, 60);
 
-const newSection = () => ({ id: uid('sec'), title: 'New Section', titleAr: '', subtitle: '', subtitleAr: '', videoId: '', markdownContent: { en: '', ar: '' } });
-const newChapter = (): CreatorModuleChapter => ({ id: uid('ch'), title: 'New Chapter', titleAr: '', sections: [newSection()] });
+/* The names the editor used to give a new chapter and a new lesson. They were
+   English, they were saved, and on a module written in Arabic they were all an
+   English reader saw. Nobody chose them, so they are read back as no name. */
+const OLD_PLACEHOLDER_NAMES = new Set(['New Chapter', 'New Section']);
+const withoutPlaceholder = (name: string | undefined): string => (name && OLD_PLACEHOLDER_NAMES.has(name.trim()) ? '' : name ?? '');
 
 /** Rough mm:ss reading/watch time so the viewer sidebar shows something sane. */
 function estimateDuration(s: { markdownContent: LocalizedMarkdown; videoId?: string; videoMinutes?: number }): string {
@@ -98,6 +112,8 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
   const navigate = useNavigate();
   const { toast, ToastContainer } = useToast();
   const { user } = useAuth();
+  const tr = useTr();
+  const interfaceLang = useInterfaceLang();
   const isEditing = !!id;
   const isOS = kind === 'os';
   /* Editing someone else's module in place, ownership kept. Two ways here:
@@ -113,6 +129,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
   const saveModule = isOS ? saveOSModule : saveStandaloneModule;
   const listRoute = isOS ? '/creators/os-modules' : '/creators/modules';
   const noun = isOS ? 'OS Module' : 'Module';
+  const nounAr = isOS ? 'وحدة أنظمة التشغيل' : 'الوحدة';
 
   const [titleEn, setTitleEn] = useState('');
   const [titleAr, setTitleAr] = useState('');
@@ -130,16 +147,30 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
   const [status, setStatus] = useState<ContentStatus>('draft');
   const [chapters, setChapters] = useState<CreatorModuleChapter[]>([]);
   const [labs, setLabs] = useState<ModuleLab[]>([]);
-  const [selected, setSelected] = useState<{ ci: number; si: number } | null>(null);
+  const [selected, setSelected] = useState<LessonSelection | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [existing, setExisting] = useState<CreatorFundamentalModule | null>(null);
-  const [mdLang, setMdLang] = useState<'en' | 'ar'>('en');
+  /* The languages the module is written in, the main one first, and the one
+     being written right now. Every text field on every tab follows the second
+     (services/contentLang.ts has the rule). */
+  const [languages, setLanguages] = useState<Lang[]>(['en']);
+  const [contentLang, setContentLang] = useState<Lang>('en');
+  const [compare, setCompare] = useState(() => {
+    try { return localStorage.getItem(COMPARE_KEY) === 'true'; } catch { return false; }
+  });
+  const [openLabId, setOpenLabId] = useState<string | null>(null);
   const [tab, setTab] = useState<'details' | 'content' | 'lab'>('details');
   const [adminCtx, setAdminCtx] = useState<{
     ownerId: string;
     ownerName: string;
     bucket: AdminModuleBucket;
   } | null>(null);
+
+  const mainLang = languages[0] ?? 'en';
+  const editing: EditingLanguage = useMemo(
+    () => ({ lang: languages.includes(contentLang) ? contentLang : mainLang, languages, compare }),
+    [contentLang, languages, compare, mainLang]
+  );
 
   // Load existing
   useEffect(() => {
@@ -157,7 +188,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
           /* fall through */
         }
         if (!mod) {
-          toast('error', 'Could not open this course for editing. Open it again from the list.');
+          toast('error', tr('Could not open this course for editing. Open it again from the list.', 'تعذّر فتح هذه الدورة للتعديل. افتحها من القائمة مجددًا.'));
           navigate(listRoute);
           return;
         }
@@ -173,7 +204,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
           /* fall through to own-bucket load */
         }
         if (!mod) {
-          toast('error', 'Could not open this module for editing. Open it again from the list.');
+          toast('error', tr('Could not open this module for editing. Open it again from the list.', 'تعذّر فتح هذه الوحدة للتعديل. افتحها من القائمة مجددًا.'));
           navigate(listRoute);
           return;
         }
@@ -181,7 +212,10 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
         mod = getById(id);
       }
       if (mod) {
+        const written = moduleLanguages(mod);
         setExisting(mod);
+        setLanguages(written);
+        setContentLang(written[0]);
         setTitleEn(mod.title.en);
         setTitleAr(mod.title.ar);
         setDescEn(mod.description.en);
@@ -202,7 +236,12 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
           setChapters(
             mod.chapters.map((ch) => ({
               ...ch,
-              sections: ch.sections.map((s) => ({ ...s, markdownContent: toLocalizedMarkdown(s.markdownContent) })),
+              title: withoutPlaceholder(ch.title),
+              sections: ch.sections.map((s) => ({
+                ...s,
+                title: withoutPlaceholder(s.title),
+                markdownContent: toLocalizedMarkdown(s.markdownContent),
+              })),
             }))
           );
         } else if (mod.markdownContent) {
@@ -214,13 +253,21 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
         }
       }
     } else {
+      /* A new module starts out in the language its creator works in: someone
+         using the Studio in Arabic is most likely about to write in Arabic. */
+      setLanguages([interfaceLang]);
+      setContentLang(interfaceLang);
       setChapters([newChapter()]);
     }
   }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-slug for new
+  /* Auto-slug for new. A slug is Latin letters, so it can only follow an
+     English title; with none, whatever is in the box stays, and saving gives
+     the module one if it is still empty. */
   useEffect(() => {
-    if (!isEditing) setSlug(generateSlug(titleEn));
+    if (isEditing) return;
+    const fromTitle = generateSlug(titleEn);
+    if (fromTitle) setSlug(fromTitle);
   }, [titleEn, isEditing]);
 
   // Keep a valid selection
@@ -228,69 +275,55 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
     if (chapters.length && !selected) setSelected({ ci: 0, si: 0 });
   }, [chapters, selected]);
 
+  useEffect(() => {
+    try { localStorage.setItem(COMPARE_KEY, String(compare)); } catch { /* preference is optional */ }
+  }, [compare]);
+
   const totalSections = useMemo(() => chapters.reduce((s, c) => s + c.sections.length, 0), [chapters]);
 
-  /* Every section, flattened and labelled by its chapter, so a lab can be
+  const title = pairOf(titleEn, titleAr);
+  const description = pairOf(descEn, descAr);
+
+  /* Every lesson, flattened and labelled by its chapter, so a lab can be
    * placed after one of them by name rather than by id. */
   const sectionOptions = useMemo(
     () =>
-      chapters.flatMap((ch) =>
+      chapters.flatMap((ch, ci) =>
         ch.sections.map((s) => ({
           id: s.id,
-          label: `${ch.title || 'Chapter'} / ${s.title || 'Untitled section'}`,
+          label: `${pickText(pairOf(ch.title, ch.titleAr), editing.lang) || tr(`Chapter ${ci + 1}`, `الفصل ${ci + 1}`)} / ${
+            pickText(pairOf(s.title, s.titleAr), editing.lang) || tr('Untitled lesson', 'درس بلا عنوان')
+          }`,
         }))
       ),
-    [chapters]
+    [chapters, editing.lang] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
-  /* ── Structure ops ── */
-  const addChapter = () => {
-    setChapters((p) => [...p, newChapter()]);
-  };
-  const removeChapter = (ci: number) => {
-    setChapters((p) => p.filter((_, i) => i !== ci));
-    setSelected(null);
-  };
-  const moveChapter = (ci: number, dir: -1 | 1) => {
-    setChapters((p) => {
-      const next = [...p];
-      const t = ci + dir;
-      if (t < 0 || t >= next.length) return p;
-      [next[ci], next[t]] = [next[t], next[ci]];
-      return next;
-    });
-    setSelected(null);
-  };
-  const setChapterTitle = (ci: number, title: string, language: 'en' | 'ar') =>
-    setChapters((p) => p.map((c, i) => (i === ci ? { ...c, [language === 'ar' ? 'titleAr' : 'title']: title } : c)));
+  /* What the second language still lacks, for the bar above the tabs and for
+     the question asked before publishing. Nothing to report on a module
+     written in one language. */
+  const report = useMemo(
+    () => (languages.length === 2 ? translationReport({ title, description, chapters, labs }, languages[1]) : null),
+    [languages, titleEn, titleAr, descEn, descAr, chapters, labs] // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
-  const addSection = (ci: number) => {
-    setChapters((p) => p.map((c, i) => (i === ci ? { ...c, sections: [...c.sections, newSection()] } : c)));
-    setSelected({ ci, si: chapters[ci].sections.length });
+  const changeLanguages = (next: Lang[]) => {
+    setLanguages(next);
+    if (!next.includes(contentLang)) setContentLang(next[0]);
   };
-  const removeSection = (ci: number, si: number) => {
-    setChapters((p) => p.map((c, i) => (i === ci ? { ...c, sections: c.sections.filter((_, j) => j !== si) } : c)));
-    setSelected(null);
-  };
-  const moveSection = (ci: number, si: number, dir: -1 | 1) => {
-    setChapters((p) =>
-      p.map((c, i) => {
-        if (i !== ci) return c;
-        const secs = [...c.sections];
-        const t = si + dir;
-        if (t < 0 || t >= secs.length) return c;
-        [secs[si], secs[t]] = [secs[t], secs[si]];
-        return { ...c, sections: secs };
-      })
-    );
-    setSelected({ ci, si: Math.max(0, Math.min(si + dir, chapters[ci].sections.length - 1)) });
-  };
-  const updateSection = (ci: number, si: number, patch: Partial<CreatorModuleChapter['sections'][number]>) =>
-    setChapters((p) =>
-      p.map((c, i) => (i === ci ? { ...c, sections: c.sections.map((s, j) => (j === si ? { ...s, ...patch } : s)) } : c))
-    );
 
-  const activeSection = selected ? chapters[selected.ci]?.sections[selected.si] : undefined;
+  /** Take the creator to something that is not translated yet. */
+  const openGap = (gap: Gap, lang: Lang) => {
+    setContentLang(lang);
+    if (gap.target.tab === 'details') setTab('details');
+    else if (gap.target.tab === 'lab') {
+      setOpenLabId(gap.target.labId);
+      setTab('lab');
+    } else {
+      setSelected({ ci: gap.target.ci, si: gap.target.si ?? 0 });
+      setTab('content');
+    }
+  };
 
   /* ── Build the full module object from the current editor state ── */
   const buildModule = (): CreatorFundamentalModule => {
@@ -298,6 +331,10 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
     // OS modules are pinned to their pillar; standalone modules are free-topic
     // ('general') — legacy categories are preserved on edit.
     const cat = isOS ? 'operating-systems' : existing?.category ?? 'general';
+    const moduleId = existing?.id || uid('mod');
+    /* The address the module is reached at. With no English title to make one
+       from, the module's own id serves: it is already Latin and unique. */
+    const resolvedSlug = slug.trim() || generateSlug(titleEn) || moduleId;
 
     // Derive a content type from the sections
     const hasVideo = chapters.some((c) => c.sections.some((s) => s.videoId));
@@ -313,11 +350,16 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
      * in the sidebar, in the progress count and in "next lesson" for free: the
      * viewer's only special case is rendering a lab body instead of a lesson
      * one. Stubs are dropped by cleanLabs, since a lab with nothing in it is
-     * worse in the sidebar than no lab at all. */
-    const readyLabs = cleanLabs(labs);
+     * worse in the sidebar than no lab at all.
+     *
+     * courseData is what learners are sent, so every text in it goes through
+     * services/moduleLocalize.ts: the module's languages decide what is sent,
+     * and a name is never left empty where the other language has one. */
+    const readyLabs = cleanLabs(labs).map((lab) => servedLab(lab, languages));
     const labLecture = (lab: ModuleLab) => ({
       id: lab.id,
       title: lab.title,
+      titleAr: lab.titleAr ?? '',
       subtitle: '',
       videoId: '',
       duration: `${lab.estimatedMinutes}:00`,
@@ -327,33 +369,39 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
     });
 
     // Flatten to courseData so the existing viewer can render it
-    const courseModules = chapters.map((ch) => ({
-      id: ch.id,
-      title: ch.title,
-      titleAr: ch.titleAr?.trim() || '',
-      lectures: ch.sections.flatMap((s) => {
-        const quiz = cleanQuiz(s.quiz);
-        const lecture = {
-          id: s.id,
-          title: s.title,
-          titleAr: s.titleAr?.trim() || '',
-          subtitle: s.subtitle || '',
-          subtitleAr: s.subtitleAr?.trim() || '',
-          videoId: s.videoId || '',
-          // Only with a video; XP times the video from it (shared/xp.ts).
-          videoMinutes: s.videoId && s.videoMinutes ? s.videoMinutes : undefined,
-          duration: estimateDuration(s),
-          // 'embedded' marker keeps the viewer's hasQuiz/gating checks working
-          quiz: quiz.length ? 'embedded' : null,
-          quizQuestions: quiz.length ? quiz : undefined,
-          markdownContent: s.markdownContent,
-        };
-        const pinned = readyLabs.filter(
-          (lab) => lab.placement.at === 'after-section' && lab.placement.sectionId === s.id
-        );
-        return [lecture, ...pinned.map(labLecture)];
-      }),
-    }));
+    const courseModules = chapters.map((ch, ci) => {
+      const chapterName = servedName(pairOf(ch.title, ch.titleAr), languages, UNNAMED.chapter(ci + 1));
+      return {
+        id: ch.id,
+        title: chapterName.text,
+        titleAr: chapterName.textAr,
+        lectures: ch.sections.flatMap((s) => {
+          const quiz = servedQuiz(cleanQuiz(s.quiz), languages);
+          const lessonName = servedName(pairOf(s.title, s.titleAr), languages, UNNAMED.lesson);
+          const subtitle = servedText(pairOf(s.subtitle, s.subtitleAr), languages);
+          const body = servedBody(s.markdownContent, languages);
+          const lecture = {
+            id: s.id,
+            title: lessonName.text,
+            titleAr: lessonName.textAr,
+            subtitle: subtitle.text,
+            subtitleAr: subtitle.textAr,
+            videoId: s.videoId || '',
+            // Only with a video; XP times the video from it (shared/xp.ts).
+            videoMinutes: s.videoId && s.videoMinutes ? s.videoMinutes : undefined,
+            duration: estimateDuration({ ...s, markdownContent: body }),
+            // 'embedded' marker keeps the viewer's hasQuiz/gating checks working
+            quiz: quiz.length ? 'embedded' : null,
+            quizQuestions: quiz.length ? quiz : undefined,
+            markdownContent: body,
+          };
+          const pinned = readyLabs.filter(
+            (lab) => lab.placement.at === 'after-section' && lab.placement.sectionId === s.id
+          );
+          return [lecture, ...pinned.map(labLecture)];
+        }),
+      };
+    });
 
     /* Labs placed at the end, plus any that were pinned to a section the author
      * has since deleted. An orphaned lab moves to the end rather than vanishing
@@ -362,18 +410,20 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
     const trailingLabs = readyLabs.filter(
       (lab) => lab.placement.at === 'end' || !sectionIds.has(lab.placement.sectionId)
     );
+    const labsChapter = servedName(pairOf('', ''), languages, UNNAMED.labs(trailingLabs.length));
 
     const courseData = {
-      id: slug || generateSlug(titleEn),
-      title: titleEn,
-      description: descEn,
+      id: resolvedSlug,
+      title: servedText(title, languages).text,
+      description: servedText(description, languages).text,
       modules: [
         ...courseModules,
         ...(trailingLabs.length
           ? [
               {
-                id: `${slug || 'module'}-labs`,
-                title: trailingLabs.length === 1 ? 'Lab' : 'Labs',
+                id: `${resolvedSlug}-labs`,
+                title: labsChapter.text,
+                titleAr: labsChapter.textAr,
                 lectures: trailingLabs.map(labLecture),
               },
             ]
@@ -387,10 +437,11 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
     );
 
     return {
-      id: existing?.id || uid('mod'),
-      slug: slug || generateSlug(titleEn),
+      id: moduleId,
+      slug: resolvedSlug,
       title: { en: titleEn, ar: titleAr },
       description: { en: descEn, ar: descAr },
+      languages,
       category: cat,
       contentType,
       difficulty,
@@ -424,20 +475,35 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
     };
   };
 
+  /** The one thing a module cannot be saved without: a title in the language
+   *  it is written in. Says so, and takes the creator to the box. */
+  const hasMainTitle = (silent: boolean): boolean => {
+    if (exactText(title, mainLang)) return true;
+    if (!silent) {
+      setContentLang(mainLang);
+      setTab('details');
+      toast(
+        'error',
+        mainLang === 'ar'
+          ? tr('Give the module a title in Arabic first.', 'أضف عنوانًا للوحدة بالعربية أولًا.')
+          : tr('Give the module a title in English first.', 'أضف عنوانًا للوحدة بالإنجليزية أولًا.')
+      );
+    }
+    return false;
+  };
+
   /* ── Save ── */
   const handleSave = async (silent = false) => {
     if (isSaving) return;
-    if (!titleEn.trim()) {
-      if (!silent) { setTab('details'); toast('error', 'An English title is required.'); }
-      return;
-    }
+    if (!hasMainTitle(silent)) return;
     if (totalSections === 0) {
-      if (!silent) { setTab('content'); toast('error', 'Add at least one section.'); }
+      if (!silent) { setTab('content'); toast('error', tr('Add at least one lesson.', 'أضف درسًا واحدًا على الأقل.')); }
       return;
     }
 
     setIsSaving(true);
     const built = buildModule();
+    const saved = status === 'published' ? tr(`${noun} published.`, `نُشرت ${nounAr}.`) : tr(`${noun} saved.`, `حُفظت ${nounAr}.`);
 
     // Admin edit: write back into the original author's bucket via the server.
     if (adminCtx) {
@@ -445,9 +511,9 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
         await saveModuleAsAdmin(adminCtx.ownerId, adminCtx.bucket, built);
         sessionStorage.setItem(ADMIN_EDIT_STASH, JSON.stringify({ id: built.id, ...adminCtx, module: built }));
         setExisting(built);
-        if (!silent) toast('success', status === 'published' ? `${noun} published.` : `${noun} saved.`);
+        if (!silent) toast('success', saved);
       } catch (err) {
-        toast('error', err instanceof Error ? err.message : 'Could not save this module.');
+        toast('error', err instanceof Error ? err.message : tr('Could not save this module.', 'تعذّر حفظ هذه الوحدة.'));
       } finally {
         setIsSaving(false);
       }
@@ -460,22 +526,50 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
     saveModule(built);
     if (isBuiltinEdit) sessionStorage.setItem(BUILTIN_EDIT_STASH, JSON.stringify({ id: built.id, module: built }));
     setExisting(built);
+    if (!slug.trim()) setSlug(built.slug);
     setIsSaving(false);
-    if (!silent) toast('success', status === 'published' ? `${noun} published.` : `${noun} saved.`);
+    if (!silent) toast('success', saved);
     if (!id) navigate(`${listRoute}/edit/${built.id}`, { replace: true });
+  };
+
+  /* Publishing is the moment a half-done translation starts reaching people,
+     so that is when it is asked about: once, plainly, with the way to carry on
+     regardless. Nothing is blocked. A module can go out in one language and
+     gain the other lesson by lesson. */
+  const changeStatus = async (next: ContentStatus) => {
+    if (next === 'published' && status !== 'published' && report && report.gaps.length > 0) {
+      const second = report.language;
+      const count = report.gaps.length;
+      const ok = await confirmDialog({
+        title:
+          second === 'ar'
+            ? tr('Publish with the Arabic unfinished?', 'النشر قبل اكتمال العربية؟')
+            : tr('Publish with the English unfinished?', 'النشر قبل اكتمال الإنجليزية؟'),
+        message:
+          second === 'ar'
+            ? tr(
+                `${count} ${count === 1 ? 'part is' : 'parts are'} not in Arabic yet. Learners reading in Arabic will be shown the English for ${count === 1 ? 'it' : 'those'}, with a note saying so.`,
+                `عدد الأجزاء التي لم تُكتب بالعربية بعد: ${count}. من يقرأ بالعربية سيرى النص الإنجليزي بدلًا منها مع ملاحظة توضّح ذلك.`
+              )
+            : tr(
+                `${count} ${count === 1 ? 'part is' : 'parts are'} not in English yet. Learners reading in English will be shown the Arabic for ${count === 1 ? 'it' : 'those'}, with a note saying so.`,
+                `عدد الأجزاء التي لم تُكتب بالإنجليزية بعد: ${count}. من يقرأ بالإنجليزية سيرى النص العربي بدلًا منها مع ملاحظة توضّح ذلك.`
+              ),
+        confirmLabel: tr('Publish anyway', 'انشر على أي حال'),
+        cancelLabel: tr('Keep translating', 'تابع الترجمة'),
+      });
+      if (!ok) return;
+    }
+    setStatus(next);
   };
 
   /* ── Preview as published: snapshot the current (unsaved) draft and open it
    * in the real student viewer in a new tab. ── */
   const handlePreview = () => {
-    if (!titleEn.trim()) {
-      setTab('details');
-      toast('error', 'Add an English title before previewing.');
-      return;
-    }
+    if (!hasMainTitle(false)) return;
     if (totalSections === 0) {
       setTab('content');
-      toast('error', 'Add at least one section to preview.');
+      toast('error', tr('Add at least one lesson to preview.', 'أضف درسًا واحدًا على الأقل للمعاينة.'));
       return;
     }
     try {
@@ -486,22 +580,31 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
         'noopener'
       );
     } catch {
-      toast('error', 'Could not open the preview.');
+      toast('error', tr('Could not open the preview.', 'تعذّر فتح المعاينة.'));
     }
   };
 
+  const tabCls = (on: boolean, amber = false) =>
+    `flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+      on
+        ? amber
+          ? 'bg-[#f3a43a]/12 text-[#f3a43a] border border-[#f3a43a]/30'
+          : 'bg-[#00a859]/12 text-[#00a859] border border-[#00a859]/30'
+        : 'text-[#8592ad] hover:text-[#d2d7e3] border border-transparent'
+    }`;
+
   return (
     <CreatorLayout
-      title={isEditing ? `Edit ${noun}` : `New ${noun}`}
-      subtitle={titleEn || undefined}
+      title={isEditing ? tr(`Edit ${noun}`, `تعديل ${nounAr}`) : tr(`New ${noun}`, isOS ? 'وحدة أنظمة تشغيل جديدة' : 'وحدة جديدة')}
+      subtitle={pickText(title, editing.lang) || undefined}
       backTo={listRoute}
-      backLabel={isOS ? 'OS & Modules' : 'Modules'}
+      backLabel={isOS ? tr('OS & Modules', 'أنظمة التشغيل والوحدات') : tr('Modules', 'الوحدات')}
       onSave={handleSave}
-      autoSaveSnapshot={JSON.stringify([titleEn, titleAr, descEn, descAr, slug, difficulty, tags, author, estimatedHours, iconColor, coverImage, domain, showInModules, status, chapters, labs])}
+      autoSaveSnapshot={JSON.stringify([titleEn, titleAr, descEn, descAr, slug, difficulty, tags, author, estimatedHours, iconColor, coverImage, domain, showInModules, status, chapters, labs, languages])}
       isSaving={isSaving}
       onPreview={handlePreview}
       status={status}
-      onStatusChange={setStatus}
+      onStatusChange={(next) => void changeStatus(next)}
     >
       <ToastContainer />
 
@@ -510,9 +613,11 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
         <div className="flex items-start gap-3 rounded-lg border border-[#9fef00]/30 bg-[#9fef00]/10 px-4 py-3">
           <BookOpen size={16} className="text-[#9fef00] mt-0.5 flex-shrink-0" />
           <div className="text-xs text-[#d2d7e3]">
-            <span className="font-bold text-[#9fef00]">Editing a built-in course</span>, saving
-            creates an editable copy that replaces the original everywhere. Existing student
-            progress is preserved.
+            <span className="font-bold text-[#9fef00]">{tr('Editing a built-in course', 'تعديل دورة مضمّنة')}</span>
+            {tr(
+              ', saving creates an editable copy that replaces the original everywhere. Existing student progress is preserved.',
+              '، والحفظ ينشئ نسخة قابلة للتعديل تحل محل الأصل في كل مكان. يبقى تقدّم الطلاب كما هو.'
+            )}
           </div>
         </div>
       )}
@@ -530,51 +635,32 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
           />
           <div className="text-xs text-[#d2d7e3]">
             <span className={`font-bold ${viaShare ? 'text-[#60a5fa]' : 'text-[#f3a43a]'}`}>
-              {viaShare ? 'Shared with you' : 'Admin edit'}
+              {viaShare ? tr('Shared with you', 'مشاركة معك') : tr('Admin edit', 'تعديل إداري')}
             </span>{' '}
-            you're editing <span className="font-semibold text-[#f3f6ff]">{adminCtx.ownerName}</span>'s
-            module. Authorship is kept; saving updates it for everyone who can see it.
+            {tr("you're editing", 'أنت تعدّل وحدة')} <span className="font-semibold text-[#f3f6ff]"><bdi>{adminCtx.ownerName}</bdi></span>
+            {tr("'s module. Authorship is kept; saving updates it for everyone who can see it.", '. يبقى التأليف باسمه، والحفظ يحدّثها لكل من يراها.')}
           </div>
         </div>
       )}
 
       {/* ── Tabs ── */}
       <div className="creator-section-tabs grid grid-cols-3 sm:flex items-stretch gap-1 rounded-xl border border-[#263248] bg-[#0b1019] p-1">
-        <button
-          type="button"
-          onClick={() => setTab('details')}
-          className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-            tab === 'details'
-              ? 'bg-[#00a859]/12 text-[#00a859] border border-[#00a859]/30'
-              : 'text-[#8592ad] hover:text-[#d2d7e3] border border-transparent'
-          }`}
-        >
+        <button type="button" onClick={() => setTab('details')} aria-pressed={tab === 'details'} className={tabCls(tab === 'details')}>
           <FileText size={15} />
-          <span>{noun} Details</span>
+          <span>{tr('Details', 'التفاصيل')}</span>
         </button>
-        <button
-          type="button"
-          onClick={() => setTab('content')}
-          className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-            tab === 'content'
-              ? 'bg-[#00a859]/12 text-[#00a859] border border-[#00a859]/30'
-              : 'text-[#8592ad] hover:text-[#d2d7e3] border border-transparent'
-          }`}
-        >
+        <button type="button" onClick={() => setTab('content')} aria-pressed={tab === 'content'} className={tabCls(tab === 'content')}>
           <Layers size={15} />
-          <span>Structure &amp; Content</span>
+          <span>{tr('Lessons', 'الدروس')}</span>
+          {totalSections > 0 && (
+            <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${tab === 'content' ? 'bg-[#00a859]/20 text-[#00a859]' : 'bg-[#1a2332] text-[#8592ad]'}`}>
+              {totalSections}
+            </span>
+          )}
         </button>
-        <button
-          type="button"
-          onClick={() => setTab('lab')}
-          className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-            tab === 'lab'
-              ? 'bg-[#f3a43a]/12 text-[#f3a43a] border border-[#f3a43a]/30'
-              : 'text-[#8592ad] hover:text-[#d2d7e3] border border-transparent'
-          }`}
-        >
+        <button type="button" onClick={() => setTab('lab')} aria-pressed={tab === 'lab'} className={tabCls(tab === 'lab', true)}>
           <FlaskConical size={15} />
-          <span>Lab</span>
+          <span>{tr('Labs', 'المختبرات')}</span>
           {labs.length > 0 && (
             <span
               className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
@@ -587,39 +673,47 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
         </button>
       </div>
 
+      {/* ── The language being written, for every tab ── */}
+      <ContentLanguageBar
+        editing={editing}
+        onLang={setContentLang}
+        onCompare={setCompare}
+        report={report}
+        onOpenGap={openGap}
+        onChangeLanguages={() => setTab('details')}
+      />
+
       {/* ── Metadata ── */}
       {tab === 'details' && (
       <EnhancedCard padding="lg">
-        <h3 className="text-sm font-bold text-[#f3f6ff] mb-4">{noun} Details</h3>
-        <div className="space-y-4">
-          <BilingualInput
-            labelEn="Title (English)"
-            labelAr="العنوان (العربية)"
-            valueEn={titleEn}
-            valueAr={titleAr}
-            onChangeEn={setTitleEn}
-            onChangeAr={setTitleAr}
-            placeholder="e.g. Windows Security Fundamentals"
+        <h3 className="text-sm font-bold text-[#f3f6ff] mb-4">{tr('Details', 'التفاصيل')}</h3>
+        <div className="space-y-5">
+          <ModuleLanguagesField value={languages} onChange={changeLanguages} />
+
+          <LocalizedInput
+            label={tr('Title', 'العنوان')}
+            value={title}
+            onChange={(next) => { setTitleEn(next.en); setTitleAr(next.ar); }}
+            editing={editing}
             required
+            placeholder={{ en: 'e.g. Windows Security Fundamentals', ar: 'مثل: أساسيات أمن ويندوز' }}
           />
-          <BilingualInput
-            labelEn="Description (English)"
-            labelAr="الوصف (العربية)"
-            valueEn={descEn}
-            valueAr={descAr}
-            onChangeEn={setDescEn}
-            onChangeAr={setDescAr}
-            placeholder="Short module description..."
+          <LocalizedInput
+            label={tr('Description', 'الوصف')}
+            value={description}
+            onChange={(next) => { setDescEn(next.en); setDescAr(next.ar); }}
+            editing={editing}
             multiline
+            placeholder={{ en: 'A sentence or two on what the module covers.', ar: 'جملة أو جملتان عمّا تتناوله الوحدة.' }}
           />
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#9aa5bf] mb-1.5">Slug</label>
-              <input value={slug} onChange={(e) => setSlug(e.target.value)} className={`${inputCls} font-mono`} dir="ltr" />
+              <label className={fieldLabelCls}>{tr('Slug', 'المسار')}</label>
+              <input value={slug} onChange={(e) => setSlug(e.target.value)} className={`${inputCls} font-mono`} dir="ltr" placeholder="windows-security" />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[#9aa5bf] mb-1.5">Difficulty</label>
+              <label className={fieldLabelCls}>{tr('Difficulty', 'الصعوبة')}</label>
               <select value={difficulty} onChange={(e) => setDifficulty(e.target.value as Difficulty)} className={inputCls}>
                 {DIFFICULTIES.map((d) => (
                   <option key={d} value={d}>{d}</option>
@@ -627,48 +721,60 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[#9aa5bf] mb-1.5">Est. Hours</label>
+              <label className={fieldLabelCls}>{tr('Est. hours', 'الساعات التقديرية')}</label>
               <input type="number" value={estimatedHours} onChange={(e) => setEstimatedHours(Number(e.target.value))} step="0.5" min="0.5" className={inputCls} dir="ltr" />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[#9aa5bf] mb-1.5">Accent</label>
-              <div className="flex items-center gap-2">
-                <input type="color" value={iconColor} onChange={(e) => setIconColor(e.target.value)} className="w-9 h-9 rounded border border-[#263248] bg-transparent cursor-pointer flex-shrink-0" />
-                <input value={iconColor} onChange={(e) => setIconColor(e.target.value)} className={`${inputCls} font-mono`} dir="ltr" />
+              <label className={fieldLabelCls}>{tr('Accent', 'اللون')}</label>
+              <div className="flex items-center gap-2" dir="ltr">
+                <input type="color" value={iconColor} onChange={(e) => setIconColor(e.target.value)} className="w-9 h-9 rounded border border-[#263248] bg-transparent cursor-pointer flex-shrink-0" aria-label={tr('Accent colour', 'لون الوحدة')} />
+                <input value={iconColor} onChange={(e) => setIconColor(e.target.value)} className={`${inputCls} font-mono`} dir="ltr" aria-label={tr('Accent colour code', 'رمز لون الوحدة')} />
               </div>
             </div>
           </div>
+          <p className="-mt-3 text-[11px] text-[#8592ad]">
+            {tr(
+              "The slug is the module's address: Latin letters, numbers and hyphens. Leave it empty and it is filled in when you save.",
+              'المسار هو عنوان الوحدة في الرابط: أحرف لاتينية وأرقام وشرطات. إن تركته فارغًا يُملأ عند الحفظ.'
+            )}
+          </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#9aa5bf] mb-1.5">Author</label>
-              <input value={author} onChange={(e) => setAuthor(e.target.value)} className={inputCls} dir="ltr" />
+              <label className={fieldLabelCls}>{tr('Author', 'المؤلف')}</label>
+              <input value={author} onChange={(e) => setAuthor(e.target.value)} className={inputCls} dir="auto" />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[#9aa5bf] mb-1.5">Category</label>
+              <label className={fieldLabelCls}>{tr('Category', 'التصنيف')}</label>
               <select value={domain} onChange={(e) => setDomain(e.target.value as ModuleDomain)} className={inputCls}>
                 {MODULE_DOMAINS.map((d) => (
-                  <option key={d} value={d}>{MODULE_DOMAIN_META[d].label.en}</option>
+                  <option key={d} value={d}>{tr(MODULE_DOMAIN_META[d].label.en, MODULE_DOMAIN_META[d].label.ar)}</option>
                 ))}
               </select>
-              <p className="mt-1 text-[11px] text-[#8592ad]">Offensive, Defensive, or General, shown as the module's tag.</p>
+              <p className="mt-1 text-[11px] text-[#8592ad]">
+                {tr("Offensive, Defensive, or General, shown as the module's tag.", 'هجومي أو دفاعي أو عام، ويظهر وسمًا على الوحدة.')}
+              </p>
             </div>
           </div>
 
           <CoverImageUploader value={coverImage} onChange={setCoverImage} accent={iconColor} />
 
-          <TagInput value={tags} onChange={setTags} label="Tags" />
+          <TagInput value={tags} onChange={setTags} label={tr('Tags', 'الوسوم')} />
 
           {isOS && (
-            <div className="flex items-center justify-between py-1">
+            <div className="flex items-center justify-between gap-4 py-1">
               <div>
-                <p className="text-sm font-medium text-[#d2d7e3]">Also show on Modules page</p>
-                <p className="text-xs text-[#8592ad]">Surface this OS module in the standalone Modules hub too</p>
+                <p className="text-sm font-medium text-[#d2d7e3]">{tr('Also show on Modules page', 'أظهرها في صفحة الوحدات أيضًا')}</p>
+                <p className="text-xs text-[#8592ad]">{tr('Surface this OS module in the standalone Modules hub too', 'اعرض هذه الوحدة في مركز الوحدات كذلك')}</p>
               </div>
               <button
                 type="button"
+                role="switch"
+                aria-checked={showInModules}
+                aria-label={tr('Also show on Modules page', 'أظهرها في صفحة الوحدات أيضًا')}
                 onClick={() => setShowInModules(!showInModules)}
-                className={`relative w-11 h-6 rounded-full transition-colors ${showInModules ? 'bg-[#00a859]' : 'bg-[#263248]'}`}
+                dir="ltr"
+                className={`relative w-11 h-6 flex-shrink-0 rounded-full transition-colors ${showInModules ? 'bg-[#00a859]' : 'bg-[#263248]'}`}
               >
                 <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-transform ${showInModules ? 'left-[22px]' : 'left-0.5'}`} />
               </button>
@@ -678,236 +784,15 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
       </EnhancedCard>
       )}
 
-      {/* ── Structure + Section editor ── */}
+      {/* ── Chapters and lessons ── */}
       {tab === 'content' && (
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-6">
-        <div className="lg:col-span-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#263248] bg-[#101827] p-4">
-          <div>
-            <p className="text-sm font-semibold text-[#f3f6ff]">Write in two languages</p>
-            <p className="mt-1 text-xs text-[#9aa5bf]">Add English and Arabic titles below. Switch the lesson body and preview here. Empty Arabic fields use English.</p>
-          </div>
-          <div role="group" aria-label="Content editing language" className="flex shrink-0 gap-1 rounded-lg bg-[#0b1019] p-1" dir="ltr">
-            {(['en', 'ar'] as const).map((language) => (
-              <button key={language} type="button" lang={language} aria-pressed={mdLang === language} onClick={() => setMdLang(language)}
-                className={`rounded-md px-4 py-2 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00a859] ${mdLang === language ? 'bg-[#00a859]/15 text-[#74dfac]' : 'text-[#9aa5bf] hover:text-white'}`}>
-                {language === 'en' ? 'English' : 'العربية'}
-              </button>
-            ))}
-          </div>
-        </div>
-        {/* Outline */}
-        <EnhancedCard padding="none" className="lg:col-span-2 overflow-hidden">
-          <div className="px-5 py-3.5 border-b border-[#263248] bg-[#0b1019] flex items-center justify-between">
-            <span className="text-sm font-bold text-[#f3f6ff] flex items-center gap-2">
-              <Layers size={15} className="text-[#f3a43a]" /> Structure
-            </span>
-            <span className="text-xs text-[#8592ad]" dir="ltr">
-              {chapters.length} ch · {totalSections} sec
-            </span>
-          </div>
-
-          <div className="max-h-[520px] overflow-y-auto custom-scrollbar p-3 space-y-4">
-            {chapters.map((ch, ci) => (
-              <div key={ch.id} className="rounded-lg border border-[#263248] bg-[#0d1117]">
-                {/* Chapter header */}
-                <div className="flex items-center gap-2 px-2.5 py-2 border-b border-[#263248]">
-                  <span className="text-[10px] font-bold text-[#8592ad] w-4 text-center flex-shrink-0">{ci + 1}</span>
-                  <div className="flex-1 min-w-0 space-y-2">
-                    {(['en', 'ar'] as const).map((language) => (
-                      <label key={language} className="flex items-center gap-2">
-                        <span className="w-5 shrink-0 text-[10px] text-[#8592ad]">{language === 'en' ? 'EN' : 'AR'}</span>
-                        <input
-                          aria-label={`Chapter ${ci + 1} title (${language === 'en' ? 'English' : 'Arabic'})`}
-                          value={language === 'ar' ? ch.titleAr || '' : ch.title}
-                          onChange={(e) => setChapterTitle(ci, e.target.value, language)}
-                          placeholder={language === 'ar' ? 'عنوان الفصل بالعربية' : 'Chapter title'}
-                          className="w-full min-w-0 rounded border border-transparent bg-transparent px-1 py-1 text-xs font-bold text-[#f3f6ff] placeholder:font-normal placeholder:text-[#8592ad] focus:outline-none focus:border-[#00a859]/50"
-                          dir={language === 'ar' ? 'rtl' : 'ltr'} lang={language}
-                        />
-                      </label>
-                    ))}
-                  </div>
-                  <button onClick={() => moveChapter(ci, -1)} disabled={ci === 0} className="w-6 h-6 flex items-center justify-center rounded text-[#7c8aa6] hover:text-[#d2d7e3] disabled:opacity-20">
-                    <ArrowUp size={12} />
-                  </button>
-                  <button onClick={() => moveChapter(ci, 1)} disabled={ci === chapters.length - 1} className="w-6 h-6 flex items-center justify-center rounded text-[#7c8aa6] hover:text-[#d2d7e3] disabled:opacity-20">
-                    <ArrowDown size={12} />
-                  </button>
-                  <button onClick={() => removeChapter(ci)} className="w-6 h-6 flex items-center justify-center rounded text-[#7c8aa6] hover:text-red-400">
-                    <Trash2 size={12} />
-                  </button>
-                </div>
-
-                {/* Sections */}
-                <div className="p-1.5 space-y-1">
-                  {ch.sections.map((s, si) => {
-                    const isActive = selected?.ci === ci && selected?.si === si;
-                    return (
-                      <div
-                        key={s.id}
-                        className={`flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer transition-colors ${
-                          isActive ? 'bg-[#00a859]/10 border border-[#00a859]/25' : 'hover:bg-[#182235] border border-transparent'
-                        }`}
-                        onClick={() => setSelected({ ci, si })}
-                      >
-                        {s.videoId ? (
-                          <Film size={12} className="text-[#60a5fa] flex-shrink-0" />
-                        ) : (
-                          <FileText size={12} className="text-[#8592ad] flex-shrink-0" />
-                        )}
-                        <span className={`flex-1 min-w-0 truncate text-xs ${isActive ? 'text-[#f3f6ff] font-semibold' : 'text-[#c4cad6]'}`}>
-                          <bdi>{(mdLang === 'ar' && s.titleAr?.trim()) || s.title || 'Untitled section'}</bdi>
-                        </span>
-                        <button onClick={(e) => { e.stopPropagation(); moveSection(ci, si, -1); }} disabled={si === 0} className="w-5 h-5 flex items-center justify-center rounded text-[#7c8aa6] hover:text-[#d2d7e3] disabled:opacity-20">
-                          <ArrowUp size={11} />
-                        </button>
-                        <button onClick={(e) => { e.stopPropagation(); moveSection(ci, si, 1); }} disabled={si === ch.sections.length - 1} className="w-5 h-5 flex items-center justify-center rounded text-[#7c8aa6] hover:text-[#d2d7e3] disabled:opacity-20">
-                          <ArrowDown size={11} />
-                        </button>
-                        <button onClick={(e) => { e.stopPropagation(); removeSection(ci, si); }} className="w-5 h-5 flex items-center justify-center rounded text-[#7c8aa6] hover:text-red-400">
-                          <Trash2 size={11} />
-                        </button>
-                      </div>
-                    );
-                  })}
-                  <button
-                    onClick={() => addSection(ci)}
-                    className="w-full flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[11px] font-medium text-[#8592ad] hover:text-[#00a859] transition-colors"
-                  >
-                    <Plus size={12} /> Add Section
-                  </button>
-                </div>
-              </div>
-            ))}
-
-            <button
-              onClick={addChapter}
-              className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-[#8592ad] bg-[#0d1420] border border-dashed border-[#263248] hover:border-[#f3a43a]/40 hover:text-[#f3a43a] transition-all"
-            >
-              <Plus size={13} /> Add Chapter
-            </button>
-          </div>
-        </EnhancedCard>
-
-        {/* Section editor */}
-        <div className="lg:col-span-3 space-y-4">
-          {activeSection && selected ? (
-            <>
-              <EnhancedCard padding="lg">
-                <div className="flex items-center gap-2 mb-4">
-                  <BookOpen size={15} className="text-[#00a859]" />
-                  <h3 className="text-sm font-bold text-[#f3f6ff]">Section Content</h3>
-                </div>
-                <div className="space-y-3">
-                  <BilingualInput labelEn="Section title (English)" labelAr="عنوان الدرس (العربية)"
-                    valueEn={activeSection.title} valueAr={activeSection.titleAr || ''}
-                    onChangeEn={(title) => updateSection(selected.ci, selected.si, { title })}
-                    onChangeAr={(titleAr) => updateSection(selected.ci, selected.si, { titleAr })} />
-                  <BilingualInput labelEn="Subtitle (English, optional)" labelAr="العنوان الفرعي (العربية، اختياري)"
-                    valueEn={activeSection.subtitle || ''} valueAr={activeSection.subtitleAr || ''}
-                    onChangeEn={(subtitle) => updateSection(selected.ci, selected.si, { subtitle })}
-                    onChangeAr={(subtitleAr) => updateSection(selected.ci, selected.si, { subtitleAr })} />
-                  <div>
-                    <label className="block text-xs font-semibold text-[#9aa5bf] mb-1.5">YouTube Video ID (optional)</label>
-                    <input
-                      value={activeSection.videoId || ''}
-                      onChange={(e) => updateSection(selected.ci, selected.si, { videoId: e.target.value })}
-                      placeholder="e.g. dQw4w9WgXcQ"
-                      className={`${inputCls} font-mono`}
-                      dir="ltr"
-                    />
-                  </div>
-                  {activeSection.videoId && (
-                    <div>
-                      <label className="block text-xs font-semibold text-[#9aa5bf] mb-1.5">
-                        Video length in minutes
-                      </label>
-                      <input
-                        type="number"
-                        min={1}
-                        max={180}
-                        step={1}
-                        value={activeSection.videoMinutes ?? ''}
-                        onChange={(e) =>
-                          updateSection(selected.ci, selected.si, {
-                            videoMinutes: e.target.value
-                              ? Math.min(180, Math.max(0, Math.round(Number(e.target.value)) || 0)) || undefined
-                              : undefined,
-                          })
-                        }
-                        placeholder="e.g. 12"
-                        className={`${inputCls} max-w-[10rem]`}
-                        dir="ltr"
-                      />
-                      <p className="mt-1 text-[11px] text-[#8592ad]">
-                        Students earn XP for the time they spend watching. Without a length, the video counts as 4 minutes.
-                      </p>
-                    </div>
-                  )}
-                  <div>
-                    <label className="block text-xs font-semibold text-[#9aa5bf] mb-1.5">Markdown Content</label>
-                    <BilingualMarkdown
-                      showLanguageTabs={false}
-                      value={toLocalizedMarkdown(activeSection.markdownContent)}
-                      onChange={(v) => updateSection(selected.ci, selected.si, { markdownContent: v })}
-                      lang={mdLang}
-                      onLangChange={setMdLang}
-                    />
-                  </div>
-                </div>
-              </EnhancedCard>
-
-              {/* ── Section quiz ── */}
-              <EnhancedCard padding="lg">
-                <div className="flex items-center gap-2 mb-1">
-                  <HelpCircle size={15} className="text-[#9fef00]" />
-                  <h3 className="text-sm font-bold text-[#f3f6ff]">
-                    Section Quiz <span className="text-[#8592ad] font-normal">(optional)</span>
-                  </h3>
-                </div>
-                <p className="text-xs text-[#8592ad] mb-4">
-                  Questions students answer after this section. Each one is either MCQ, whose
-                  options are shuffled for every attempt, or a written answer they type out.
-                </p>
-                <QuizEditor
-                  value={activeSection.quiz ?? []}
-                  onChange={(quiz) => updateSection(selected.ci, selected.si, { quiz })}
-                />
-              </EnhancedCard>
-
-              <EnhancedCard padding="none" className="overflow-hidden">
-                <div className="px-4 py-3 border-b border-[#263248] bg-[#0b1019] flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#8592ad]">Section Preview</span>
-                  <span className="text-[10px] font-semibold text-[#8592ad]">{mdLang === 'ar' ? 'العربية' : 'English'}</span>
-                </div>
-                {activeSection.videoId && (
-                  <div className="aspect-video border-b border-[#263248]">
-                    <iframe
-                      className="w-full h-full"
-                      src={`https://www.youtube.com/embed/${activeSection.videoId}`}
-                      title="Section video"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
-                  </div>
-                )}
-                <div className="p-6 max-h-[420px] overflow-y-auto custom-scrollbar" dir={mdLang === 'ar' ? 'rtl' : 'ltr'}>
-                  <h4 className="mb-2 text-lg font-bold text-[#f3f6ff]" dir="auto">{(mdLang === 'ar' && activeSection.titleAr?.trim()) || activeSection.title}</h4>
-                  <p className="mb-4 text-sm text-[#9aa5bf]" dir="auto">{(mdLang === 'ar' && activeSection.subtitleAr?.trim()) || activeSection.subtitle}</p>
-                  <MarkdownPreview content={toLocalizedMarkdown(activeSection.markdownContent)[mdLang]} />
-                </div>
-              </EnhancedCard>
-            </>
-          ) : (
-            <EnhancedCard padding="xl" className="text-center">
-              <div className="w-12 h-12 rounded-xl bg-[#121a2a] border border-[#263248] flex items-center justify-center mx-auto mb-3">
-                <ChevronRight size={20} className="text-[#7c8aa6]" />
-              </div>
-              <p className="text-sm text-[#8592ad]">Select a section to edit its content.</p>
-            </EnhancedCard>
-          )}
-        </div>
-      </div>
+        <LessonsTab
+          chapters={chapters}
+          setChapters={setChapters}
+          selected={selected}
+          onSelect={setSelected}
+          editing={editing}
+        />
       )}
 
       {/* ── Lab ── */}
@@ -916,8 +801,8 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
           labs={labs}
           onChange={setLabs}
           sections={sectionOptions}
-          lang={mdLang}
-          onLangChange={setMdLang}
+          editing={editing}
+          openLabId={openLabId}
         />
       )}
     </CreatorLayout>

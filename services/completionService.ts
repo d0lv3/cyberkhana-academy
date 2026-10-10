@@ -220,6 +220,8 @@ export interface AnswerCheck {
   correctIndex?: number;
   /** The right answer, when a typed one was wrong. */
   answer?: string;
+  /** The same in Arabic, on a question that is asked in both languages. */
+  answerAr?: string;
 }
 
 /** Mark one answer, for the feedback after each question. Records nothing. */

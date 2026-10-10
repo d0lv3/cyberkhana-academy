@@ -24,7 +24,6 @@ import { getViewableModuleBySlug } from '../../data/modulesData';
 import { moduleLearnPath } from '../../data/fundamentalsData';
 import LessonMarkdown from '../../components/ui/LessonMarkdown';
 import quizBank, {
-  answerMask,
   isTextQuestion,
   type StudentQuizQuestion,
 } from '../../data/linuxQuizData';
@@ -43,7 +42,10 @@ import { useAuth } from '../../contexts/AuthContext';
 import CourseTerminalLauncher from '../../components/terminal/CourseTerminalLauncher';
 import LabView from '../../components/labs/LabView';
 import type { ModuleLab } from '../../services/labTypes';
-import { mdFor, type LocalizedMarkdown } from '../../services/creatorTypes';
+import { mdFor, toLocalizedMarkdown, type LocalizedMarkdown } from '../../services/creatorTypes';
+import { isFallback, moduleLanguages, pickText, withLabsChapterNamed } from '../../services/contentLang';
+import { arabicOptionsInOrder, maskInLanguage, ownWording, type ArabicWording } from '../../services/quizLanguage';
+import { LanguageNotice, useLessonLanguages, withLessonLanguage } from '../../components/ui/LessonLanguage';
 import {
   completeOSLecture,
   getOSModuleDone,
@@ -92,8 +94,9 @@ type CourseModule = {
   lectures: Lecture[];
 };
 
-/** A question as one attempt shows it, its options shuffled. */
-type ShownQuestion = StudentQuizQuestion & {
+/** A question as one attempt shows it, its options shuffled. A question
+ *  written in two languages has its Arabic along (services/quizLanguage.ts). */
+type ShownQuestion = StudentQuizQuestion & ArabicWording & {
   /** For each option shown, where it sits in the author's order, which is the
    *  order the server marks in. Empty for a typed question. */
   order: number[];
@@ -147,14 +150,14 @@ const emptyQuizState = (): QuizState => ({
 
 /** A question with its options shuffled (Fisher-Yates), remembering where
  *  each came from. A written-answer question has nothing to shuffle. */
-const shuffleOptions = (q: StudentQuizQuestion): ShownQuestion => {
+const shuffleOptions = (q: StudentQuizQuestion & ArabicWording): ShownQuestion => {
   if (isTextQuestion(q)) return { ...q, order: [] };
   const order = q.options.map((_, i) => i);
   for (let i = order.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [order[i], order[j]] = [order[j], order[i]];
   }
-  return { ...q, options: order.map((i) => q.options[i]), order };
+  return { ...q, options: order.map((i) => q.options[i]), ...arabicOptionsInOrder(q, order), order };
 };
 
 /** Where a module sits, recorded alongside its feedback so a creator reading
@@ -188,9 +191,18 @@ const ModuleViewerPage: React.FC = () => {
     }
     return getViewableModuleBySlug(slug || '');
   }, [slug, isPreview]);
-  const course = fundamentalModule?.courseData as {
-    id: string; title: string; description: string; modules: CourseModule[];
-  } | undefined;
+  const course = useMemo(
+    () =>
+      withLabsChapterNamed(fundamentalModule?.courseData) as {
+        id: string; title: string; description: string; modules: CourseModule[];
+      } | undefined,
+    [fundamentalModule]
+  );
+  /* The languages the module is written in are the ones its lessons can be
+     read in. The page takes them from here (components/ui/LessonLanguage.tsx),
+     and `lang` above is the lesson's language, not the Academy's. */
+  const moduleLangs = useMemo(() => moduleLanguages(fundamentalModule), [fundamentalModule]);
+  useLessonLanguages(moduleLangs);
   const isBuiltinLinuxContent = fundamentalModule?.courseData === linuxCourse;
 
   const allLectures = useMemo(
@@ -420,7 +432,8 @@ const ModuleViewerPage: React.FC = () => {
       showExplanation: true,
       answers: {
         ...qs.answers,
-        [qs.currentIndex]: { given, correct: marked.correct, rightShown, rightText: marked.answer },
+        // The answer in the language being read, when the question has one in it.
+        [qs.currentIndex]: { given, correct: marked.correct, rightShown, rightText: (ar && marked.answerAr) || marked.answer },
       },
     });
   };
@@ -493,7 +506,7 @@ const ModuleViewerPage: React.FC = () => {
           </button>
           <div className="hidden md:flex items-center gap-2.5">
             <h1 className="text-sm font-bold text-[#f3f6ff] truncate max-w-[260px]">
-              {fundamentalModule.title[lang] || fundamentalModule.title.en}
+              {pickText(fundamentalModule.title, lang)}
             </h1>
             {isPreview && (
               <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[#9fef00]/15 text-[#9fef00] border border-[#9fef00]/30">
@@ -555,6 +568,15 @@ const ModuleViewerPage: React.FC = () => {
               transition={{ duration: 0.2 }}
               className="max-w-5xl mx-auto p-4 md:p-8 space-y-6"
             >
+              {/* The page stays in the reader's language around a module that
+                  is not written in it, and says why the lessons are not. */}
+              {!moduleLangs.includes(lang) && (
+                <LanguageNotice>
+                  {ar
+                    ? 'هذه الوحدة مكتوبة بالإنجليزية فقط، ولم تُترجم إلى العربية بعد.'
+                    : 'This module is written in Arabic only. It has not been translated into English yet.'}
+                </LanguageNotice>
+              )}
               {activeLecture.kind === 'lab' && activeLecture.lab ? (
                 /* ── A lab stop ──
                    Same course, same sidebar, same progress. The body is the
@@ -622,6 +644,13 @@ const ModuleViewerPage: React.FC = () => {
               {/* Section markdown (creator modules).
                   Deliberately unframed: the body is the page, not a card sitting
                   on it, so it reads on the same ground as the lesson title. */}
+              {moduleLangs.includes(lang) && isFallback(toLocalizedMarkdown(activeLecture.markdownContent), lang) && (
+                <LanguageNotice>
+                  {ar
+                    ? 'لم يُترجم هذا الدرس إلى العربية بعد، لذا يظهر بالإنجليزية.'
+                    : 'This lesson has not been translated into English yet, so it is shown in Arabic.'}
+                </LanguageNotice>
+              )}
               {mdFor(activeLecture.markdownContent, lang) && (
                 <LessonMarkdown content={mdFor(activeLecture.markdownContent, lang)} />
               )}
@@ -689,8 +718,10 @@ const ModuleViewerPage: React.FC = () => {
                 }
 
                 const qs = getQuizState(activeLecture.id);
-                const questions: StudentQuizQuestion[] = qs.questions.length ? qs.questions : baseQuestions;
+                const questions: (StudentQuizQuestion & ArabicWording)[] = qs.questions.length ? qs.questions : baseQuestions;
                 const currentQuestion = questions[qs.currentIndex];
+                /* A question's own Arabic comes first: it is what its author wrote. */
+                const ownQuestion = currentQuestion ? ownWording(currentQuestion, lang) : null;
                 const localizedQuestion = ar && isLinuxCourse && currentQuestion
                   ? arabicLinuxQuizText(activeLecture.id, currentQuestion)
                   : undefined;
@@ -742,7 +773,7 @@ const ModuleViewerPage: React.FC = () => {
 
                           {/* Question */}
                           <p className="text-[#f3f6ff] font-medium leading-relaxed">
-                            {localizedQuestion?.question ?? currentQuestion.question}
+                            <span dir="auto">{ownQuestion?.question ?? localizedQuestion?.question ?? currentQuestion.question}</span>
                           </p>
 
                           {/* Written answer, or options to pick from */}
@@ -762,11 +793,11 @@ const ModuleViewerPage: React.FC = () => {
                                 else void submitAnswer(activeLecture);
                               }}
                               disabled={qs.showExplanation || qs.checking}
-                              placeholder={answerMask(currentQuestion)}
+                              placeholder={maskInLanguage(currentQuestion, lang)}
                               spellCheck={false}
                               autoComplete="off"
                               aria-label={ar ? 'إجابتك' : 'Your answer'}
-                              dir="ltr"
+                              dir="auto"
                               className={`w-full rounded-lg border bg-[#0d1117] px-4 py-3 font-mono text-sm tracking-wide outline-none transition-colors placeholder:tracking-[0.2em] placeholder:text-[#3d4a63] disabled:cursor-default ${
                                 !qs.showExplanation
                                   ? 'border-[#263248] text-[#f3f6ff] focus:border-[#00a859]/50'
@@ -816,7 +847,7 @@ const ModuleViewerPage: React.FC = () => {
                                   }`}>
                                     {LETTERS[idx]}
                                   </span>
-                                  <span dir="auto" className={`text-sm font-medium ${textColor}`}>{localizedQuestion?.options[idx] ?? option}</span>
+                                  <span dir="auto" className={`text-sm font-medium ${textColor}`}>{ownQuestion?.options[idx] ?? localizedQuestion?.options[idx] ?? option}</span>
                                   {showResult && isCorrect && <CheckCircle2 size={16} className="ms-auto text-[#00a859] flex-shrink-0" />}
                                   {showResult && isSelected && !isCorrect && <X size={16} className="ms-auto text-red-400 flex-shrink-0" />}
                                 </button>
@@ -856,7 +887,7 @@ const ModuleViewerPage: React.FC = () => {
                                     {isTextQuestion(currentQuestion) ? (
                                       <>
                                         {ar ? 'إجابة غير صحيحة، الإجابة هي ' : 'Incorrect, the answer was '}
-                                        <span className="font-mono">{qs.answers[qs.currentIndex]?.rightText}</span>
+                                        <span className="font-mono" dir="auto">{qs.answers[qs.currentIndex]?.rightText}</span>
                                       </>
                                     ) : (
                                       <>{ar ? 'إجابة غير صحيحة، الإجابة الصحيحة هي ' : 'Incorrect, the correct answer is '}{LETTERS[qs.answers[qs.currentIndex]?.rightShown ?? -1] ?? ''}</>
@@ -931,7 +962,7 @@ const ModuleViewerPage: React.FC = () => {
                                         ) : (
                                           <X size={15} className="text-red-400 flex-shrink-0" />
                                         )}
-                                        <span className="text-xs text-[#d2d7e3] truncate">{ar && isLinuxCourse ? arabicLinuxQuizText(activeLecture.id, q).question : q.question}</span>
+                                        <span className="text-xs text-[#d2d7e3] truncate">{ownWording(q, lang)?.question ?? (ar && isLinuxCourse ? arabicLinuxQuizText(activeLecture.id, q).question : q.question)}</span>
                                       </div>
                                     );
                                   })}
@@ -988,4 +1019,6 @@ const ModuleViewerPage: React.FC = () => {
   );
 };
 
-export default ModuleViewerPage;
+/* The page reads in a language of its own, which the switch in its header
+   changes without touching the Academy around it. */
+export default withLessonLanguage(ModuleViewerPage);

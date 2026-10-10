@@ -24,6 +24,7 @@ import {
   isInsecureLabUrl,
   labFlags,
   labHost,
+  labInLanguage,
   type ModuleLab,
 } from '../../services/labTypes';
 import {
@@ -317,7 +318,7 @@ const FlagBoard: React.FC<{
  * nothing about the layout.
  */
 const LabView: React.FC<LabViewProps> = ({
-  lab,
+  lab: authored,
   lang,
   moduleSlug,
   isComplete = false,
@@ -326,6 +327,9 @@ const LabView: React.FC<LabViewProps> = ({
   pendingAt = null,
   failure = null,
 }) => {
+  /* Every short text in the reader's language, or the other one where theirs
+     was not written. Everything below reads the plain fields of this. */
+  const lab = useMemo(() => labInLanguage(authored, lang), [authored, lang]);
   const persist = !preview && !!moduleSlug;
 
   const [progress, setProgress] = useState<LabProgress>(() =>

@@ -5,6 +5,7 @@ import type { ProgrammingLanguage, ProgrammingModule, ProgrammingConcept, TestCa
 import type { FundamentalModule } from '../data/fundamentalsData';
 import type { QuizQuestion, QuizKind } from '../data/linuxQuizData';
 import type { ModuleLab } from './labTypes';
+import type { Lang } from './contentLang';
 import type { Difficulty } from '../types';
 import type { ExamInfo, PathCertificate, PathExam } from '../backend/src/shared/exam';
 
@@ -148,10 +149,20 @@ export interface CreatorModuleSection {
   /** The section's markdown body (bilingual) */
   markdownContent: LocalizedMarkdown;
   /** Optional end-of-section quiz (MCQ and/or written-answer questions). */
-  quiz?: QuizQuestion[];
+  quiz?: LocalizedQuizQuestion[];
 }
 
 export type { QuizQuestion, QuizKind };
+
+/** A question with its Arabic wording beside the English (services/contentLang.ts).
+ *  The options line up one to one, so the right answer is marked once for both;
+ *  a typed question may be answered in either language. */
+export type LocalizedQuizQuestion = QuizQuestion & {
+  questionAr?: string;
+  /** Same length and order as `options`. */
+  optionsAr?: string[];
+  answerAr?: string;
+};
 
 export interface CreatorModuleChapter {
   id: string;
@@ -163,6 +174,9 @@ export interface CreatorModuleChapter {
 export type CreatorFundamentalModule = FundamentalModule & CreatorMeta & {
   /** If true, also appears on the Modules page */
   showInModules: boolean;
+  /** The languages the module is written in, the main one first. Absent on a
+   *  module saved before this was asked (services/contentLang.ts reads those). */
+  languages?: Lang[];
   /** Structured, section-divided content (source of truth for editing) */
   chapters?: CreatorModuleChapter[];
   /**

@@ -209,7 +209,7 @@ const DashboardPage: React.FC = () => {
                     </div>
                     <div className="min-w-0 flex-1 text-start">
                       <p className="truncate text-sm font-medium text-[#9aa5bf] transition-colors group-hover:text-[#f3f6ff]">
-                        {mod.title[lang] || mod.title.en}
+                        {mod.title[lang] || mod.title.en || mod.title.ar}
                       </p>
                       {done > 0 ? (
                         <div className="mt-1.5 flex items-center gap-2" dir="ltr">

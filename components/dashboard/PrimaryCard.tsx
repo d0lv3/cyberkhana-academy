@@ -182,7 +182,7 @@ export const ContinueCard: React.FC<{
           </div>
 
           <h1 className="mt-1.5 text-2xl font-black leading-tight text-[#f3f6ff] sm:text-3xl">
-            {target.title[lang] || target.title.en}
+            {target.title[lang] || target.title.en || target.title.ar}
           </h1>
 
           {target.progress && target.progress.total > 0 && (

@@ -44,7 +44,7 @@ const NextStepCard: React.FC<{ target: JourneyTarget }> = ({ target }) => {
             {ar ? 'الخطوة المقترحة' : 'Recommended next'}
           </span>
           <span className="mt-0.5 block truncate text-base font-bold text-[#f3f6ff]">
-            {target.title[lang] || target.title.en}
+            {target.title[lang] || target.title.en || target.title.ar}
           </span>
           <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[#8592ad]">
             <span className="truncate">{target.context?.[lang] || meta.label[lang]}</span>

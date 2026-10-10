@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
 
 type Lang = 'en' | 'ar';
 
@@ -302,6 +302,38 @@ export function LangProvider({ children }: { children: React.ReactNode }) {
   return (
     <LangContext.Provider value={{ lang, setLang, t, isArabic: lang === 'ar' }}>
       <div dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+        {children}
+      </div>
+    </LangContext.Provider>
+  );
+}
+
+/**
+ * One part of the page in a language of its own.
+ *
+ * A lesson can be read in a language other than the Academy's (see
+ * components/ui/LessonLanguage.tsx). Everything under this reads `useLang()`
+ * as usual and gets the lesson's language and direction, while the saved
+ * preference and the rest of the Academy stay as they were. `setLang` is left
+ * pointing at the Academy's own, for the few things that mean to change that.
+ *
+ * The wrapper is always rendered, whichever language it carries, so switching
+ * never remounts what is inside it.
+ */
+export function LangScope({ lang, children }: { lang: Lang; children: React.ReactNode }) {
+  const outer = useContext(LangContext);
+  const value = useMemo<LangContextType>(
+    () => ({
+      lang,
+      setLang: outer.setLang,
+      t: (key: string) => translations[key]?.[lang] ?? key,
+      isArabic: lang === 'ar',
+    }),
+    [lang, outer.setLang]
+  );
+  return (
+    <LangContext.Provider value={value}>
+      <div dir={lang === 'ar' ? 'rtl' : 'ltr'} lang={lang} style={{ display: 'contents' }}>
         {children}
       </div>
     </LangContext.Provider>

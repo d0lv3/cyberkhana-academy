@@ -42,7 +42,7 @@ const NetworkingLessonCard: React.FC<NetworkingLessonCardProps> = ({
   return (
     <ImageCard
       src={coverImageSrc(lesson.coverSvg)}
-      alt={lesson.title[lang]}
+      alt={lesson.title[lang] || lesson.title.en}
       imageClassName="transition-transform duration-500 group-hover:scale-[1.04]"
       fallback={<CardArt kind="network" color={ACCENT} className="transition-transform duration-500 group-hover:scale-[1.04]" />}
       role="button"
@@ -96,7 +96,7 @@ const NetworkingLessonCard: React.FC<NetworkingLessonCardProps> = ({
       {/* Bottom: title + stats + who wrote it */}
       <div className="absolute inset-x-0 bottom-0 p-4">
         <h3 className="mb-2 line-clamp-2 text-base font-bold leading-snug text-[#f3f6ff] transition-colors group-hover:text-[#60a5fa]">
-          {lesson.title[lang]}
+          {lesson.title[lang] || lesson.title.en}
         </h3>
         <div className="flex flex-wrap items-center gap-3 text-[11px] font-medium text-[#aab3c7]" dir="ltr">
           <span className="inline-flex items-center gap-1">

@@ -22,6 +22,9 @@ import LessonMarkdown from '../../components/ui/LessonMarkdown';
 import ProgressBar from '../../components/ui/ProgressBar';
 import ModuleActionButton from '../../components/fundamentals/ModuleActionButton';
 import { useLang } from '../../contexts/LangContext';
+import { moduleLanguages, moduleText } from '../../services/contentLang';
+import ModuleLanguageBadge from '../../components/fundamentals/ModuleLanguageBadge';
+import { LanguageNotice } from '../../components/ui/LessonLanguage';
 import { getViewableModuleBySlug } from '../../data/modulesData';
 import {
   MODULE_DOMAIN_META,
@@ -123,7 +126,7 @@ const ModuleOverviewPage: React.FC = () => {
   const domain = MODULE_DOMAIN_META[moduleDomain(mod)];
   const content = contentTypeMeta[mod.contentType];
   const ContentIcon = content.icon;
-  const description = mod.description[lang] || mod.description.en || mod.description.ar || '';
+  const description = moduleText(mod, mod.description, lang);
 
   const done = isPreview ? 0 : getOSModuleDoneCount(mod.slug);
   const totalLessons = mod.totalLessons || 0;
@@ -235,6 +238,10 @@ const ModuleOverviewPage: React.FC = () => {
                 <span className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-xs font-semibold text-[#9aa5bf] backdrop-blur-sm">
                   <ContentIcon size={12} /> {content.label[lang]}
                 </span>
+                <ModuleLanguageBadge
+                  module={mod}
+                  className="rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-xs font-semibold text-[#9aa5bf] backdrop-blur-sm"
+                />
                 {isPreview && (
                   <span className="inline-flex items-center rounded-md border border-[#9fef00]/30 bg-[#9fef00]/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#9fef00]">
                     Preview
@@ -243,7 +250,7 @@ const ModuleOverviewPage: React.FC = () => {
               </div>
 
               <h1 className="text-2xl font-black leading-tight text-[#f3f6ff] sm:text-3xl lg:text-4xl">
-                {mod.title[lang] || mod.title.en}
+                <span dir="auto">{moduleText(mod, mod.title, lang)}</span>
               </h1>
 
               <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium text-[#8592ad]">
@@ -352,6 +359,15 @@ const ModuleOverviewPage: React.FC = () => {
           />
         )}
       </div>
+
+      {/* Said before they start, so nobody opens a lesson to find out. */}
+      {!moduleLanguages(mod).includes(lang) && (
+        <LanguageNotice>
+          {ar
+            ? 'هذه الوحدة مكتوبة بالإنجليزية فقط، ولم تُترجم إلى العربية بعد.'
+            : 'This module is written in Arabic only. It has not been translated into English yet.'}
+        </LanguageNotice>
+      )}
 
       {/* ── What this module covers ── */}
       {description.trim() && (

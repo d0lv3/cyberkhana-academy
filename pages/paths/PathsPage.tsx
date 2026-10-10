@@ -133,7 +133,7 @@ const PathsPage: React.FC = () => {
 
               {/* Bottom block */}
               <div className="mt-auto pt-8">
-                <h3 className="text-lg font-bold text-[#f3f6ff]">{path.title[lang]}</h3>
+                <h3 className="text-lg font-bold text-[#f3f6ff]">{path.title[lang] || path.title.en || path.title.ar}</h3>
                 <p className="mt-1.5 line-clamp-2 text-sm text-[#aab3c7]">{path.desc[lang]}</p>
                 <div className="mt-4 text-[11px] font-medium text-[#9aa5bf]" dir="ltr">
                   {path.modules} {lang === 'ar' ? 'وحدة' : 'modules'}
