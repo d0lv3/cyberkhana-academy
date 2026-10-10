@@ -1,3 +1,4 @@
+import LessonLanguageSwitcher from '../../components/ui/LessonLanguageSwitcher';
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
@@ -218,7 +219,7 @@ const ProgrammingLessonPage: React.FC = () => {
     <div className="lesson-shell fixed inset-0 z-40 flex flex-col bg-[#0d1117] text-[#d2d7e3]">
 
       {/* ── HEADER ── */}
-      <header className="flex-shrink-0 h-14 border-b border-[#263248] bg-[#121a2a] px-4 md:px-6 flex items-center justify-between z-20">
+      <header className="flex-shrink-0 h-14 border-b border-[#263248] bg-[#121a2a] px-3 md:px-6 flex items-center justify-between gap-2 z-20">
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <button
             onClick={() => navigate(`/fundamentals/programming/${langSlug}`)}
@@ -259,19 +260,19 @@ const ProgrammingLessonPage: React.FC = () => {
           </button>
 
           {/* Breadcrumb */}
-          <div className="hidden md:flex items-center gap-1.5 text-xs text-[#8592ad]" dir="ltr">
+          <div className="hidden md:flex min-w-0 overflow-hidden items-center gap-1.5 text-xs text-[#8592ad]" dir="ltr">
             <span className="font-medium" style={{ color: language.color }}>
               {language.name}
             </span>
             <ChevronRight size={12} />
-            <span>{mod.title[lang]}</span>
+            <span>{mod.title[lang] || mod.title.en}</span>
             <ChevronRight size={12} />
-            <span className="text-[#f3f6ff] font-semibold">{concept.title[lang]}</span>
+            <span className="text-[#f3f6ff] font-semibold">{concept.title[lang] || concept.title.en}</span>
           </div>
 
           {/* Mobile title */}
           <h1 className="md:hidden text-sm font-bold text-[#f3f6ff] truncate min-w-0">
-            {concept.title[lang]}
+            {concept.title[lang] || concept.title.en}
           </h1>
 
           {/* Type badge */}
@@ -286,7 +287,8 @@ const ProgrammingLessonPage: React.FC = () => {
           )}
         </div>
 
-        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          <LessonLanguageSwitcher />
           {/* Put the workspace away and read. Desktop only: on a phone the two
               panes are already tabs, so there is nothing to minimise. */}
           <button
@@ -405,7 +407,7 @@ const ProgrammingLessonPage: React.FC = () => {
                         <iframe
                           className="h-full w-full"
                           src={youtubeEmbedUrl(mod.videoId)}
-                          title={`${mod.title[lang]} video`}
+                          title={`${mod.title[lang] || mod.title.en} video`}
                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                           allowFullScreen
                         />

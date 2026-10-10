@@ -1,3 +1,4 @@
+import LessonLanguageSwitcher from '../../components/ui/LessonLanguageSwitcher';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
@@ -212,7 +213,7 @@ const NetworkingLessonPage: React.FC = () => {
     <div className="lesson-shell fixed inset-0 z-40 flex flex-col bg-[#0d1117] text-[#d2d7e3]">
 
       {/* ── HEADER ── */}
-      <header className="flex-shrink-0 h-14 border-b border-[#263248] bg-[#121a2a] px-4 md:px-6 flex items-center justify-between z-20">
+      <header className="flex-shrink-0 h-14 border-b border-[#263248] bg-[#121a2a] px-3 md:px-6 flex items-center justify-between gap-2 z-20">
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           {/* Out of the lesson, not back one lesson. The track is walked by
               replacing the entry rather than stacking on it, so history has
@@ -254,9 +255,9 @@ const NetworkingLessonPage: React.FC = () => {
               <PanelLeftClose className="w-5 h-5 rtl-flip" />
             )}
           </button>
-          <div className="flex items-center gap-2.5">
+          <div className="flex min-w-0 items-center gap-2.5">
             <h1 className="text-sm font-bold text-[#f3f6ff] truncate max-w-[260px]">
-              {lesson.title[lang]}
+              {lesson.title[lang] || lesson.title.en}
             </h1>
           </div>
           <div className="hidden lg:flex items-center gap-2" dir="ltr">
@@ -271,7 +272,8 @@ const NetworkingLessonPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          <LessonLanguageSwitcher />
           {/* Tags (desktop) */}
           <div className="hidden md:flex items-center gap-1.5">
             {lesson.tags.slice(0, 4).map((tag) => (
@@ -469,7 +471,7 @@ const NetworkingLessonPage: React.FC = () => {
                         {lang === 'ar' ? 'الدرس التالي' : 'Next lesson'}
                       </p>
                       <p className="mt-1 mb-3 text-sm font-bold text-[#f3f6ff]">
-                        {nextLesson.title[lang]}
+                        {nextLesson.title[lang] || nextLesson.title.en}
                       </p>
                       <Button
                         variant="primary"

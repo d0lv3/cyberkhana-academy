@@ -80,8 +80,8 @@ const uid = (p: string) => `${p}-${Date.now()}-${Math.random().toString(36).slic
 const generateSlug = (title: string) =>
   title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').slice(0, 60);
 
-const newSection = () => ({ id: uid('sec'), title: 'New Section', subtitle: '', videoId: '', markdownContent: { en: '', ar: '' } });
-const newChapter = (): CreatorModuleChapter => ({ id: uid('ch'), title: 'New Chapter', sections: [newSection()] });
+const newSection = () => ({ id: uid('sec'), title: 'New Section', titleAr: '', subtitle: '', subtitleAr: '', videoId: '', markdownContent: { en: '', ar: '' } });
+const newChapter = (): CreatorModuleChapter => ({ id: uid('ch'), title: 'New Chapter', titleAr: '', sections: [newSection()] });
 
 /** Rough mm:ss reading/watch time so the viewer sidebar shows something sane. */
 function estimateDuration(s: { markdownContent: LocalizedMarkdown; videoId?: string; videoMinutes?: number }): string {
@@ -261,8 +261,8 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
     });
     setSelected(null);
   };
-  const setChapterTitle = (ci: number, title: string) =>
-    setChapters((p) => p.map((c, i) => (i === ci ? { ...c, title } : c)));
+  const setChapterTitle = (ci: number, title: string, language: 'en' | 'ar') =>
+    setChapters((p) => p.map((c, i) => (i === ci ? { ...c, [language === 'ar' ? 'titleAr' : 'title']: title } : c)));
 
   const addSection = (ci: number) => {
     setChapters((p) => p.map((c, i) => (i === ci ? { ...c, sections: [...c.sections, newSection()] } : c)));
@@ -330,12 +330,15 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
     const courseModules = chapters.map((ch) => ({
       id: ch.id,
       title: ch.title,
+      titleAr: ch.titleAr?.trim() || '',
       lectures: ch.sections.flatMap((s) => {
         const quiz = cleanQuiz(s.quiz);
         const lecture = {
           id: s.id,
           title: s.title,
+          titleAr: s.titleAr?.trim() || '',
           subtitle: s.subtitle || '',
+          subtitleAr: s.subtitleAr?.trim() || '',
           videoId: s.videoId || '',
           // Only with a video; XP times the video from it (shared/xp.ts).
           videoMinutes: s.videoId && s.videoMinutes ? s.videoMinutes : undefined,
@@ -678,6 +681,20 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
       {/* ── Structure + Section editor ── */}
       {tab === 'content' && (
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-6">
+        <div className="lg:col-span-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#263248] bg-[#101827] p-4">
+          <div>
+            <p className="text-sm font-semibold text-[#f3f6ff]">Write in two languages</p>
+            <p className="mt-1 text-xs text-[#9aa5bf]">Add English and Arabic titles below. Switch the lesson body and preview here. Empty Arabic fields use English.</p>
+          </div>
+          <div role="group" aria-label="Content editing language" className="flex shrink-0 gap-1 rounded-lg bg-[#0b1019] p-1" dir="ltr">
+            {(['en', 'ar'] as const).map((language) => (
+              <button key={language} type="button" lang={language} aria-pressed={mdLang === language} onClick={() => setMdLang(language)}
+                className={`rounded-md px-4 py-2 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00a859] ${mdLang === language ? 'bg-[#00a859]/15 text-[#74dfac]' : 'text-[#9aa5bf] hover:text-white'}`}>
+                {language === 'en' ? 'English' : 'العربية'}
+              </button>
+            ))}
+          </div>
+        </div>
         {/* Outline */}
         <EnhancedCard padding="none" className="lg:col-span-2 overflow-hidden">
           <div className="px-5 py-3.5 border-b border-[#263248] bg-[#0b1019] flex items-center justify-between">
@@ -695,12 +712,21 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
                 {/* Chapter header */}
                 <div className="flex items-center gap-2 px-2.5 py-2 border-b border-[#263248]">
                   <span className="text-[10px] font-bold text-[#8592ad] w-4 text-center flex-shrink-0">{ci + 1}</span>
-                  <input
-                    value={ch.title}
-                    onChange={(e) => setChapterTitle(ci, e.target.value)}
-                    className="flex-1 min-w-0 bg-transparent text-xs font-bold text-[#f3f6ff] focus:outline-none"
-                    dir="ltr"
-                  />
+                  <div className="flex-1 min-w-0 space-y-2">
+                    {(['en', 'ar'] as const).map((language) => (
+                      <label key={language} className="flex items-center gap-2">
+                        <span className="w-5 shrink-0 text-[10px] text-[#8592ad]">{language === 'en' ? 'EN' : 'AR'}</span>
+                        <input
+                          aria-label={`Chapter ${ci + 1} title (${language === 'en' ? 'English' : 'Arabic'})`}
+                          value={language === 'ar' ? ch.titleAr || '' : ch.title}
+                          onChange={(e) => setChapterTitle(ci, e.target.value, language)}
+                          placeholder={language === 'ar' ? 'عنوان الفصل بالعربية' : 'Chapter title'}
+                          className="w-full min-w-0 rounded border border-transparent bg-transparent px-1 py-1 text-xs font-bold text-[#f3f6ff] placeholder:font-normal placeholder:text-[#8592ad] focus:outline-none focus:border-[#00a859]/50"
+                          dir={language === 'ar' ? 'rtl' : 'ltr'} lang={language}
+                        />
+                      </label>
+                    ))}
+                  </div>
                   <button onClick={() => moveChapter(ci, -1)} disabled={ci === 0} className="w-6 h-6 flex items-center justify-center rounded text-[#7c8aa6] hover:text-[#d2d7e3] disabled:opacity-20">
                     <ArrowUp size={12} />
                   </button>
@@ -730,7 +756,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
                           <FileText size={12} className="text-[#8592ad] flex-shrink-0" />
                         )}
                         <span className={`flex-1 min-w-0 truncate text-xs ${isActive ? 'text-[#f3f6ff] font-semibold' : 'text-[#c4cad6]'}`}>
-                          {s.title || 'Untitled section'}
+                          <bdi>{(mdLang === 'ar' && s.titleAr?.trim()) || s.title || 'Untitled section'}</bdi>
                         </span>
                         <button onClick={(e) => { e.stopPropagation(); moveSection(ci, si, -1); }} disabled={si === 0} className="w-5 h-5 flex items-center justify-center rounded text-[#7c8aa6] hover:text-[#d2d7e3] disabled:opacity-20">
                           <ArrowUp size={11} />
@@ -773,26 +799,14 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
                   <h3 className="text-sm font-bold text-[#f3f6ff]">Section Content</h3>
                 </div>
                 <div className="space-y-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-semibold text-[#9aa5bf] mb-1.5">Section Title</label>
-                      <input
-                        value={activeSection.title}
-                        onChange={(e) => updateSection(selected.ci, selected.si, { title: e.target.value })}
-                        className={inputCls}
-                        dir="ltr"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-[#9aa5bf] mb-1.5">Subtitle (optional)</label>
-                      <input
-                        value={activeSection.subtitle || ''}
-                        onChange={(e) => updateSection(selected.ci, selected.si, { subtitle: e.target.value })}
-                        className={inputCls}
-                        dir="ltr"
-                      />
-                    </div>
-                  </div>
+                  <BilingualInput labelEn="Section title (English)" labelAr="عنوان الدرس (العربية)"
+                    valueEn={activeSection.title} valueAr={activeSection.titleAr || ''}
+                    onChangeEn={(title) => updateSection(selected.ci, selected.si, { title })}
+                    onChangeAr={(titleAr) => updateSection(selected.ci, selected.si, { titleAr })} />
+                  <BilingualInput labelEn="Subtitle (English, optional)" labelAr="العنوان الفرعي (العربية، اختياري)"
+                    valueEn={activeSection.subtitle || ''} valueAr={activeSection.subtitleAr || ''}
+                    onChangeEn={(subtitle) => updateSection(selected.ci, selected.si, { subtitle })}
+                    onChangeAr={(subtitleAr) => updateSection(selected.ci, selected.si, { subtitleAr })} />
                   <div>
                     <label className="block text-xs font-semibold text-[#9aa5bf] mb-1.5">YouTube Video ID (optional)</label>
                     <input
@@ -833,6 +847,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
                   <div>
                     <label className="block text-xs font-semibold text-[#9aa5bf] mb-1.5">Markdown Content</label>
                     <BilingualMarkdown
+                      showLanguageTabs={false}
                       value={toLocalizedMarkdown(activeSection.markdownContent)}
                       onChange={(v) => updateSection(selected.ci, selected.si, { markdownContent: v })}
                       lang={mdLang}
@@ -876,8 +891,10 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
                     />
                   </div>
                 )}
-                <div className="p-6 max-h-[420px] overflow-y-auto custom-scrollbar">
-                  <MarkdownPreview content={mdFor(activeSection.markdownContent, mdLang)} />
+                <div className="p-6 max-h-[420px] overflow-y-auto custom-scrollbar" dir={mdLang === 'ar' ? 'rtl' : 'ltr'}>
+                  <h4 className="mb-2 text-lg font-bold text-[#f3f6ff]" dir="auto">{(mdLang === 'ar' && activeSection.titleAr?.trim()) || activeSection.title}</h4>
+                  <p className="mb-4 text-sm text-[#9aa5bf]" dir="auto">{(mdLang === 'ar' && activeSection.subtitleAr?.trim()) || activeSection.subtitle}</p>
+                  <MarkdownPreview content={toLocalizedMarkdown(activeSection.markdownContent)[mdLang]} />
                 </div>
               </EnhancedCard>
             </>

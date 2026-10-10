@@ -7,12 +7,14 @@ interface MarkdownUploaderProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  dir?: 'ltr' | 'rtl';
 }
 
 const MarkdownUploader: React.FC<MarkdownUploaderProps> = ({
   value,
   onChange,
   placeholder = 'Write your markdown content here...',
+  dir = 'ltr',
 }) => {
   const { isArabic } = useLang();
   const [mode, setMode] = useState<'editor' | 'upload'>('editor');
@@ -236,9 +238,10 @@ const MarkdownUploader: React.FC<MarkdownUploaderProps> = ({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={isArabic && placeholder === 'Write your markdown content here...' ? 'اكتب محتوى Markdown هنا…' : placeholder}
-          className="w-full min-h-[300px] bg-[#0a0f18] border border-[#263248] rounded-lg px-4 py-3 text-sm text-[#c4cad6] font-mono resize-y focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#7c8aa6] custom-scrollbar"
+          aria-label={dir === 'rtl' ? 'محتوى الدرس بالعربية' : 'Lesson markdown content'}
+          className={`w-full min-h-[300px] bg-[#0a0f18] border border-[#263248] rounded-lg px-4 py-3 text-sm text-[#c4cad6] ${dir === 'rtl' ? 'font-sans leading-7' : 'font-mono'} resize-y focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#7c8aa6] custom-scrollbar`}
           spellCheck={false}
-          dir="ltr"
+          dir={dir}
         />
       ) : (
         <div

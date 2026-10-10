@@ -137,7 +137,9 @@ export type CreatorProgrammingModule = Omit<ProgrammingModule, 'concepts'> & {
 export interface CreatorModuleSection {
   id: string;
   title: string;
+  titleAr?: string;
   subtitle?: string;
+  subtitleAr?: string;
   /** Optional YouTube video id shown above the markdown */
   videoId?: string;
   /** The video's length in minutes, which its XP is timed from. Unset counts
@@ -154,6 +156,7 @@ export type { QuizQuestion, QuizKind };
 export interface CreatorModuleChapter {
   id: string;
   title: string;
+  titleAr?: string;
   sections: CreatorModuleSection[];
 }
 

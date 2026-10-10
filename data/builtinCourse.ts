@@ -12,7 +12,7 @@ import type { ProgrammingConcept, ProgrammingModule } from './programming/types'
 import quizBank, { type StudentQuizQuestion } from './linuxQuizData';
 import type { KeyedAnswer } from '../backend/src/shared/checks';
 import linuxCourse from './linuxCourseData';
-import { linuxLecturesAr } from './linuxCourseArabic';
+import { linuxLecturesAr, linuxModuleTitlesAr } from './linuxCourseArabic';
 import {
   makeCreatorMeta,
   type CreatorFundamentalModule,
@@ -26,17 +26,21 @@ import {
 interface RawLecture {
   id: string;
   title: string;
+  titleAr?: string;
   subtitle?: string;
+  subtitleAr?: string;
   videoId?: string;
   quiz?: unknown;
   quizQuestions?: StudentQuizQuestion[];
   notes?: string[];
+  notesAr?: string[];
   markdownContent?: string | { en: string; ar: string };
 }
 
 interface RawModule {
   id: string;
   title: string;
+  titleAr?: string;
   lectures: RawLecture[];
 }
 
@@ -83,14 +87,17 @@ export function builtinToEditableModule(mod: FundamentalModule, answers: Builtin
   const chapters: CreatorModuleChapter[] = (course?.modules ?? []).map((m) => ({
     id: m.id,
     title: m.title,
+    titleAr: m.titleAr || (isBuiltinLinux ? linuxModuleTitlesAr[m.id] : '') || '',
     sections: (m.lectures ?? []).map((l) => ({
       id: l.id,
       title: l.title,
+      titleAr: l.titleAr || (isBuiltinLinux ? linuxLecturesAr[l.id]?.title : '') || '',
       subtitle: l.subtitle || '',
+      subtitleAr: l.subtitleAr || (isBuiltinLinux ? linuxLecturesAr[l.id]?.subtitle : '') || '',
       videoId: l.videoId || '',
       markdownContent: {
         en: lectureBodyEn(l),
-        ar: isBuiltinLinux ? notesToMarkdown(linuxLecturesAr[l.id]?.notes) : '',
+        ar: (typeof l.markdownContent === 'object' && l.markdownContent.ar) || notesToMarkdown(l.notesAr) || (isBuiltinLinux ? notesToMarkdown(linuxLecturesAr[l.id]?.notes) : ''),
       },
       quiz: lectureQuiz(l, answers),
     })),

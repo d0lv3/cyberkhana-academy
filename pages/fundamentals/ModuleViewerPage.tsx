@@ -1,3 +1,4 @@
+import LessonLanguageSwitcher from '../../components/ui/LessonLanguageSwitcher';
 import React, { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -64,6 +65,9 @@ import { requestFeedback } from '../../components/feedback/FeedbackHost';
 type Lecture = {
   id: string;
   title: string;
+  titleAr?: string;
+  subtitleAr?: string;
+  notesAr?: string[];
   subtitle: string;
   videoId: string;
   duration: string;
@@ -84,6 +88,7 @@ type Lecture = {
 type CourseModule = {
   id: string;
   title: string;
+  titleAr?: string;
   lectures: Lecture[];
 };
 
@@ -248,10 +253,10 @@ const ModuleViewerPage: React.FC = () => {
     () =>
       course?.modules.map((mod) => ({
         id: mod.id,
-        title: ar && isBuiltinLinuxContent ? linuxModuleTitlesAr[mod.id] ?? mod.title : mod.title,
+        title: (ar && (mod.titleAr?.trim() || (isBuiltinLinuxContent && linuxModuleTitlesAr[mod.id]))) || mod.title,
         lectures: mod.lectures.map((l) => ({
           id: l.id,
-          title: ar && isBuiltinLinuxContent ? linuxLecturesAr[l.id]?.title ?? l.title : l.title,
+          title: (ar && (l.titleAr?.trim() || (isBuiltinLinuxContent && linuxLecturesAr[l.id]?.title))) || l.title,
           hasQuiz: !!l.quiz || !!(l.quizQuestions && l.quizQuestions.length),
           kind: l.kind === 'lab' ? ('lab' as const) : ('lesson' as const),
         })),
@@ -446,15 +451,13 @@ const ModuleViewerPage: React.FC = () => {
   const activeLectureInfo = allLectures.find((l) => l.lecture.id === activeLectureId);
   const activeLecture = activeLectureInfo?.lecture;
   const arabicLecture = ar && isBuiltinLinuxContent && activeLecture ? linuxLecturesAr[activeLecture.id] : undefined;
-  const activeNotes = arabicLecture?.notes ?? activeLecture?.notes ?? [];
+  const activeNotes: string[] = (ar && activeLecture?.notesAr?.length ? activeLecture.notesAr : arabicLecture?.notes ?? activeLecture?.notes) ?? [];
 
   // Switching lecture swaps the body under a pane that keeps its offset, so
   // the next one would open partway down. Send it back to the top.
   const bodyRef = useScrollToTop<HTMLElement>(activeLecture?.id);
   const activeModule = activeLectureInfo?.module;
-  const activeModuleTitle = activeModule && ar && isBuiltinLinuxContent
-    ? linuxModuleTitlesAr[activeModule.id] ?? activeModule.title
-    : activeModule?.title;
+  const activeModuleTitle = (ar && (activeModule?.titleAr?.trim() || (isBuiltinLinuxContent && activeModule && linuxModuleTitlesAr[activeModule.id]))) || activeModule?.title;
 
   const totalLectures = allLectures.length;
   const completedCount = completedLectures.length;
@@ -471,7 +474,7 @@ const ModuleViewerPage: React.FC = () => {
     <div className="lesson-shell fixed inset-0 z-40 flex flex-col bg-[#0d1117] text-[#d2d7e3]">
 
       {/* ── HEADER ── */}
-      <header className="flex-shrink-0 h-14 border-b border-[#263248] bg-[#121a2a] px-4 md:px-6 flex items-center justify-between z-20">
+      <header className="flex-shrink-0 h-14 border-b border-[#263248] bg-[#121a2a] px-3 md:px-6 flex items-center justify-between gap-2 z-20">
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <button aria-label={lang === 'ar' ? 'رجوع' : 'Back'} onClick={() => navigate(-1)} className="text-[#9aa5bf] hover:text-[#f3f6ff] transition-colors inline-flex items-center justify-center touch:min-h-tap touch:min-w-tap -ms-2">
             <ArrowLeft className="w-5 h-5 rtl-flip" />
@@ -490,7 +493,7 @@ const ModuleViewerPage: React.FC = () => {
           </button>
           <div className="hidden md:flex items-center gap-2.5">
             <h1 className="text-sm font-bold text-[#f3f6ff] truncate max-w-[260px]">
-              {fundamentalModule.title[lang]}
+              {fundamentalModule.title[lang] || fundamentalModule.title.en}
             </h1>
             {isPreview && (
               <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[#9fef00]/15 text-[#9fef00] border border-[#9fef00]/30">
@@ -517,12 +520,13 @@ const ModuleViewerPage: React.FC = () => {
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-3" dir="ltr">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3" dir="ltr">
+          <LessonLanguageSwitcher />
           <div className="hidden sm:block text-right">
             <p className="text-[10px] text-[#8592ad] font-semibold uppercase tracking-wider">{ar ? 'التقدّم' : 'Progress'}</p>
             <p className="text-sm font-bold text-[#f3f6ff]">{completedCount}<span className="text-[#8592ad]">/{totalLectures}</span></p>
           </div>
-          <div className="w-20 sm:w-28"><ProgressBar value={progressPct} color="neon" size="sm" /></div>
+          <div className="hidden sm:block w-20 sm:w-28"><ProgressBar value={progressPct} color="neon" size="sm" /></div>
         </div>
       </header>
 
@@ -595,9 +599,9 @@ const ModuleViewerPage: React.FC = () => {
                   {activeModuleTitle}
                 </p>
                 <h2 className="text-2xl md:text-3xl font-bold text-[#f3f6ff] mb-1">
-                  {arabicLecture?.title ?? activeLecture.title}
+                  {(ar && activeLecture.titleAr?.trim()) || arabicLecture?.title || activeLecture.title}
                 </h2>
-                <p className="text-sm text-[#9aa5bf]">{arabicLecture?.subtitle ?? activeLecture.subtitle}</p>
+                <p className="text-sm text-[#9aa5bf]">{(ar && activeLecture.subtitleAr?.trim()) || arabicLecture?.subtitle || activeLecture.subtitle}</p>
               </div>
 
               {/* Video */}
@@ -607,7 +611,7 @@ const ModuleViewerPage: React.FC = () => {
                     <iframe
                       className="w-full h-full"
                       src={`https://www.youtube.com/embed/${activeLecture.videoId}`}
-                      title={arabicLecture?.title ?? activeLecture.title}
+                      title={(ar && activeLecture.titleAr?.trim()) || arabicLecture?.title || activeLecture.title}
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
                     />

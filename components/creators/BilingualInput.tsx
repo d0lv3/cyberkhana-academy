@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 
 interface BilingualInputProps {
   labelEn?: string;
@@ -23,6 +23,7 @@ const BilingualInput: React.FC<BilingualInputProps> = ({
   multiline = false,
   required = false,
 }) => {
+  const id = useId();
   const inputClasses =
     'w-full bg-[#0a0f18] border border-[#263248] rounded-lg px-3 py-2 text-sm text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#7c8aa6]';
 
@@ -30,11 +31,12 @@ const BilingualInput: React.FC<BilingualInputProps> = ({
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
       {/* English */}
       <div>
-        <label className="block text-xs font-semibold text-[#9aa5bf] mb-1.5">
+        <label htmlFor={`${id}-en`} className="block text-xs font-semibold text-[#9aa5bf] mb-1.5">
           {labelEn} {required && <span className="text-[#00a859]">*</span>}
         </label>
         {multiline ? (
           <textarea
+            id={`${id}-en`} lang="en"
             value={valueEn}
             onChange={(e) => onChangeEn(e.target.value)}
             placeholder={placeholder}
@@ -45,6 +47,7 @@ const BilingualInput: React.FC<BilingualInputProps> = ({
         ) : (
           <input
             type="text"
+            id={`${id}-en`} lang="en"
             value={valueEn}
             onChange={(e) => onChangeEn(e.target.value)}
             placeholder={placeholder}
@@ -57,11 +60,12 @@ const BilingualInput: React.FC<BilingualInputProps> = ({
 
       {/* Arabic */}
       <div>
-        <label className="block text-xs font-semibold text-[#9aa5bf] mb-1.5">
+        <label htmlFor={`${id}-ar`} className="block text-xs font-semibold text-[#9aa5bf] mb-1.5">
           {labelAr} {required && <span className="text-[#00a859]">*</span>}
         </label>
         {multiline ? (
           <textarea
+            id={`${id}-ar`} lang="ar"
             value={valueAr}
             onChange={(e) => onChangeAr(e.target.value)}
             placeholder={placeholder}
@@ -72,6 +76,7 @@ const BilingualInput: React.FC<BilingualInputProps> = ({
         ) : (
           <input
             type="text"
+            id={`${id}-ar`} lang="ar"
             value={valueAr}
             onChange={(e) => onChangeAr(e.target.value)}
             placeholder={placeholder}
