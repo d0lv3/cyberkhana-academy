@@ -23,7 +23,7 @@ import { SHELL } from './shell';
  * The poster is frame 5.0s of the render (video/out), exported at two widths.
  * If the video is replaced, replace VIDEO_ID, DURATION and both posters.
  */
-const VIDEO_ID = 'cUY19HkSfFg';
+const VIDEO_ID = 'vVzpyRrproE';
 const DURATION = '2:12';
 const EMBED_URL = `https://www.youtube-nocookie.com/embed/${VIDEO_ID}?autoplay=1&rel=0&playsinline=1`;
 
