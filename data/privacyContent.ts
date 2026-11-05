@@ -25,8 +25,8 @@ import type { BilingualDoc } from './legalTypes';
 export const PRIVACY: BilingualDoc = {
   en: {
     title: 'Privacy Policy',
-    updated: '6 October 2026',
-    version: '2026-10-02',
+    updated: '5 November 2026',
+    version: '2026-11-05',
     intro:
       'This policy explains what CyberKhana Academy collects, what we do with it, and what you can ask us to do about it.',
     callout: {
@@ -126,7 +126,7 @@ export const PRIVACY: BilingualDoc = {
           'We set one cookie. It is an httpOnly authentication cookie that keeps you signed in. It cannot be read by JavaScript in your browser.',
           'We set no advertising cookies and no analytics cookies, which is why the Academy has no cookie banner: the only cookie of ours is the one that makes signing in work.',
           'YouTube may set its own. A lesson that includes a video shows it in a YouTube player, and the player loads as soon as the lesson opens. YouTube may then set cookies in your browser. They belong to YouTube, we cannot read them, and Google uses them as its own privacy policy describes. A lesson without a video loads nothing from YouTube. The introduction video on our front page uses YouTube’s privacy-enhanced player, and loads nothing from YouTube until you press play.',
-          'The Academy also uses your browser’s local storage for practical things like your language choice and your place in a lesson. That stays on your device.',
+          'The Academy also uses your browser’s local storage for practical things like your language choice and your place in a lesson. It also keeps a copy of the published courses on your device so the Academy opens quickly, and, if you are a creator, a backup of any change that has not reached our servers yet, until it has. All of that stays on your device.',
         ],
       },
       {
@@ -182,7 +182,7 @@ export const PRIVACY: BilingualDoc = {
       {
         h: 'How long we keep it',
         body: [
-          'We keep your account data for as long as your account exists. If you ask for your account to be deleted, we keep it for 7 more days in case you change your mind, and then delete it, as described below. Server logs are kept only as long as they are useful for security and debugging.',
+          'We keep your account data for as long as your account exists. If you ask for your account to be deleted, we keep it for 7 more days in case you change your mind, and then delete it, as described below. Server logs are kept only as long as they are useful for security and debugging. If you are a creator, we also keep earlier versions of what you write, so that work overwritten or deleted by mistake can be brought back: up to 20 for each item, each for up to 90 days. Nobody else can read them through the Academy, and they are deleted along with your account.',
         ],
       },
       {
@@ -193,7 +193,7 @@ export const PRIVACY: BilingualDoc = {
           'Signing in again during those 7 days cancels the request, and your account comes back exactly as you left it. If you do not sign in, it is deleted automatically and permanently when the 7 days are up. After that it cannot be recovered.',
           'Administrators can see that you have asked, and when the deletion is due, next to your account in the members list. If you cannot sign in, email support@cyberkhana.tech and we will delete your account for you within 30 days of a request we can verify came from you.',
           'An administrator can also delete an account straight away, as the Terms of Service allow. That takes effect at once, with no waiting period, and deletes and keeps exactly what is listed below.',
-          'What is deleted: your name, email address, profile picture, username, university, country, bio, social links, language preference, your public profile, and the link between your account and your Google identity; your learning progress, your XP and your place on the leaderboards; your final exam attempts and your certificates, whose public pages stop working; and anything you wrote as a creator but had not published, such as drafts and content waiting for review, along with uploaded files that nothing else uses. Sharing between you and other creators ends. The leaderboards are worked out from the accounts that exist, so nobody else loses XP; the members below you each move up a place.',
+          'What is deleted: your name, email address, profile picture, username, university, country, bio, social links, language preference, your public profile, and the link between your account and your Google identity; your learning progress, your XP and your place on the leaderboards; your final exam attempts and your certificates, whose public pages stop working; and anything you wrote as a creator but had not published, such as drafts and content waiting for review, and the earlier versions of your content, along with uploaded files that nothing else uses. Sharing between you and other creators ends. The leaderboards are worked out from the accounts that exist, so nobody else loses XP; the members below you each move up a place.',
           'What is not deleted, and why:',
         ],
         list: [
@@ -259,8 +259,8 @@ export const PRIVACY: BilingualDoc = {
 
   ar: {
     title: 'سياسة الخصوصية',
-    updated: '٦ تشرين الأول/أكتوبر ٢٠٢٦',
-    version: '2026-10-02',
+    updated: '٥ تشرين الثاني/نوفمبر ٢٠٢٦',
+    version: '2026-11-05',
     intro:
       'تشرح هذه السياسة ما تجمعه أكاديمية سايبر خانة، وما نفعله به، وما يمكنك أن تطلب منا فعله بشأنه.',
     callout: {
@@ -358,7 +358,7 @@ export const PRIVACY: BilingualDoc = {
           'نضع ملفًا واحدًا. وهو ملف مصادقة من نوع httpOnly يُبقيك مسجَّل الدخول، ولا يمكن لجافاسكربت في متصفحك قراءته.',
           'ولا نضع ملفات إعلانية ولا تحليلية، ولهذا لا تعرض الأكاديمية لافتة موافقة على الارتباطات: فالملف الوحيد الذي نضعه نحن هو الذي يجعل تسجيل الدخول يعمل.',
           'لكنّ YouTube قد يضع ملفاته الخاصة. فالدرس الذي يتضمّن فيديو يعرضه في مشغّل YouTube، ويُحمَّل المشغّل فور فتح الدرس. وعندها قد يضع YouTube ملفات تعريف ارتباط في متصفحك. وهذه الملفات تخصّ YouTube، ولا نستطيع قراءتها، وتستخدمها Google وفق سياسة الخصوصية الخاصة بها. أما الدرس الذي لا فيديو فيه فلا يُحمِّل شيئًا من YouTube. والفيديو التعريفي في صفحتنا الرئيسية يستخدم مشغّل YouTube المعزِّز للخصوصية، ولا يُحمَّل شيء من YouTube قبل أن تضغط على التشغيل.',
-          'كما تستخدم الأكاديمية التخزين المحلي في متصفحك لأمور عملية مثل اختيارك للغة وموضعك في الدرس. وهذا يبقى على جهازك.',
+          'كما تستخدم الأكاديمية التخزين المحلي في متصفحك لأمور عملية مثل اختيارك للغة وموضعك في الدرس. وتحتفظ أيضًا على جهازك بنسخة من الدورات المنشورة لتفتح الأكاديمية بسرعة، وإذا كنت مُنشِئًا فبنسخة احتياطية من أي تغيير لم يصل إلى خوادمنا بعد، إلى أن يصل. وكل ذلك يبقى على جهازك.',
         ],
       },
       {
@@ -414,7 +414,7 @@ export const PRIVACY: BilingualDoc = {
       {
         h: 'مدة الاحتفاظ بها',
         body: [
-          'نحتفظ ببيانات حسابك ما دام حسابك قائمًا. وإذا طلبت حذف حسابك، نحتفظ به ٧ أيام أخرى تحسّبًا لتغيير رأيك، ثم نحذفه، على النحو المبيّن أدناه. أما سجلّات الخادم فنحتفظ بها فقط ما دامت مفيدة لأغراض الأمان وتصحيح الأعطال.',
+          'نحتفظ ببيانات حسابك ما دام حسابك قائمًا. وإذا طلبت حذف حسابك، نحتفظ به ٧ أيام أخرى تحسّبًا لتغيير رأيك، ثم نحذفه، على النحو المبيّن أدناه. أما سجلّات الخادم فنحتفظ بها فقط ما دامت مفيدة لأغراض الأمان وتصحيح الأعطال. وإذا كنت مُنشِئًا، فنحتفظ أيضًا بالنسخ السابقة مما تكتبه، حتى يمكن استعادة ما يُستبدل أو يُحذف بالخطأ: ما يصل إلى ٢٠ نسخة لكل عنصر، وكل نسخة لمدة تصل إلى ٩٠ يومًا. ولا يمكن لأحد غيرك قراءتها عبر الأكاديمية، وتُحذف مع حسابك.',
         ],
       },
       {
@@ -425,7 +425,7 @@ export const PRIVACY: BilingualDoc = {
           'وتسجيل دخولك مجددًا خلال هذه الأيام السبعة يلغي الطلب، فيعود حسابك كما تركته تمامًا. وإن لم تسجّل الدخول، يُحذف حسابك تلقائيًا ونهائيًا عند انقضائها، ولا يمكن استرجاعه بعد ذلك.',
           'ويستطيع المشرفون أن يروا أنك طلبت الحذف، وموعد تنفيذه، بجانب حسابك في قائمة الأعضاء. وإذا لم تتمكن من تسجيل الدخول، فراسلنا على support@cyberkhana.tech وسنحذف حسابك خلال ٣٠ يومًا من طلبٍ نتحقق من صدوره عنك.',
           'ويجوز للمشرف أيضًا حذف حساب فورًا، على النحو الذي تسمح به شروط الخدمة. ويسري ذلك في الحال دون مدة انتظار، ويحذف ويُبقي بالضبط ما هو مبيّن أدناه.',
-          'ما يُحذف: اسمك وبريدك الإلكتروني وصورتك الشخصية واسم المستخدم وجامعتك وبلدك ونبذتك وروابطك ولغتك المفضّلة وملفك العام، والرابط بين حسابك وهويتك على Google؛ وتقدّمك في التعلّم ونقاط خبرتك وموقعك على لوحات الصدارة؛ ومحاولاتك في الاختبارات النهائية وشهاداتك التي تتوقف صفحاتها العامة عن العمل؛ وكل ما كتبته كمُنشِئ ولم تنشره، كالمسودّات والمحتوى الذي ينتظر المراجعة، مع الملفات المرفوعة التي لا يستخدمها شيء آخر. وتنتهي المشاركة بينك وبين المُنشِئين الآخرين. ولوحات الصدارة تُحسب من الحسابات الموجودة، فلا يخسر أحد غيرك شيئًا من نقاط خبرته، ويتقدّم كل من كان بعدك مرتبة واحدة.',
+          'ما يُحذف: اسمك وبريدك الإلكتروني وصورتك الشخصية واسم المستخدم وجامعتك وبلدك ونبذتك وروابطك ولغتك المفضّلة وملفك العام، والرابط بين حسابك وهويتك على Google؛ وتقدّمك في التعلّم ونقاط خبرتك وموقعك على لوحات الصدارة؛ ومحاولاتك في الاختبارات النهائية وشهاداتك التي تتوقف صفحاتها العامة عن العمل؛ وكل ما كتبته كمُنشِئ ولم تنشره، كالمسودّات والمحتوى الذي ينتظر المراجعة، والنسخ السابقة من محتواك، مع الملفات المرفوعة التي لا يستخدمها شيء آخر. وتنتهي المشاركة بينك وبين المُنشِئين الآخرين. ولوحات الصدارة تُحسب من الحسابات الموجودة، فلا يخسر أحد غيرك شيئًا من نقاط خبرته، ويتقدّم كل من كان بعدك مرتبة واحدة.',
           'وما لا يُحذف، ولماذا:',
         ],
         list: [

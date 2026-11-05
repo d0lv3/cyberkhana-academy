@@ -20,6 +20,7 @@ import {
   type CreatorProgrammingLanguage,
 } from '../../services/creatorTypes';
 import { ADMIN_PROGRAMMING_STASH, type AdminProgrammingStash } from './programmingEditStash';
+import { stashGet, stashSet } from '../../services/studioStash';
 
 const inputCls =
   'w-full bg-[#0a0f18] border border-[#263248] rounded-lg px-3 py-2 text-sm text-[#d2d7e3] focus:outline-none focus:border-[#00a859]/50 transition-colors placeholder:text-[#7c8aa6]';
@@ -95,7 +96,7 @@ const ProgrammingLanguageEditor: React.FC = () => {
       // Another author's language: the list page hands it over, since it lives
       // in their bucket rather than mine.
       try {
-        const raw = sessionStorage.getItem(ADMIN_PROGRAMMING_STASH);
+        const raw = stashGet(ADMIN_PROGRAMMING_STASH);
         const stash: AdminProgrammingStash | null = raw ? JSON.parse(raw) : null;
         if (stash && stash.kind === 'language' && stash.item.slug === editSlug) {
           def = stash.item;
@@ -179,7 +180,7 @@ const ProgrammingLanguageEditor: React.FC = () => {
           kind: 'language',
           item: def,
         });
-        sessionStorage.setItem(ADMIN_PROGRAMMING_STASH, JSON.stringify({ kind: 'language', ownerId: adminCtx.ownerId, ownerName: adminCtx.ownerName, languageSlug: finalSlug, item: def }));
+        stashSet(ADMIN_PROGRAMMING_STASH, JSON.stringify({ kind: 'language', ownerId: adminCtx.ownerId, ownerName: adminCtx.ownerName, languageSlug: finalSlug, item: def }));
       } catch (err) {
         setIsSaving(false);
         toast('error', err instanceof Error ? err.message : 'Could not save this language.');

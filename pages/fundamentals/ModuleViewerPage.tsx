@@ -63,6 +63,7 @@ import {
 } from '../../services/completionService';
 import CompletionNotice, { failureText } from '../../components/ui/CompletionNotice';
 import { requestFeedback } from '../../components/feedback/FeedbackHost';
+import { readModulePreview } from '../../services/contentStore';
 
 type Lecture = {
   id: string;
@@ -181,14 +182,7 @@ const ModuleViewerPage: React.FC = () => {
   // `__preview__` renders an unsaved draft snapshotted by the creator studio.
   const isPreview = slug === '__preview__';
   const fundamentalModule = useMemo(() => {
-    if (isPreview) {
-      try {
-        const raw = localStorage.getItem('academy-module-preview');
-        return raw ? JSON.parse(raw) : null;
-      } catch {
-        return null;
-      }
-    }
+    if (isPreview) return readModulePreview<ReturnType<typeof getViewableModuleBySlug>>();
     return getViewableModuleBySlug(slug || '');
   }, [slug, isPreview]);
   const course = useMemo(

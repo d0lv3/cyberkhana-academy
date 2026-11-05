@@ -1,8 +1,8 @@
 # CyberKhana Academy — Privacy Policy
 
 **Applies to:** academy.cyberkhana.tech (the "Academy")
-**Last updated:** 6 October 2026
-**Effective from:** 6 October 2026
+**Last updated:** 5 November 2026
+**Effective from:** 5 November 2026
 
 ---
 
@@ -145,7 +145,10 @@ YouTube's privacy-enhanced player, and loads nothing from YouTube until you
 press play.
 
 The Academy also uses your browser's local storage for practical things like
-your language choice and your place in a lesson. That stays on your device.
+your language choice and your place in a lesson. It also keeps a copy of the
+published courses on your device so the Academy opens quickly, and, if you are a
+creator, a backup of any change that has not reached our servers yet, until it
+has. All of that stays on your device.
 
 ## 5. Who can see what
 
@@ -255,6 +258,11 @@ mind, and then delete it, as section 9 explains.
 
 Server logs are kept only as long as they are useful for security and debugging.
 
+If you are a creator, we also keep earlier versions of what you write, so that
+work overwritten or deleted by mistake can be brought back: up to 20 for each
+item, each for up to 90 days. Nobody else can read them through the Academy, and
+they are deleted along with your account.
+
 Feedback and creator content are kept as described in section 9.
 
 ## 9. Deleting your account
@@ -284,7 +292,8 @@ profile, and the link between your account and your Google identity; your
 learning progress, your XP and your place on the leaderboards; your final exam
 attempts and your certificates, whose public pages stop working; and anything
 you wrote as a creator but had not published, such as drafts and content
-waiting for review, along with uploaded files that nothing else uses. Sharing
+waiting for review, and the earlier versions of your content, along with uploaded
+files that nothing else uses. Sharing
 between you and other creators ends. The leaderboards are worked out from the
 accounts that exist, so nobody else loses XP; the members below you each
 move up a place.

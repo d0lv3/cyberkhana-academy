@@ -44,7 +44,13 @@ app.use(
   })
 );
 app.use(cookieParser());
-app.use(express.json({ limit: '2mb' }));
+/* One Studio item may be larger than anything else the API takes. Its route
+   parses its own body (routes/content.ts), so that limit is only ever offered
+   to a signed-in creator. */
+const jsonBody = express.json({ limit: '2mb' });
+app.use((req, res, next) =>
+  req.method === 'PUT' && /^\/api\/content\/[^/]+\/item$/.test(req.path) ? next() : jsonBody(req, res, next)
+);
 app.use(originGuard);
 app.use('/api', apiLimiter);
 

@@ -30,6 +30,7 @@ import {
   deleteSharedItem,
   BUCKET_LABEL,
 } from '../../services/collabService';
+import { stashSet } from '../../services/studioStash';
 
 /** Stash a foreign module + its owner, then open it in the editor (admin mode). */
 function openAdminEdit(
@@ -38,7 +39,7 @@ function openAdminEdit(
   editRoute: string
 ): void {
   const { _ownerId, _ownerName, _bucket, ...clean } = mod;
-  sessionStorage.setItem(
+  stashSet(
     'academy-admin-module-edit',
     JSON.stringify({ id: mod.id, ownerId: _ownerId, ownerName: _ownerName, bucket: _bucket, module: clean })
   );
@@ -85,7 +86,7 @@ const OSModulesCreator: React.FC = () => {
   /** Open a shared module in the editor, writing back to its owner's bucket. */
   const editShared = (ownerId: string, mod: CreatorFundamentalModule) => {
     const owner = shared.find((g) => g.owner?.id === ownerId)?.owner;
-    sessionStorage.setItem(
+    stashSet(
       'academy-admin-module-edit',
       JSON.stringify({
         id: mod.id,
@@ -191,7 +192,7 @@ const OSModulesCreator: React.FC = () => {
       });
       return;
     }
-    sessionStorage.setItem(
+    stashSet(
       'academy-builtin-module-edit',
       JSON.stringify({ id: mod.id, module: builtinToEditableModule(mod, answers) })
     );

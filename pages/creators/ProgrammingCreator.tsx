@@ -43,6 +43,7 @@ import {
   type CollabPerson,
 } from '../../services/collabService';
 import type { ProgrammingPatch } from '../../services/creatorTypes';
+import { stashSet } from '../../services/studioStash';
 
 type DisplayModule = ProgrammingModule & Partial<CreatorMeta>;
 
@@ -392,7 +393,7 @@ const ProgrammingCreator: React.FC = () => {
     getCreatorConcepts(langSlug, moduleSlug).some((c) => c.id === conceptId);
 
   const stashAdminEdit = (stash: AdminProgrammingStash) => {
-    sessionStorage.setItem(ADMIN_PROGRAMMING_STASH, JSON.stringify(stash));
+    stashSet(ADMIN_PROGRAMMING_STASH, JSON.stringify(stash));
   };
 
   /* ── Open a row in the right editing mode ──

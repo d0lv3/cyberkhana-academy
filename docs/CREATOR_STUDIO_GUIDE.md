@@ -56,6 +56,23 @@ Every item carries one of three statuses, set from the dropdown in the editor he
 Saving syncs your content to your account on the server. Published items reach all
 students; drafts never leave your account.
 
+### Saving
+
+Each item saves on its own, when you press Save or, with Autosave on, shortly after you stop typing.
+
+- **If an item changed somewhere else** after you opened it (another tab, another device, or a
+  collaborator), the Studio asks which version to keep. It never overwrites the other one by itself.
+- **If a save is refused**, the Studio says why. Your version stays in the tab until you fix the
+  problem or go back to the saved one.
+- **Unsaved work is backed up on your device** until the server has it. If you close the tab first,
+  your next visit offers it back.
+- **Earlier versions are kept on the server**: up to 20 for each item, for up to 90 days, and one
+  more whenever an item is deleted or cut to less than half its size. There is no screen for them
+  yet, so ask an administrator to bring one back.
+- **Size limits:** one item can be up to 4 MB, and one content type up to about 14 MB in total.
+  Images pasted straight into lesson text are refused above 256 KB in one item, so upload images as
+  files instead.
+
 ### Bilingual fields
 
 Titles and descriptions always have **English + Arabic** inputs.

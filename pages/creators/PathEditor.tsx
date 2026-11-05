@@ -54,6 +54,7 @@ import {
 } from '../../services/examService';
 import { certificateLink, type CertificateData } from '../../services/certificateService';
 import type { Difficulty } from '../../types';
+import { stashGet, stashSet } from '../../services/studioStash';
 
 function generateSlug(title: string): string {
   return title
@@ -121,7 +122,7 @@ const PathEditor: React.FC = () => {
       if (viaShare) {
         p = undefined;
         try {
-          const raw = sessionStorage.getItem(SHARED_PATH_STASH);
+          const raw = stashGet(SHARED_PATH_STASH);
           const stash: SharedPathStash | null = raw ? JSON.parse(raw) : null;
           if (stash && stash.id === id) {
             p = stash.path;
@@ -285,7 +286,7 @@ const PathEditor: React.FC = () => {
     if (sharedCtx) {
       try {
         await saveSharedItem(sharedCtx.ownerId, 'paths', path);
-        sessionStorage.setItem(SHARED_PATH_STASH, JSON.stringify({ id: path.id, ...sharedCtx, path }));
+        stashSet(SHARED_PATH_STASH, JSON.stringify({ id: path.id, ...sharedCtx, path }));
       } catch (err) {
         setIsSaving(false);
         toast('error', err instanceof Error ? err.message : 'Could not save this path.');

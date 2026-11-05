@@ -39,6 +39,7 @@ import {
   getOSModuleDoneCount,
   isModuleEnrolled,
 } from '../../services/progressService';
+import { readModulePreview } from '../../services/contentStore';
 
 /* ─── Module overview ───
  *
@@ -95,14 +96,7 @@ const ModuleOverviewPage: React.FC = () => {
      the same way the viewer does, so a creator previews the front door too. */
   const isPreview = slug === '__preview__';
   const mod = useMemo<FundamentalModule | undefined>(() => {
-    if (isPreview) {
-      try {
-        const raw = localStorage.getItem('academy-module-preview');
-        return raw ? JSON.parse(raw) : undefined;
-      } catch {
-        return undefined;
-      }
-    }
+    if (isPreview) return readModulePreview<FundamentalModule>() ?? undefined;
     return getViewableModuleBySlug(slug || '');
   }, [slug, isPreview]);
 

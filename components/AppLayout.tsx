@@ -26,7 +26,11 @@ const AppLayout: React.FC = () => {
   const { revision } = useSyncStatus();
 
   useEffect(() => {
-    localStorage.setItem(SIDEBAR_KEY, String(collapsed));
+    try {
+      localStorage.setItem(SIDEBAR_KEY, String(collapsed));
+    } catch {
+      /* storage full or blocked: the choice lasts for this visit */
+    }
   }, [collapsed]);
 
   const mainRef = useRef<HTMLElement>(null);

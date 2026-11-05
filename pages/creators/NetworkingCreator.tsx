@@ -40,6 +40,7 @@ import {
   deleteSharedItem,
   BUCKET_LABEL,
 } from '../../services/collabService';
+import { stashSet } from '../../services/studioStash';
 
 /** Stash a foreign lesson + its owner, then open it in the editor (admin mode). */
 function openAdminEdit(
@@ -47,7 +48,7 @@ function openAdminEdit(
   lesson: AdminPublishedNetworkingLesson
 ): void {
   const { _ownerId, _ownerName, _bucket, ...clean } = lesson;
-  sessionStorage.setItem(
+  stashSet(
     ADMIN_NETWORKING_STASH,
     JSON.stringify({ id: lesson.id, ownerId: _ownerId, ownerName: _ownerName, lesson: clean })
   );
@@ -98,7 +99,7 @@ const NetworkingCreator: React.FC = () => {
     }
     const { _ownerId, _ownerName, _bucket, ...clean } = unit;
     const stash: AdminUnitStash = { id: unit.id, ownerId: _ownerId, ownerName: _ownerName, unit: clean };
-    sessionStorage.setItem(ADMIN_UNIT_STASH, JSON.stringify(stash));
+    stashSet(ADMIN_UNIT_STASH, JSON.stringify(stash));
     navigate(`/creators/networking/units/edit/${unit.id}?admin=1`);
   };
 
@@ -140,7 +141,7 @@ const NetworkingCreator: React.FC = () => {
   /** Open a shared lesson in the editor, writing back to its owner's bucket. */
   const editShared = (ownerId: string, lesson: CreatorNetworkingLesson) => {
     const owner = shared.find((g) => g.owner?.id === ownerId)?.owner;
-    sessionStorage.setItem(
+    stashSet(
       ADMIN_NETWORKING_STASH,
       JSON.stringify({
         id: lesson.id,

@@ -44,6 +44,7 @@ import { programmingLanguages } from '../../data/programming';
 import { builtinToEditableConcept } from '../../data/builtinCourse';
 import { ADMIN_PROGRAMMING_STASH, type AdminProgrammingStash } from './programmingEditStash';
 import type { TestCase } from '../../data/programming/types';
+import { stashGet, stashSet } from '../../services/studioStash';
 
 function generateId(): string {
   return `prog-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -204,7 +205,7 @@ const ProgrammingConceptEditor: React.FC = () => {
       if (!concept && builtin) concept = builtinToEditableConcept(builtin);
     } else if (isAdminEdit) {
       try {
-        const raw = sessionStorage.getItem(ADMIN_PROGRAMMING_STASH);
+        const raw = stashGet(ADMIN_PROGRAMMING_STASH);
         const stash: AdminProgrammingStash | null = raw ? JSON.parse(raw) : null;
         if (stash && stash.kind === 'concept' && stash.item.slug === conceptSlug) {
           concept = stash.item;
@@ -405,7 +406,7 @@ const ProgrammingConceptEditor: React.FC = () => {
           moduleSlug,
           item: concept,
         });
-        sessionStorage.setItem(ADMIN_PROGRAMMING_STASH, JSON.stringify({ kind: 'concept', ownerId: adminCtx.ownerId, ownerName: adminCtx.ownerName, languageSlug: langSlug, moduleSlug, item: concept }));
+        stashSet(ADMIN_PROGRAMMING_STASH, JSON.stringify({ kind: 'concept', ownerId: adminCtx.ownerId, ownerName: adminCtx.ownerName, languageSlug: langSlug, moduleSlug, item: concept }));
       } catch (err) {
         setIsSaving(false);
         toast('error', err instanceof Error ? err.message : 'Could not save this lesson.');

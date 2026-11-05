@@ -5,6 +5,7 @@ import User, { IUser } from '../models/User';
 import Progress from '../models/Progress';
 import Feedback from '../models/Feedback';
 import ContentBucket from '../models/ContentBucket';
+import ContentItemVersion from '../models/ContentItemVersion';
 import ContentGrant from '../models/ContentGrant';
 import ExamAttempt from '../models/ExamAttempt';
 import Certificate from '../models/Certificate';
@@ -198,10 +199,14 @@ async function keepOnlyPublished(user: IUser) {
       await ContentBucket.deleteOne({ _id: doc._id });
       bucketsRemoved++;
     } else if (JSON.stringify(kept) !== JSON.stringify(items)) {
-      await ContentBucket.updateOne({ _id: doc._id }, { $set: { items: kept } });
+      await ContentBucket.updateOne({ _id: doc._id }, { $set: { items: kept }, $inc: { revision: 1 } });
       bucketsTrimmed++;
     }
   }
+
+  /* Earlier versions hold drafts as readily as published work, and nothing of
+     theirs that was not published stays. What was published stays as it is now. */
+  await ContentItemVersion.deleteMany({ ownerId: user._id });
 
   const filesRemoved = await removeUnusedUploads(
     uploadRefs([docs.map((d) => d.items), user.avatarUrl]),

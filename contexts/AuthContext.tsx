@@ -8,7 +8,7 @@ import {
   claimCachesFor,
   flushPendingSync,
   forgetServerBackedCaches,
-  hasCachedCopyFor,
+  openCachedCopyFor,
 } from '../services/syncService';
 import { setOwnAuthor } from '../services/creatorDataService';
 import { setAwardedXp, setStreakXp } from '../services/xpService';
@@ -194,8 +194,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
      waited for. Either way it is the same pull. */
   const settle = useCallback(
     async (serverUser: ServerUser) => {
+      const request = sessionRequest.current;
       const account = adopt(serverUser);
-      const cached = hasCachedCopyFor(account.id);
+      const cached = await openCachedCopyFor(account.id);
+      // Signed out or signed in again while the device was answering.
+      if (request !== sessionRequest.current) return;
       const pulled = hydrateFromServer(account);
       if (!cached) await pulled;
     },

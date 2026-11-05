@@ -22,6 +22,7 @@ import {
 } from '../../services/collabService';
 import { SHARED_PATH_STASH } from './sharedPathStash';
 import { coverImageSrc } from '../../data/fundamentalsData';
+import { stashSet } from '../../services/studioStash';
 
 const PathsCreator: React.FC = () => {
   const navigate = useNavigate();
@@ -49,7 +50,7 @@ const PathsCreator: React.FC = () => {
 
   const editShared = (ownerId: string, path: CreatorPath) => {
     const owner = shared.find((g) => g.owner?.id === ownerId)?.owner;
-    sessionStorage.setItem(
+    stashSet(
       SHARED_PATH_STASH,
       JSON.stringify({ id: path.id, ownerId, ownerName: owner?.displayName ?? '', path })
     );

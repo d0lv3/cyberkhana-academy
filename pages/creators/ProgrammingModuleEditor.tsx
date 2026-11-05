@@ -17,6 +17,7 @@ import { programmingLanguages } from '../../data/programming';
 import { builtinToEditableProgrammingModule } from '../../data/builtinCourse';
 import { ADMIN_PROGRAMMING_STASH, type AdminProgrammingStash } from './programmingEditStash';
 import type { ProgrammingModule } from '../../data/programming/types';
+import { stashGet, stashSet } from '../../services/studioStash';
 
 function generateSlug(title: string): string {
   return title
@@ -77,7 +78,7 @@ const ProgrammingModuleEditor: React.FC = () => {
       if (!mod && builtin) mod = builtinToEditableProgrammingModule(builtin);
     } else if (isAdminEdit) {
       try {
-        const raw = sessionStorage.getItem(ADMIN_PROGRAMMING_STASH);
+        const raw = stashGet(ADMIN_PROGRAMMING_STASH);
         const stash: AdminProgrammingStash | null = raw ? JSON.parse(raw) : null;
         if (stash && stash.kind === 'module' && stash.item.id === moduleId) {
           mod = stash.item;
@@ -160,7 +161,7 @@ const ProgrammingModuleEditor: React.FC = () => {
           kind: 'module',
           item: mod,
         });
-        sessionStorage.setItem(ADMIN_PROGRAMMING_STASH, JSON.stringify({ kind: 'module', ownerId: adminCtx.ownerId, ownerName: adminCtx.ownerName, languageSlug: langSlug, item: mod }));
+        stashSet(ADMIN_PROGRAMMING_STASH, JSON.stringify({ kind: 'module', ownerId: adminCtx.ownerId, ownerName: adminCtx.ownerName, languageSlug: langSlug, item: mod }));
       } catch (err) {
         setIsSaving(false);
         toast('error', err instanceof Error ? err.message : 'Could not save this module.');

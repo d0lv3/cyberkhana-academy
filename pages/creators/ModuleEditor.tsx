@@ -38,6 +38,7 @@ import {
   type LocalizedMarkdown,
 } from '../../services/creatorTypes';
 import { cleanLabs, type ModuleLab } from '../../services/labTypes';
+import { setModulePreview } from '../../services/contentStore';
 import { exactText, moduleLanguages, pairOf, pickText, type Lang } from '../../services/contentLang';
 import {
   servedBody,
@@ -51,6 +52,7 @@ import {
 } from '../../services/moduleLocalize';
 import { MODULE_DOMAINS, MODULE_DOMAIN_META, type ModuleDomain } from '../../data/fundamentalsData';
 import type { Difficulty } from '../../types';
+import { stashGet, stashSet } from '../../services/studioStash';
 
 interface ModuleEditorProps {
   /** 'os' → OS Fundamentals module · 'standalone' → Modules-hub module */
@@ -176,12 +178,12 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
   useEffect(() => {
     if (id) {
       // Admin editing a foreign module: the list page stashed the full module
-      // (+ its owner) in sessionStorage. Fall back to a normal own-bucket load.
+      // (+ its owner) (services/studioStash.ts). Fall back to a normal own-bucket load.
       let mod: CreatorFundamentalModule | undefined;
       if (isBuiltinEdit) {
         // Built-in course converted by the list page; save creates the override.
         try {
-          const raw = sessionStorage.getItem(BUILTIN_EDIT_STASH);
+          const raw = stashGet(BUILTIN_EDIT_STASH);
           const stash: BuiltinEditStash | null = raw ? JSON.parse(raw) : null;
           if (stash && stash.id === id && stash.module) mod = stash.module;
         } catch {
@@ -194,7 +196,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
         }
       } else if (isAdminEdit) {
         try {
-          const raw = sessionStorage.getItem(ADMIN_EDIT_STASH);
+          const raw = stashGet(ADMIN_EDIT_STASH);
           const stash: AdminEditStash | null = raw ? JSON.parse(raw) : null;
           if (stash && stash.id === id && stash.module) {
             mod = stash.module;
@@ -509,7 +511,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
     if (adminCtx) {
       try {
         await saveModuleAsAdmin(adminCtx.ownerId, adminCtx.bucket, built);
-        sessionStorage.setItem(ADMIN_EDIT_STASH, JSON.stringify({ id: built.id, ...adminCtx, module: built }));
+        stashSet(ADMIN_EDIT_STASH, JSON.stringify({ id: built.id, ...adminCtx, module: built }));
         setExisting(built);
         if (!silent) toast('success', saved);
       } catch (err) {
@@ -524,7 +526,7 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
     // it writes a fresh, published DB module (owned by this admin) that overrides
     // the static original.
     saveModule(built);
-    if (isBuiltinEdit) sessionStorage.setItem(BUILTIN_EDIT_STASH, JSON.stringify({ id: built.id, module: built }));
+    if (isBuiltinEdit) stashSet(BUILTIN_EDIT_STASH, JSON.stringify({ id: built.id, module: built }));
     setExisting(built);
     if (!slug.trim()) setSlug(built.slug);
     setIsSaving(false);
@@ -565,23 +567,22 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({ kind }) => {
 
   /* ── Preview as published: snapshot the current (unsaved) draft and open it
    * in the real student viewer in a new tab. ── */
-  const handlePreview = () => {
+  const handlePreview = async () => {
     if (!hasMainTitle(false)) return;
     if (totalSections === 0) {
       setTab('content');
       toast('error', tr('Add at least one lesson to preview.', 'أضف درسًا واحدًا على الأقل للمعاينة.'));
       return;
     }
-    try {
-      localStorage.setItem('academy-module-preview', JSON.stringify(buildModule()));
-      window.open(
-        `${window.location.origin}${window.location.pathname}#/fundamentals/module/__preview__`,
-        '_blank',
-        'noopener'
-      );
-    } catch {
+    if (!(await setModulePreview(JSON.stringify(buildModule())))) {
       toast('error', tr('Could not open the preview.', 'تعذّر فتح المعاينة.'));
+      return;
     }
+    window.open(
+      `${window.location.origin}${window.location.pathname}#/fundamentals/module/__preview__`,
+      '_blank',
+      'noopener'
+    );
   };
 
   const tabCls = (on: boolean, amber = false) =>

@@ -18,6 +18,7 @@ import LoginPage from './pages/LoginPage';
 import NotFoundPage from './pages/NotFoundPage';
 import { loginPath, safeLoginDestination } from './services/loginDestination';
 import { ConnectionRecovery, SyncNoticeHost } from './components/ConnectionRecovery';
+import StudioSaveHost from './components/creators/StudioSaveHost';
 import { useSyncStatus } from './hooks/useSyncStatus';
 import { CACHE_OWNER_KEY } from './services/syncService';
 import { getPublishedPathBySlug } from './services/creatorDataService';
@@ -150,8 +151,8 @@ function CatalogRoute({ has, children }: { has: (params: RouteParams) => boolean
 function CreatorGate() {
   const { user, isLoading } = useAuth();
   const sync = useSyncStatus();
-  /* The Studio writes whole buckets back, so it never works from the copy a
-     visit opened with: it waits until this visit's pull has brought its own. */
+  /* A creator's work is only ever in memory, brought by this visit's pull, so
+     the Studio has nothing to open from until that has landed. */
   if (isLoading || sync.loading) return <LazyFallback />;
   if (!user || (user.role !== 'creator' && user.role !== 'admin')) {
     return <Navigate to="/dashboard" replace />;
@@ -408,6 +409,7 @@ const App: React.FC = () => {
               <FeedbackHost />
               <AccountNoticeHost />
               <SyncNoticeHost />
+              <StudioSaveHost />
               <LevelUpHost />
               <StreakMilestoneHost />
               <TourGate />

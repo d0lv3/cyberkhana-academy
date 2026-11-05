@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import mongoose from 'mongoose';
 import ContentBucket from '../models/ContentBucket';
+import { itemRevisions } from '../utils/contentStore';
 import ContentGrant from '../models/ContentGrant';
 import User from '../models/User';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
@@ -251,6 +252,7 @@ router.get('/shared', authenticate, requireRole('creator', 'admin'), async (req:
         bucket: g.bucket,
         owner: ownerById.get(String(g.ownerId)) ?? null,
         items: doc?.items ?? [],
+        revisions: doc ? itemRevisions(doc) : [],
       };
     });
 

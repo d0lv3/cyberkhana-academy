@@ -39,6 +39,7 @@ import {
 } from '../../services/creatorTypes';
 import type { NetworkingLesson } from '../../components/network-sim/types';
 import { ADMIN_UNIT_STASH, type AdminUnitStash } from './networkingUnitStash';
+import { stashGet, stashSet } from '../../services/studioStash';
 
 /* ─── Networking unit editor ───
  *
@@ -99,7 +100,7 @@ const NetworkingUnitEditor: React.FC = () => {
     let unit: NetworkingUnit | undefined;
     if (viaAdmin) {
       try {
-        const raw = sessionStorage.getItem(ADMIN_UNIT_STASH);
+        const raw = stashGet(ADMIN_UNIT_STASH);
         const stash: AdminUnitStash | null = raw ? JSON.parse(raw) : null;
         if (stash && stash.id === id) {
           unit = stash.unit;
@@ -208,7 +209,7 @@ const NetworkingUnitEditor: React.FC = () => {
     if (adminCtx) {
       try {
         await saveItemAsAdmin(adminCtx.ownerId, 'networking-units', unit);
-        sessionStorage.setItem(ADMIN_UNIT_STASH, JSON.stringify({ id: unit.id, ...adminCtx, unit }));
+        stashSet(ADMIN_UNIT_STASH, JSON.stringify({ id: unit.id, ...adminCtx, unit }));
       } catch (err) {
         setIsSaving(false);
         toast('error', err instanceof Error ? err.message : 'Could not save this unit.');

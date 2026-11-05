@@ -5,6 +5,7 @@ import Button from '../ui/EnhancedButton';
 import StatusSelect from './StatusSelect';
 import { useLang } from '../../contexts/LangContext';
 import type { ContentStatus } from '../../services/creatorTypes';
+import { noteEditorOpen } from '../../services/syncService';
 
 interface CreatorLayoutProps {
   title: string;
@@ -78,6 +79,11 @@ const CreatorLayout: React.FC<CreatorLayoutProps> = ({
   }, [autoSave, autoSaveSnapshot]);
 
   useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
+
+  /* Saving is what makes this an editor rather than a list page: its form was
+     made from one revision of an item, and has to stay answerable for that. */
+  const isEditor = Boolean(onSave);
+  useEffect(() => (isEditor ? noteEditorOpen() : undefined), [isEditor]);
 
   const toggleAutoSave = () => {
     const next = !autoSave;

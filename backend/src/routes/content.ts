@@ -1,6 +1,7 @@
-import { Router } from 'express';
+import express, { Router, type RequestHandler } from 'express';
 import mongoose from 'mongoose';
 import ContentBucket from '../models/ContentBucket';
+import ContentItemVersion from '../models/ContentItemVersion';
 import User from '../models/User';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 import { checkSafeJson } from '../utils/sanitize';
@@ -18,6 +19,7 @@ import { scheduleXpRestate } from '../utils/xpMigration';
 import { forStudents } from '../utils/redact';
 import { certificateProblem, examProblem } from '../shared/exam';
 import { addedTargets, examGateProblem } from '../utils/examGate';
+import { changeItem, itemKeyOf, itemRevisions } from '../utils/contentStore';
 import builtinAnswers from '../data/builtinAnswerKey.json';
 
 const router = Router();
@@ -38,6 +40,48 @@ router.use((req, res, next) => {
 });
 
 const MAX_ITEMS_PER_BUCKET = 300;
+
+/* ── How big a save may be ──
+ * A bucket is one MongoDB document, which cannot pass 16 MB, and an author who
+ * reaches that should hear it while the work can still be saved somewhere. The
+ * figure leaves room for what the database adds around the JSON. */
+const MAX_ITEM_SIZE = '4mb';
+const MAX_BUCKET_BYTES = 14 * 1024 * 1024;
+
+/** An image pasted into lesson text rather than uploaded travels inside every
+ *  save of the lesson. The Studio's own inline art stays far under this. */
+const MAX_INLINE_IMAGE_BYTES = 256 * 1024;
+const INLINE_IMAGE = /data:image\/[^"'\s)]*/gi;
+
+function inlineImageBytes(item: unknown): number {
+  let total = 0;
+  for (const match of JSON.stringify(item ?? null).matchAll(INLINE_IMAGE)) total += match[0].length;
+  return total;
+}
+
+function isRevision(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0;
+}
+
+const CONFLICT = {
+  error: 'This was changed somewhere else after you opened it. Open it again to see the latest version.',
+  code: 'VERSION_CONFLICT',
+} as const;
+
+/** The JSON body of a save of one item, parsed only once the session has been
+ *  checked, with a reason an author can act on when it is too large. */
+const itemBody: RequestHandler = (req, res, next) => {
+  express.json({ limit: MAX_ITEM_SIZE })(req, res, (err?: unknown) => {
+    if ((err as { type?: string } | undefined)?.type === 'entity.too.large') {
+      res.status(413).json({
+        error: `This is too large to save, over ${MAX_ITEM_SIZE.replace('mb', ' MB')}. Split it into smaller parts, and upload images as files.`,
+        code: 'ITEM_TOO_LARGE',
+      });
+      return;
+    }
+    next(err as Error | undefined);
+  });
+};
 
 /** Buckets an admin may moderate across all authors. These all store a flat,
  * id-keyed array, so one list/patch pair serves them. `programming-patches` is
@@ -138,6 +182,19 @@ function withoutCredit(item: AnyItem): AnyItem {
 function credited(item: AnyItem, author: PublicAuthor | undefined): AnyItem {
   const clean = withoutCredit(item);
   return author ? { ...clean, _author: author } : clean;
+}
+
+/** A built-in language's own name/color/description and its visibility are an
+ *  admin's call, never a permitted creator's: the same permission that lets a
+ *  creator add a module to Python does not let them rewrite Python. */
+function builtinLanguageProblem(user: { role: string }, bucket: ContentBucketKey, item: AnyItem): string | null {
+  if (bucket !== 'programming-patches' || user.role === 'admin') return null;
+  const slug = item.languageSlug;
+  return typeof slug === 'string' &&
+    BUILTIN_PROGRAMMING_SLUGS.has(slug) &&
+    (item.newLanguage !== undefined || item.languageHidden !== undefined)
+    ? 'Only an admin may redefine or hide a built-in language'
+    : null;
 }
 
 /** Structural validation per bucket (deep content is free-form, identity fields are not). */
@@ -325,17 +382,36 @@ router.get('/mine', authenticate, requireRole('creator', 'admin'), async (req: A
   try {
     const docs = await ContentBucket.find({ ownerId: req.user!._id }).lean();
     const buckets: Partial<Record<ContentBucketKey, unknown[]>> = {};
-    for (const doc of docs) buckets[doc.bucket] = doc.items ?? [];
-    res.json({ buckets });
+    const revisions: Partial<Record<ContentBucketKey, ReturnType<typeof itemRevisions>>> = {};
+    for (const doc of docs) {
+      buckets[doc.bucket] = doc.items ?? [];
+      revisions[doc.bucket] = itemRevisions(doc);
+    }
+    res.json({ buckets, revisions });
   } catch (err) {
     logger.error('content.mine_failed', { error: String(err) });
     res.status(500).json({ error: 'Could not load your content' });
   }
 });
 
-/* ── PUT /api/content/:bucket ── replace MY bucket. Ownership comes from the
- * session; a creator can never write another creator's documents. */
-router.put('/:bucket', authenticate, requireRole('creator', 'admin'), async (req: AuthRequest, res) => {
+/* ── PUT /api/content/:bucket ── what saving used to be: a whole bucket, replaced
+ * by whatever one browser held. A tab still running that code is told to reload
+ * rather than being allowed to write, because the copy it holds may be out of
+ * date. Its unsaved work stays on its device, and the reload offers it back. */
+router.put('/:bucket', authenticate, requireRole('creator', 'admin'), (req: AuthRequest, res) => {
+  if (!isBucketKey(req.params.bucket)) {
+    res.status(404).json({ error: 'Unknown bucket' });
+    return;
+  }
+  res.status(409).json({ error: 'The Academy was updated. Reload this page to keep saving.', code: 'RELOAD_REQUIRED' });
+});
+
+/* ── PUT /api/content/:bucket/item ── save one of MY items. Ownership comes from
+ * the session; a creator can never write another creator's documents.
+ * `baseRevision` is the revision this copy was made from, 0 for a new item: if
+ * the item has moved on since, the save is refused rather than undoing whatever
+ * moved it, and the author decides. */
+router.put('/:bucket/item', authenticate, requireRole('creator', 'admin'), itemBody, async (req: AuthRequest, res) => {
   const bucket = req.params.bucket;
   if (!isBucketKey(bucket)) {
     res.status(404).json({ error: 'Unknown bucket' });
@@ -348,65 +424,166 @@ router.put('/:bucket', authenticate, requireRole('creator', 'admin'), async (req
     return;
   }
 
-  const items = (req.body ?? {}).items;
-  const problem = validateBucketItems(bucket, items);
+  const { item, baseRevision, account, overwriting } = (req.body ?? {}) as {
+    item?: unknown;
+    baseRevision?: unknown;
+    account?: unknown;
+    overwriting?: unknown;
+  };
+
+  /* The session decides whose bucket this is, so a tab left open across a change
+     of account would otherwise save the last person's work into the next one's. */
+  if (account !== undefined && account !== String(req.user!._id)) {
+    res.status(409).json({ error: 'You are signed in as someone else now. Reload this page.', code: 'ACCOUNT_CHANGED' });
+    return;
+  }
+  if (!isRevision(baseRevision)) {
+    res.status(400).json({ error: 'A baseRevision is required' });
+    return;
+  }
+
+  const problem = validateBucketItems(bucket, [item]);
   if (problem) {
     res.status(400).json({ error: problem });
     return;
   }
+  const incoming = item as AnyItem;
 
-  // A built-in language's own name/color/description and its visibility are
-  // an admin's call, never a permitted creator's — the same permission that
-  // lets a creator add a module to Python does not let them rewrite Python.
-  if (bucket === 'programming-patches' && req.user!.role !== 'admin') {
-    for (const item of items as unknown[]) {
-      if (!isPlainObject(item)) continue;
-      const slug = item.languageSlug;
-      if (
-        typeof slug === 'string' &&
-        BUILTIN_PROGRAMMING_SLUGS.has(slug) &&
-        (item.newLanguage !== undefined || item.languageHidden !== undefined)
-      ) {
-        res.status(403).json({ error: 'Only an admin may redefine or hide a built-in language' });
-        return;
-      }
-    }
+  const language = builtinLanguageProblem(req.user!, bucket, incoming);
+  if (language) {
+    res.status(403).json({ error: language });
+    return;
   }
 
-  try {
-    /* A path's exam is a separate permission, and its targets an admin's: each
-       path is held against the copy already stored (utils/examGate.ts). */
-    if (bucket === 'paths') {
-      const stored = await ContentBucket.findOne({ ownerId: req.user!._id, bucket }).select('items').lean();
-      const before = new Map(
-        ((stored?.items as AnyItem[]) ?? []).filter(isPlainObject).map((i) => [String(i.id), i] as const)
-      );
-      for (const item of items as AnyItem[]) {
-        const gate = examGateProblem(req.user!, before.get(String(item.id)), item);
-        if (gate) {
-          res.status(403).json({ error: gate, code: 'EXAM_PERMISSION' });
-          return;
-        }
-        const targets = addedTargets(before.get(String(item.id)), item);
-        if (targets.length) {
-          logger.info('exam.targets_set', { by: String(req.user!._id), pathId: String(item.id), targets });
-        }
-      }
-    }
+  // Credit is assigned on the way out; a stored copy would only go stale.
+  const clean = withoutCredit(incoming);
+  const key = itemKeyOf(bucket, clean) as string;
 
-    // Credit is assigned on the way out; a stored copy would only go stale.
-    const clean = (items as unknown[]).map((i) => (isPlainObject(i) ? withoutCredit(i) : i));
-    await ContentBucket.findOneAndUpdate(
-      { ownerId: req.user!._id, bucket },
-      { $set: { items: clean } },
-      { upsert: true, new: true }
+  try {
+    const outcome = await changeItem<{ status: number; body: Record<string, unknown> }>(
+      { ownerId: req.user!._id as mongoose.Types.ObjectId, bucket, key, savedBy: req.user!._id as mongoose.Types.ObjectId },
+      ({ item: before, revision, items }) => {
+        /* Already saved: the answer to an earlier try never arrived. */
+        if (before && JSON.stringify(before) === JSON.stringify(clean)) return { item: clean };
+        if (revision !== baseRevision) {
+          return { refuse: { status: 409, body: { ...CONFLICT, revision } } };
+        }
+        if (!before && items.length >= MAX_ITEMS_PER_BUCKET) {
+          return { refuse: { status: 400, body: { error: `Too many items (max ${MAX_ITEMS_PER_BUCKET})` } } };
+        }
+
+        /* An image already in the item does not block the fix of a typo: this
+           only refuses a save that adds more of them. */
+        const pasted = inlineImageBytes(clean);
+        if (pasted > MAX_INLINE_IMAGE_BYTES && pasted > inlineImageBytes(before)) {
+          return {
+            refuse: {
+              status: 413,
+              body: {
+                error: `This has ${Math.round(pasted / 1024)} KB of images pasted into its text. Upload them as files instead, then save again.`,
+                code: 'INLINE_IMAGES_TOO_LARGE',
+              },
+            },
+          };
+        }
+
+        const others = items.filter((i) => itemKeyOf(bucket, i) !== key);
+        if (Buffer.byteLength(JSON.stringify([...others, clean])) > MAX_BUCKET_BYTES) {
+          return {
+            refuse: {
+              status: 413,
+              body: {
+                error: 'This section of your Studio is full. Move or delete something in it, then save again.',
+                code: 'BUCKET_FULL',
+              },
+            },
+          };
+        }
+
+        /* A path's exam is a separate permission, and its targets an admin's: each
+           path is held against the copy already stored (utils/examGate.ts). */
+        if (bucket === 'paths') {
+          const gate = examGateProblem(req.user!, before, clean);
+          if (gate) return { refuse: { status: 403, body: { error: gate, code: 'EXAM_PERMISSION' } } };
+          const targets = addedTargets(before, clean);
+          if (targets.length) {
+            logger.info('exam.targets_set', { by: String(req.user!._id), pathId: String(clean.id), targets });
+          }
+        }
+
+        return { item: clean, keepVersion: overwriting === true };
+      }
     );
-    res.json({ ok: true, count: (items as unknown[]).length });
+
+    if ('refused' in outcome) {
+      res.status(outcome.refused.status).json(outcome.refused.body);
+      return;
+    }
+    res.json({ ok: true, revision: outcome.revision, sequence: outcome.sequence });
   } catch (err) {
-    logger.error('content.put_failed', { bucket, error: String(err) });
+    logger.error('content.item_save_failed', { bucket, error: String(err) });
     res.status(500).json({ error: 'Could not save content' });
   }
 });
+
+/* ── GET /api/content/history/:bucket/:key ── the earlier versions of one of MY
+ * items, newest first, without their content. */
+router.get('/history/:bucket/:key', authenticate, requireRole('creator', 'admin'), async (req: AuthRequest, res) => {
+  const { bucket, key } = req.params;
+  if (!isBucketKey(bucket)) {
+    res.status(404).json({ error: 'Unknown bucket' });
+    return;
+  }
+  try {
+    const versions = await ContentItemVersion.find({ ownerId: req.user!._id, bucket, itemKey: key })
+      .sort({ createdAt: -1 })
+      .select('createdAt replacedBy')
+      .lean();
+    res.json({
+      versions: versions.map((v) => ({ id: String(v._id), createdAt: v.createdAt, replacedBy: String(v.replacedBy) })),
+    });
+  } catch (err) {
+    logger.error('content.history_failed', { error: String(err) });
+    res.status(500).json({ error: 'Could not load earlier versions' });
+  }
+});
+
+/* ── GET /api/content/history/:bucket/:key/:versionId ── one earlier version in
+ * full. It holds answers and drafts, so it only ever goes back to its owner.
+ * Bringing it back is an ordinary save of what this returns. */
+router.get(
+  '/history/:bucket/:key/:versionId',
+  authenticate,
+  requireRole('creator', 'admin'),
+  async (req: AuthRequest, res) => {
+    const { bucket, key, versionId } = req.params;
+    if (!isBucketKey(bucket) || !mongoose.isValidObjectId(versionId)) {
+      res.status(404).json({ error: 'Version not found' });
+      return;
+    }
+    try {
+      const version = await ContentItemVersion.findOne({
+        _id: versionId,
+        ownerId: req.user!._id,
+        bucket,
+        itemKey: key,
+      }).lean();
+      if (!version) {
+        res.status(404).json({ error: 'Version not found' });
+        return;
+      }
+      res.json({ id: String(version._id), createdAt: version.createdAt, item: version.data });
+    } catch (err) {
+      logger.error('content.history_failed', { error: String(err) });
+      res.status(500).json({ error: 'Could not load this version' });
+    }
+  }
+);
+
+/** A bucket's revisions for someone other than its owner to save against. */
+function ownedRevisions(doc: Parameters<typeof itemRevisions>[0] & { ownerId: unknown }) {
+  return itemRevisions(doc).map((r) => ({ ownerId: String(doc.ownerId), bucket: doc.bucket, ...r }));
+}
 
 /* ── GET /api/content/admin/items ── every PUBLISHED or IN-REVIEW item across
  * ALL authors in the flat, id-keyed buckets (OS modules, standalone modules,
@@ -423,6 +600,7 @@ router.get(['/admin/items', '/admin/modules'], authenticate, requireRole('admin'
     const nameById = new Map(owners.map((u) => [String(u._id), u.displayName as string]));
 
     const items: AnyItem[] = [];
+    const revisions = docs.flatMap(ownedRevisions);
     for (const doc of docs) {
       for (const item of ((doc.items as AnyItem[]) ?? [])) {
         if (!isPlainObject(item) || !isModeratableItem(item)) continue;
@@ -434,7 +612,7 @@ router.get(['/admin/items', '/admin/modules'], authenticate, requireRole('admin'
         });
       }
     }
-    res.json({ items });
+    res.json({ items, revisions });
   } catch (err) {
     logger.error('content.admin_items_failed', { error: String(err) });
     res.status(500).json({ error: 'Could not load content' });
@@ -451,10 +629,11 @@ router.patch(
   authenticate,
   requireRole('creator', 'admin'),
   async (req: AuthRequest, res) => {
-    const { ownerId, bucket, item } = (req.body ?? {}) as {
+    const { ownerId, bucket, item, baseRevision } = (req.body ?? {}) as {
       ownerId?: unknown;
       bucket?: unknown;
       item?: unknown;
+      baseRevision?: unknown;
     };
 
     if (typeof bucket !== 'string' || !isAdminItemBucket(bucket)) {
@@ -484,34 +663,28 @@ router.patch(
     }
 
     try {
-      const doc = await ContentBucket.findOne({ ownerId, bucket });
-      if (!doc) {
-        res.status(404).json({ error: 'Content not found' });
+      const outcome = await changeItem<{ status: number; body: Record<string, unknown> }>(
+        { ownerId, bucket, key: item.id, savedBy: req.user!._id as mongoose.Types.ObjectId },
+        ({ item: before, revision }) => {
+          if (!before) return { refuse: { status: 404, body: { error: 'Content not found' } } };
+          if (isRevision(baseRevision) && baseRevision !== revision) {
+            return { refuse: { status: 409, body: { ...CONFLICT, revision } } };
+          }
+          if (bucket === 'paths') {
+            const gate = examGateProblem(req.user!, before, item);
+            if (gate) return { refuse: { status: 403, body: { error: gate, code: 'EXAM_PERMISSION' } } };
+            const targets = addedTargets(before, item);
+            if (targets.length) {
+              logger.info('exam.targets_set', { by: String(req.user!._id), owner: ownerId, pathId: item.id, targets });
+            }
+          }
+          return { item: withoutCredit(item) };
+        }
+      );
+      if ('refused' in outcome) {
+        res.status(outcome.refused.status).json(outcome.refused.body);
         return;
       }
-      const list = doc.items as AnyItem[];
-      const idx = list.findIndex((i) => isPlainObject(i) && i.id === item.id);
-      if (idx < 0) {
-        res.status(404).json({ error: 'Content not found' });
-        return;
-      }
-
-      if (bucket === 'paths') {
-        const before = isPlainObject(list[idx]) ? list[idx] : undefined;
-        const gate = examGateProblem(req.user!, before, item);
-        if (gate) {
-          res.status(403).json({ error: gate, code: 'EXAM_PERMISSION' });
-          return;
-        }
-        const targets = addedTargets(before, item);
-        if (targets.length) {
-          logger.info('exam.targets_set', { by: String(req.user!._id), owner: ownerId, pathId: item.id, targets });
-        }
-      }
-
-      list[idx] = withoutCredit(item);
-      doc.markModified('items');
-      await doc.save();
 
       logger.info('content.delegated_item_edited', {
         by: String(req.user!._id),
@@ -519,7 +692,7 @@ router.patch(
         bucket,
         itemId: item.id,
       });
-      res.json({ ok: true });
+      res.json({ ok: true, revision: outcome.revision });
     } catch (err) {
       logger.error('content.admin_item_patch_failed', { error: String(err) });
       res.status(500).json({ error: 'Could not save content' });
@@ -536,10 +709,11 @@ router.delete(
   authenticate,
   requireRole('creator', 'admin'),
   async (req: AuthRequest, res) => {
-    const { ownerId, bucket, itemId } = (req.body ?? {}) as {
+    const { ownerId, bucket, itemId, baseRevision } = (req.body ?? {}) as {
       ownerId?: unknown;
       bucket?: unknown;
       itemId?: unknown;
+      baseRevision?: unknown;
     };
 
     if (typeof bucket !== 'string' || !isAdminItemBucket(bucket)) {
@@ -564,21 +738,20 @@ router.delete(
     }
 
     try {
-      const doc = await ContentBucket.findOne({ ownerId, bucket });
-      if (!doc) {
-        res.status(404).json({ error: 'Content not found' });
+      const outcome = await changeItem<{ status: number; body: Record<string, unknown> }>(
+        { ownerId, bucket, key: itemId, savedBy: req.user!._id as mongoose.Types.ObjectId },
+        ({ item: before, revision }) => {
+          if (!before) return { refuse: { status: 404, body: { error: 'Content not found' } } };
+          if (isRevision(baseRevision) && baseRevision !== revision) {
+            return { refuse: { status: 409, body: { ...CONFLICT, revision } } };
+          }
+          return { item: null };
+        }
+      );
+      if ('refused' in outcome) {
+        res.status(outcome.refused.status).json(outcome.refused.body);
         return;
       }
-      const list = doc.items as AnyItem[];
-      const idx = list.findIndex((i) => isPlainObject(i) && i.id === itemId);
-      if (idx < 0) {
-        res.status(404).json({ error: 'Content not found' });
-        return;
-      }
-
-      list.splice(idx, 1);
-      doc.markModified('items');
-      await doc.save();
 
       logger.info('content.delegated_item_deleted', {
         by: String(req.user!._id),
@@ -616,6 +789,7 @@ router.get('/admin/programming', authenticate, requireRole('admin'), async (_req
     const nameById = new Map(owners.map((u) => [String(u._id), u.displayName as string]));
 
     const items: AnyItem[] = [];
+    const revisions = docs.flatMap(ownedRevisions);
     for (const doc of docs) {
       for (const patch of ((doc.items as AnyItem[]) ?? [])) {
         if (!isPlainObject(patch) || typeof patch.languageSlug !== 'string') continue;
@@ -649,7 +823,7 @@ router.get('/admin/programming', authenticate, requireRole('admin'), async (_req
         });
       }
     }
-    res.json({ items });
+    res.json({ items, revisions });
   } catch (err) {
     logger.error('content.admin_programming_failed', { error: String(err) });
     res.status(500).json({ error: 'Could not load programming content' });
@@ -664,12 +838,13 @@ router.patch(
   authenticate,
   requireRole('creator', 'admin'),
   async (req: AuthRequest, res) => {
-  const { ownerId, languageSlug, kind, moduleSlug, item } = (req.body ?? {}) as {
+  const { ownerId, languageSlug, kind, moduleSlug, item, baseRevision } = (req.body ?? {}) as {
     ownerId?: unknown;
     languageSlug?: unknown;
     kind?: unknown;
     moduleSlug?: unknown;
     item?: unknown;
+    baseRevision?: unknown;
   };
 
   if (typeof ownerId !== 'string' || !mongoose.isValidObjectId(ownerId)) {
@@ -711,47 +886,41 @@ router.patch(
   }
 
   try {
-    const doc = await ContentBucket.findOne({ ownerId, bucket: 'programming-patches' });
-    if (!doc) {
-      res.status(404).json({ error: 'Programming content not found' });
+    const refuse = (status: number, error: string) => ({ refuse: { status, body: { error } } });
+    const outcome = await changeItem<{ status: number; body: Record<string, unknown> }>(
+      { ownerId, bucket: 'programming-patches', key: languageSlug, savedBy: req.user!._id as mongoose.Types.ObjectId },
+      ({ item: before, revision }) => {
+        if (!before) return refuse(404, 'Programming content not found');
+        if (isRevision(baseRevision) && baseRevision !== revision) {
+          return { refuse: { status: 409, body: { ...CONFLICT, revision } } };
+        }
+        // A copy: what was read is also what goes into the item's history.
+        const patch = structuredClone(before);
+
+        if (kind === 'language') {
+          if (!isPlainObject(patch.newLanguage)) return refuse(404, 'Language definition not found');
+          patch.newLanguage = item;
+        } else if (kind === 'module') {
+          const list = Array.isArray(patch.newModules) ? (patch.newModules as AnyItem[]) : [];
+          const idx = list.findIndex((m) => isPlainObject(m) && m.id === item.id);
+          if (idx < 0) return refuse(404, 'Module not found');
+          list[idx] = item;
+        } else {
+          const byModule = isPlainObject(patch.newConcepts)
+            ? (patch.newConcepts as Record<string, AnyItem[]>)
+            : null;
+          const list = byModule?.[moduleSlug as string];
+          const idx = Array.isArray(list) ? list.findIndex((c) => isPlainObject(c) && c.id === item.id) : -1;
+          if (idx < 0 || !list) return refuse(404, 'Concept not found');
+          list[idx] = item;
+        }
+        return { item: patch };
+      }
+    );
+    if ('refused' in outcome) {
+      res.status(outcome.refused.status).json(outcome.refused.body);
       return;
     }
-    const patches = doc.items as AnyItem[];
-    const patch = patches.find((p) => isPlainObject(p) && p.languageSlug === languageSlug);
-    if (!patch || !isPlainObject(patch)) {
-      res.status(404).json({ error: 'Programming content not found' });
-      return;
-    }
-
-    if (kind === 'language') {
-      if (!isPlainObject(patch.newLanguage)) {
-        res.status(404).json({ error: 'Language definition not found' });
-        return;
-      }
-      patch.newLanguage = item;
-    } else if (kind === 'module') {
-      const list = Array.isArray(patch.newModules) ? (patch.newModules as AnyItem[]) : [];
-      const idx = list.findIndex((m) => isPlainObject(m) && m.id === item.id);
-      if (idx < 0) {
-        res.status(404).json({ error: 'Module not found' });
-        return;
-      }
-      list[idx] = item;
-    } else {
-      const byModule = isPlainObject(patch.newConcepts)
-        ? (patch.newConcepts as Record<string, AnyItem[]>)
-        : null;
-      const list = byModule?.[moduleSlug as string];
-      const idx = Array.isArray(list) ? list.findIndex((c) => isPlainObject(c) && c.id === item.id) : -1;
-      if (idx < 0 || !list) {
-        res.status(404).json({ error: 'Concept not found' });
-        return;
-      }
-      list[idx] = item;
-    }
-
-    doc.markModified('items');
-    await doc.save();
 
     logger.info('content.delegated_programming_edited', {
       by: String(req.user!._id),
@@ -760,7 +929,7 @@ router.patch(
       kind,
       itemId: typeof item.id === 'string' ? item.id : languageSlug,
     });
-    res.json({ ok: true });
+    res.json({ ok: true, revision: outcome.revision });
   } catch (err) {
     logger.error('content.delegated_programming_patch_failed', { error: String(err) });
     res.status(500).json({ error: 'Could not save programming content' });
@@ -775,12 +944,13 @@ router.delete(
   authenticate,
   requireRole('creator', 'admin'),
   async (req: AuthRequest, res) => {
-    const { ownerId, languageSlug, kind, moduleSlug, itemId } = (req.body ?? {}) as {
+    const { ownerId, languageSlug, kind, moduleSlug, itemId, baseRevision } = (req.body ?? {}) as {
       ownerId?: unknown;
       languageSlug?: unknown;
       kind?: unknown;
       moduleSlug?: unknown;
       itemId?: unknown;
+      baseRevision?: unknown;
     };
 
     if (typeof ownerId !== 'string' || !mongoose.isValidObjectId(ownerId)) {
@@ -813,50 +983,46 @@ router.delete(
     }
 
     try {
-      const doc = await ContentBucket.findOne({ ownerId, bucket: 'programming-patches' });
-      if (!doc) {
-        res.status(404).json({ error: 'Programming content not found' });
+      const refuse = (status: number, error: string) => ({ refuse: { status, body: { error } } });
+      const outcome = await changeItem<{ status: number; body: Record<string, unknown> }>(
+        { ownerId, bucket: 'programming-patches', key: languageSlug, savedBy: req.user!._id as mongoose.Types.ObjectId },
+        ({ item: before, revision }) => {
+          if (!before) return refuse(404, 'Programming content not found');
+          if (isRevision(baseRevision) && baseRevision !== revision) {
+            return { refuse: { status: 409, body: { ...CONFLICT, revision } } };
+          }
+          // Dropping the definition takes the whole patch with it: its modules
+          // and lessons have no language left to belong to.
+          if (kind === 'language') return { item: null };
+
+          // A copy: what was read is also what goes into the item's history.
+          const patch = structuredClone(before);
+          if (kind === 'module') {
+            const list = Array.isArray(patch.newModules) ? (patch.newModules as AnyItem[]) : [];
+            const idx = list.findIndex((m) => isPlainObject(m) && m.id === itemId);
+            if (idx < 0) return refuse(404, 'Module not found');
+            const [removed] = list.splice(idx, 1);
+            // Its lessons are keyed by the module's slug, so they go too.
+            const slug = isPlainObject(removed) ? removed.slug : undefined;
+            if (typeof slug === 'string' && isPlainObject(patch.newConcepts)) {
+              delete (patch.newConcepts as Record<string, unknown>)[slug];
+            }
+          } else {
+            const byModule = isPlainObject(patch.newConcepts)
+              ? (patch.newConcepts as Record<string, AnyItem[]>)
+              : null;
+            const list = byModule?.[moduleSlug as string];
+            const idx = Array.isArray(list) ? list.findIndex((c) => isPlainObject(c) && c.id === itemId) : -1;
+            if (idx < 0 || !list) return refuse(404, 'Concept not found');
+            list.splice(idx, 1);
+          }
+          return { item: patch };
+        }
+      );
+      if ('refused' in outcome) {
+        res.status(outcome.refused.status).json(outcome.refused.body);
         return;
       }
-      const patches = doc.items as AnyItem[];
-      const patch = patches.find((p) => isPlainObject(p) && p.languageSlug === languageSlug);
-      if (!patch || !isPlainObject(patch)) {
-        res.status(404).json({ error: 'Programming content not found' });
-        return;
-      }
-
-      if (kind === 'language') {
-        // Dropping the definition takes the whole patch with it: its modules
-        // and lessons have no language left to belong to.
-        doc.items = patches.filter((p) => !(isPlainObject(p) && p.languageSlug === languageSlug));
-      } else if (kind === 'module') {
-        const list = Array.isArray(patch.newModules) ? (patch.newModules as AnyItem[]) : [];
-        const idx = list.findIndex((m) => isPlainObject(m) && m.id === itemId);
-        if (idx < 0) {
-          res.status(404).json({ error: 'Module not found' });
-          return;
-        }
-        const [removed] = list.splice(idx, 1);
-        // Its lessons are keyed by the module's slug, so they go too.
-        const slug = isPlainObject(removed) ? removed.slug : undefined;
-        if (typeof slug === 'string' && isPlainObject(patch.newConcepts)) {
-          delete (patch.newConcepts as Record<string, unknown>)[slug];
-        }
-      } else {
-        const byModule = isPlainObject(patch.newConcepts)
-          ? (patch.newConcepts as Record<string, AnyItem[]>)
-          : null;
-        const list = byModule?.[moduleSlug as string];
-        const idx = Array.isArray(list) ? list.findIndex((c) => isPlainObject(c) && c.id === itemId) : -1;
-        if (idx < 0 || !list) {
-          res.status(404).json({ error: 'Concept not found' });
-          return;
-        }
-        list.splice(idx, 1);
-      }
-
-      doc.markModified('items');
-      await doc.save();
 
       logger.info('content.delegated_programming_deleted', {
         by: String(req.user!._id),
@@ -864,12 +1030,59 @@ router.delete(
         languageSlug,
         kind,
       });
-      res.json({ ok: true });
+      res.json({ ok: true, revision: outcome.revision });
     } catch (err) {
       logger.error('content.delegated_programming_delete_failed', { error: String(err) });
       res.status(500).json({ error: 'Could not delete this content' });
     }
   }
 );
+
+/* ── DELETE /api/content/:bucket/item ── delete one of MY items. Held to the same
+ * check as saving: a copy that is out of date cannot delete what it has not seen. */
+router.delete('/:bucket/item', authenticate, requireRole('creator', 'admin'), async (req: AuthRequest, res) => {
+  const bucket = req.params.bucket;
+  if (!isBucketKey(bucket)) {
+    res.status(404).json({ error: 'Unknown bucket' });
+    return;
+  }
+  if (!canWriteBucket(req.user!, bucket)) {
+    res.status(403).json({ error: 'You do not have permission to author this content type' });
+    return;
+  }
+
+  const { key, baseRevision, account } = (req.body ?? {}) as {
+    key?: unknown;
+    baseRevision?: unknown;
+    account?: unknown;
+  };
+  if (account !== undefined && account !== String(req.user!._id)) {
+    res.status(409).json({ error: 'You are signed in as someone else now. Reload this page.', code: 'ACCOUNT_CHANGED' });
+    return;
+  }
+  if (typeof key !== 'string' || !key || !isRevision(baseRevision)) {
+    res.status(400).json({ error: 'A key and a baseRevision are required' });
+    return;
+  }
+
+  try {
+    const outcome = await changeItem<{ status: number; body: Record<string, unknown> }>(
+      { ownerId: req.user!._id as mongoose.Types.ObjectId, bucket, key, savedBy: req.user!._id as mongoose.Types.ObjectId },
+      ({ item: before, revision }) =>
+        // Already gone: the answer to an earlier try never arrived.
+        before && revision !== baseRevision
+          ? { refuse: { status: 409, body: { ...CONFLICT, revision } } }
+          : { item: null }
+    );
+    if ('refused' in outcome) {
+      res.status(outcome.refused.status).json(outcome.refused.body);
+      return;
+    }
+    res.json({ ok: true, revision: 0, sequence: outcome.sequence });
+  } catch (err) {
+    logger.error('content.item_delete_failed', { bucket, error: String(err) });
+    res.status(500).json({ error: 'Could not delete content' });
+  }
+});
 
 export default router;

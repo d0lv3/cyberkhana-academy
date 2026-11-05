@@ -53,7 +53,11 @@ function readSet(key: string): Set<string> {
 }
 
 function writeSet(key: string, set: Set<string>): void {
-  localStorage.setItem(key, JSON.stringify([...set]));
+  try {
+    localStorage.setItem(key, JSON.stringify([...set]));
+  } catch {
+    /* storage full or blocked: this is a copy of what the server records */
+  }
   emitProgressChange();
   // Write-through to the server (debounced; no-op when signed out).
   queueProgressPush();

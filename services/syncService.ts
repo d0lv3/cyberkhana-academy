@@ -1,18 +1,19 @@
 /* ─── Sync Service ───
- * Bridges the localStorage cache layer with the backend API:
+ * Bridges the device's copies with the backend API:
  *  - hydrateFromServer(): on login, pulls everyone's PUBLISHED content into
  *    the published-* caches, takes in the server's record of my progress, and
- *    seeds my own creator-* buckets (first login migrates existing local
- *    content UP to the server instead of wiping it).
- *  - queueContentPush()/queueProgressPush(): debounced write-through called
- *    by creatorDataService/progressService on every local write. Progress
- *    pushes carry bookmarks only; completions go through completionService.
+ *    brings my own creator-* buckets into memory (services/contentStore.ts).
+ *  - queueContentChanges()/queueProgressPush(): debounced write-through called
+ *    by creatorDataService/progressService on every local write. Content goes
+ *    an item at a time, checked against its revision (see "content
+ *    write-through"). Progress pushes carry bookmarks only; completions go
+ *    through completionService.
  *  - applyServerRecord(): takes in the server's answer to any progress write.
  *  - claimCachesFor() / flushPendingSync() / forgetServerBackedCaches(): keep
  *    the caches to one account at a time (see "Whose caches these are").
- *  - hasCachedCopyFor(): whether this device already holds the account's copy,
- *    so the app can open from it while the pull catches up behind the page
- *    (see "Opening from this device's copy").
+ *  - openCachedCopyFor(): brings in the copy this device holds for the account,
+ *    if it has one, so the app can open from it while the pull catches up behind
+ *    the page (see "Opening from this device's copy").
  *
  * All pushes are no-ops until a session exists, so the app still works fully
  * offline against the local cache.
@@ -26,6 +27,17 @@ import { levelFor } from '../backend/src/shared/xp';
 import { dayKeyOf } from '../backend/src/shared/streak';
 import { forgetServerXp, isOvertaken, nextScoreTicket, setServerXp } from './serverXp';
 import { getLabProgress, saveLabProgress } from './labProgress';
+import { cacheClear, cacheDelete, cacheEntries, cacheSet } from './localCache';
+import {
+  clearModulePreview,
+  forgetStudioContent,
+  loadCatalogCopy,
+  loadModulePreview,
+  readContent,
+  saveCatalogCopy,
+  writeContent,
+} from './contentStore';
+import { clearStashes } from './studioStash';
 
 /* Mirrors progressService's event name (defined locally to avoid an import
  * cycle — progressService imports this module for write-through). */
@@ -93,11 +105,38 @@ export interface SyncStatus {
    *  differs from the copy that page was drawn from. Pages are keyed by it,
    *  so they start again from what is true now. */
   revision: number;
+  /** Saves that need a decision from their author (components/creators/StudioSaveHost.tsx). */
+  problems: SaveProblem[];
+  /** Work an earlier visit left on this device that never reached the server. */
+  recoverable: RecoverableItem[];
+}
+
+export interface SaveProblem {
+  id: string;
+  title: string;
+  /** Another copy got there first, or the server refused this one for a reason. */
+  kind: 'conflict' | 'rejected';
+  reason?: string;
+  code?: string;
+}
+
+export interface RecoverableItem {
+  id: string;
+  title: string;
+  savedAt: string;
 }
 const SYNC_STATUS_EVENT = 'academy-sync-status';
 const PENDING_BOOKMARKS_KEY = 'academy-bookmarks-unsaved';
 const PENDING_BUCKETS_KEY = 'academy-content-unsaved';
-let status: SyncStatus = { failedLoads: [], saveFailed: false, retrying: false, loading: false, revision: 0 };
+let status: SyncStatus = {
+  failedLoads: [],
+  saveFailed: false,
+  retrying: false,
+  loading: false,
+  revision: 0,
+  problems: [],
+  recoverable: [],
+};
 let account: { id: string; displayName: string } | null = null;
 let generation = 0;
 let retryTimer: ReturnType<typeof setTimeout> | null = null;
@@ -132,8 +171,6 @@ function rememberPendingWrites(): void {
   try {
     if (bookmarksDirty) localStorage.setItem(PENDING_BOOKMARKS_KEY, '1');
     else localStorage.removeItem(PENDING_BOOKMARKS_KEY);
-    if (pendingBuckets.size) localStorage.setItem(PENDING_BUCKETS_KEY, JSON.stringify([...pendingBuckets.keys()]));
-    else localStorage.removeItem(PENDING_BUCKETS_KEY);
   } catch { /* The visible error still offers Retry when storage is unavailable. */ }
 }
 
@@ -187,7 +224,7 @@ export function setSyncEnabled(enabled: boolean): void {
     hydrationInFlight = null;
     recordPulled = false;
     retryDelay = 5_000;
-    updateStatus({ failedLoads: [], saveFailed: false, retrying: false, loading: false });
+    updateStatus({ failedLoads: [], saveFailed: false, retrying: false, loading: false, problems: [], recoverable: [] });
   }
 }
 
@@ -203,42 +240,390 @@ function readArray<T>(key: string): T[] {
   }
 }
 
-/* ── content write-through ── */
+/* ── content write-through ──
+ *
+ * A creator's work is held in memory for the visit, and goes to the server an
+ * item at a time, each saying which revision it was made from. The server
+ * refuses a save made from a copy it has moved on from, so no tab, device or
+ * collaborator can quietly undo another's work: the author is asked instead.
+ *
+ * Until the server has an item, this device keeps a backup of that item alone.
+ * The next visit compares it with the server and OFFERS it back. It is never
+ * pushed on its own: a copy left on a device may be long out of date, and that
+ * is exactly how a whole section once vanished from an account. */
 
-const pendingBuckets = new Map<string, unknown[]>();
+interface PendingItem {
+  bucket: string;
+  key: string;
+  /** What to save, or null to delete it. */
+  item: unknown | null;
+  /** The name it goes by, which a deleted item can no longer say. */
+  title: string;
+  /** The revision to save against, when it is not simply the last one seen: a
+   *  restored backup carries its own, and keeping my version in a conflict uses
+   *  the one that beat it. */
+  base?: number;
+  /** Replacing someone else's work knowingly, so its copy must be kept. */
+  overwriting?: boolean;
+  problem?: 'conflict' | 'rejected';
+  reason?: string;
+  code?: string;
+  /** The revision that beat this copy, while the author decides. */
+  latest?: number;
+}
+
+interface BackupRecord {
+  bucket: string;
+  key: string;
+  item: unknown;
+  baseRevision: number;
+  savedAt: string;
+}
+
+const pendingItems = new Map<string, PendingItem>();
+/** The revision of each of my items, as last heard from the server. */
+const itemRevisions = new Map<string, number>();
+const offers = new Map<string, BackupRecord>();
 let bucketTimer: ReturnType<typeof setTimeout> | null = null;
 
-export function queueContentPush(storageKey: string, items: unknown[]): void {
+const itemIdOf = (bucket: string, key: string) => `${bucket}\u0000${key}`;
+const backupKeyOf = (owner: string, id: string) => `backup:${owner}:${id}`;
+
+/** The field that names an item within its bucket (as on the server). */
+function itemKeyOf(bucket: string, item: unknown): string | null {
+  if (!item || typeof item !== 'object') return null;
+  const record = item as { id?: unknown; languageSlug?: unknown };
+  const key = bucket === 'programming-patches' ? record.languageSlug : record.id;
+  return typeof key === 'string' && key ? key : null;
+}
+
+/** The name a creator knows an item by, for the messages about it. */
+function titleOf(item: unknown, key: string): string {
+  const record = (item ?? {}) as { title?: { en?: string; ar?: string }; newLanguage?: { name?: string } };
+  return record.title?.en || record.title?.ar || record.newLanguage?.name || key;
+}
+
+/** Put one item into the copy in memory, or take it out. */
+function setInMemory(bucket: string, key: string, item: unknown | null): void {
+  const storageKey = STORAGE_KEY_BY_BUCKET.get(bucket);
+  if (!storageKey) return;
+  const items = readContent<unknown>(storageKey);
+  const index = items.findIndex((i) => itemKeyOf(bucket, i) === key);
+  if (item === null) {
+    if (index >= 0) items.splice(index, 1);
+  } else if (index >= 0) items[index] = item;
+  else items.push(item);
+  writeContent(storageKey, JSON.stringify(items));
+}
+
+const STORAGE_KEY_BY_BUCKET = new Map(
+  Object.entries(SERVER_BUCKET_BY_STORAGE_KEY).map(([storageKey, bucket]) => [bucket, storageKey])
+);
+
+function publishProblems(): void {
+  const problems: SaveProblem[] = [];
+  for (const [id, entry] of pendingItems) {
+    if (!entry.problem) continue;
+    problems.push({
+      id,
+      title: entry.title,
+      kind: entry.problem,
+      reason: entry.reason,
+      code: entry.code,
+    });
+  }
+  if (JSON.stringify(problems) !== JSON.stringify(status.problems)) updateStatus({ problems });
+}
+
+function publishOffers(): void {
+  updateStatus({
+    recoverable: [...offers].map(([id, offer]) => ({
+      id,
+      title: titleOf(offer.item, offer.key),
+      savedAt: offer.savedAt,
+    })),
+  });
+}
+
+function dropBackup(id: string): void {
+  if (account) void cacheDelete(backupKeyOf(account.id, id));
+}
+
+function queueItem(bucket: string, key: string, item: unknown | null, title: string): void {
+  const id = itemIdOf(bucket, key);
+  const earlier = pendingItems.get(id);
+  const entry: PendingItem = {
+    bucket,
+    key,
+    item,
+    title,
+    base: earlier?.base,
+    overwriting: earlier?.overwriting,
+    // Editing can fix what the server refused, but not what a conflict is about.
+    ...(earlier?.problem === 'conflict'
+      ? { problem: 'conflict' as const, latest: earlier.latest }
+      : {}),
+  };
+  pendingItems.set(id, entry);
+  if (item === null) dropBackup(id);
+  else if (account) {
+    const backup: BackupRecord = {
+      bucket,
+      key,
+      item,
+      baseRevision: entry.base ?? itemRevisions.get(id) ?? 0,
+      savedAt: new Date().toISOString(),
+    };
+    void cacheSet(backupKeyOf(account.id, id), backup);
+  }
+}
+
+/** Queue what changed between two copies of a bucket. Called on every write, so
+ *  nothing else has to know that saving happens an item at a time. */
+export function queueContentChanges(storageKey: string, before: unknown[], after: unknown[]): void {
   const bucket = SERVER_BUCKET_BY_STORAGE_KEY[storageKey];
   if (!bucket || !syncEnabled) return;
-  pendingBuckets.set(bucket, items);
-  rememberPendingWrites();
+  const earlier = new Map<string, string>();
+  for (const item of before) {
+    const key = itemKeyOf(bucket, item);
+    if (key) earlier.set(key, JSON.stringify(item));
+  }
+  const still = new Set<string>();
+  for (const item of after) {
+    const key = itemKeyOf(bucket, item);
+    if (!key) continue;
+    still.add(key);
+    if (earlier.get(key) !== JSON.stringify(item)) queueItem(bucket, key, item, titleOf(item, key));
+  }
+  for (const [key, json] of earlier) {
+    if (!still.has(key)) queueItem(bucket, key, null, titleOf(JSON.parse(json), key));
+  }
+  publishProblems();
   if (bucketTimer) clearTimeout(bucketTimer);
   bucketTimer = setTimeout(() => {
     bucketTimer = null;
     // Signed out in the meantime: sign-out already pushed what was waiting.
-    if (syncEnabled) void flushBuckets();
-    else pendingBuckets.clear();
+    if (syncEnabled) void flushItems();
+    else pendingItems.clear();
   }, 800);
 }
 
-async function flushBuckets(): Promise<void> {
+const hasUnsentItems = () => [...pendingItems.values()].some((entry) => !entry.problem);
+
+/** Worth another try later. Anything else is the server's considered answer. */
+function isPassing(err: unknown): boolean {
+  if (!(err instanceof ApiError)) return true;
+  return err.status >= 500 || err.status === 401 || err.status === 408 || err.status === 425 || err.status === 429;
+}
+
+/* A large item on a slow connection takes more than the usual 20 seconds, and
+   giving up early would only send it all over again. */
+const ITEM_SAVE_TIMEOUT_MS = 90_000;
+
+async function sendPendingItems(): Promise<void> {
   const ticket = generation;
-  const entries = [...pendingBuckets.entries()];
-  for (const [bucket, items] of entries) {
+  for (const [id, entry] of [...pendingItems]) {
     if (!syncEnabled || ticket !== generation) return;
+    if (entry.problem) continue;
+    const base = entry.base ?? itemRevisions.get(id) ?? 0;
+    const owner = account?.id;
     try {
-      await api.put(`/content/${bucket}`, { items });
+      const { revision, sequence } =
+        entry.item === null
+          ? await api.delete<{ revision: number; sequence: number }>(`/content/${entry.bucket}/item`, {
+              key: entry.key,
+              baseRevision: base,
+              account: owner,
+            })
+          : await api.put<{ revision: number; sequence: number }>(
+              `/content/${entry.bucket}/item`,
+              {
+                item: entry.item,
+                baseRevision: base,
+                account: owner,
+                ...(entry.overwriting ? { overwriting: true } : {}),
+              },
+              ITEM_SAVE_TIMEOUT_MS
+            );
       if (ticket !== generation) return;
-      if (pendingBuckets.get(bucket) === items) pendingBuckets.delete(bucket);
+      if (entry.item === null) itemRevisions.delete(id);
+      else itemRevisions.set(id, revision);
+      remoteSaves.delete(id);
+      announce({ type: 'saved', account: owner, bucket: entry.bucket, key: entry.key, item: entry.item, revision, sequence });
+      const current = pendingItems.get(id);
+      if (current === entry) {
+        pendingItems.delete(id);
+        dropBackup(id);
+      } else if (current) {
+        // Edited again while this was on its way: that edit is made from this one.
+        current.base = undefined;
+        current.overwriting = undefined;
+        flushAgain = true;
+      }
     } catch (err) {
       if (ticket !== generation) return;
-      console.warn(`[sync] failed to push ${bucket}:`, err);
-      updateStatus({ saveFailed: true });
-      scheduleRetry();
+      const current = pendingItems.get(id);
+      if (!current) continue;
+      if (err instanceof ApiError && err.status === 409 && err.body.code === 'VERSION_CONFLICT') {
+        current.problem = 'conflict';
+        current.latest = typeof err.body.revision === 'number' ? err.body.revision : 0;
+      } else if (!isPassing(err)) {
+        current.problem = 'rejected';
+        current.reason = (err as Error).message;
+        current.code = typeof (err as ApiError).body.code === 'string' ? ((err as ApiError).body.code as string) : undefined;
+      } else {
+        console.warn(`[sync] failed to save ${entry.bucket}:`, err);
+        updateStatus({ saveFailed: true });
+        scheduleRetry();
+      }
     }
   }
-  rememberPendingWrites();
+}
+
+let flushing: Promise<void> | null = null;
+let flushAgain = false;
+
+/** One at a time: a save has to wait for the revision the one before it earns. */
+function flushItems(): Promise<void> {
+  if (flushing) {
+    flushAgain = true;
+    return flushing;
+  }
+  flushing = (async () => {
+    do {
+      flushAgain = false;
+      await sendPendingItems();
+    } while (flushAgain && syncEnabled);
+  })().finally(() => {
+    flushing = null;
+    publishProblems();
+    if (syncEnabled && status.saveFailed && !bookmarksDirty && !hasUnsentItems()) {
+      updateStatus({ saveFailed: false });
+    }
+  });
+  return flushing;
+}
+
+/** In a conflict, this version wins. What it replaces stays in the item's history. */
+export function keepMyVersion(id: string): void {
+  const entry = pendingItems.get(id);
+  if (!entry || entry.problem !== 'conflict') return;
+  entry.problem = undefined;
+  entry.base = entry.latest ?? 0;
+  entry.latest = undefined;
+  entry.overwriting = true;
+  publishProblems();
+  void flushItems();
+}
+
+/** Drop this device's version of an item, and start again from the server's. */
+export async function discardLocalVersion(id: string): Promise<void> {
+  pendingItems.delete(id);
+  dropBackup(id);
+  publishProblems();
+  await pullOwnContent();
+}
+
+/** Take back work an earlier visit left here. It goes through the same check as
+ *  any save, against the revision it was made from, so if the item has moved on
+ *  since then the author is asked about that too. */
+export function restoreBackup(id: string): void {
+  const offer = offers.get(id);
+  if (!offer) return;
+  offers.delete(id);
+  setInMemory(offer.bucket, offer.key, offer.item);
+  pendingItems.set(id, {
+    bucket: offer.bucket,
+    key: offer.key,
+    item: offer.item,
+    title: titleOf(offer.item, offer.key),
+    base: offer.baseRevision,
+  });
+  publishOffers();
+  // Whatever is on screen was drawn without it.
+  updateStatus({ revision: status.revision + 1 });
+  void flushItems();
+}
+
+export function discardBackup(id: string): void {
+  offers.delete(id);
+  dropBackup(id);
+  publishOffers();
+}
+
+/* ── Other tabs of this Studio ──
+ *
+ * Each tab holds its own copy, so a save in one tells the others. They take it
+ * in, unless an editor is open: what that editor shows was made from the older
+ * revision, and if it is saved the server has to be able to tell. Those wait
+ * until the editor closes. */
+
+type TabMessage =
+  | {
+      type: 'saved';
+      account?: string;
+      bucket: string;
+      key: string;
+      item: unknown | null;
+      revision: number;
+      sequence: number;
+    }
+  | { type: 'session-ended' };
+
+/* Browsers only. The build loads this file under Node (scripts/build-xp-catalog.mjs),
+   which has a BroadcastChannel of its own, and an open one never lets it exit. */
+const tabs =
+  typeof window !== 'undefined' && typeof BroadcastChannel === 'function'
+    ? new BroadcastChannel('academy-studio')
+    : null;
+const remoteSaves = new Map<string, Extract<TabMessage, { type: 'saved' }>>();
+let openEditors = 0;
+
+function announce(message: TabMessage): void {
+  try {
+    tabs?.postMessage(message);
+  } catch {
+    /* Too large to pass along: that tab's save is still checked by the server. */
+  }
+}
+
+function takeRemoteSaves(): void {
+  if (openEditors > 0) return;
+  for (const [id, saved] of remoteSaves) {
+    /* A later revision is always a higher number, so this cannot go backwards. */
+    if (pendingItems.has(id) || saved.sequence <= (itemRevisions.get(id) ?? 0)) continue;
+    setInMemory(saved.bucket, saved.key, saved.item);
+    if (saved.item === null) itemRevisions.delete(id);
+    else itemRevisions.set(id, saved.revision);
+  }
+  remoteSaves.clear();
+}
+
+/** An editor has opened, holding a form made from the revision in memory now.
+ *  Returns what to call when it closes. */
+export function noteEditorOpen(): () => void {
+  openEditors++;
+  return () => {
+    openEditors--;
+    takeRemoteSaves();
+  };
+}
+
+if (tabs) {
+  tabs.onmessage = (event: MessageEvent<TabMessage>) => {
+    const message = event.data;
+    if (message.type === 'session-ended') {
+      // Whoever this tab was showing is not who the cookie says any more.
+      if (account) window.location.reload();
+      return;
+    }
+    if (message.account !== account?.id) return;
+    const id = itemIdOf(message.bucket, message.key);
+    // It has reached the server, so nothing is waiting to be offered back.
+    if (offers.delete(id)) publishOffers();
+    remoteSaves.set(id, message);
+    takeRemoteSaves();
+  };
 }
 
 /* ── progress write-through ──
@@ -534,7 +919,7 @@ export function queueProgressPush(): void {
     try {
       await pushProgress();
       if (session !== generation) return;
-      if (!bookmarksDirty && !pendingBuckets.size) updateStatus({ saveFailed: false });
+      if (!bookmarksDirty && !hasUnsentItems()) updateStatus({ saveFailed: false });
     } catch (err) {
       if (session !== generation) return;
       console.warn('[sync] failed to push progress:', err);
@@ -571,22 +956,31 @@ export const CACHE_OWNER_KEY = 'academy-cache-owner';
  * when a pull brings down both the catalog and the record, and dropped with
  * the copy itself: at sign-out, and when another account takes the device. A
  * first sign-in here has no copy, so it waits for the pull as it always did.
+ * The catalog itself is in IndexedDB, so a browser that has cleared it, or never
+ * managed to keep it, waits the same way, whatever this mark says.
  */
 const CACHE_FILLED_KEY = 'academy-cache-filled';
 
-/** Does this device hold a whole copy for this account, to open from? */
-export function hasCachedCopyFor(accountId: string): boolean {
+/** Does this device hold a whole copy for this account, to open from? If it
+ *  does, it is in memory by the time this answers. */
+export async function openCachedCopyFor(accountId: string): Promise<boolean> {
+  // A preview tab opens onto a draft only the device can hand it.
+  if (window.location.hash.includes('__preview__')) await loadModulePreview();
   try {
-    return (
-      localStorage.getItem(CACHE_OWNER_KEY) === accountId &&
-      localStorage.getItem(CACHE_FILLED_KEY) === accountId
-    );
+    if (
+      localStorage.getItem(CACHE_OWNER_KEY) !== accountId ||
+      localStorage.getItem(CACHE_FILLED_KEY) !== accountId
+    ) {
+      return false;
+    }
   } catch {
     return false;
   }
+  return loadCatalogCopy();
 }
 
-/** The creator-* keys: my own Studio content, mirrored from my buckets. */
+/** Where a creator's Studio content used to be kept whole. Only read now, to
+ *  rescue what was still waiting there (see adoptOldDeviceCopies). */
 const CREATOR_KEYS: string[] = Object.keys(SERVER_BUCKET_BY_STORAGE_KEY);
 
 /** Learning progress: the server's record of it, and the bookmarks pushed back. */
@@ -650,11 +1044,22 @@ function removeKeys(match: (key: string) => boolean): void {
   for (const key of doomed) localStorage.removeItem(key);
 }
 
+/** A creator's work held for this visit, which goes with the session. Backups
+ *  are not part of it: they stay for their owner's next visit. */
+function forgetStudioCopies(): void {
+  forgetStudioContent();
+  itemRevisions.clear();
+  remoteSaves.clear();
+  offers.clear();
+  clearModulePreview();
+  clearStashes();
+}
+
 /** Queued pushes belong to the session that queued them. */
 function discardPendingPushes(): void {
   if (bucketTimer) clearTimeout(bucketTimer);
   bucketTimer = null;
-  pendingBuckets.clear();
+  pendingItems.clear();
   if (progressTimer) clearTimeout(progressTimer);
   progressTimer = null;
   bookmarksDirty = false;
@@ -707,8 +1112,7 @@ function creditedTo(storageKey: string, displayName: string): boolean {
  *    it is dropped rather than merged into this one, and so are a lab's
  *    working state (it can complete a lesson) and feedback still waiting to
  *    send (it would go out under this name). Studio content stays only where
- *    every item is credited to this person, for the first-login migration in
- *    seedOwnBuckets.
+ *    every item is credited to this person, for adoptOldDeviceCopies to look at.
  */
 export function claimCachesFor(account: { id: string; displayName: string }): void {
   try {
@@ -718,8 +1122,13 @@ export function claimCachesFor(account: { id: string; displayName: string }): vo
     localStorage.removeItem(CACHE_FILLED_KEY);
     discardPendingPushes();
     forgetServerXp();
+    forgetStudioCopies();
     if (owner) {
       removeKeys((key) => isServerBackedKey(key) || isDeviceOnlyAccountKey(key));
+      /* Only for an owner on record. A store too full to hold the mark looks
+         like this on every visit, and backups are filed by account anyway. */
+      void cacheClear('backup:');
+      announce({ type: 'session-ended' });
     } else {
       removeKeys(
         (key) =>
@@ -751,7 +1160,7 @@ export async function flushPendingSync(): Promise<void> {
   if (progressTimer) clearTimeout(progressTimer);
   progressTimer = null;
 
-  await flushBuckets();
+  await flushItems();
   if (!syncEnabled || ticket !== generation) return;
   if (progressWaiting && syncEnabled) {
     try {
@@ -764,7 +1173,7 @@ export async function flushPendingSync(): Promise<void> {
     }
   }
   if (ticket !== generation) return;
-  if (!bookmarksDirty && !pendingBuckets.size) updateStatus({ saveFailed: false });
+  if (!bookmarksDirty && !hasUnsentItems()) updateStatus({ saveFailed: false });
 }
 
 /**
@@ -774,7 +1183,8 @@ export async function flushPendingSync(): Promise<void> {
  * anyone else's sign-in clears them (claimCachesFor).
  */
 export function forgetServerBackedCaches(): void {
-  const unsavedBuckets = new Set(pendingBuckets.keys());
+  // A device copy not yet looked at is still the only copy of what it holds.
+  const unsavedBuckets = new Set(readArray<string>(PENDING_BUCKETS_KEY));
   const keepBookmarks = bookmarksDirty;
   discardPendingPushes();
   forgetServerXp();
@@ -784,15 +1194,11 @@ export function forgetServerBackedCaches(): void {
     removeKeys((key) => isServerBackedKey(key)
       && !unsavedBuckets.has(SERVER_BUCKET_BY_STORAGE_KEY[key])
       && !(keepBookmarks && ['academy-paths-enrolled', 'academy-modules-enrolled', 'academy-last-activity'].includes(key)));
-    const stashes: string[] = [];
-    for (let i = 0; i < sessionStorage.length; i++) {
-      const key = sessionStorage.key(i);
-      if (key?.startsWith('academy-')) stashes.push(key);
-    }
-    for (const key of stashes) sessionStorage.removeItem(key);
   } catch {
     /* Storage unavailable: nothing was cached. */
   }
+  forgetStudioCopies();
+  announce({ type: 'session-ended' });
 }
 
 /* ── hydration ── */
@@ -814,18 +1220,18 @@ function mergeProgress(server: ProgressSnapshot | null, overtaken = false): void
   if (!server) return;
   if (!overtaken) writeSolvedFlags(server.solvedFlags);
 
-  localStorage.setItem(
-    'academy-paths-enrolled',
-    JSON.stringify(setUnion(readArray<string>('academy-paths-enrolled'), server.enrolledPaths ?? []))
-  );
-  localStorage.setItem(
-    'academy-modules-enrolled',
-    JSON.stringify(setUnion(readArray<string>('academy-modules-enrolled'), server.enrolledModules ?? []))
-  );
-  localStorage.setItem(
-    FINISHED_MODULES_KEY,
-    JSON.stringify(setUnion(readArray<string>(FINISHED_MODULES_KEY), server.finishedModules ?? []))
-  );
+  /* A device with no room for these still has an account. The server holds the
+     record, so this is never a reason to say the connection failed. */
+  const keep = (key: string, value: string[]) => {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (err) {
+      console.warn('[sync] could not keep the record on this device:', err);
+    }
+  };
+  keep('academy-paths-enrolled', setUnion(readArray<string>('academy-paths-enrolled'), server.enrolledPaths ?? []));
+  keep('academy-modules-enrolled', setUnion(readArray<string>('academy-modules-enrolled'), server.enrolledModules ?? []));
+  keep(FINISHED_MODULES_KEY, setUnion(readArray<string>(FINISHED_MODULES_KEY), server.finishedModules ?? []));
 
   // Last activity: the newer timestamp wins.
   try {
@@ -840,32 +1246,119 @@ function mergeProgress(server: ProgressSnapshot | null, overtaken = false): void
   }
 }
 
-/** Seed my own creator buckets; first login pushes existing local work UP.
- *  Returns whether the server's copy differed from what was cached. */
-function seedOwnBuckets(serverBuckets: Record<string, unknown[] | undefined>): boolean {
-  let changed = false;
+/** Bring my own buckets into memory. Studio pages wait for this and nothing else
+ *  draws a draft, so there is no page to start again when it lands. */
+function applyOwnBuckets(
+  serverBuckets: Record<string, unknown[] | undefined>,
+  revisions: Record<string, { key: string; revision: number }[] | undefined>
+): void {
+  itemRevisions.clear();
+  remoteSaves.clear();
+  for (const [storageKey, bucket] of Object.entries(SERVER_BUCKET_BY_STORAGE_KEY)) {
+    for (const { key, revision } of revisions[bucket] ?? []) itemRevisions.set(itemIdOf(bucket, key), revision);
+    writeContent(storageKey, JSON.stringify(serverBuckets[bucket] ?? []));
+  }
+  // Anything still on its way is newer than what was just read.
+  for (const entry of pendingItems.values()) setInMemory(entry.bucket, entry.key, entry.item);
+}
+
+/** Pick up what the previous version of this app left behind: a whole bucket on
+ *  the device, and a mark saying which ones had changes the server never took.
+ *  Items in those that are ahead of the server become backups, offered like any
+ *  other, and then the copies go. A marked bucket may be long out of date, so an
+ *  item the server holds a newer version of is not offered. */
+async function adoptOldDeviceCopies(
+  owner: { id: string },
+  serverBuckets: Record<string, unknown[] | undefined>
+): Promise<void> {
   const unsaved = new Set(readArray<string>(PENDING_BUCKETS_KEY));
-  const pairs: Array<[string, string]> = Object.entries(SERVER_BUCKET_BY_STORAGE_KEY);
-  for (const [storageKey, bucket] of pairs) {
-    const serverItems = serverBuckets[bucket];
-    if (unsaved.has(bucket)) {
-      queueContentPush(storageKey, readArray(storageKey));
-    } else if (serverItems !== undefined) {
-      // Server is the source of truth once a bucket exists there.
-      const next = JSON.stringify(serverItems);
-      if (localStorage.getItem(storageKey) !== next) {
-        localStorage.setItem(storageKey, next);
-        changed = true;
+  let allKept = true;
+  for (const [storageKey, bucket] of Object.entries(SERVER_BUCKET_BY_STORAGE_KEY)) {
+    let raw: string | null = null;
+    try {
+      raw = localStorage.getItem(storageKey);
+    } catch {
+      continue;
+    }
+    if (raw === null) continue;
+    const stored = serverBuckets[bucket];
+    let kept = true;
+    if (unsaved.has(bucket) || stored === undefined) {
+      for (const item of readArray<unknown>(storageKey)) {
+        const key = itemKeyOf(bucket, item);
+        if (!key) continue;
+        const onServer = stored?.find((i) => itemKeyOf(bucket, i) === key);
+        if (onServer && JSON.stringify(onServer) === JSON.stringify(item)) continue;
+        const mine = (item as { updatedAt?: unknown }).updatedAt;
+        const theirs = (onServer as { updatedAt?: unknown } | undefined)?.updatedAt;
+        if (typeof mine === 'string' && typeof theirs === 'string' && mine <= theirs) continue;
+        const id = itemIdOf(bucket, key);
+        const backup: BackupRecord = {
+          bucket,
+          key,
+          item,
+          baseRevision: itemRevisions.get(id) ?? 0,
+          savedAt: typeof mine === 'string' ? mine : new Date().toISOString(),
+        };
+        if (!(await cacheSet(backupKeyOf(owner.id, id), backup))) kept = false;
       }
-    } else {
-      /* Never synced: migrate any existing local content up. Whatever is
-         still cached here got through claimCachesFor, so it is this
-         account's own work and nobody else's. */
-      const local = readArray(storageKey);
-      if (local.length > 0) queueContentPush(storageKey, local);
+    }
+    if (!kept) {
+      // Nowhere to put them: the old copy stays until there is.
+      allKept = false;
+      continue;
+    }
+    try {
+      localStorage.removeItem(storageKey);
+    } catch {
+      /* it goes next time */
     }
   }
-  return changed;
+  if (allKept) {
+    try {
+      localStorage.removeItem(PENDING_BUCKETS_KEY);
+    } catch {
+      /* it goes next time */
+    }
+  }
+}
+
+/** See which backups are still ahead of the server, and offer those. */
+async function offerBackups(
+  owner: { id: string },
+  serverBuckets: Record<string, unknown[] | undefined>
+): Promise<void> {
+  const prefix = `backup:${owner.id}:`;
+  offers.clear();
+  for (const [entryKey, backup] of await cacheEntries<BackupRecord>(prefix)) {
+    const id = entryKey.slice(prefix.length);
+    if (pendingItems.has(id)) continue;
+    const onServer = serverBuckets[backup.bucket]?.find((i) => itemKeyOf(backup.bucket, i) === backup.key);
+    if (onServer && JSON.stringify(onServer) === JSON.stringify(backup.item)) {
+      void cacheDelete(entryKey);
+      continue;
+    }
+    offers.set(id, backup);
+  }
+  publishOffers();
+}
+
+interface MineResponse {
+  buckets?: Record<string, unknown[] | undefined>;
+  revisions?: Record<string, { key: string; revision: number }[] | undefined>;
+}
+
+/** Fetch my buckets again, and have the page start again from them. */
+async function pullOwnContent(): Promise<void> {
+  try {
+    const { buckets, revisions } = await api.get<MineResponse>('/content/mine');
+    applyOwnBuckets(buckets ?? {}, revisions ?? {});
+    updateStatus({ revision: status.revision + 1 });
+  } catch (err) {
+    console.warn('[sync] could not reload own content:', err);
+    loadFailed('studio', true);
+    scheduleRetry();
+  }
 }
 
 /** What the pages draw from the learner's record, in a form two reads can be
@@ -900,13 +1393,6 @@ export async function hydrateFromServer(owner: { id: string; displayName: string
     claimCachesFor(owner);
     account = owner;
     bookmarksDirty = readPendingBookmark();
-    // Rebuild the entire pending queue before any parallel read can save
-    // bookmarks and update its markers. Otherwise a fast progress response
-    // could clear the creator marker before the creator response arrives.
-    const waiting = new Set(readArray<string>(PENDING_BUCKETS_KEY));
-    for (const [storageKey, bucket] of Object.entries(SERVER_BUCKET_BY_STORAGE_KEY)) {
-      if (waiting.has(bucket)) pendingBuckets.set(bucket, readArray(storageKey));
-    }
   }
   setSyncEnabled(true);
   if (hydrationInFlight) return hydrationInFlight;
@@ -918,10 +1404,7 @@ export async function hydrateFromServer(owner: { id: string; displayName: string
      page drawn from them before it landed is started again only when it did. */
   let changed = false;
   const put = (key: string, value: unknown) => {
-    const next = JSON.stringify(value);
-    if (localStorage.getItem(key) === next) return;
-    localStorage.setItem(key, next);
-    changed = true;
+    if (writeContent(key, JSON.stringify(value))) changed = true;
   };
   hydrationInFlight = (async () => {
     await Promise.all([
@@ -939,6 +1422,7 @@ export async function hydrateFromServer(owner: { id: string; displayName: string
           put(PUBLISHED_CACHE_KEYS.OS_MODULES, buckets['os-modules'] ?? []);
           put(PUBLISHED_CACHE_KEYS.STANDALONE_MODULES, buckets['standalone-modules'] ?? []);
           put(PUBLISHED_CACHE_KEYS.PATHS, buckets['paths'] ?? []);
+          saveCatalogCopy();
           loadFailed('courses', false);
         } catch (err) {
           if (!current()) return;
@@ -950,6 +1434,7 @@ export async function hydrateFromServer(owner: { id: string; displayName: string
       (async () => {
         // My progress (all roles).
         if (!sections.includes('progress')) return;
+        let reachedServer = false;
         try {
           const ticket = nextScoreTicket();
           const { progress, xp, board, streakAwarded } = await api.get<{
@@ -959,6 +1444,7 @@ export async function hydrateFromServer(owner: { id: string; displayName: string
             streakAwarded?: number[];
           }>('/progress');
           if (!current()) return;
+          reachedServer = true;
           loadFailed('progress', false);
           const before = recordMark();
           /* The app can be in use while this is on its way. A stop finished in
@@ -985,7 +1471,10 @@ export async function hydrateFromServer(owner: { id: string; displayName: string
         } catch (err) {
           if (!current()) return;
           console.warn('[sync] could not hydrate progress:', err);
-          loadFailed('progress', true);
+          /* The answer came, and keeping it here is what failed. That is no
+             reason to tell anyone the connection is down. */
+          if (reachedServer) recordPulled = true;
+          else loadFailed('progress', true);
         }
       })(),
 
@@ -993,9 +1482,13 @@ export async function hydrateFromServer(owner: { id: string; displayName: string
         // My creator buckets (creators/admins only — 403 for students is expected).
         if (!sections.includes('studio')) return;
         try {
-          const { buckets } = await api.get<{ buckets: Record<string, unknown[]> }>('/content/mine');
+          const { buckets, revisions } = await api.get<MineResponse>('/content/mine');
           if (!current()) return;
-          if (seedOwnBuckets(buckets ?? {})) changed = true;
+          applyOwnBuckets(buckets ?? {}, revisions ?? {});
+          await adoptOldDeviceCopies(owner, buckets ?? {});
+          if (!current()) return;
+          await offerBackups(owner, buckets ?? {});
+          if (!current()) return;
           loadFailed('studio', false);
         } catch (err) {
           if (!current()) return;

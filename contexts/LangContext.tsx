@@ -292,7 +292,11 @@ export function LangProvider({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
-    localStorage.setItem('academy-lang', lang);
+    try {
+      localStorage.setItem('academy-lang', lang);
+    } catch {
+      /* storage full or blocked: the choice lasts for this visit */
+    }
   }, [lang]);
 
   const t = (key: string): string => {

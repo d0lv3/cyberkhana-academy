@@ -27,9 +27,9 @@ class ApiService {
     this.baseUrl = baseUrl;
   }
 
-  private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  private async request<T>(path: string, options: RequestInit = {}, timeoutMs = 20_000): Promise<T> {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 20_000);
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
       const response = await fetch(`${this.baseUrl}${path}`, {
         ...options,
@@ -70,11 +70,11 @@ class ApiService {
     });
   }
 
-  put<T>(path: string, body?: unknown) {
+  put<T>(path: string, body?: unknown, timeoutMs?: number) {
     return this.request<T>(path, {
       method: 'PUT',
       body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
+    }, timeoutMs);
   }
 
   patch<T>(path: string, body?: unknown) {

@@ -44,6 +44,7 @@ import {
   toLocalizedText,
   type NetworkSimulation,
 } from '../../components/network-sim/types';
+import { stashGet, stashSet } from '../../services/studioStash';
 
 function generateSlug(title: string): string {
   return title
@@ -124,9 +125,9 @@ const NetworkingEditor: React.FC = () => {
       if (!lesson && builtin) lesson = builtinToEditableLesson(builtin);
     } else if (isAdminEdit) {
       // Another author's lesson: it came from an admin-only endpoint, so the
-      // list page hands it over through sessionStorage.
+      // list page hands it over through a stash (services/studioStash.ts).
       try {
-        const raw = sessionStorage.getItem(ADMIN_NETWORKING_STASH);
+        const raw = stashGet(ADMIN_NETWORKING_STASH);
         const stash: AdminNetworkingStash | null = raw ? JSON.parse(raw) : null;
         if (stash && stash.id === id && stash.lesson) {
           lesson = stash.lesson;
@@ -228,7 +229,7 @@ const NetworkingEditor: React.FC = () => {
     if (adminCtx) {
       try {
         await saveItemAsAdmin(adminCtx.ownerId, 'networking-lessons', lesson);
-        sessionStorage.setItem(ADMIN_NETWORKING_STASH, JSON.stringify({ id: lesson.id, ownerId: adminCtx.ownerId, ownerName: adminCtx.ownerName, lesson }));
+        stashSet(ADMIN_NETWORKING_STASH, JSON.stringify({ id: lesson.id, ownerId: adminCtx.ownerId, ownerName: adminCtx.ownerName, lesson }));
       } catch (err) {
         setIsSaving(false);
         toast('error', err instanceof Error ? err.message : 'Could not save this lesson.');

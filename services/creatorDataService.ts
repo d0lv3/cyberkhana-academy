@@ -1,5 +1,7 @@
 /* ─── Creator Data Service ───
- * Manages all creator-authored content in localStorage.
+ * Manages all creator-authored content, held in memory for the visit
+ * (services/contentStore.ts) and saved to the server an item at a time
+ * (services/syncService.ts).
  * Merges with static data so consumer pages see everything seamlessly.
  */
 
@@ -23,21 +25,12 @@ import {
   statusOf,
   authorOf,
 } from './creatorTypes';
-import { queueContentPush } from './syncService';
+import { queueContentChanges } from './syncService';
+import { readContent, writeContent } from './contentStore';
+import { delegatedBase, rememberRevisions, rememberSaved, type OwnedRevision } from './delegatedRevisions';
 import { api } from './api';
 
-/* ─────────────────────────────────────────────
- * Generic localStorage helpers
- * ───────────────────────────────────────────── */
-
-function readStorage<T>(key: string): T[] {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
+const readStorage = readContent;
 
 /** A copy without `_author`. Credit is the server's to assign as content goes
  *  out, so it is never written back: a stored copy would only go stale. */
@@ -49,14 +42,11 @@ function withoutCredit<T>(item: T): T {
 }
 
 function writeStorage<T>(key: string, data: T[]): void {
+  const before = readContent<unknown>(key);
   const clean = data.map(withoutCredit);
-  try {
-    localStorage.setItem(key, JSON.stringify(clean));
-  } catch (err) {
-    console.warn('[creator] local cache write failed (quota?):', err);
-  }
-  // Write-through to the server (debounced; no-op when signed out).
-  queueContentPush(key, clean as unknown[]);
+  writeContent(key, JSON.stringify(clean));
+  // Write-through to the server, item by item (debounced; no-op when signed out).
+  queueContentChanges(key, before, clean as unknown[]);
 }
 
 /* ── Credit for my own items ──
@@ -869,7 +859,10 @@ type AdminPublishedItem = (CreatorFundamentalModule | CreatorNetworkingLesson | 
  *  Drafts are never returned — a creator's unfinished work stays private until
  *  they move it to review. */
 async function fetchAllPublishedItemsForAdmin(): Promise<AdminPublishedItem[]> {
-  const { items } = await api.get<{ items: AdminPublishedItem[] }>('/content/admin/items');
+  const { items, revisions } = await api.get<{ items: AdminPublishedItem[]; revisions?: OwnedRevision[] }>(
+    '/content/admin/items'
+  );
+  rememberRevisions(revisions);
   return items;
 }
 
@@ -900,7 +893,13 @@ export async function saveItemAsAdmin(
   bucket: AdminItemBucket,
   item: CreatorFundamentalModule | CreatorNetworkingLesson | NetworkingUnit
 ): Promise<void> {
-  await api.patch('/content/admin/item', { ownerId, bucket, item });
+  const { revision } = await api.patch<{ revision?: number }>('/content/admin/item', {
+    ownerId,
+    bucket,
+    item,
+    baseRevision: delegatedBase(ownerId, bucket, item.id),
+  });
+  rememberSaved(ownerId, bucket, item.id, revision);
 }
 
 /** Module-typed alias of {@link saveItemAsAdmin}, used by the module editors. */
@@ -920,7 +919,10 @@ export interface AdminProgrammingPatch extends ProgrammingPatch, AdminOwned {}
 
 /** Every author's published or in-review programming patches (admin-only). */
 export async function fetchAllModeratableProgrammingForAdmin(): Promise<AdminProgrammingPatch[]> {
-  const { items } = await api.get<{ items: AdminProgrammingPatch[] }>('/content/admin/programming');
+  const { items, revisions } = await api.get<{ items: AdminProgrammingPatch[]; revisions?: OwnedRevision[] }>(
+    '/content/admin/programming'
+  );
+  rememberRevisions(revisions);
   return items;
 }
 
@@ -933,7 +935,11 @@ export async function saveProgrammingAsAdmin(args: {
   moduleSlug?: string;
   item: unknown;
 }): Promise<void> {
-  await api.patch('/content/admin/programming', args);
+  const { revision } = await api.patch<{ revision?: number }>('/content/admin/programming', {
+    ...args,
+    baseRevision: delegatedBase(args.ownerId, 'programming-patches', args.languageSlug),
+  });
+  rememberSaved(args.ownerId, 'programming-patches', args.languageSlug, revision);
 }
 
 /** Most recently updated content first. */

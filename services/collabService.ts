@@ -10,6 +10,7 @@
  */
 
 import { api } from './api';
+import { delegatedBase, rememberRevisions, rememberSaved } from './delegatedRevisions';
 
 /** Server bucket names. One studio tab, one bucket, one grant. */
 export type CollabBucket =
@@ -44,6 +45,7 @@ export interface SharedBucket<T = unknown> {
   bucket: CollabBucket;
   owner: CollabPerson | null;
   items: T[];
+  revisions?: { key: string; revision: number }[];
 }
 
 /** Both directions: what I have shared out, and what has been shared with me. */
@@ -76,6 +78,9 @@ export async function revokeGrant(grantId: string): Promise<void> {
 /** Every bucket shared with me, items included (drafts too, unlike moderation). */
 export async function fetchSharedWithMe<T = unknown>(): Promise<SharedBucket<T>[]> {
   const { shared } = await api.get<{ shared: SharedBucket<T>[] }>('/collab/shared');
+  for (const { owner, bucket, revisions } of shared) {
+    if (owner) rememberRevisions(revisions?.map((r) => ({ ...r, ownerId: owner.id, bucket })));
+  }
   return shared;
 }
 
@@ -85,7 +90,14 @@ export async function saveSharedItem(
   bucket: CollabBucket,
   item: unknown
 ): Promise<void> {
-  await api.patch('/content/collab/item', { ownerId, bucket, item });
+  const key = String((item as { id?: unknown } | null)?.id ?? '');
+  const { revision } = await api.patch<{ revision?: number }>('/content/collab/item', {
+    ownerId,
+    bucket,
+    item,
+    baseRevision: delegatedBase(ownerId, bucket, key),
+  });
+  rememberSaved(ownerId, bucket, key, revision);
 }
 
 /** Delete one item from the owner's bucket. A collaborator holds the owner's
@@ -95,7 +107,12 @@ export async function deleteSharedItem(
   bucket: CollabBucket,
   itemId: string
 ): Promise<void> {
-  await api.delete('/content/collab/item', { ownerId, bucket, itemId });
+  await api.delete('/content/collab/item', {
+    ownerId,
+    bucket,
+    itemId,
+    baseRevision: delegatedBase(ownerId, bucket, itemId),
+  });
 }
 
 /** Save one module / concept / language back into the owner's programming patch. */
@@ -106,7 +123,11 @@ export async function saveSharedProgramming(args: {
   moduleSlug?: string;
   item: unknown;
 }): Promise<void> {
-  await api.patch('/content/collab/programming', args);
+  const { revision } = await api.patch<{ revision?: number }>('/content/collab/programming', {
+    ...args,
+    baseRevision: delegatedBase(args.ownerId, 'programming-patches', args.languageSlug),
+  });
+  rememberSaved(args.ownerId, 'programming-patches', args.languageSlug, revision);
 }
 
 /** Delete one module / concept / language from the owner's programming patch. */
@@ -117,7 +138,11 @@ export async function deleteSharedProgramming(args: {
   moduleSlug?: string;
   itemId?: string;
 }): Promise<void> {
-  await api.delete('/content/collab/programming', args);
+  const { revision } = await api.delete<{ revision?: number }>('/content/collab/programming', {
+    ...args,
+    baseRevision: delegatedBase(args.ownerId, 'programming-patches', args.languageSlug),
+  });
+  rememberSaved(args.ownerId, 'programming-patches', args.languageSlug, revision);
 }
 
 /** Human label for a bucket, used in the share panel and the shared sections. */
